@@ -6,7 +6,6 @@ import base from './nuxt.config.base.js'
 const config = {
   build: {
     extend(config, ctx) {
-      // Run ESLint ad Stylelint on save
       if (ctx.isDev && ctx.isClient) {
         config.module.rules.push({
           enforce: 'pre',

@@ -1,15 +1,7 @@
-from django.urls import path, include
+from django.urls import include
 from django.conf.urls import url
-
-from rest_framework import routers
-from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
-
-
-router = routers.DefaultRouter()
 
 
 urlpatterns = [
-    url(r'^api/token-auth/', obtain_jwt_token),
-    url(r'^api/token-refresh/', refresh_jwt_token),
-    path('api/', include(router.urls)),
+    url(r'^api/', include('baserow.api.v0.urls', namespace='api')),
 ]

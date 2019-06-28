@@ -10,9 +10,10 @@ export const state = () => ({
 })
 
 export const mutations = {
-  SET_USER_DATA(state, token) {
+  SET_USER_DATA(state, { token, user }) {
     state.token = token
-    state.user = jwtDecode(token)
+    state.token_data = jwtDecode(token)
+    state.user = user
   },
   CLEAR_USER_DATA(state) {
     state.token = null
@@ -31,7 +32,7 @@ export const actions = {
   login({ commit, dispatch }, { email, password }) {
     return AuthService.login(email, password).then(({ data }) => {
       setToken(data.token, this.app.$cookies)
-      commit('SET_USER_DATA', data.token)
+      commit('SET_USER_DATA', data)
       dispatch('startRefreshTimeout')
     })
   },
@@ -44,7 +45,7 @@ export const actions = {
     return AuthService.refresh(token)
       .then(({ data }) => {
         setToken(data.token, this.app.$cookies)
-        commit('SET_USER_DATA', data.token)
+        commit('SET_USER_DATA', data)
         dispatch('startRefreshTimeout')
       })
       .catch(() => {
@@ -93,6 +94,6 @@ export const getters = {
    */
   tokenExpireSeconds(state) {
     const now = Math.ceil(new Date().getTime() / 1000)
-    return state.user.exp - now
+    return state.token_data.exp - now
   }
 }

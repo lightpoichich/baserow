@@ -107,7 +107,7 @@ export default {
             password: this.credentials.password
           })
           .then(() => {
-            console.log('@TODO navigate to main page')
+            this.$nuxt.$router.replace({ name: 'app' })
           })
           .catch(() => {
             this.invalid = true

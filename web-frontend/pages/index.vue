@@ -1,16 +1,12 @@
 <template>
-  <div>
-    <h1>Baserow</h1>
-    <p>authenticated: {{ isAuthenticated }}</p>
-    <nuxt-link :to="{ name: 'login' }">Login</nuxt-link>
-  </div>
+  <div></div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-
 export default {
-  middleware: 'authenticated',
-  computed: { ...mapGetters({ isAuthenticated: 'auth/isAuthenticated' }) }
+  mounted() {
+    const name = this.$store.getters['auth/isAuthenticated'] ? 'app' : 'login'
+    this.$nuxt.$router.replace({ name: name })
+  }
 }
 </script>

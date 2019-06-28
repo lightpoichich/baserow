@@ -12,7 +12,6 @@
         The provided e-mail address or password is incorrect.
       </p>
     </div>
-    authenticated: {{ loggedIn }}
     <form @submit.prevent="login">
       <div class="control">
         <label class="control-label">E-mail address</label>
@@ -53,6 +52,11 @@
               Sign up
             </nuxt-link>
           </li>
+          <li>
+            <nuxt-link :to="{ name: 'index' }">
+              Index
+            </nuxt-link>
+          </li>
         </ul>
         <button
           :class="{ 'button-loading': loading }"
@@ -67,7 +71,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { required, email } from 'vuelidate/lib/validators'
 
 export default {
@@ -87,7 +90,6 @@ export default {
       }
     }
   },
-  computed: { ...mapGetters({ loggedIn: 'auth/loggedIn' }) },
   validations: {
     credentials: {
       email: { required, email },

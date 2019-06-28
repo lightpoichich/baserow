@@ -30,24 +30,14 @@ export default {
   /*
    ** Nuxt.js modules
    */
-  modules: [
-    // Doc: https://axios.nuxtjs.org/usage
-    '@nuxtjs/axios'
-  ],
+  modules: ['@nuxtjs/axios', 'cookie-universal-nuxt'],
 
-  /*
-   ** Axios module configuration
-   */
-  axios: {
-    // See https://github.com/nuxt-community/axios-module#options
+  router: {
+    middleware: 'authentication'
   },
 
   env: {
     // The API base url, this will be prepended to the urls of the remote calls.
-    baseUrl: 'http://localhost:8000',
-
-    // The JWT token expire time in seconds, when this time passes after a login
-    // or refresh, the token will be refreshed.
-    JWTTokenExpire: 300
+    baseUrl: 'http://localhost:8000'
   }
 }

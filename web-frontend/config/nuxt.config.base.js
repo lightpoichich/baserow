@@ -38,6 +38,6 @@ export default {
 
   env: {
     // The API base url, this will be prepended to the urls of the remote calls.
-    baseUrl: 'http://localhost:8000'
+    baseUrl: 'http://localhost:8000/api/v0'
   }
 }

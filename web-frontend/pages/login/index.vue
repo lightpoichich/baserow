@@ -52,11 +52,6 @@
               Sign up
             </nuxt-link>
           </li>
-          <li>
-            <nuxt-link :to="{ name: 'index' }">
-              Index
-            </nuxt-link>
-          </li>
         </ul>
         <button
           :class="{ 'button-loading': loading }"

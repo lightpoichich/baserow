@@ -132,5 +132,6 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=300),
     'JWT_ALLOW_REFRESH': True,
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-    'JWT_RESPONSE_PAYLOAD_HANDLER': 'baserow.api.v0.jwt.jwt_response_payload_handler'
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'baserow.api.v0.user.jwt.'
+                                    'jwt_response_payload_handler'
 }

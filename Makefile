@@ -31,3 +31,5 @@ lint-backend:
 
 test-backend:
 	(cd backend && pytest tests) || exit;
+
+make lint-and-test: lint-backend lint-web-frontend test-backend test-web-frontend

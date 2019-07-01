@@ -37,6 +37,19 @@ export const actions = {
     })
   },
   /**
+   * Register a new user and immediately authenticate. If successful commit the
+   * token to the state and start the refresh timeout to stay authenticated.
+   */
+  register({ commit, dispatch }, { email, name, password }) {
+    return AuthService.register(email, name, password, true).then(
+      ({ data }) => {
+        setToken(data.token, this.app.$cookies)
+        commit('SET_USER_DATA', data)
+        dispatch('startRefreshTimeout')
+      }
+    )
+  },
+  /**
    * Refresh the existing token. If successful commit the new token and start a
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.

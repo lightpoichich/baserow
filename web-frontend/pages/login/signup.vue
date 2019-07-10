@@ -123,10 +123,10 @@ export default {
       error: '',
       loading: false,
       account: {
-        email: 'lol@lol.nl',
-        name: 'lol',
-        password: 'lol',
-        passwordConfirm: 'lol'
+        email: '',
+        name: '',
+        password: '',
+        passwordConfirm: ''
       }
     }
   },

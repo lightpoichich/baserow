@@ -1,12 +1,12 @@
 <template>
-  <div></div>
+  <div>{{ test }}</div>
 </template>
 
 <script>
 export default {
-  mounted() {
-    const name = this.$store.getters['auth/isAuthenticated'] ? 'app' : 'login'
-    this.$nuxt.$router.replace({ name: name })
+  fetch({ store, redirect }) {
+    const name = store.getters['auth/isAuthenticated'] ? 'app' : 'login'
+    redirect({ name: name })
   }
 }
 </script>

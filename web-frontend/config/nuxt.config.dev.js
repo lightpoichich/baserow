@@ -1,4 +1,4 @@
-import merge from 'lodash.merge'
+import _ from 'lodash'
 import StyleLintPlugin from 'stylelint-webpack-plugin'
 
 import base from './nuxt.config.base.js'
@@ -24,4 +24,4 @@ const config = {
   }
 }
 
-export default merge(base, config)
+export default _.assign(base, config)

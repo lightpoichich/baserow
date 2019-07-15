@@ -8,7 +8,7 @@
 import { mapState } from 'vuex'
 
 export default {
-  middleware: 'authenticated',
+  layout: 'app',
   computed: {
     ...mapState({
       user: state => state.auth.user

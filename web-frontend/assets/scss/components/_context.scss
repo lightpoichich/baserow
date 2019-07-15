@@ -1,6 +1,6 @@
 .context {
   position: absolute;
-  z-index: 1;
+  z-index: $z-index-context;
   white-space: nowrap;
   background-color: $white;
   border-radius: 6px;

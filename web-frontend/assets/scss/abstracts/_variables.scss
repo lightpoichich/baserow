@@ -64,3 +64,10 @@ $z-index-layout-col-3: 1;
 $z-index-layout-col-3-1: 5;
 $z-index-layout-col-3-2: 4;
 $z-index-modal: 6;
+
+// The z-index of the context must always be the highest because they can open in a
+// modal.
+$z-index-context: 7;
+
+// normalize overrides
+$base-font-family: $text-font-stack;

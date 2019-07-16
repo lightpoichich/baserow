@@ -1,10 +1,5 @@
 <template>
-  <div
-    v-move-to-body
-    v-click-outside="hide"
-    class="context"
-    :class="{ 'visibility-hidden': !open }"
-  >
+  <div class="context" :class="{ 'visibility-hidden': !open }">
     <slot></slot>
   </div>
 </template>
@@ -26,14 +21,29 @@ export default {
    * element and in the child element we need to register the child with their parent to
    * prevent this.
    */
-  beforeMount() {
+  mounted() {
     let $parent = this.$parent
     while ($parent !== undefined) {
       if ($parent.registerContextChild) {
         $parent.registerContextChild(this.$el)
-        break
       }
       $parent = $parent.$parent
+    }
+
+    // Move the rendered element to the top of the body so it can be positioned over any
+    // other element.
+    const body = document.body
+    body.insertBefore(this.$el, body.firstChild)
+  },
+  /**
+   * Make sure the context menu is not open and all the events on the body are removed
+   * and that the element is removed from the body.
+   */
+  destroyed() {
+    this.hide()
+
+    if (this.$el.parentNode) {
+      this.$el.parentNode.removeChild(this.$el)
     }
   },
   methods: {
@@ -62,33 +72,56 @@ export default {
       }
 
       if (value) {
-        const css = this.calculatePosition(target, vertical, horizontal, offset)
+        this.show(target, vertical, horizontal, offset)
+      } else {
+        this.hide()
+      }
+    },
+    /**
+     * Calculate the position, show the context menu and register a click event on the
+     * body to check if the user has clicked outside the context.
+     */
+    show(target, vertical, horizontal, offset) {
+      const css = this.calculatePosition(target, vertical, horizontal, offset)
 
-        // Set the calculated positions of the context.
-        for (const key in css) {
-          const value = css[key] !== null ? Math.ceil(css[key]) + 'px' : 'auto'
-          this.$el.style[key] = value
-        }
+      // Set the calculated positions of the context.
+      for (const key in css) {
+        const value = css[key] !== null ? Math.ceil(css[key]) + 'px' : 'auto'
+        this.$el.style[key] = value
       }
 
       // If we store the element who opened the context menu we can exclude the element
       // when clicked outside of this element.
-      this.opener = value ? target : null
-      this.open = value
-    },
-    hide(event) {
-      // Checks if the click is inside one of our children. In that code the context
-      // must stay open.
-      const isChild = this.children.some(element =>
-        isElement(element, event.target)
-      )
+      this.opener = target
+      this.open = true
 
-      // Checks if the context is already opened, if the click was not on the opener
-      // because he can trigger the toggle method and if the click was not in one of
-      // our child contexts.
-      if (this.open && !isElement(this.opener, event.target) && !isChild) {
-        this.open = false
+      this.$el.clickOutsideEvent = event => {
+        if (
+          // Check if the context menu is still open
+          this.open &&
+          // If the click was outside the context element because we want to ignore
+          // clicks inside it.s
+          !isElement(this.$el, event.target) &&
+          // If the click was not on the opener because he can trigger the toggle
+          // method.
+          !isElement(this.opener, event.target) &&
+          // If the click was not inside one of the context children of this context
+          // menu.
+          !this.children.some(element => isElement(element, event.target))
+        ) {
+          this.hide()
+        }
       }
+      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+    },
+    /**
+     * Hide the context menu and make sure the body event is removed.
+     */
+    hide() {
+      this.opener = null
+      this.open = false
+
+      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
     },
     /**
      * Calculates the absolute position of the context based on the original clicked
@@ -147,8 +180,6 @@ export default {
     /**
      * A child context can register itself with the parent to prevent closing of the
      * parent when clicked inside the child.
-     *
-     * @param element HTMLElement
      */
     registerContextChild(element) {
       this.children.push(element)

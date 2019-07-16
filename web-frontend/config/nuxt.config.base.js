@@ -25,11 +25,7 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [
-    { src: '@/plugins/auth.js' },
-    { src: '@/plugins/directives.js' },
-    { src: '@/plugins/vuelidate.js' }
-  ],
+  plugins: [{ src: '@/plugins/auth.js' }, { src: '@/plugins/vuelidate.js' }],
 
   /*
    ** Nuxt.js modules

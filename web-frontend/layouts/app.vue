@@ -9,68 +9,15 @@
           </nuxt-link>
         </li>
         <li class="menu-item">
-          <a href="#" class="menu-link" data-context=".select">
+          <a
+            ref="groupSelectToggle"
+            class="menu-link"
+            @click="$refs.groupSelect.toggle($refs.groupSelectToggle)"
+          >
             <i class="fas fa-layer-group"></i>
             <span class="menu-link-text">Groups</span>
           </a>
-          <div class="select hidden">
-            <div class="select-search">
-              <i class="select-search-icon fas fa-search"></i>
-              <input
-                type="text"
-                class="select-search-input"
-                placeholder="Search views"
-              />
-            </div>
-            <ul class="select-items">
-              <li class="select-item active">
-                <a href="#" class="select-item-link">Group name 1</a>
-                <a href="#" class="select-item-options" data-context=".context">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-                <div class="context hidden">
-                  <ul class="context-menu">
-                    <li>
-                      <a href="#">
-                        <i class="context-menu-icon fas fa-fw fa-pen"></i>
-                        Rename group
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i class="context-menu-icon fas fa-fw fa-trash"></i>
-                        Delete group
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </li>
-              <li class="select-item">
-                <a href="#" class="select-item-link">Group name 2</a>
-                <a href="#" class="select-item-options">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-              </li>
-              <li class="select-item">
-                <a href="#" class="select-item-link">Group name 3</a>
-                <a href="#" class="select-item-options">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-              </li>
-              <li class="select-item">
-                <a href="#" class="select-item-link">Group name 4</a>
-                <a href="#" class="select-item-options">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-              </li>
-            </ul>
-            <div class="select-footer">
-              <a href="#" class="select-footer-button">
-                <i class="fas fa-plus"></i>
-                Do something
-              </a>
-            </div>
-          </div>
+          <GroupsContext ref="groupSelect"></GroupsContext>
         </li>
       </ul>
       <ul class="menu-items">
@@ -108,130 +55,6 @@
           <div class="sidebar-title">
             <img src="@/static/img/logo.svg" alt="" />
           </div>
-          <div class="sidebar-group-title">Group name 1</div>
-          <ul class="tree">
-            <li class="tree-item">
-              <div class="tree-action">
-                <a href="#" class="tree-link">
-                  <i class="tree-type fas fa-database"></i>
-                  Vehicles
-                </a>
-                <a href="#" class="tree-options" data-context=".context">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-                <div class="context hidden">
-                  <div class="context-menu-title">Vehicles</div>
-                  <ul class="context-menu">
-                    <li>
-                      <a href="#">
-                        <i class="context-menu-icon fas fa-fw fa-pen"></i>
-                        Rename database
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i class="context-menu-icon fas fa-fw fa-trash"></i>
-                        Delete table
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
-            <li class="tree-item">
-              <div class="tree-action">
-                <a href="#" class="tree-link">
-                  <i class="tree-type fas fa-angle-right"></i>
-                  Map nummer 1
-                </a>
-              </div>
-            </li>
-            <li class="tree-item active">
-              <div class="tree-action">
-                <a href="#" class="tree-link">
-                  <i class="tree-type fas fa-database"></i>
-                  Webshop
-                </a>
-                <a href="#" class="tree-options">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-              </div>
-              <ul class="tree-subs">
-                <li class="tree-sub active">
-                  <a href="#" class="tree-sub-link">Customers</a>
-                  <a href="#" class="tree-options">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </a>
-                </li>
-                <li class="tree-sub">
-                  <a href="#" class="tree-sub-link">Products very long name</a>
-                  <a href="#" class="tree-options">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </a>
-                </li>
-                <li class="tree-sub">
-                  <a href="#" class="tree-sub-link">Categories</a>
-                  <a href="#" class="tree-options">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </a>
-                </li>
-              </ul>
-            </li>
-            <li class="tree-item">
-              <div class="tree-action">
-                <a href="#" class="tree-link">
-                  <i class="tree-type fas fa-angle-down"></i>
-                  Map nummer 1
-                </a>
-              </div>
-              <ul class="tree">
-                <li class="tree-item">
-                  <div class="tree-action">
-                    <a href="#" class="tree-link">
-                      <i class="tree-type fas fa-database"></i>
-                      Vehicles
-                    </a>
-                    <a href="#" class="tree-options">
-                      <i class="fas fa-ellipsis-v"></i>
-                    </a>
-                  </div>
-                </li>
-                <li class="tree-item">
-                  <div class="tree-action">
-                    <a href="#" class="tree-link">
-                      <i class="tree-type fas fa-database"></i>
-                      Something
-                    </a>
-                    <a href="#" class="tree-options">
-                      <i class="fas fa-ellipsis-v"></i>
-                    </a>
-                  </div>
-                </li>
-              </ul>
-            </li>
-            <li class="tree-item">
-              <div class="tree-action">
-                <a href="#" class="tree-link">
-                  <i class="tree-type fas fa-database"></i>
-                  Vehicles with very long name and that is not good.
-                </a>
-                <a href="#" class="tree-options">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-              </div>
-            </li>
-            <li class="tree-item">
-              <div class="tree-action">
-                <a href="#" class="tree-link">
-                  <i class="tree-type fas fa-database"></i>
-                  Something else
-                </a>
-                <a href="#" class="tree-options">
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
-              </div>
-            </li>
-          </ul>
         </nav>
       </div>
       <div class="sidebar-footer">
@@ -250,13 +73,13 @@
 <script>
 import { mapActions, mapGetters } from 'vuex'
 
-import Context from '@/components/Context'
+import GroupsContext from '@/components/group/GroupsContext'
 
 export default {
   layout: 'default',
   middleware: 'authenticated',
   components: {
-    Context
+    GroupsContext
   },
   computed: {
     ...mapGetters({

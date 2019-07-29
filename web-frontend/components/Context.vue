@@ -6,44 +6,16 @@
 
 <script>
 import { isElement } from '@/utils/dom'
+import MoveToBody from '@/mixins/moveToBody'
 
 export default {
   name: 'Context',
+  mixins: [MoveToBody],
   data() {
     return {
       open: false,
       opener: null,
       children: []
-    }
-  },
-  /**
-   * Because we don't want the parent context to close when a user clicks 'outside' that
-   * element and in the child element we need to register the child with their parent to
-   * prevent this.
-   */
-  mounted() {
-    let $parent = this.$parent
-    while ($parent !== undefined) {
-      if ($parent.registerContextChild) {
-        $parent.registerContextChild(this.$el)
-      }
-      $parent = $parent.$parent
-    }
-
-    // Move the rendered element to the top of the body so it can be positioned over any
-    // other element.
-    const body = document.body
-    body.insertBefore(this.$el, body.firstChild)
-  },
-  /**
-   * Make sure the context menu is not open and all the events on the body are removed
-   * and that the element is removed from the body.
-   */
-  destroyed() {
-    this.hide()
-
-    if (this.$el.parentNode) {
-      this.$el.parentNode.removeChild(this.$el)
     }
   },
   methods: {
@@ -54,6 +26,8 @@ export default {
      *                    context, this will be used to calculate the correct position.
      * @param vertical    Bottom positions the context under the target.
      *                    Top positions the context above the target.
+     *                    Over-bottom positions the context over and under the target.
+     *                    Over-top positions the context over and above the target
      * @param horizontal  Left aligns the context with the left side of the target.
      *                    Right aligns the context with the right side of the target.
      * @param offset      The distance between the target element and the context.
@@ -136,6 +110,9 @@ export default {
       const canTop = targetRect.top - contextRect.height - offset > 0
       const canBottom =
         window.innerHeight - targetRect.bottom - contextRect.height - offset > 0
+      const canOverTop = targetRect.bottom - contextRect.height - offset > 0
+      const canOverBottom =
+        window.innerHeight - targetRect.bottom - contextRect.height - offset > 0
       const canRight = targetRect.right - contextRect.width > 0
       const canLeft =
         window.innerWidth - targetRect.left - contextRect.width > 0
@@ -148,6 +125,14 @@ export default {
 
       if (vertical === 'top' && !canTop) {
         vertical = 'bottom'
+      }
+
+      if (vertical === 'over-bottom' && !canOverBottom && canOverTop) {
+        vertical = 'over-top'
+      }
+
+      if (vertical === 'over-top' && !canOverTop) {
+        vertical = 'over-bottom'
       }
 
       if (horizontal === 'left' && !canLeft && canRight) {
@@ -173,6 +158,14 @@ export default {
 
       if (vertical === 'top') {
         positions.bottom = window.innerHeight - targetRect.top + offset
+      }
+
+      if (vertical === 'over-bottom') {
+        positions.top = targetRect.top + offset
+      }
+
+      if (vertical === 'over-top') {
+        positions.bottom = window.innerHeight - targetRect.bottom + offset
       }
 
       return positions

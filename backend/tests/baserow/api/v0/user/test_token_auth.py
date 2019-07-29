@@ -20,7 +20,7 @@ def test_token_auth(client, data_fixture):
     data_fixture.create_user(email='test@test.nl', password='password',
                              first_name='Test1')
 
-    response = client.post(reverse('api:user:token_auth'), {
+    response = client.post(reverse('api_v0:user:token_auth'), {
         'username': 'no_existing@test.nl',
         'password': 'password'
     })
@@ -29,7 +29,7 @@ def test_token_auth(client, data_fixture):
     assert response.status_code == 400
     assert len(json['non_field_errors']) > 0
 
-    response = client.post(reverse('api:user:token_auth'), {
+    response = client.post(reverse('api_v0:user:token_auth'), {
         'username': 'test@test.nl',
         'password': 'wrong_password'
     })
@@ -38,7 +38,7 @@ def test_token_auth(client, data_fixture):
     assert response.status_code == 400
     assert len(json['non_field_errors']) > 0
 
-    response = client.post(reverse('api:user:token_auth'), {
+    response = client.post(reverse('api_v0:user:token_auth'), {
         'username': 'test@test.nl',
         'password': 'password'
     })
@@ -56,13 +56,13 @@ def test_token_refresh(client, data_fixture):
     user = data_fixture.create_user(email='test@test.nl', password='password',
                                     first_name='Test1')
 
-    response = client.post(reverse('api:user:token_refresh'), {'token': 'WRONG_TOKEN'})
+    response = client.post(reverse('api_v0:user:token_refresh'), {'token': 'WRONG_TOKEN'})
     assert response.status_code == 400
 
     payload = jwt_payload_handler(user)
     token = jwt_encode_handler(payload)
 
-    response = client.post(reverse('api:user:token_refresh'), {'token': token})
+    response = client.post(reverse('api_v0:user:token_refresh'), {'token': token})
     assert response.status_code == 200
     assert 'token' in response.json()
 
@@ -71,5 +71,5 @@ def test_token_refresh(client, data_fixture):
         payload = jwt_payload_handler(user)
         token = jwt_encode_handler(payload)
 
-        response = client.post(reverse('api:user:token_refresh'), {'token': token})
+        response = client.post(reverse('api_v0:user:token_refresh'), {'token': token})
         assert response.status_code == 400

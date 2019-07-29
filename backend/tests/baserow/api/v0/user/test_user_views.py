@@ -9,7 +9,7 @@ User = get_user_model()
 
 @pytest.mark.django_db
 def test_create_user(client):
-    response = client.post(reverse('api:user:index'), {
+    response = client.post(reverse('api_v0:user:index'), {
         'name': 'Test1',
         'email': 'test@test.nl',
         'password': 'test12'
@@ -21,7 +21,7 @@ def test_create_user(client):
     assert user.email == 'test@test.nl'
     assert user.password != ''
 
-    response_failed = client.post(reverse('api:user:index'), {
+    response_failed = client.post(reverse('api_v0:user:index'), {
         'name': 'Test1',
         'email': 'test@test.nl',
         'password': 'test12'
@@ -30,7 +30,7 @@ def test_create_user(client):
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_ALREADY_EXISTS'
 
-    response_failed_2 = client.post(reverse('api:user:index'), {
+    response_failed_2 = client.post(reverse('api_v0:user:index'), {
         'email': 'test'
     })
 

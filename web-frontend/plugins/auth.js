@@ -6,7 +6,7 @@ export default function({ store }) {
   client.interceptors.request.use(config => {
     if (store.getters['auth/isAuthenticated']) {
       const token = store.getters['auth/token']
-      config.headers.Authorization = `JWT: ${token}`
+      config.headers.Authorization = `JWT ${token}`
     }
     return config
   })

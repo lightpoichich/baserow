@@ -103,7 +103,6 @@ export default {
             password: this.credentials.password
           })
           .then(() => {
-            console.log(this.$nuxt)
             this.$nuxt.$router.push({ name: 'app' })
           })
           .catch(error => {

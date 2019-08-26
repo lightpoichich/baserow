@@ -103,7 +103,8 @@ export default {
             password: this.credentials.password
           })
           .then(() => {
-            this.$nuxt.$router.replace({ name: 'app' })
+            console.log(this.$nuxt)
+            this.$nuxt.$router.push({ name: 'app' })
           })
           .catch(error => {
             // If the status code is 400 the provided email or password is incorrect.

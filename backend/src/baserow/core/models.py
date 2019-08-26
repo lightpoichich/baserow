@@ -13,6 +13,13 @@ class Group(models.Model):
 
     objects = GroupQuerySet.as_manager()
 
+    def has_user(self, user):
+        """Returns true is the user belongs to the group."""
+        return self.users.filter(id=user.id).exists()
+
+    def __str__(self):
+        return f'<Group id={self.id}, name={self.name}>'
+
 
 class GroupUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -25,8 +32,10 @@ class GroupUser(models.Model):
     @classmethod
     def get_last_order(cls, user):
         """Returns a new position that will be last for a new group."""
-        return cls.objects.filter(
+        highest_order = cls.objects.filter(
             user=user
         ).aggregate(
             models.Max('order')
-        ).get('order__max', 0) + 1
+        ).get('order__max', 0) or 0
+
+        return highest_order + 1

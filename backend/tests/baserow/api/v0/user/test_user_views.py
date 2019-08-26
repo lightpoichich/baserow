@@ -13,7 +13,7 @@ def test_create_user(client):
         'name': 'Test1',
         'email': 'test@test.nl',
         'password': 'test12'
-    })
+    }, format='json')
 
     assert response.status_code == 200
     user = User.objects.get(email='test@test.nl')
@@ -25,13 +25,13 @@ def test_create_user(client):
         'name': 'Test1',
         'email': 'test@test.nl',
         'password': 'test12'
-    })
+    }, format='json')
 
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_ALREADY_EXISTS'
 
     response_failed_2 = client.post(reverse('api_v0:user:index'), {
         'email': 'test'
-    })
+    }, format='json')
 
     assert response_failed_2.status_code == 400

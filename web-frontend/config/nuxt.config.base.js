@@ -27,6 +27,7 @@ export default {
    */
   plugins: [
     { src: '@/plugins/global.js' },
+    { src: '@/plugins/client.js' },
     { src: '@/plugins/auth.js' },
     { src: '@/plugins/vuelidate.js' }
   ],

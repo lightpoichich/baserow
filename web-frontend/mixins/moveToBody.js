@@ -8,7 +8,7 @@ export default {
     let $parent = this.$parent
     while ($parent !== undefined) {
       if ($parent.registerContextChild) {
-        $parent.registerContextChild(this.$el)
+        $parent.registerContextChild(this)
       }
       $parent = $parent.$parent
     }

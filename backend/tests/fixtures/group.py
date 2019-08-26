@@ -9,7 +9,9 @@ class GroupFixtures:
         if user:
             users.insert(0, user)
 
-        kwargs.setdefault('name', self.fake.name())
+        if 'name' not in kwargs:
+            kwargs['name'] = self.fake.name()
+
         group = Group.objects.create(**kwargs)
 
         for user in users:
@@ -18,7 +20,13 @@ class GroupFixtures:
         return group
 
     def create_user_group(self, **kwargs):
-        kwargs.setdefault('group', self.create_group())
-        kwargs.setdefault('user', self.create_user())
-        kwargs.setdefault('order', 0)
+        if 'group' not in kwargs:
+            kwargs['group'] = self.create_group()
+
+        if 'user' not in kwargs:
+            kwargs['user'] = self.create_user()
+
+        if 'order' not in kwargs:
+            kwargs['order'] = 0
+
         return GroupUser.objects.create(**kwargs)

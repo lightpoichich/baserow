@@ -1,3 +1,5 @@
+// import { set } from 'vue'
+
 import GroupService from '@/services/group'
 
 export const state = () => ({
@@ -15,6 +17,17 @@ export const mutations = {
   },
   SET_ITEMS(state, items) {
     state.items = items
+  },
+  ADD_ITEM(state, item) {
+    state.items.push(item)
+  },
+  UPDATE_ITEM(state, values) {
+    const index = state.items.findIndex(item => item.id === values.id)
+    Object.assign(state.items[index], state.items[index], values)
+  },
+  DELETE_ITEM(state, id) {
+    const index = state.items.findIndex(item => item.id === id)
+    state.items.splice(index, 1)
   }
 }
 
@@ -29,7 +42,7 @@ export const actions = {
 
     return GroupService.fetchAll()
       .then(({ data }) => {
-        commit('SET_LOADED', false)
+        commit('SET_LOADED', true)
         commit('SET_ITEMS', data)
       })
       .catch(() => {
@@ -38,6 +51,22 @@ export const actions = {
       .then(() => {
         commit('SET_LOADING', false)
       })
+  },
+  create({ commit }, values) {
+    return GroupService.create(values).then(({ data }) => {
+      commit('ADD_ITEM', data)
+    })
+  },
+  update({ commit }, { id, values }) {
+    return GroupService.update(id, values).then(({ data }) => {
+      commit('UPDATE_ITEM', data)
+    })
+  },
+  delete({ commit }, id) {
+    return GroupService.delete(id).then(() => {
+      console.log(id)
+      commit('DELETE_ITEM', id)
+    })
   }
 }
 

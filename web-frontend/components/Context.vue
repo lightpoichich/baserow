@@ -81,7 +81,9 @@ export default {
           !isElement(this.opener, event.target) &&
           // If the click was not inside one of the context children of this context
           // menu.
-          !this.children.some(element => isElement(element, event.target))
+          !this.children.some(component =>
+            isElement(component.$el, event.target)
+          )
         ) {
           this.hide()
         }

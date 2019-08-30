@@ -1,5 +1,6 @@
 .grid-view-s {
   @include absolute(0);
+
   overflow: hidden;
 }
 
@@ -11,6 +12,7 @@
 
 .grid-view-s-scroll {
   @include absolute(0);
+
   overflow: hidden;
 }
 
@@ -18,7 +20,6 @@
   position: sticky;
   top: 0;
   z-index: 2;
-
   height: 33px;
   background-color: $color-neutral-50;
   border-bottom: 1px solid $color-neutral-200;
@@ -29,7 +30,7 @@
   z-index: 1;
   min-height: calc(100% - 33px - 48px);
 
-  &:after {
+  &::after {
     content: "";
     display: block;
     height: 100px;
@@ -41,12 +42,10 @@
   position: sticky;
   bottom: 0;
   z-index: 2;
-
   height: 48px;
   background-color: $color-neutral-50;
   border-top: 1px solid $color-neutral-200;
 }
-
 
 // The divider has not left property because the width of the left column can be
 // adjusted that is why it is specified in the html file.
@@ -97,7 +96,6 @@
     background-color: $color-primary-500;
   }
 }
-
 
 .grid-view-s-foot-info {
   padding: 10px;

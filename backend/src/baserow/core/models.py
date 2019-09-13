@@ -1,10 +1,16 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 
 from .managers import GroupQuerySet
+from .mixins import OrderableMixin
 
 
 User = get_user_model()
+
+
+def get_default_application_content_type():
+    return ContentType.objects.get_for_model(Application)
 
 
 class Group(models.Model):
@@ -21,7 +27,7 @@ class Group(models.Model):
         return f'<Group id={self.id}, name={self.name}>'
 
 
-class GroupUser(models.Model):
+class GroupUser(OrderableMixin, models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
@@ -31,11 +37,28 @@ class GroupUser(models.Model):
 
     @classmethod
     def get_last_order(cls, user):
-        """Returns a new position that will be last for a new group."""
-        highest_order = cls.objects.filter(
-            user=user
-        ).aggregate(
-            models.Max('order')
-        ).get('order__max', 0) or 0
+        return cls.get_highest_order_of_queryset(cls.objects.filter(user=user)) + 1
 
-        return highest_order + 1
+
+class Application(OrderableMixin, models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    order = models.PositiveIntegerField()
+    content_type = models.ForeignKey(
+        ContentType,
+        verbose_name='content type',
+        related_name='applications',
+        on_delete=models.SET(get_default_application_content_type)
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not self.id:
+            if not self.content_type_id:
+                self.content_type = ContentType.objects.get_for_model(self)
+
+    @classmethod
+    def get_last_order(cls, group):
+        return cls.get_highest_order_of_queryset(
+            Application.objects.filter(group=group)) + 1

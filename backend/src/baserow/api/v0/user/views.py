@@ -9,8 +9,8 @@ from baserow.api.v0.decorators import map_exceptions
 from baserow.user.handler import UserHandler
 from baserow.user.exceptions import UserAlreadyExist
 
-
 from .serializers import RegisterSerializer, UserSerializer
+from .errors import ERROR_ALREADY_EXISTS
 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -23,7 +23,7 @@ class UserView(APIView):
 
     @transaction.atomic
     @map_exceptions({
-        UserAlreadyExist: 'ERROR_ALREADY_EXISTS'
+        UserAlreadyExist: ERROR_ALREADY_EXISTS
     })
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)

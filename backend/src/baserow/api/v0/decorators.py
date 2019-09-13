@@ -3,7 +3,8 @@ from rest_framework.exceptions import APIException
 
 
 def map_exceptions(exceptions):
-    """This decorator easily maps specific exceptions to a standard api response.
+    """
+    This decorator simplifies mapping specific exceptions to a standard api response.
 
     Example:
       @map_exceptions({ SomeException: 'ERROR_1' })

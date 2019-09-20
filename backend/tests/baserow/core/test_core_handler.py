@@ -84,7 +84,7 @@ def test_order_groups(data_fixture):
     assert [1, 2, 3] == [ug_1.order, ug_2.order, ug_3.order]
 
     handler = CoreHandler()
-    handler.order_groups(user, [ug_3.id, ug_2.id, ug_1.id])
+    handler.order_groups(user, [ug_3.group.id, ug_2.group.id, ug_1.group.id])
 
     ug_1.refresh_from_db()
     ug_2.refresh_from_db()
@@ -92,7 +92,7 @@ def test_order_groups(data_fixture):
 
     assert [1, 2, 3] == [ug_3.order, ug_2.order, ug_1.order]
 
-    handler.order_groups(user, [ug_2.id, ug_1.id, ug_3.id])
+    handler.order_groups(user, [ug_2.group.id, ug_1.group.id, ug_3.group.id])
 
     ug_1.refresh_from_db()
     ug_2.refresh_from_db()

@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from baserow.api.v0.decorators import validate_body
 from baserow.core.models import GroupUser
 from baserow.core.handler import CoreHandler
 
@@ -22,14 +23,10 @@ class GroupsView(APIView):
         return Response(serializer.data)
 
     @transaction.atomic
-    def post(self, request):
+    @validate_body(GroupSerializer)
+    def post(self, request, data):
         """Creates a new group for a user."""
-        serializer = GroupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        data = serializer.data
         group_user = self.core_handler.create_group(request.user, name=data['name'])
-
         return Response(GroupUserSerializer(group_user).data)
 
 
@@ -38,14 +35,15 @@ class GroupView(APIView):
     core_handler = CoreHandler()
 
     @transaction.atomic
-    def patch(self, request, group_id):
+    @validate_body(GroupSerializer)
+    def patch(self, request, data, group_id):
         """Updates the group if it belongs to a user."""
-        group_user = get_object_or_404(GroupUser, group_id=group_id, user=request.user)
+        group_user = get_object_or_404(
+            GroupUser.objects.select_for_update(),
+            group_id=group_id,
+            user=request.user
+        )
 
-        serializer = GroupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        data = serializer.data
         group_user.group = self.core_handler.update_group(
             request.user,  group_user.group, name=data['name'])
 
@@ -63,11 +61,8 @@ class GroupOrderView(APIView):
     permission_classes = (IsAuthenticated,)
     core_handler = CoreHandler()
 
-    def post(self, request):
+    @validate_body(OrderGroupsSerializer)
+    def post(self, request, data):
         """Updates to order of some groups for a user."""
-        serializer = OrderGroupsSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        self.core_handler.order_groups(request.user, serializer.data['groups'])
-
+        self.core_handler.order_groups(request.user, data['groups'])
         return Response(status=204)

@@ -7,12 +7,11 @@ class Application(object):
     """
     This abstract class represents a custom application that can be added to the
     application registry. It must be extended so customisation can be done. Each
-    application will have his own model that must extend the ApplicationModel, this is
-    needed to that the user can set custom settings per application instance he has
-    created.
+    application will have his own model that must extend the Application, this is needed
+    to that the user can set custom settings per application instance he has created.
 
     Example:
-        from baserow.core.models import ApplicationModel
+        from baserow.core.models import Application as ApplicationModel
         from baserow.core.applications import Application, registry
 
         class ExampleApplicationModel(ApplicationModel):
@@ -89,6 +88,32 @@ class ApplicationRegistry(object):
                                               f'exist.')
 
         return self.registry[type]
+
+    def get_by_model(self, instance):
+        """Returns the application instance of a model or model instance.
+
+        :param instance: The modal that must be the applications model_instance.
+        :type instance: Model or an instance of model.
+        :return: The registered application instance.
+        :rtype: Application
+        """
+
+        for value in self.registry.values():
+            if value.instance_model == instance \
+               or isinstance(instance, value.instance_model):
+                return value
+
+        raise ApplicationTypeDoesNotExist(f'The application with model instance '
+                                          f'{instance} does not exist. ')
+
+    def get_types(self):
+        """
+        Returns a list of available type names.
+
+        :return: A list of available types.
+        :rtype: List
+        """
+        return list(self.registry.keys())
 
     def register(self, application):
         """

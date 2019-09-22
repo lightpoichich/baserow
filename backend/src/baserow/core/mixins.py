@@ -14,6 +14,7 @@ class OrderableMixin:
         :param field:
         :return:
         """
+
         return queryset.aggregate(
             models.Max(field)
         ).get(f'{field}__max', 0) or 0

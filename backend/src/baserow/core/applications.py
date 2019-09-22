@@ -7,8 +7,9 @@ class Application(object):
     """
     This abstract class represents a custom application that can be added to the
     application registry. It must be extended so customisation can be done. Each
-    application will have his own model that must extend the Application, this is needed
-    to that the user can set custom settings per application instance he has created.
+    application will have his own model that must extend the Application model, this is
+    needed so that the user can set custom settings per application instance he has
+    created.
 
     Example:
         from baserow.core.models import Application as ApplicationModel
@@ -59,6 +60,7 @@ class Application(object):
         :return: A list containing the urls.
         :rtype: list
         """
+
         return []
 
 
@@ -113,6 +115,7 @@ class ApplicationRegistry(object):
         :return: A list of available types.
         :rtype: List
         """
+
         return list(self.registry.keys())
 
     def register(self, application):
@@ -133,6 +136,14 @@ class ApplicationRegistry(object):
         self.registry[application.type] = application
 
     def unregister(self, value):
+        """
+        Removes a registered application from the registry. An application instance or
+        type name can be provided as value.
+
+        :param value: The application instance or type name.
+        :type value: Application or str
+        """
+
         if isinstance(value, Application):
             for type, application in self.registry.items():
                 if application == value:
@@ -152,6 +163,7 @@ class ApplicationRegistry(object):
         :return: The api urls of the registered applications.
         :rtype: list
         """
+
         api_urls = []
         for application in self.registry.values():
             api_urls += application.get_api_urls()

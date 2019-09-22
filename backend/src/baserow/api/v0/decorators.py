@@ -66,7 +66,7 @@ def validate_body(serializer_class):
     """
     This decorator can validate the request body using a serializer. If the body is
     valid it will add the data to the kwargs. If not it will raise an APIException with
-    structured details what is wrong.
+    structured details about what is wrong.
 
     Example:
         class LoginSerializer(serializers.Serializer):

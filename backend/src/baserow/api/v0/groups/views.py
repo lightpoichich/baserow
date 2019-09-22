@@ -18,6 +18,7 @@ class GroupsView(APIView):
 
     def get(self, request):
         """Responds with a list of groups where the users takes part in."""
+
         groups = GroupUser.objects.filter(user=request.user).select_related('group')
         serializer = GroupUserSerializer(groups, many=True)
         return Response(serializer.data)
@@ -26,6 +27,7 @@ class GroupsView(APIView):
     @validate_body(GroupSerializer)
     def post(self, request, data):
         """Creates a new group for a user."""
+
         group_user = self.core_handler.create_group(request.user, name=data['name'])
         return Response(GroupUserSerializer(group_user).data)
 
@@ -38,6 +40,7 @@ class GroupView(APIView):
     @validate_body(GroupSerializer)
     def patch(self, request, data, group_id):
         """Updates the group if it belongs to a user."""
+
         group_user = get_object_or_404(
             GroupUser.objects.select_for_update(),
             group_id=group_id,
@@ -52,6 +55,7 @@ class GroupView(APIView):
     @transaction.atomic
     def delete(self, request, group_id):
         """Deletes an existing group if it belongs to a user."""
+
         group_user = get_object_or_404(GroupUser, group_id=group_id, user=request.user)
         self.core_handler.delete_group(request.user,  group_user.group)
         return Response(status=204)
@@ -64,5 +68,6 @@ class GroupOrderView(APIView):
     @validate_body(OrderGroupsSerializer)
     def post(self, request, data):
         """Updates to order of some groups for a user."""
+
         self.core_handler.order_groups(request.user, data['groups'])
         return Response(status=204)

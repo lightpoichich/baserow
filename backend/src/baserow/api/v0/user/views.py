@@ -28,6 +28,7 @@ class UserView(APIView):
     @validate_body(RegisterSerializer)
     def post(self, request, data):
         """Registers a new user."""
+
         user = self.user_handler.create_user(name=data['name'], email=data['email'],
                                              password=data['password'])
 

@@ -43,7 +43,8 @@ class ApplicationsView(APIView):
     @transaction.atomic
     @validate_body(ApplicationCreateSerializer)
     def post(self, request, data, group_id):
-        """Creates a new group for a user."""
+        """Creates a new application for a user."""
+
         group_user = self.load_group(request, group_id)
         application = self.core_handler.create_application(
             request.user, group_user.group, data['type'], name=data['name'])
@@ -61,7 +62,8 @@ class ApplicationView(APIView):
         UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
     })
     def patch(self, request, data, application_id):
-        """Updates the application if it belongs to a user."""
+        """Updates the application if the user belongs to the group."""
+
         application = get_object_or_404(
             Application.objects.select_related('group').select_for_update(),
             pk=application_id
@@ -77,6 +79,7 @@ class ApplicationView(APIView):
     })
     def delete(self, request, application_id):
         """Deletes an existing application if the user belongs to the group."""
+
         application = get_object_or_404(
             Application.objects.select_related('group'),
             pk=application_id

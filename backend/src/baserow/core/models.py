@@ -22,6 +22,7 @@ class Group(models.Model):
 
     def has_user(self, user):
         """Returns true is the user belongs to the group."""
+
         return self.users.filter(id=user.id).exists()
 
     def __str__(self):
@@ -64,9 +65,8 @@ class Application(OrderableMixin, models.Model):
 
     @cached_property
     def specific(self):
-        """
-        Return this page in its most specific subclassed form.
-        """
+        """Return this page in its most specific subclassed form."""
+
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         model_class = self.specific_class
         if model_class is None:
@@ -82,6 +82,7 @@ class Application(OrderableMixin, models.Model):
         Return the class that this application would be if instantiated in its
         most specific form
         """
+
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         return content_type.model_class()
 

@@ -92,3 +92,74 @@ def test_create_application(api_client, data_fixture):
     assert response_json['id'] == database.id
     assert response_json['name'] == database.name
     assert response_json['order'] == database.order
+
+
+@pytest.mark.django_db
+def test_update_application(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group(user=user_2)
+    application = data_fixture.create_database_application(group=group)
+    application_2 = data_fixture.create_database_application(group=group_2)
+
+    url = reverse('api_v0:applications:item',
+                  kwargs={'application_id': application_2.id})
+    response = api_client.patch(
+        url,
+        {'name': 'Test 1'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    url = reverse('api_v0:applications:item', kwargs={'application_id': application.id})
+    response = api_client.patch(
+        url,
+        {'UNKNOWN_FIELD': 'Test 1'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+
+    url = reverse('api_v0:applications:item', kwargs={'application_id': application.id})
+    response = api_client.patch(
+        url,
+        {'name': 'Test 1'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert response_json['id'] == application.id
+    assert response_json['name'] == 'Test 1'
+
+    application.refresh_from_db()
+    assert application.name == 'Test 1'
+
+
+@pytest.mark.django_db
+def test_delete_application(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group(user=user_2)
+    application = data_fixture.create_database_application(group=group)
+    application_2 = data_fixture.create_database_application(group=group_2)
+
+    url = reverse('api_v0:applications:item',
+                  kwargs={'application_id': application_2.id})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    url = reverse('api_v0:applications:item', kwargs={'application_id': application.id})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
+    assert response.status_code == 204
+
+    assert Database.objects.all().count() == 1

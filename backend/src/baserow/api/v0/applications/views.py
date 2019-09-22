@@ -5,11 +5,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from baserow.api.v0.decorators import validate_body
+from baserow.api.v0.decorators import validate_body, map_exceptions
 from baserow.core.models import GroupUser, Application
 from baserow.core.handler import CoreHandler
+from baserow.core.exceptions import UserNotIngroupError
 
-from .serializers import ApplicationSerializer, ApplicationCreateSerializer
+from .serializers import (
+    ApplicationSerializer, ApplicationCreateSerializer, ApplicationUpdateSerializer
+)
+from .errors import ERROR_USER_NOT_IN_GROUP
 
 
 class ApplicationsView(APIView):
@@ -45,3 +49,38 @@ class ApplicationsView(APIView):
             request.user, group_user.group, data['type'], name=data['name'])
 
         return Response(ApplicationSerializer(application).data)
+
+
+class ApplicationView(APIView):
+    permission_classes = (IsAuthenticated,)
+    core_handler = CoreHandler()
+
+    @transaction.atomic
+    @validate_body(ApplicationUpdateSerializer)
+    @map_exceptions({
+        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+    })
+    def patch(self, request, data, application_id):
+        """Updates the application if it belongs to a user."""
+        application = get_object_or_404(
+            Application.objects.select_related('group').select_for_update(),
+            pk=application_id
+        )
+        application = self.core_handler.update_application(
+            request.user, application, name=data['name'])
+
+        return Response(ApplicationSerializer(application).data)
+
+    @transaction.atomic
+    @map_exceptions({
+        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+    })
+    def delete(self, request, application_id):
+        """Deletes an existing application if the user belongs to the group."""
+        application = get_object_or_404(
+            Application.objects.select_related('group'),
+            pk=application_id
+        )
+        self.core_handler.delete_application(request.user, application)
+
+        return Response(status=204)

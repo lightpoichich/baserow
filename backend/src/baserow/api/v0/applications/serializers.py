@@ -29,7 +29,6 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         fields = ('name', 'type')
 
 
-
 class ApplicationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application

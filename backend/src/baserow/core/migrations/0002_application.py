@@ -17,11 +17,18 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Application',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, primary_key=True,
+                                        serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
                 ('order', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(on_delete=models.SET(baserow.core.models.get_default_application_content_type), related_name='applications', to='contenttypes.ContentType', verbose_name='content type')),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.Group')),
+                ('content_type', models.ForeignKey(
+                    on_delete=models.SET(
+                        baserow.core.models.get_default_application_content_type),
+                    related_name='applications', to='contenttypes.ContentType',
+                    verbose_name='content type')
+                 ),
+                ('group', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='core.Group')),
             ],
             options={
                 'ordering': ('order',),

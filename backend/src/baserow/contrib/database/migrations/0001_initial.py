@@ -16,16 +16,31 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Database',
             fields=[
-                ('application_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='core.Application')),
+                ('application_ptr', models.OneToOneField(
+                    auto_created=True,
+                    on_delete=django.db.models.deletion.CASCADE,
+                    parent_link=True,
+                    primary_key=True,
+                    serialize=False,
+                    to='core.Application')
+                 ),
             ],
             bases=('core.application',),
         ),
         migrations.CreateModel(
             name='Table',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(
+                    auto_created=True,
+                    primary_key=True,
+                    serialize=False,
+                    verbose_name='ID')
+                 ),
                 ('order', models.PositiveIntegerField()),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='database.Database')),
+                ('group', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE,
+                    to='database.Database')
+                 ),
             ],
         ),
     ]

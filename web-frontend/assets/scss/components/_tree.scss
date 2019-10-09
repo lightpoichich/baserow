@@ -1,7 +1,7 @@
 .tree {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 12px;
 
   .tree-item & {
     padding-left: 8px;
@@ -17,6 +17,13 @@
 
   &.active {
     background-color: $color-primary-100;
+  }
+
+  &.tree-item-loading::after {
+    content: " ";
+
+    @include loading(14px);
+    @include absolute(9px, 9px, auto, auto);
   }
 }
 
@@ -140,5 +147,9 @@
 
   :hover > & {
     display: block;
+  }
+
+  .tree-item-loading > .tree-action > & {
+    display: none;
   }
 }

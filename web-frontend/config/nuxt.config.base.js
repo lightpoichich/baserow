@@ -35,10 +35,14 @@ export default {
   /*
    ** Nuxt.js modules
    */
-  modules: ['@nuxtjs/axios', 'cookie-universal-nuxt'],
+  modules: [
+    '@nuxtjs/axios',
+    'cookie-universal-nuxt',
+    '@/modules/database/module.js'
+  ],
 
   router: {
-    middleware: 'authentication'
+    middleware: ['authentication', 'group']
   },
 
   env: {

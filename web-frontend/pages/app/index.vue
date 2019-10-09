@@ -3,6 +3,12 @@
     <h1>Welcome {{ user }}</h1>
     <p>
       {{ groups }}
+      <br /><br />
+      {{ selectedGroup }}
+      <br /><br />
+      {{ applications }}
+      <br /><br />
+      {{ groupApplications }}
     </p>
   </div>
 </template>
@@ -15,7 +21,10 @@ export default {
   computed: {
     ...mapState({
       user: state => state.auth.user,
-      groups: state => state.group.items
+      groups: state => state.group.items,
+      selectedGroup: state => state.application.selectedGroup,
+      applications: state => state.application.applications,
+      groupApplications: state => state.application.items
     })
   }
 }

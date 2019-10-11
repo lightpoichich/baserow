@@ -22,7 +22,7 @@ export default {
     ...mapState({
       user: state => state.auth.user,
       groups: state => state.group.items,
-      selectedGroup: state => state.application.selectedGroup,
+      selectedGroup: state => state.group.selected,
       applications: state => state.application.applications,
       groupApplications: state => state.application.items
     })

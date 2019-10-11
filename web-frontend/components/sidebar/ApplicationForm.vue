@@ -38,6 +38,9 @@ export default {
       }
     }
   },
+  mounted() {
+    this.$refs.name.focus()
+  },
   validations: {
     values: {
       name: { required }

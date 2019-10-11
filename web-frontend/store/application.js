@@ -1,6 +1,5 @@
 import { Application } from '@/core/applications'
 import ApplicationService from '@/services/application'
-import { setGroupCookie } from '@/utils/group'
 import { notify404, notifyError } from '@/utils/error'
 
 function populateApplication(application, getters) {
@@ -14,16 +13,12 @@ function populateApplication(application, getters) {
 export const state = () => ({
   applications: {},
   loading: false,
-  items: [],
-  selectedGroup: {}
+  items: []
 })
 
 export const mutations = {
   REGISTER(state, application) {
     state.applications[application.type] = application
-  },
-  SET_SELECTED_GROUP(state, group) {
-    state.selectedGroup = group
   },
   SET_ITEMS(state, applications) {
     state.items = applications
@@ -66,18 +61,14 @@ export const actions = {
     commit('SET_ITEM_LOADING', { application, value })
   },
   /**
-   * Choose an existing group. It will fetch all the applications of that group,
-   * sets a cookie so the next time the page loads the group is still selected
-   * and populates each item.
+   * Fetches all the applications of a given group. The is mostly called when
+   * the user selects a different group.
    */
-  selectGroup({ commit, getters, dispatch }, group) {
+  fetchAll({ commit, getters, dispatch }, group) {
     commit('SET_LOADING', true)
 
     return ApplicationService.fetchAll(group.id)
       .then(({ data }) => {
-        commit('SET_SELECTED_GROUP', group)
-        setGroupCookie(group.id, this.app.$cookies)
-
         data.forEach((part, index, d) => {
           populateApplication(data[index], getters)
         })
@@ -89,8 +80,9 @@ export const actions = {
         notify404(
           dispatch,
           error,
-          'Unable to select group',
-          "You're unable to select the group. This could be because you're not part of the group."
+          'Unable to fetch applications',
+          "You're unable to fetch the application of this group. " +
+            "This could be because you're not part of the group."
         )
       })
       .then(() => {
@@ -98,19 +90,17 @@ export const actions = {
       })
   },
   /**
-   * If a selected group is deleted or for example the user logs off the current
-   * group must be unselected which means that all the fetched items will be
-   * forgotten.
+   * Clears all the currently selected applications, this could be called when
+   * the group is deleted of when the user logs off.
    */
-  unselectGroup({ commit }) {
-    commit('SET_SELECTED_GROUP', {})
+  clearAll({ commit }) {
     commit('SET_ITEMS', [])
   },
   /**
    * Creates a new application with the given type and values for the currently
    * selected group.
    */
-  create({ commit, getters, dispatch }, { type, values }) {
+  create({ commit, getters, rootGetters, dispatch }, { type, values }) {
     if (values.hasOwnProperty('type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
@@ -123,7 +113,7 @@ export const actions = {
     }
 
     values.type = type
-    return ApplicationService.create(getters.selectedGroupId, values)
+    return ApplicationService.create(rootGetters['group/selectedId'], values)
       .then(({ data }) => {
         populateApplication(data, getters)
         commit('ADD_ITEM', data)
@@ -141,8 +131,8 @@ export const actions = {
   /**
    * Updates the values of an existing application.
    */
-  update({ commit, dispatch }, { id, values }) {
-    return ApplicationService.update(id, values)
+  update({ commit, dispatch }, { application, values }) {
+    return ApplicationService.update(application.id, values)
       .then(({ data }) => {
         commit('UPDATE_ITEM', data)
       })
@@ -160,10 +150,10 @@ export const actions = {
   /**
    * Deletes an existing application.
    */
-  delete({ commit, dispatch }, id) {
-    return ApplicationService.delete(id)
+  delete({ commit, dispatch }, application) {
+    return ApplicationService.delete(application.id)
       .then(() => {
-        commit('DELETE_ITEM', id)
+        commit('DELETE_ITEM', application.id)
       })
       .catch(error => {
         notifyError(
@@ -179,15 +169,6 @@ export const actions = {
 }
 
 export const getters = {
-  selectedGroupId(state) {
-    return state.selectedGroup.id
-  },
-  hasSelectedGroup(state) {
-    return state.selectedGroup.hasOwnProperty('id')
-  },
-  applications(state) {
-    return state.applications
-  },
   isLoading(state) {
     return state.loading
   },

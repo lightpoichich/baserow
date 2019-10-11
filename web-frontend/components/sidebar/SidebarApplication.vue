@@ -70,7 +70,7 @@ export default {
 
       this.$store
         .dispatch('application/update', {
-          id: application.id,
+          application,
           values: {
             name: event.value
           }
@@ -87,7 +87,7 @@ export default {
       this.$refs.context.hide()
       this.setLoading(application, true)
 
-      this.$store.dispatch('application/delete', application.id).then(() => {
+      this.$store.dispatch('application/delete', application).then(() => {
         this.setLoading(application, false)
       })
     }

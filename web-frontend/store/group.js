@@ -1,15 +1,17 @@
 import GroupService from '@/services/group'
 import { notify404 } from '@/utils/error'
+import { setGroupCookie, unsetGroupCookie } from '@/utils/group'
 
 function populateGroup(group) {
-  group._ = { loading: false }
+  group._ = { loading: false, selected: false }
   return group
 }
 
 export const state = () => ({
   loaded: false,
   loading: false,
-  items: []
+  items: [],
+  selected: {}
 })
 
 export const mutations = {
@@ -27,6 +29,9 @@ export const mutations = {
     })
   },
   SET_ITEM_LOADING(state, { group, value }) {
+    if (!group.hasOwnProperty('_')) {
+      return
+    }
     group._.loading = value
   },
   ADD_ITEM(state, item) {
@@ -40,6 +45,19 @@ export const mutations = {
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex(item => item.id === id)
     state.items.splice(index, 1)
+  },
+  SET_SELECTED(state, group) {
+    Object.values(state.items).forEach(item => {
+      item._.selected = false
+    })
+    group._.selected = true
+    state.selected = group
+  },
+  UNSELECT(state) {
+    Object.values(state.items).forEach(item => {
+      item._.selected = false
+    })
+    state.selected = {}
   }
 }
 
@@ -95,8 +113,8 @@ export const actions = {
   /**
    * Updates the values of the group with the provided id.
    */
-  update({ commit, dispatch }, { id, values }) {
-    return GroupService.update(id, values)
+  update({ commit, dispatch }, { group, values }) {
+    return GroupService.update(group.id, values)
       .then(({ data }) => {
         commit('UPDATE_ITEM', data)
       })
@@ -113,10 +131,15 @@ export const actions = {
   /**
    * Deletes an existing group with the provided id.
    */
-  delete({ commit, dispatch }, id) {
-    return GroupService.delete(id)
+  delete({ commit, dispatch }, group) {
+    return GroupService.delete(group.id)
       .then(() => {
-        commit('DELETE_ITEM', id)
+        if (group._.selected) {
+          console.log('calling unselect')
+          dispatch('unselect', group)
+        }
+
+        commit('DELETE_ITEM', group.id)
       })
       .catch(error => {
         notify404(
@@ -127,6 +150,22 @@ export const actions = {
             "you're not part of the group."
         )
       })
+  },
+  /**
+   * Select a group and fetch all the applications related to that group.
+   */
+  select({ commit, dispatch }, group) {
+    commit('SET_SELECTED', group)
+    setGroupCookie(group.id, this.app.$cookies)
+    return dispatch('application/fetchAll', group, { root: true })
+  },
+  /**
+   * Unselect a group if selected and clears all the fetched applications.
+   */
+  unselect({ commit, dispatch, getters }, group) {
+    commit('UNSELECT', {})
+    unsetGroupCookie(this.app.$cookies)
+    return dispatch('application/clearAll', group, { root: true })
   }
 }
 
@@ -139,5 +178,15 @@ export const getters = {
   },
   get: state => id => {
     return state.items.find(item => item.id === id)
+  },
+  hasSelected(state) {
+    return state.selected.hasOwnProperty('id')
+  },
+  selectedId(state) {
+    if (!state.selected.hasOwnProperty('id')) {
+      throw new Error('There is no selected group.')
+    }
+
+    return state.selected.id
   }
 }

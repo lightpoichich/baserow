@@ -18,8 +18,8 @@ export function notify404(dispatch, error, title, message) {
  * Adds a notification error if the response error is equal to the provided
  * error code.
  */
-export function notifyError(dispatch, error, error_code, title, message) {
-  if (error.responseError === error_code) {
+export function notifyError(dispatch, error, errorCode, title, message) {
+  if (error.responseError === errorCode) {
     dispatch(
       'notification/error',
       {

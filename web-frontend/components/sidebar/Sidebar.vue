@@ -43,11 +43,11 @@ export default {
   computed: {
     ...mapState({
       applications: state => state.application.items,
-      selectedGroup: state => state.application.selectedGroup
+      selectedGroup: state => state.group.selected
     }),
     ...mapGetters({
       isLoading: 'application/isLoading',
-      hasSelectedGroup: 'application/hasSelectedGroup'
+      hasSelectedGroup: 'group/hasSelected'
     })
   }
 }

@@ -2,7 +2,7 @@
   <li
     class="select-item"
     :class="{
-      active: selectedGroup.id == group.id,
+      active: group._.selected,
       'select-item-loading': group._.loading
     }"
   >
@@ -41,8 +41,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
-
 export default {
   name: 'GroupsContextItem',
   props: {
@@ -50,11 +48,6 @@ export default {
       type: Object,
       required: true
     }
-  },
-  computed: {
-    ...mapState({
-      selectedGroup: state => state.application.selectedGroup
-    })
   },
   methods: {
     setLoading(group, value) {
@@ -69,7 +62,7 @@ export default {
 
       this.$store
         .dispatch('group/update', {
-          id: group.id,
+          group,
           values: {
             name: event.value
           }
@@ -85,17 +78,16 @@ export default {
     selectGroup(group) {
       this.setLoading(group, true)
 
-      this.$store.dispatch('application/selectGroup', group).then(() => {
+      this.$store.dispatch('group/select', group).then(() => {
         this.setLoading(group, false)
         this.$emit('selected')
       })
     },
     deleteGroup(group) {
       this.$refs.context.hide()
-      this.$store.dispatch('application/unselectGroup')
       this.setLoading(group, true)
 
-      this.$store.dispatch('group/delete', group.id).then(() => {
+      this.$store.dispatch('group/delete', group).then(() => {
         this.setLoading(group, false)
       })
     }

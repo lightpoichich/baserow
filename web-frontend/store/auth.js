@@ -59,7 +59,7 @@ export const actions = {
     unsetGroupCookie(this.app.$cookies)
     commit('CLEAR_USER_DATA')
     dispatch('group/clearAll', {}, { root: true })
-    dispatch('application/unselectGroup', {}, { root: true })
+    dispatch('group/unselect', {}, { root: true })
   },
   /**
    * Refresh the existing token. If successful commit the new token and start a

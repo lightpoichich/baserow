@@ -42,6 +42,9 @@ export default {
     values: {
       name: { required }
     }
+  },
+  mounted() {
+    this.$refs.name.focus()
   }
 }
 </script>

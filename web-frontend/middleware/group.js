@@ -1,9 +1,8 @@
 import { getGroupCookie, unsetGroupCookie } from '@/utils/group'
 
 /**
- * This middleware is used to automatically fetch the groups and set a
- * selected group, which will automatically fetch the applications, if a group
- * id is stored as a cookie. This cookie will be set when selecting a group.
+ * This middleware checks if there is a saved group id in the cookies. If set
+ * it will fetch the groups, and related application of that group.
  */
 export default function({ store, req, app }) {
   // If nuxt generate, pass this middleware

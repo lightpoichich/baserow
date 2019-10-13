@@ -56,9 +56,6 @@ class ApplicationView(APIView):
     permission_classes = (IsAuthenticated,)
     core_handler = CoreHandler()
 
-    @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
-    })
     def get(self, request, application_id):
         """Selects a single application and responds with a serialized version."""
         application = get_object_or_404(

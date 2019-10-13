@@ -9,10 +9,11 @@ export default {
     }
   },
   /**
-   * Because we want the to be able to stack elements that are moved to the body
-   * they have to be placed at the correct position. If it has no parent is must
-   * be moved to the top of the body, but is there is a parent it must by
-   * directly under that so it will always display on over of that component.
+   * Because we want the to be able to stack nested elements that are moved to
+   * the body, they have to be placed at the correct position. If it has no
+   * parent is must be moved to the top of the body, but if there is a parent it
+   * must be directly under that so it will always display on over of that
+   * component.
    */
   mounted() {
     let parent = this.$parent
@@ -34,7 +35,7 @@ export default {
     if (first) {
       // If there is a parent where we can register we want to position the
       // element directly after that one so it will always be positioned over
-      // the parent.
+      // the parent when opened.
       const handler = () => {
         // Some times we have to wait for elements to render like with v-if.
         this.$nextTick(() => {

@@ -1,10 +1,11 @@
 import { notify404 } from '@/utils/error'
 
 /**
- * This mixin can be used in combination with the page an application routes to
- * when selected. It will make sure that the application preSelect action is
- * called so that the all the depending information is loaded. If something
- * goes wrong while loading this information it will show a standard error.
+ * This mixin can be used in combination with the component where the
+ * application routes to when selected. It will make sure that the application
+ * preSelect action is called so that the all the depending information is
+ * loaded. If something goes wrong while loading this information it will show a
+ * standard error.
  */
 export default {
   props: {

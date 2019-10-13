@@ -63,8 +63,8 @@ export const mutations = {
 
 export const actions = {
   /**
-   * If not already loading it will trigger the fetchAll action which will load
-   * all the groups for the user.
+   * If not already loading or loaded it will trigger the fetchAll action which
+   * will load all the groups for the user.
    */
   loadAll({ state, dispatch }) {
     if (!state.loaded && !state.loading) {

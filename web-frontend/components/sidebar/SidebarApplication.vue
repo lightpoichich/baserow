@@ -2,11 +2,12 @@
   <li
     class="tree-item"
     :class="{
+      active: application._.selected,
       'tree-item-loading': application._.loading
     }"
   >
     <div class="tree-action">
-      <a class="tree-link">
+      <a class="tree-link" @click="selectApplication(application)">
         <i
           class="tree-type fas"
           :class="'fa-' + application._.type.iconClass"
@@ -42,6 +43,16 @@
         </ul>
       </Context>
     </div>
+    <template
+      v-if="
+        application._.selected && application._.type.hasSelectedSidebarComponent
+      "
+    >
+      <component
+        :is="getSelectedApplicationComponent(application)"
+        :application="application"
+      ></component>
+    </template>
   </li>
 </template>
 
@@ -83,6 +94,24 @@ export default {
           this.setLoading(application, false)
         })
     },
+    selectApplication(application) {
+      this.setLoading(application, true)
+
+      this.$nuxt.$router.push(
+        {
+          name: application._.type.routeName,
+          params: {
+            id: application.id
+          }
+        },
+        () => {
+          this.setLoading(application, false)
+        },
+        () => {
+          this.setLoading(application, false)
+        }
+      )
+    },
     deleteApplication(application) {
       this.$refs.context.hide()
       this.setLoading(application, true)
@@ -90,6 +119,12 @@ export default {
       this.$store.dispatch('application/delete', application).then(() => {
         this.setLoading(application, false)
       })
+    },
+    getSelectedApplicationComponent(application) {
+      const type = this.$store.getters['application/getApplicationByType'](
+        application.type
+      )
+      return type.getSelectedSidebarComponent()
     }
   }
 }

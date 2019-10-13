@@ -135,7 +135,6 @@ export const actions = {
     return GroupService.delete(group.id)
       .then(() => {
         if (group._.selected) {
-          console.log('calling unselect')
           dispatch('unselect', group)
         }
 
@@ -158,6 +157,16 @@ export const actions = {
     commit('SET_SELECTED', group)
     setGroupCookie(group.id, this.app.$cookies)
     return dispatch('application/fetchAll', group, { root: true })
+  },
+  /**
+   * Select a group by a given group id.
+   */
+  selectById({ dispatch, getters }, id) {
+    const group = getters.get(id)
+    if (group === undefined) {
+      throw new Error(`Group with id ${id} is not found.`)
+    }
+    return dispatch('select', group)
   },
   /**
    * Unselect a group if selected and clears all the fetched applications.

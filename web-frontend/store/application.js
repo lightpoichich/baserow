@@ -3,9 +3,12 @@ import ApplicationService from '@/services/application'
 import { notify404, notifyError } from '@/utils/error'
 
 function populateApplication(application, getters) {
+  const type = getters.getApplicationByType(application.type)
+
   application._ = {
-    type: getters.getApplicationByType(application.type).serialize(),
-    loading: false
+    type: type.serialize(),
+    loading: false,
+    selected: false
   }
   return application
 }
@@ -13,7 +16,8 @@ function populateApplication(application, getters) {
 export const state = () => ({
   applications: {},
   loading: false,
-  items: []
+  items: [],
+  selected: {}
 })
 
 export const mutations = {
@@ -39,6 +43,19 @@ export const mutations = {
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex(item => item.id === id)
     state.items.splice(index, 1)
+  },
+  SET_SELECTED(state, group) {
+    Object.values(state.items).forEach(item => {
+      item._.selected = false
+    })
+    group._.selected = true
+    state.selected = group
+  },
+  UNSELECT(state) {
+    Object.values(state.items).forEach(item => {
+      item._.selected = false
+    })
+    state.selected = {}
   }
 }
 
@@ -165,12 +182,86 @@ export const actions = {
             ' not part of the group where the application is in.'
         )
       })
+  },
+  /**
+   * Select an application.
+   */
+  select({ commit }, application) {
+    commit('SET_SELECTED', application)
+  },
+  /**
+   * Select an application by a given application id.
+   */
+  selectById({ dispatch, getters }, id) {
+    const application = getters.get(id)
+    if (application === undefined) {
+      throw new Error(`Application with id ${id} is not found.`)
+    }
+    return dispatch('select', application)
+  },
+  /**
+   * Unselect the
+   */
+  unselect({ commit }) {
+    commit('UNSELECT', {})
+  },
+  /**
+   * The preSelect action will eventually select an application, but it will
+   * first check which information still needs to be loaded. For example if
+   * no group or not the group where the application is in loaded it will then
+   * first fetch that group and related application so that the sidebar is up
+   * to date. In short it will make sure that the depending state of the given
+   * application will be there.
+   */
+  preSelect({ dispatch, getters, rootGetters }, id) {
+    // First we will check if the application is already in the items.
+    const application = getters.get(id)
+
+    // If the application is already selected we don't have to do anything.
+    if (application !== undefined && application._.selected) {
+      return
+    }
+
+    // This function will select a group by its id which will then automatically
+    // fetch the applications related to that group. When done it will select
+    // the provided application id.
+    const selectGroupAndApplication = (groupId, applicationId) => {
+      return dispatch('group/selectById', groupId, {
+        root: true
+      }).then(() => {
+        return dispatch('selectById', applicationId)
+      })
+    }
+
+    if (application !== undefined) {
+      // If the application is already in the selected groups, which means that
+      // the groups and applications are already loaded, we can just select that
+      // application.
+      dispatch('select', application)
+    } else {
+      // The application is not in the selected group so we need to figure out
+      // in which he is by fetching the application.
+      return ApplicationService.get(id).then(data => {
+        if (!rootGetters['group/isLoaded']) {
+          // If the groups are not already loaded we need to load them first.
+          return dispatch('group/fetchAll', {}, { root: true }).then(() => {
+            return selectGroupAndApplication(data.data.group.id, id)
+          })
+        } else {
+          // The groups are already loaded so we
+          return selectGroupAndApplication(data.data.group.id, id)
+        }
+      })
+    }
   }
 }
 
 export const getters = {
   isLoading(state) {
     return state.loading
+  },
+  get: state => id => {
+    return state.items.find(item => item.id === id)
   },
   applicationTypeExists: state => type => {
     return state.applications.hasOwnProperty(type)

@@ -7,6 +7,9 @@ export default {
   create(groupId, values) {
     return client.post(`/applications/group/${groupId}/`, values)
   },
+  get(applicationId) {
+    return client.get(`/applications/${applicationId}/`)
+  },
   update(applicationId, values) {
     return client.patch(`/applications/${applicationId}/`, values)
   },

@@ -31,6 +31,14 @@ export class Application {
   }
 
   /**
+   * Must return the route name where the application can navigate to when the
+   * application is selected.
+   */
+  getRouteName() {
+    return null
+  }
+
+  /**
    * The form component that will be rendered when creating a new instance of
    * this application. By default the ApplicationForm component is returned, but
    * this only contains a name field. If custom fields are required upon
@@ -40,19 +48,32 @@ export class Application {
     return ApplicationForm
   }
 
+  /**
+   * The sidebar component that will be rendered when an application instance
+   * is selected. By default no component will rendered. This could be used for
+   * example to render a list of tables that belong to a database.
+   */
+  getSelectedSidebarComponent() {
+    return null
+  }
+
   constructor() {
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
+    this.routeName = this.getRouteName()
 
     if (this.type === null) {
-      throw Error('The type name of an application must be set.')
+      throw new Error('The type name of an application must be set.')
     }
     if (this.iconClass === null) {
-      throw Error('The icon class of an application must be set.')
+      throw new Error('The icon class of an application must be set.')
     }
     if (this.name === null) {
-      throw Error('The name of an application must be set.')
+      throw new Error('The name of an application must be set.')
+    }
+    if (this.routeName === null) {
+      throw new Error('The route name of an application must be set.')
     }
   }
 
@@ -63,7 +84,9 @@ export class Application {
     return {
       type: this.type,
       iconClass: this.iconClass,
-      name: this.name
+      name: this.name,
+      routeName: this.routeName,
+      hasSelectedSidebarComponent: this.getSelectedSidebarComponent() !== null
     }
   }
 }

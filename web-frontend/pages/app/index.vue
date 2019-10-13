@@ -9,6 +9,11 @@
       {{ applications }}
       <br /><br />
       {{ groupApplications }}
+      <br /><br />
+      <nuxt-link :to="{ name: 'application-database', params: { id: 1 } }">
+        <i class="fas fa-arrow-left"></i>
+        App
+      </nuxt-link>
     </p>
   </div>
 </template>

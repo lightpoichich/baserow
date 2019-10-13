@@ -1,4 +1,5 @@
 import { Application } from '@/core/applications'
+import Sidebar from '@/modules/database/components/Sidebar'
 
 export class DatabaseApplication extends Application {
   getType() {
@@ -11,5 +12,13 @@ export class DatabaseApplication extends Application {
 
   getName() {
     return 'Database'
+  }
+
+  getRouteName() {
+    return 'application-database'
+  }
+
+  getSelectedSidebarComponent() {
+    return Sidebar
   }
 }

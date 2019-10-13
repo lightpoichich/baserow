@@ -129,6 +129,18 @@
   }
 }
 
+.tree-sub-add {
+  display: inline-block;
+  margin: 0 0 10px 10px;
+  font-size: 12px;
+  color: $color-neutral-300;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-500;
+  }
+}
+
 .tree-options {
   display: none;
   position: absolute;

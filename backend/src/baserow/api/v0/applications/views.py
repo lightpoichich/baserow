@@ -85,6 +85,9 @@ class ApplicationView(APIView):
         UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
     })
     def patch(self, request, data, application_id):
+        ### REMOVE THIS ###
+        raise UserNotIngroupError
+
         """Updates the application if the user belongs to the group."""
 
         application = get_object_or_404(
@@ -101,6 +104,9 @@ class ApplicationView(APIView):
         UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, application_id):
+        ### REMOVE THIS ###
+        raise UserNotIngroupError
+
         """Deletes an existing application if the user belongs to the group."""
 
         application = get_object_or_404(

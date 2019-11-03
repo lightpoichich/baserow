@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from baserow.api.v0.decorators import validate_body, map_exceptions
 from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.core.models import GroupUser, Application
+from baserow.core.models import Group, Application
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import UserNotIngroupError
 
@@ -22,22 +22,29 @@ class ApplicationsView(APIView):
 
     @staticmethod
     def get_group(request, group_id):
-        return get_object_or_404(
-            GroupUser.objects.select_related('group'),
-            group_id=group_id,
-            user=request.user
+        group = get_object_or_404(
+            Group,
+            id=group_id
         )
 
+        if not group.has_user(request.user):
+            raise UserNotIngroupError(f'User {request.user} doesn\'t have access to '
+                                      f'group {group}.')
+
+        return group
+
+    @map_exceptions({
+        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+    })
     def get(self, request, group_id):
         """
         Responds with a list of serialized applications that belong to the group if the
         user has access to that group.
         """
 
-        group_user = self.get_group(request, group_id)
-        applications = Application.objects.filter(
-            group=group_user.group
-        ).select_related('content_type')
+        group = self.get_group(request, group_id)
+        applications = Application.objects.filter(group=group) \
+            .select_related('content_type')
         data = [
             get_application_serializer(application).data
             for application in applications
@@ -46,12 +53,15 @@ class ApplicationsView(APIView):
 
     @transaction.atomic
     @validate_body(ApplicationCreateSerializer)
+    @map_exceptions({
+        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+    })
     def post(self, request, data, group_id):
         """Creates a new application for a user."""
 
-        group_user = self.get_group(request, group_id)
+        group = self.get_group(request, group_id)
         application = self.core_handler.create_application(
-            request.user, group_user.group, data['type'], name=data['name'])
+            request.user, group, data['type'], name=data['name'])
 
         return Response(get_application_serializer(application).data)
 

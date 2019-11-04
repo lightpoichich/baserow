@@ -1,4 +1,4 @@
-class UserNotIngroupError(Exception):
+class UserNotInGroupError(Exception):
     pass
 
 

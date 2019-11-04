@@ -9,7 +9,7 @@ from baserow.api.v0.decorators import validate_body, map_exceptions
 from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.core.models import Group, GroupUser
 from baserow.core.handler import CoreHandler
-from baserow.core.exceptions import UserNotIngroupError
+from baserow.core.exceptions import UserNotInGroupError
 
 from .serializers import GroupSerializer, GroupUserSerializer, OrderGroupsSerializer
 
@@ -47,14 +47,14 @@ class GroupView(APIView):
             # If the group user doesn't exist we should check if the group exist so we
             # can show a proper error.
             get_object_or_404(Group, id=group_id)
-            raise UserNotIngroupError
+            raise UserNotInGroupError
 
         return group_user
 
     @transaction.atomic
     @validate_body(GroupSerializer)
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def patch(self, request, data, group_id):
         """Updates the group if it belongs to a user."""
@@ -67,7 +67,7 @@ class GroupView(APIView):
 
     @transaction.atomic
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, group_id):
         """Deletes an existing group if it belongs to a user."""

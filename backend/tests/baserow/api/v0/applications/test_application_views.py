@@ -123,7 +123,8 @@ def test_get_application(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:applications:item',
                   kwargs={'application_id': 99999})

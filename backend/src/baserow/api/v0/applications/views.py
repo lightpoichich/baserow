@@ -28,8 +28,7 @@ class ApplicationsView(APIView):
         )
 
         if not group.has_user(request.user):
-            raise UserNotInGroupError(f'User {request.user} doesn\'t have access to '
-                                      f'group {group}.')
+            raise UserNotInGroupError(request.user, group)
 
         return group
 
@@ -82,8 +81,7 @@ class ApplicationView(APIView):
         )
 
         if not application.group.has_user(request.user):
-            raise UserNotInGroupError(f'User {request.user} doesn\'t have access to '
-                                      f'group {application.group}.')
+            raise UserNotInGroupError(request.user, application.group)
 
         return Response(get_application_serializer(application).data)
 

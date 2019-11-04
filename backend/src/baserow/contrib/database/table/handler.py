@@ -20,8 +20,7 @@ class TableHandler:
         """
 
         if not database.group.has_user(user):
-            raise UserNotInGroupError(f'The user {user} does not belong to the group '
-                                      f'{database.group}.')
+            raise UserNotInGroupError(user, database.group)
 
         table_values = extract_allowed(kwargs, ['name'])
         last_order = Table.get_last_order(database)
@@ -48,8 +47,7 @@ class TableHandler:
             raise ValueError('The table is not an instance of Table')
 
         if not table.database.group.has_user(user):
-            raise UserNotInGroupError(f'The user {user} does not belong to the group '
-                                      f'{table.database.group}.')
+            raise UserNotInGroupError(user, table.database.group)
 
         table = set_allowed_attrs(kwargs, ['name'], table)
         table.save()
@@ -70,7 +68,6 @@ class TableHandler:
             raise ValueError('The table is not an instance of Table')
 
         if not table.database.group.has_user(user):
-            raise UserNotInGroupError(f'The user {user} does not belong to the group '
-                                      f'{table.database.group}.')
+            raise UserNotInGroupError(user, table.database.group)
 
         table.delete()

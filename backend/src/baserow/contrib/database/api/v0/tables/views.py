@@ -27,8 +27,7 @@ class TablesView(APIView):
         )
 
         if not database.group.has_user(user):
-            raise UserNotInGroupError(f'User {user} doesn\'t belong to group '
-                                      f'{database.group}.')
+            raise UserNotInGroupError(user, database.group)
 
         return database
 
@@ -70,8 +69,7 @@ class TableView(APIView):
         )
 
         if not table.database.group.has_user(user):
-            raise UserNotInGroupError(f'User {user} doesn\'t belong to group '
-                                      f'{table.database.group}.')
+            raise UserNotInGroupError(user, table.database.group)
 
         return table
 

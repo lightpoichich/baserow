@@ -59,7 +59,12 @@ export const actions = {
    */
   update({ commit, dispatch }, { database, table, values }) {
     return TableService.update(table.id, values).then(({ data }) => {
-      commit('UPDATE_ITEM', { database, table, values: data })
+      // Create a dict with only the values we want to update.
+      const update = Object.keys(values).reduce((result, key) => {
+        result[key] = data[key]
+        return result
+      }, {})
+      commit('UPDATE_ITEM', { database, table, values: update })
     })
   },
   /**

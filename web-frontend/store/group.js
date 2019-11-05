@@ -37,8 +37,8 @@ export const mutations = {
     item = populateGroup(item)
     state.items.push(item)
   },
-  UPDATE_ITEM(state, values) {
-    const index = state.items.findIndex(item => item.id === values.id)
+  UPDATE_ITEM(state, { id, values }) {
+    const index = state.items.findIndex(item => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
   DELETE_ITEM(state, id) {
@@ -114,7 +114,12 @@ export const actions = {
    */
   update({ commit, dispatch }, { group, values }) {
     return GroupService.update(group.id, values).then(({ data }) => {
-      commit('UPDATE_ITEM', data)
+      // Create a dict with only the values we want to update.
+      const update = Object.keys(values).reduce((result, key) => {
+        result[key] = data[key]
+        return result
+      }, {})
+      commit('UPDATE_ITEM', { id: group.id, values: update })
     })
   },
   /**

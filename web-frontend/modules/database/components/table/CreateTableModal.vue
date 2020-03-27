@@ -25,9 +25,9 @@
 </template>
 
 <script>
-import TableForm from './TableForm'
+import modal from '@baserow/modules/core/mixins/modal'
 
-import modal from '@/mixins/modal'
+import TableForm from './TableForm'
 
 export default {
   name: 'CreateTableModal',

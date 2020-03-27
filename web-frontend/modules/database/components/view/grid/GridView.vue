@@ -182,10 +182,10 @@
 <script>
 import { mapGetters } from 'vuex'
 
-import CreateFieldContext from '@/modules/database/components/field/CreateFieldContext'
-import GridViewFieldType from '@/modules/database/components/view/grid/GridViewFieldType'
-import GridViewField from '@/modules/database/components/view/grid/GridViewField'
-import { notifyIf } from '@/utils/error'
+import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
+import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
+import GridViewField from '@baserow/modules/database/components/view/grid/GridViewField'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'GridView',

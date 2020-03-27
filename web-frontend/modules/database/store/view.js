@@ -1,6 +1,6 @@
-import { ViewType } from '@/modules/database/viewTypes'
-import ViewService from '@/modules/database/services/view'
-import { clone } from '@/utils/object'
+import { ViewType } from '@baserow/modules/database/viewTypes'
+import ViewService from '@baserow/modules/database/services/view'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export function populateView(view, getters) {
   const type = getters.getType(view.type)

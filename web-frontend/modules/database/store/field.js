@@ -1,6 +1,6 @@
-import { FieldType } from '@/modules/database/fieldTypes'
-import FieldService from '@/modules/database/services/field'
-import { clone } from '@/utils/object'
+import { FieldType } from '@baserow/modules/database/fieldTypes'
+import FieldService from '@baserow/modules/database/services/field'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export function populateField(field, getters) {
   const type = getters.getType(field.type)

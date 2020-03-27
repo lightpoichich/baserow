@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-import TableService from '@/modules/database/services/table'
-import { DatabaseApplicationType } from '@/modules/database/applicationTypes'
+import TableService from '@baserow/modules/database/services/table'
+import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
 export function populateTable(table) {
   table._ = {
@@ -92,7 +92,7 @@ export const actions = {
   forceDelete({ commit, dispatch }, { database, table }) {
     if (table._.selected) {
       // Redirect back to the dashboard because the table doesn't exist anymore.
-      this.$router.push({ name: 'app' })
+      this.$router.push({ name: 'dashboard' })
     }
 
     commit('DELETE_ITEM', { database, id: table.id })

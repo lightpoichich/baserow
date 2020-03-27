@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import modal from '@/mixins/modal'
+import modal from '@baserow/modules/core/mixins/modal'
 
 export default {
   name: 'CreateViewModal',

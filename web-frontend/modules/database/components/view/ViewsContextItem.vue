@@ -45,8 +45,8 @@
 </template>
 
 <script>
-import context from '@/mixins/context'
-import { notifyIf } from '@/utils/error'
+import context from '@baserow/modules/core/mixins/context'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'ViewsContextItem',

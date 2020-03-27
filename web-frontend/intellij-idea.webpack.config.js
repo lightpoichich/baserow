@@ -10,7 +10,8 @@ module.exports = {
       '@': path.resolve(__dirname),
       '@@': path.resolve(__dirname),
       '~': path.resolve(__dirname),
-      '~~': path.resolve(__dirname)
+      '~~': path.resolve(__dirname),
+      '@baserow': path.resolve(__dirname)
     }
   }
 }

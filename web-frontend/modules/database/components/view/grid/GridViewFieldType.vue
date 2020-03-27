@@ -52,8 +52,8 @@
 </template>
 
 <script>
-import { notifyIf } from '@/utils/error'
-import UpdateFieldContext from '@/modules/database/components/field/UpdateFieldContext'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
 
 export default {
   name: 'GridViewFieldType',

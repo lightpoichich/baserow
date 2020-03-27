@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-import GridService from '@/modules/database/services/view/grid'
-import RowService from '@/modules/database/services/row'
+import GridService from '@baserow/modules/database/services/view/grid'
+import RowService from '@baserow/modules/database/services/row'
 
 export function populateRow(row) {
   row._ = { loading: false }

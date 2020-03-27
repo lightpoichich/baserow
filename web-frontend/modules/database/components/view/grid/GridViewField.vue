@@ -12,8 +12,8 @@
 </template>
 
 <script>
-import { isElement } from '@/utils/dom'
-import { notifyIf } from '@/utils/error'
+import { isElement } from '@baserow/modules/core/utils/dom'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'GridViewField',

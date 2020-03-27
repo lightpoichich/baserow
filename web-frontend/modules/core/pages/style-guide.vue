@@ -536,6 +536,11 @@ export default {
   components: {
     Notifications
   },
+  head() {
+    return {
+      title: 'Style guide'
+    }
+  },
   data() {
     return {
       checkbox: false,

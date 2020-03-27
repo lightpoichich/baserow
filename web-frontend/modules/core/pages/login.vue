@@ -3,13 +3,7 @@
     <h1 class="box-title">
       <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
     </h1>
-    <div v-if="error" class="alert alert-error alert-has-icon">
-      <div class="alert-icon">
-        <i class="fas fa-exclamation"></i>
-      </div>
-      <div class="alert-title">{{ errorTitle }}</div>
-      <p class="alert-content">{{ errorMessage }}</p>
-    </div>
+    <Error :error="error"></Error>
     <form @submit.prevent="login">
       <div class="control">
         <label class="control-label">E-mail address</label>
@@ -66,9 +60,11 @@
 
 <script>
 import { required, email } from 'vuelidate/lib/validators'
+import error from '@baserow/modules/core/mixins/error'
 
 export default {
   layout: 'login',
+  mixins: [error],
   head() {
     return {
       title: 'Login'
@@ -80,10 +76,7 @@ export default {
       credentials: {
         email: '',
         password: ''
-      },
-      error: false,
-      errorTitle: '',
-      errorMessage: ''
+      }
     }
   },
   validations: {
@@ -100,7 +93,7 @@ export default {
       }
 
       this.loading = true
-      this.error = false
+      this.hideError()
 
       try {
         await this.$store.dispatch('auth/login', {
@@ -114,19 +107,18 @@ export default {
           // Because the API server does not yet respond with proper error codes we
           // manually have to add the error here.
           if (response && response.status === 400) {
-            this.errorTitle = 'Incorrect credentials'
-            this.errorMessage =
+            this.showError(
+              'Incorrect credentials',
               'The provided e-mail address or password is ' + 'incorrect.'
+            )
             this.credentials.password = ''
             this.$v.$reset()
             this.$refs.password.focus()
           } else {
             const message = error.handler.getMessage('login')
-            this.errorTitle = message.title
-            this.errorMessage = message.message
+            this.showError(message)
           }
 
-          this.error = true
           this.loading = false
           error.handler.handled()
         } else {

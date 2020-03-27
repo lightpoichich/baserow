@@ -87,24 +87,23 @@ export const actions = {
   /**
    * Fetches all the application of the authenticated user.
    */
-  fetchAll({ commit, getters }) {
+  async fetchAll({ commit, getters }) {
     commit('SET_LOADING', true)
 
-    return ApplicationService.fetchAll()
-      .then(({ data }) => {
-        data.forEach((part, index, d) => {
-          populateApplication(data[index], getters)
-        })
-        commit('SET_ITEMS', data)
-        commit('SET_LOADING', false)
-        commit('SET_LOADED', true)
+    try {
+      const { data } = await ApplicationService.fetchAll()
+      data.forEach((part, index, d) => {
+        populateApplication(data[index], getters)
       })
-      .catch(error => {
-        commit('SET_ITEMS', [])
-        commit('SET_LOADING', false)
+      commit('SET_ITEMS', data)
+      commit('SET_LOADING', false)
+      commit('SET_LOADED', true)
+    } catch (error) {
+      commit('SET_ITEMS', [])
+      commit('SET_LOADING', false)
 
-        throw error
-      })
+      throw error
+    }
   },
   /**
    * Clears all the currently selected applications, this could be called when
@@ -129,7 +128,7 @@ export const actions = {
    * Creates a new application with the given type and values for the currently
    * selected group.
    */
-  create({ commit, getters, rootGetters, dispatch }, { type, values }) {
+  async create({ commit, getters, rootGetters, dispatch }, { type, values }) {
     if (values.hasOwnProperty('type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
@@ -141,48 +140,44 @@ export const actions = {
       throw new Error(`An application type with type "${type}" doesn't exist.`)
     }
 
-    const data = clone(values)
-    data.type = type
-    return ApplicationService.create(
+    const postData = clone(values)
+    postData.type = type
+
+    const { data } = await ApplicationService.create(
       rootGetters['group/selectedId'],
-      data
-    ).then(({ data }) => {
-      populateApplication(data, getters)
-      commit('ADD_ITEM', data)
-    })
+      postData
+    )
+    populateApplication(data, getters)
+    commit('ADD_ITEM', data)
   },
   /**
    * Updates the values of an existing application.
    */
-  update({ commit, dispatch, getters }, { application, values }) {
-    return ApplicationService.update(application.id, values).then(
-      ({ data }) => {
-        // Create a dict with only the values we want to update.
-        const update = Object.keys(values).reduce((result, key) => {
-          result[key] = data[key]
-          return result
-        }, {})
-        commit('UPDATE_ITEM', { id: application.id, values: update })
-      }
-    )
+  async update({ commit, dispatch, getters }, { application, values }) {
+    const { data } = await ApplicationService.update(application.id, values)
+    // Create a dict with only the values we want to update.
+    const update = Object.keys(values).reduce((result, key) => {
+      result[key] = data[key]
+      return result
+    }, {})
+    commit('UPDATE_ITEM', { id: application.id, values: update })
   },
   /**
    * Deletes an existing application.
    */
-  delete({ commit, dispatch, getters }, application) {
-    return ApplicationService.delete(application.id)
-      .then(() => {
-        const type = getters.getType(application.type)
-        type.delete(application, this)
+  async delete({ commit, dispatch, getters }, application) {
+    try {
+      await ApplicationService.delete(application.id)
+      const type = getters.getType(application.type)
+      type.delete(application, this)
+      commit('DELETE_ITEM', application.id)
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
         commit('DELETE_ITEM', application.id)
-      })
-      .catch(error => {
-        if (error.response && error.response.status === 404) {
-          commit('DELETE_ITEM', application.id)
-        } else {
-          throw error
-        }
-      })
+      } else {
+        throw error
+      }
+    }
   },
   /**
    * Select an application.

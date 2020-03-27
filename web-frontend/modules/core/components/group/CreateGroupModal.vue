@@ -1,6 +1,7 @@
 <template>
   <Modal>
     <h2 class="box-title">Create new group</h2>
+    <Error :error="error"></Error>
     <GroupForm ref="groupForm" @submitted="submitted">
       <div class="actions">
         <div class="align-right">
@@ -19,30 +20,32 @@
 
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
+import error from '@baserow/modules/core/mixins/error'
 
 import GroupForm from './GroupForm'
 
 export default {
   name: 'CreateGroupModal',
   components: { GroupForm },
-  mixins: [modal],
+  mixins: [modal, error],
   data() {
     return {
       loading: false
     }
   },
   methods: {
-    submitted(values) {
+    async submitted(values) {
       this.loading = true
-      this.$store
-        .dispatch('group/create', values)
-        .then(() => {
-          this.loading = false
-          this.hide()
-        })
-        .catch(() => {
-          this.loading = false
-        })
+      this.hideError()
+
+      try {
+        await this.$store.dispatch('group/create', values)
+        this.loading = false
+        this.hide()
+      } catch (error) {
+        this.loading = false
+        this.handleError(error, 'group')
+      }
     }
   }
 }

@@ -91,59 +91,54 @@ export const actions = {
   /**
    * Fetches all the groups of an authenticated user.
    */
-  fetchAll({ commit }) {
+  async fetchAll({ commit }) {
     commit('SET_LOADING', true)
 
-    return GroupService.fetchAll()
-      .then(({ data }) => {
-        commit('SET_LOADED', true)
-        commit('SET_ITEMS', data)
-      })
-      .catch(() => {
-        commit('SET_ITEMS', [])
-      })
-      .then(() => {
-        commit('SET_LOADING', false)
-      })
+    try {
+      const { data } = await GroupService.fetchAll()
+      commit('SET_LOADED', true)
+      commit('SET_ITEMS', data)
+    } catch {
+      commit('SET_ITEMS', [])
+    }
+
+    commit('SET_LOADING', false)
   },
   /**
    * Creates a new group with the given values.
    */
-  create({ commit }, values) {
-    return GroupService.create(values).then(({ data }) => {
-      commit('ADD_ITEM', data)
-    })
+  async create({ commit }, values) {
+    const { data } = await GroupService.create(values)
+    commit('ADD_ITEM', data)
   },
   /**
    * Updates the values of the group with the provided id.
    */
-  update({ commit, dispatch }, { group, values }) {
-    return GroupService.update(group.id, values).then(({ data }) => {
-      // Create a dict with only the values we want to update.
-      const update = Object.keys(values).reduce((result, key) => {
-        result[key] = data[key]
-        return result
-      }, {})
-      commit('UPDATE_ITEM', { id: group.id, values: update })
-    })
+  async update({ commit, dispatch }, { group, values }) {
+    const { data } = await GroupService.update(group.id, values)
+    // Create a dict with only the values we want to update.
+    const update = Object.keys(values).reduce((result, key) => {
+      result[key] = data[key]
+      return result
+    }, {})
+    commit('UPDATE_ITEM', { id: group.id, values: update })
   },
   /**
    * Deletes an existing group with the provided id.
    */
-  delete({ commit, dispatch }, group) {
-    return GroupService.delete(group.id)
-      .then(() => {
-        dispatch('forceDelete', group)
-      })
-      .catch(error => {
-        // If the group to delete wasn't found we can just delete it from the
-        // state.
-        if (error.response && error.response.status === 404) {
-          dispatch('forceDelete', group)
-        } else {
-          throw error
-        }
-      })
+  async delete({ commit, dispatch }, group) {
+    try {
+      await GroupService.delete(group.id)
+      await dispatch('forceDelete', group)
+    } catch (error) {
+      // If the group to delete wasn't found we can just delete it from the
+      // state.
+      if (error.response && error.response.status === 404) {
+        await dispatch('forceDelete', group)
+      } else {
+        throw error
+      }
+    }
   },
   /**
    * Forcibly remove the group from the items  without calling the server.

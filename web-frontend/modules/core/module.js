@@ -1,5 +1,6 @@
 import path from 'path'
 import _ from 'lodash'
+import serveStatic from 'serve-static'
 
 import { routes } from './routes'
 import head from './head'
@@ -30,6 +31,16 @@ export default function DatabaseModule(options) {
   // The core depends on these modules.
   this.requireModule('@nuxtjs/axios')
   this.requireModule('cookie-universal-nuxt')
+
+  // Serve the static directory
+  // @TODO we might need to change some things here for production. (See:
+  //  https://github.com/nuxt/nuxt.js/blob/5a6cde3ebc23f04e89c30a4196a9b7d116b6d675/
+  //  packages/server/src/server.js)
+  const staticMiddleware = serveStatic(
+    path.resolve(__dirname, 'static'),
+    this.options.render.static
+  )
+  this.addServerMiddleware(staticMiddleware)
 
   // Add the layouts
   this.addLayout(path.resolve(__dirname, 'layouts/app.vue'), 'app')

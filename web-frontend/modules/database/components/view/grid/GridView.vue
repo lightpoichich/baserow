@@ -273,16 +273,16 @@ export default {
       const space = 100
       return right + (columnsOnly ? 0 : add + space)
     },
-    addRow() {
-      this.$store
-        .dispatch('view/grid/create', {
+    async addRow() {
+      try {
+        await this.$store.dispatch('view/grid/create', {
           table: this.table,
           fields: this.fields,
           values: {}
         })
-        .catch(error => {
-          notifyIf(error, 'row')
-        })
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
     }
   }
 }

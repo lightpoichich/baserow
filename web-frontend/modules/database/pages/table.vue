@@ -66,6 +66,11 @@ import ViewsContext from '@baserow/modules/database/components/view/ViewsContext
  */
 export default {
   layout: 'app',
+  head() {
+    return {
+      title: (this.view ? this.view.name + ' - ' : '') + this.table.name
+    }
+  },
   components: {
     ViewsContext
   },

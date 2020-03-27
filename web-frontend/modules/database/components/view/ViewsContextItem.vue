@@ -65,36 +65,34 @@ export default {
       this.$refs.context.hide()
       this.$refs.rename.edit()
     },
-    renameView(view, event) {
+    async renameView(view, event) {
       this.setLoading(view, true)
 
-      this.$store
-        .dispatch('view/update', {
+      try {
+        await this.$store.dispatch('view/update', {
           view,
           values: {
             name: event.value
           }
         })
-        .catch(error => {
-          this.$refs.rename.set(event.oldValue)
-          notifyIf(error, 'view')
-        })
-        .then(() => {
-          this.setLoading(view, false)
-        })
+      } catch (error) {
+        this.$refs.rename.set(event.oldValue)
+        notifyIf(error, 'view')
+      }
+
+      this.setLoading(view, false)
     },
-    deleteView(view) {
+    async deleteView(view) {
       this.$refs.context.hide()
       this.setLoading(view, true)
 
-      this.$store
-        .dispatch('view/delete', view)
-        .catch(error => {
-          notifyIf(error, 'view')
-        })
-        .then(() => {
-          this.setLoading(view, false)
-        })
+      try {
+        await this.$store.dispatch('view/delete', view)
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+
+      this.setLoading(view, false)
     },
     selectView(view) {
       this.setLoading(view, true)

@@ -1,13 +1,7 @@
 <template>
   <div>
     <h1 class="box-title">Sign up</h1>
-    <div v-if="error" class="alert alert-error alert-has-icon">
-      <div class="alert-icon">
-        <i class="fas fa-exclamation"></i>
-      </div>
-      <div class="alert-title">{{ errorTitle }}</div>
-      <p class="alert-content">{{ errorMessage }}</p>
-    </div>
+    <Error :error="error"></Error>
     <form @submit.prevent="register">
       <div class="control">
         <label class="control-label">E-mail address</label>
@@ -96,9 +90,11 @@
 import { required, email, sameAs, minLength } from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
+import error from '@baserow/modules/core/mixins/error'
 
 export default {
   layout: 'login',
+  mixins: [error],
   head() {
     return {
       title: 'Create new account'
@@ -125,10 +121,7 @@ export default {
         name: '',
         password: '',
         passwordConfirm: ''
-      },
-      error: false,
-      errorTitle: '',
-      errorMessage: ''
+      }
     }
   },
   methods: {
@@ -139,7 +132,7 @@ export default {
       }
 
       this.loading = true
-      this.error = false
+      this.hideError()
 
       try {
         await this.$store.dispatch('auth/register', {
@@ -150,21 +143,12 @@ export default {
         this.$nuxt.$router.push({ name: 'dashboard' })
       } catch (error) {
         this.loading = false
-
-        if (error.handler) {
-          const message = error.handler.getMessage('signup', {
-            ERROR_EMAIL_ALREADY_EXISTS: new ResponseErrorMessage(
-              'User already exists.',
-              'A user with the provided e-mail address already exists.'
-            )
-          })
-          this.error = true
-          this.errorTitle = message.title
-          this.errorMessage = message.message
-          error.handler.handled()
-        } else {
-          throw error
-        }
+        this.handleError(error, 'signup', {
+          ERROR_EMAIL_ALREADY_EXISTS: new ResponseErrorMessage(
+            'User already exists.',
+            'A user with the provided e-mail address already exists.'
+          )
+        })
       }
     }
   }

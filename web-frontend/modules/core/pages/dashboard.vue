@@ -35,6 +35,11 @@ import { mapState } from 'vuex'
 
 export default {
   layout: 'app',
+  head() {
+    return {
+      title: 'Dashboard'
+    }
+  },
   computed: {
     ...mapState({
       user: state => state.auth.user,

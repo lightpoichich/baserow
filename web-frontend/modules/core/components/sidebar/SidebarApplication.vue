@@ -78,31 +78,32 @@ export default {
       this.$refs.context.hide()
       this.$refs.rename.edit()
     },
-    renameApplication(application, event) {
+    async renameApplication(application, event) {
       this.setLoading(application, true)
 
-      this.$store
-        .dispatch('application/update', {
+      try {
+        await this.$store.dispatch('application/update', {
           application,
           values: {
             name: event.value
           }
         })
-        .catch(error => {
-          this.$refs.rename.set(event.oldValue)
-          notifyIf(error, 'application')
-        })
-        .then(() => {
-          this.setLoading(application, false)
-        })
+      } catch (error) {
+        this.$refs.rename.set(event.oldValue)
+        notifyIf(error, 'application')
+      }
+
+      this.setLoading(application, false)
     },
-    selectApplication(application) {
+    async selectApplication(application) {
       // If there is no route associated with the application we just change the
       // selected state.
       if (application._.type.routeName === null) {
-        this.$store.dispatch('application/select', application).catch(error => {
+        try {
+          await this.$store.dispatch('application/select', application)
+        } catch (error) {
           notifyIf(error, 'group')
-        })
+        }
         return
       }
 
@@ -125,18 +126,17 @@ export default {
         }
       )
     },
-    deleteApplication(application) {
+    async deleteApplication(application) {
       this.$refs.context.hide()
       this.setLoading(application, true)
 
-      this.$store
-        .dispatch('application/delete', application)
-        .catch(error => {
-          notifyIf(error, 'application')
-        })
-        .then(() => {
-          this.setLoading(application, false)
-        })
+      try {
+        await this.$store.dispatch('application/delete', application)
+      } catch (error) {
+        notifyIf(error, 'application')
+      }
+
+      this.setLoading(application, false)
     },
     getSelectedApplicationComponent(application) {
       const type = this.$store.getters['application/getType'](application.type)

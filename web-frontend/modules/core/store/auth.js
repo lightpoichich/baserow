@@ -30,58 +30,53 @@ export const actions = {
    * Authenticate a user by his email and password. If successful commit the
    * token to the state and start the refresh timeout to stay authenticated.
    */
-  login({ commit, dispatch }, { email, password }) {
-    return AuthService.login(email, password).then(({ data }) => {
-      setToken(data.token, this.app.$cookies)
-      commit('SET_USER_DATA', data)
-      dispatch('startRefreshTimeout')
-    })
+  async login({ commit, dispatch }, { email, password }) {
+    const { data } = await AuthService.login(email, password)
+    setToken(data.token, this.app.$cookies)
+    commit('SET_USER_DATA', data)
+    dispatch('startRefreshTimeout')
   },
   /**
    * Register a new user and immediately authenticate. If successful commit the
    * token to the state and start the refresh timeout to stay authenticated.
    */
-  register({ commit, dispatch }, { email, name, password }) {
-    return AuthService.register(email, name, password, true).then(
-      ({ data }) => {
-        setToken(data.token, this.app.$cookies)
-        commit('SET_USER_DATA', data)
-        dispatch('startRefreshTimeout')
-      }
-    )
+  async register({ commit, dispatch }, { email, name, password }) {
+    const { data } = await AuthService.register(email, name, password, true)
+    setToken(data.token, this.app.$cookies)
+    commit('SET_USER_DATA', data)
+    dispatch('startRefreshTimeout')
   },
   /**
    * Logs off the user by removing the token as a cookie and clearing the user
    * data.
    */
-  logoff({ commit, dispatch }) {
+  async logoff({ commit, dispatch }) {
     unsetToken(this.app.$cookies)
     unsetGroupCookie(this.app.$cookies)
     commit('CLEAR_USER_DATA')
-    dispatch('group/clearAll', {}, { root: true })
-    dispatch('group/unselect', {}, { root: true })
+    await dispatch('group/clearAll', {}, { root: true })
+    await dispatch('group/unselect', {}, { root: true })
   },
   /**
    * Refresh the existing token. If successful commit the new token and start a
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.
    */
-  refresh({ commit, state, dispatch }, token) {
-    return AuthService.refresh(token)
-      .then(({ data }) => {
-        setToken(data.token, this.app.$cookies)
-        commit('SET_USER_DATA', data)
-        dispatch('startRefreshTimeout')
-      })
-      .catch(() => {
-        // The token could not be refreshed, this means the token is no longer
-        // valid and the user not logged in anymore.
-        unsetToken(this.app.$cookies)
-        commit('CLEAR_USER_DATA')
+  async refresh({ commit, state, dispatch }, token) {
+    try {
+      const { data } = await AuthService.refresh(token)
+      setToken(data.token, this.app.$cookies)
+      commit('SET_USER_DATA', data)
+      dispatch('startRefreshTimeout')
+    } catch {
+      // The token could not be refreshed, this means the token is no longer
+      // valid and the user not logged in anymore.
+      unsetToken(this.app.$cookies)
+      commit('CLEAR_USER_DATA')
 
-        // @TODO we might want to do something here, trigger some event, show
-        //       show the user a login popup or redirect to the login page.
-      })
+      // @TODO we might want to do something here, trigger some event, show
+      //       show the user a login popup or redirect to the login page.
+    }
   },
   /**
    * Because the token expires within a configurable time, we need to keep

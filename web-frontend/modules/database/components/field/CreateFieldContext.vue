@@ -35,27 +35,25 @@ export default {
     }
   },
   methods: {
-    submit(values) {
+    async submit(values) {
       this.loading = true
 
       const type = values.type
       delete values.type
 
-      this.$store
-        .dispatch('field/create', {
+      try {
+        await this.$store.dispatch('field/create', {
           type,
           values,
           table: this.table
         })
-        .then(() => {
-          this.loading = false
-          this.$refs.form.reset()
-          this.hide()
-        })
-        .catch(error => {
-          this.loading = false
-          notifyIf(error, 'field')
-        })
+        this.loading = false
+        this.$refs.form.reset()
+        this.hide()
+      } catch (error) {
+        this.loading = false
+        notifyIf(error, 'field')
+      }
     }
   }
 }

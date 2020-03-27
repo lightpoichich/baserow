@@ -59,51 +59,46 @@ export default {
       this.$refs.context.hide()
       this.$refs.rename.edit()
     },
-    renameGroup(group, event) {
+    async renameGroup(group, event) {
       this.setLoading(group, true)
 
-      this.$store
-        .dispatch('group/update', {
+      try {
+        await this.$store.dispatch('group/update', {
           group,
           values: {
             name: event.value
           }
         })
-        .catch(error => {
-          this.$refs.rename.set(event.oldValue)
-          notifyIf(error, 'group')
-        })
-        .then(() => {
-          this.setLoading(group, false)
-        })
+      } catch (error) {
+        this.$refs.rename.set(event.oldValue)
+        notifyIf(error, 'group')
+      }
+
+      this.setLoading(group, false)
     },
-    selectGroup(group) {
+    async selectGroup(group) {
       this.setLoading(group, true)
 
-      this.$store
-        .dispatch('group/select', group)
-        .then(() => {
-          this.$emit('selected')
-        })
-        .catch(error => {
-          notifyIf(error, 'group')
-        })
-        .then(() => {
-          this.setLoading(group, false)
-        })
+      try {
+        await this.$store.dispatch('group/select', group)
+        this.$emit('selected')
+      } catch (error) {
+        notifyIf(error, 'group')
+      }
+
+      this.setLoading(group, false)
     },
-    deleteGroup(group) {
+    async deleteGroup(group) {
       this.$refs.context.hide()
       this.setLoading(group, true)
 
-      this.$store
-        .dispatch('group/delete', group)
-        .catch(error => {
-          notifyIf(error, 'group')
-        })
-        .then(() => {
-          this.setLoading(group, false)
-        })
+      try {
+        await this.$store.dispatch('group/delete', group)
+      } catch (error) {
+        notifyIf(error, 'group')
+      }
+
+      this.setLoading(group, false)
     }
   }
 }

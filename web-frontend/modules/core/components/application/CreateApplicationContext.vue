@@ -25,7 +25,7 @@
 <script>
 import { mapState } from 'vuex'
 
-import CreateApplicationModal from '@baserow/modules/core/components/sidebar/CreateApplicationModal'
+import CreateApplicationModal from '@baserow/modules/core/components/application/CreateApplicationModal'
 import context from '@baserow/modules/core/mixins/context'
 
 export default {

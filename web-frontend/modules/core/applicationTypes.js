@@ -1,4 +1,4 @@
-import ApplicationForm from '@baserow/modules/core/components/sidebar/ApplicationForm'
+import ApplicationForm from '@baserow/modules/core/components/application/ApplicationForm'
 
 /**
  * The application type base class that can be extended when creating a plugin

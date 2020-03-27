@@ -32,7 +32,7 @@
 import { mapGetters, mapState } from 'vuex'
 
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
-import CreateApplicationContext from '@baserow/modules/core/components/sidebar/CreateApplicationContext'
+import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
 
 export default {
   name: 'Sidebar',

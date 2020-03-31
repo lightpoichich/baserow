@@ -116,7 +116,11 @@ class FieldHandler:
 
             try:
                 schema_editor.alter_field(from_model, from_model_field, to_model_field)
-            except (ProgrammingError, DataError):
+            except (ProgrammingError, DataError) as e:
+                print('---')
+                print(e)
+                print('---')
+
                 # If something is going wrong while changing the schema we will just
                 # raise a specific exception. In the future we want to have some sort
                 # of converter abstraction where the values of certain types can be

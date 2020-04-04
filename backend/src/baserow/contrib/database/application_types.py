@@ -21,8 +21,7 @@ class DatabaseApplicationType(ApplicationType):
     def user_created(self, user, group):
         """
         This method is called when a new user is created. We are going to create a
-        database, table, view, fields and some rows here. This is so that a user will
-        have some examples.
+        database, table, view, fields and some rows here as an example for the user.
 
         :param user: The newly created user.
         :param group: The newly created group for the user.
@@ -40,7 +39,6 @@ class DatabaseApplicationType(ApplicationType):
         model.objects.create(name='Bill', last_name='Gates', active=False)
         model.objects.create(name='Mark', last_name='Zuckerburg', active=True)
         model.objects.create(name='Jeffrey', last_name='Bezos', active=True)
-
 
     def pre_delete(self, user, database):
         """

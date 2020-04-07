@@ -28,17 +28,25 @@ class DatabaseApplicationType(ApplicationType):
         """
 
         database = CoreHandler().create_application(user, group, type_name=self.type,
-                                                    name='Company')
+                                                    name=f"{user.first_name}'s company")
+
         table = TableHandler().create_table(user, database, name='Customers')
         ViewHandler().create_view(user, table, GridViewType.type, name='Grid')
         FieldHandler().create_field(user, table, TextFieldType.type, name='Last name')
         FieldHandler().create_field(user, table, BooleanFieldType.type, name='Active')
-
         model = table.get_model(attribute_names=True)
         model.objects.create(name='Elon', last_name='Musk', active=True)
         model.objects.create(name='Bill', last_name='Gates', active=False)
         model.objects.create(name='Mark', last_name='Zuckerburg', active=True)
         model.objects.create(name='Jeffrey', last_name='Bezos', active=True)
+
+        table_2 = TableHandler().create_table(user, database, name='Projects')
+        ViewHandler().create_view(user, table_2, GridViewType.type, name='Grid')
+        FieldHandler().create_field(user, table_2, BooleanFieldType.type, name='Active')
+        model = table_2.get_model(attribute_names=True)
+        model.objects.create(name='Tesla', active=True)
+        model.objects.create(name='SpaceX', active=False)
+        model.objects.create(name='Amazon', active=False)
 
     def pre_delete(self, user, database):
         """

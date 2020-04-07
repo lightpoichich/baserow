@@ -53,6 +53,7 @@ class DatabaseApplicationType(ApplicationType):
         When a database is deleted we must also delete the related tables via the table
         handler.
         """
+
         database_tables = database.table_set.all().select_related('database__group')
         table_handler = TableHandler()
 

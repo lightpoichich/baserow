@@ -17,11 +17,10 @@ export class Registerable {
 }
 
 /**
- * The registry is an class where Registerable instances can be registered into a
- * namespace. This is used for plugins to register abstractions into the
- * application. For example the database plugin registers itself as an application
- * to the core. It is for example also possible to register views and fields to the
- * database plugin.
+ * The registry is an class where Registerable instances can be registered under a
+ * namespace. This is used for plugins to register extra functionality to Baserow. For
+ * example the database plugin registers itself as an application to the core, but
+ * it is also possible to register fields and views to the database plugin.
  */
 export class Registry {
   constructor() {
@@ -29,7 +28,7 @@ export class Registry {
   }
 
   /**
-   * Register a new registerable object into the provided namespace of the registry.
+   * Registers a new Registerable object under the provided namespace in the registry.
    * If the namespace doesn't exist it will be created. It is common to register
    * instantiated classes here.
    */

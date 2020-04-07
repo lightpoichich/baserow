@@ -127,8 +127,9 @@ export const actions = {
     data = populateField(data, this.$registry)
     commit('ADD_ITEM', data)
 
-    // Call the field created event registered view because they might need to
-    // change things in loaded data.
+    // Call the field created event on all the registered views because they might
+    // need to change things in loaded data. For example the grid field will add the
+    // field to all of the rows that are in memory.
     Object.values(this.$registry.getAll('view')).forEach((viewType) => {
       viewType.fieldCreated(context, table, data, fieldType)
     })

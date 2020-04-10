@@ -1,11 +1,13 @@
 <template>
   <div class="placeholder">
     <div class="placeholder__logo">
-      <img
-        class="placeholder__logo-image"
-        src="@baserow/modules/core/static/img/logo.svg"
-        alt=""
-      />
+      <nuxt-link :to="{ name: 'index' }">
+        <img
+          class="placeholder__logo-image"
+          src="@baserow/modules/core/static/img/logo.svg"
+          alt=""
+        />
+      </nuxt-link>
     </div>
     <h1 class="placeholder__title">{{ message }}</h1>
     <p v-if="error.statusCode === 404" class="placeholder__content">
@@ -53,6 +55,11 @@ export default {
     ...mapGetters({
       isAuthenticated: 'auth/isAuthenticated',
     }),
+  },
+  head() {
+    return {
+      title: this.message,
+    }
   },
 }
 </script>

@@ -166,6 +166,18 @@
             </p>
           </div>
 
+          <div class="alert alert-simple alert-has-icon">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
           <div class="alert alert-simple">
             <div class="alert-title">Notification message</div>
             <p class="alert-content">
@@ -595,7 +607,7 @@ export default {
   data() {
     return {
       checkbox: false,
-      dropdown: null,
+      dropdown: '',
     }
   },
   head() {

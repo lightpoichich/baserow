@@ -340,7 +340,7 @@ export default {
     },
     /**
      * Calculates the widths of all fields, left side, right side and place holder
-     * positions and returns the values as an object.
+     * positions and returns the values in an object.
      */
     getCalculatedWidths(primary, fields, fieldOptions) {
       const getFieldWidth = (fieldId) => {
@@ -394,8 +394,8 @@ export default {
     /**
      * This method is called when the fieldOptions or fields changes. The reason why we
      * don't have smaller methods that are called from the template to calculate the
-     * widths is that because that would quickly result in thousands of calls function
-     * calls when the smallest things change in the data. This is a speed improving
+     * widths is that because that would quickly result in thousands of function calls
+     * when the smallest things change in the data. This is a speed improving
      * workaround.
      */
     calculateWidths(primary, fields, fieldOptions) {

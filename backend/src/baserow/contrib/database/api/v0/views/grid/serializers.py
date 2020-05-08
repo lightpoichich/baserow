@@ -48,16 +48,15 @@ class GridViewFieldOptionsField(serializers.Field):
 
     def to_representation(self, value):
         """
-        If the provided value is a GridView instance we need to fetch options from
+        If the provided value is a GridView instance we need to fetch the options from
         the database. We can easily use the `get_field_options` of the GridView for
-        that and format the dict the way we want. This variant is used when we want
-        to serialize the GridView instance.
+        that and format the dict the way we want.
 
         If the provided value is a dict it means the field options have already been
         provided and validated once, so we can just return that value. The variant is
         used when we want to validate the input.
 
-        :param value:
+        :param value: The prepared value that needs to be serialized.
         :type value: GridView or dict
         :return: A dictionary containing the
         :rtype: dict

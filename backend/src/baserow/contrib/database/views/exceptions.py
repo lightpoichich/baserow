@@ -9,8 +9,8 @@ class ViewDoesNotExist(Exception):
 
 class UnrelatedFieldError(Exception):
     """
-    Raised when a field is not related to the view. For example when unrelated field
-    options are being updated.
+    Raised when a field is not related to the view. For example when someone tries to
+    update field options of a field that does not belong to the view's table.
     """
 
 

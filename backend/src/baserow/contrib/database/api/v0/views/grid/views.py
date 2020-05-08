@@ -72,10 +72,10 @@ class GridViewView(APIView):
     @validate_body(GridViewSerializer)
     def patch(self, request, view_id, data):
         """
-        Updates the grid view field options for the provided grid view.
+        Updates the field options for the provided grid view.
 
         The following example body data will only update the width of the FIELD_ID
-        and leaves the other untouched.
+        and leaves the others untouched.
             {
                 FIELD_ID: {
                     'width': 200

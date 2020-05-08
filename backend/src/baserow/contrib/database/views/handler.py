@@ -126,11 +126,11 @@ class ViewHandler:
 
         :param grid_view: The grid view for which the field options need to be updated.
         :type grid_view: Model
-        :param field_options: A dict with the field ids as the key and the value as a
-            dict with containing the values that need to be updated.
+        :param field_options: A dict with the field ids as the key and a dict
+            containing the values that need to be updated as value.
         :type field_options: dict
-        :param fields: Optionally a list of allowed can be provided so that they
-            don't have to be fetched again.
+        :param fields: Optionally a list of fields can be provided so that they don't
+            have to be fetched again.
         :type fields: None or list
         """
 

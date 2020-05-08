@@ -157,7 +157,7 @@ def validate_body_custom_fields(registry, base_serializer_class=None,
 
 def allowed_includes(*allowed):
     """
-    A view method decorator that checks the which allowed includes are in the GET
+    A view method decorator that checks which allowed includes are in the GET
     parameters of the request. The allowed arguments are going to be added to the
     view method kwargs and if they are in the includes GET parameter the value will
     be True.
@@ -169,7 +169,7 @@ def allowed_includes(*allowed):
     def get(request, cars, bikes, planes):
         cars >> True
         bikes >> True
-        plances >> False
+        planes >> False
 
     # GET /page/?include=planes
     @allowed_includes('cars', 'bikes', 'planes')
@@ -178,7 +178,7 @@ def allowed_includes(*allowed):
         bikes >> False
         planes >> True
 
-    :param allowed: Should have all the optionally allowed include values.
+    :param allowed: Should have all the allowed include values.
     :type allowed: list
     """
 

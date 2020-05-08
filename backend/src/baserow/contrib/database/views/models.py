@@ -35,14 +35,12 @@ class GridView(View):
     def get_field_options(self, create_if_not_exists=False, fields=None):
         """
         Each field can have unique options per view. This method returns those
-        options per field type and can optionally create the missing options of later
-        created fields.
+        options per field type and can optionally create the missing ones.
 
         :param create_if_not_exists: If true the missing GridViewFieldOptions are
-            going to be created. If a fields has been created at a later moment or the
-            options simply have never been updated it could be possible that it
-            doesn't exist yet. If this value is create the missing relationships are
-            created in that case.
+            going to be created. If a fields has been created at a later moment it could
+            be possible that they don't exist yet. If this value is True, the
+            missing relationships are created in that case.
         :type create_if_not_exists: bool
         :param fields: If all the fields related to the table of this grid view have
             already been fetched, they can be provided here to avoid having to fetch

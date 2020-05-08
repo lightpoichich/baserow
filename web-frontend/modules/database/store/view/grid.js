@@ -540,7 +540,7 @@ export const actions = {
     }
   },
   /**
-   * Updates the field options a a given field in the store. So no API request to
+   * Updates the field options of a given field in the store. So no API request to
    * the backend is made.
    */
   setFieldOptionsOfField({ commit }, { field, values }) {

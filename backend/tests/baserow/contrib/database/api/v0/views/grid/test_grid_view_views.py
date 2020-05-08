@@ -200,6 +200,7 @@ def test_patch_grid_view(api_client, data_fixture):
     # so that the GridViewFieldOptions entry is not created. This should
     # automatically be created when the page is fetched.
     number_field = data_fixture.create_number_field(table=table)
+    grid_2 = data_fixture.create_grid_view()
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.patch(
@@ -291,3 +292,19 @@ def test_patch_grid_view(api_client, data_fixture):
     assert response.status_code == 400
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail']['field_options'][0]['code'] == 'invalid_value'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': 999})
+    response = api_client.patch(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 404
+    assert response.json()['error'] == 'ERROR_GRID_DOES_NOT_EXIST'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid_2.id})
+    response = api_client.patch(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'

@@ -12,7 +12,7 @@ export default {
        */
       editing: false,
       /**
-       *  A temporary copy of the value when editing.
+       * A temporary copy of the value when editing.
        */
       copy: null,
     }

@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
 
@@ -5,7 +6,10 @@ import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 
 export function populateRow(row) {
-  row._ = { loading: false }
+  row._ = {
+    loading: false,
+    hover: false,
+  }
   return row
 }
 
@@ -117,8 +121,8 @@ export const mutations = {
   },
   ADD_FIELD(state, { field, value }) {
     const name = `field_${field.id}`
-    state.rows.forEach((row) => {
-      row[name] = value
+    state.rows.forEach((row, index) => {
+      Vue.set(row, name, value)
     })
   },
   SET_ROW_LOADING(state, { row, value }) {
@@ -135,6 +139,9 @@ export const mutations = {
         [fieldId]: values,
       })
     }
+  },
+  SET_ROW_HOVER(state, { row, value }) {
+    row._.hover = value
   },
 }
 
@@ -548,6 +555,9 @@ export const actions = {
       fieldId: field.id,
       values,
     })
+  },
+  setRowHover({ commit }, { row, value }) {
+    commit('SET_ROW_HOVER', { row, value })
   },
 }
 

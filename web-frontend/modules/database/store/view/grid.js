@@ -121,7 +121,10 @@ export const mutations = {
   },
   ADD_FIELD(state, { field, value }) {
     const name = `field_${field.id}`
-    state.rows.forEach((row, index) => {
+    state.rows.forEach((row) => {
+      // We have to use the Vue.set function here to make it reactive immediately.
+      // If we don't do this the value in the field components of the grid and modal
+      // don't have the correct value and will act strange.
       Vue.set(row, name, value)
     })
   },

@@ -297,6 +297,7 @@ export default {
       addHover: false,
       loading: true,
       selectedRow: null,
+      lastHoveredRow: null,
       widths: {
         fields: {},
       },
@@ -562,7 +563,19 @@ export default {
       next[0].select()
     },
     setRowHover(row, value) {
+      // Sometimes the mouseleave is not triggered, but because you can hover only one
+      // row at a time we can remember which was hovered last and set the hover state to
+      // false if it differs.
+      if (this.lastHoveredRow !== null && this.lastHoveredRow.id !== row.id) {
+        this.$store.dispatch('view/grid/setRowHover', {
+          row: this.lastHoveredRow,
+          value: false,
+        })
+        this.lastHoveredRow = true
+      }
+
       this.$store.dispatch('view/grid/setRowHover', { row, value })
+      this.lastHoveredRow = row
     },
   },
 }

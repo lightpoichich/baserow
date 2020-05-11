@@ -54,7 +54,7 @@ export class FieldType extends Registerable {
   /**
    * The row edit field should represent a the related row value of this type. It
    * will be used in the row edit modal, but can also be used in other forms. It is
-   * also responsible for editing the value.
+   * responsible for editing the value.
    */
   getRowEditFieldComponent() {
     throw new Error(

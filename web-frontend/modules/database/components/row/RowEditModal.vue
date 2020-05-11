@@ -67,7 +67,7 @@ export default {
       this.getRootModal().show(...args)
     },
     /**
-     * Because the modal can't update values by himself an event will be called to
+     * Because the modal can't update values by himself, an event will be called to
      * notify the parent component to actually update the value.
      */
     update(context) {

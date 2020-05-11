@@ -22,7 +22,7 @@ export default {
     },
     /**
      * Formats the value based on the field's settings. The number will be rounded
-     * if so much decimal places are provided and if negative numbers aren't allowed
+     * if to much decimal places are provided and if negative numbers aren't allowed
      * they will be set to 0.
      */
     beforeSave(value) {

@@ -6,7 +6,7 @@ export default {
   data() {
     return {
       /**
-       * Indicates whether of the user is editing the value.
+       * Indicates whether the user is editing the value.
        */
       editing: false,
       /**

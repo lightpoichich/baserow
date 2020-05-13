@@ -85,6 +85,21 @@ class NumberFieldType(FieldType):
                 positive=not instance.number_negative
             )
 
+    def get_alter_column_type_function(self, connection, instance):
+        if connection.vendor == 'postgresql':
+            decimal_places = 0
+            if instance.number_type == NUMBER_TYPE_DECIMAL:
+                decimal_places = instance.number_decimal_places
+
+            function = f"round(p_in::numeric, {decimal_places})"
+
+            if not instance.number_negative:
+                function = f"greatest({function}, 0)"
+
+            return function
+
+        return super().get_alter_column_type_function(connection, instance)
+
 
 class BooleanFieldType(FieldType):
     type = 'boolean'

@@ -99,6 +99,27 @@ class FieldType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
 
         return None
 
+    def get_alter_column_type_function(self, connection, instance):
+        """
+        Can optionally return a SQL function as string to convert the old field's value
+        when changing the field type. If None is returned no function will be
+        applied. The connection can be used to see which engine is used, postgresql,
+        mysql or sqlite.
+
+        Example when a string is converted to an number the function could be:
+        REGEXP_REPLACE(p_in, '[^0-9]', '', 'g') which would remove all non numeric
+        characters. The p_in variable is the old value as a string.
+
+        :param connection: The connection to check the database engine.
+        :type connection: DatabaseWrapper
+        :param instance: The new field instance.
+        :type instance: Field
+        :return: The SQL function to convert the value.
+        :rtype: None or str
+        """
+
+        return None
+
 
 class FieldTypeRegistry(CustomFieldsRegistryMixin, ModelRegistryMixin, Registry):
     """

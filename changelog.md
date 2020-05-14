@@ -10,5 +10,6 @@
 * The next field is now selected when the tab character is pressed when a field is
   selected.
 * Changed the styling of the notification alerts.
-* Fixed failing when changing field type and the a data value wasn't in the correct
+* Fixed error when changing field type and the a data value wasn't in the correct
   format.
+* Update the field's data values when the type changes.

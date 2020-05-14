@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from django.utils.encoding import force_text
 
 from rest_framework.serializers import ModelSerializer
@@ -26,14 +24,26 @@ def validate_data(serializer_class, data):
 
     serializer = serializer_class(data=data)
     if not serializer.is_valid():
-        # Create a serialized detail dict why the validation failed.
-        detail = defaultdict(list)
+        # Create a serialized detail dict about why the validation failed.
+        # @TODO we might want to make this function a bit clearer.
+        detail = {}
         for key, errors in serializer.errors.items():
-            for error in errors:
-                detail[key].append({
-                    'error': force_text(error),
-                    'code': error.code
-                })
+            if isinstance(errors, dict):
+                detail[key] = {}
+                for group_key, group_errors in errors.items():
+                    detail[key][group_key] = []
+                    for error in group_errors:
+                        detail[key][group_key].append({
+                            'error': force_text(error),
+                            'code': error.code
+                        })
+            else:
+                detail[key] = []
+                for error in errors:
+                    detail[key].append({
+                        'error': force_text(error),
+                        'code': error.code
+                    })
 
         raise RequestBodyValidationException(detail)
 

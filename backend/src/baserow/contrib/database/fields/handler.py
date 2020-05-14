@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 
 from django.db import connections
 from django.db.utils import ProgrammingError, DataError
@@ -93,6 +94,7 @@ class FieldHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        old_field = deepcopy(field)
         field_type = field_type_registry.get_by_model(field)
         from_model = field.table.get_model(field_ids=[], fields=[field])
         from_field_type = field_type.type
@@ -108,16 +110,16 @@ class FieldHandler:
         field = set_allowed_attrs(kwargs, allowed_fields, field)
         field.save()
 
-        # Change the field in the table schema.
         connection = connections[settings.USER_TABLE_DATABASE]
+        to_model = field.table.get_model(field_ids=[], fields=[field])
+        from_model_field = from_model._meta.get_field(field.db_column)
+        to_model_field = to_model._meta.get_field(field.db_column)
+
+        # Change the field in the table schema.
         with lenient_schema_editor(
             connection,
             field_type.get_alter_column_type_function(connection, field)
         ) as schema_editor:
-            to_model = field.table.get_model(field_ids=[], fields=[field])
-            from_model_field = from_model._meta.get_field(field.db_column)
-            to_model_field = to_model._meta.get_field(field.db_column)
-
             try:
                 schema_editor.alter_field(from_model, from_model_field, to_model_field)
             except (ProgrammingError, DataError):
@@ -129,6 +131,8 @@ class FieldHandler:
                           f'{from_field_type} to {new_type_name}.'
                 logger.error(message)
                 raise CannotChangeFieldType(message)
+
+        field_type.after_update(field, old_field, to_model, from_model, connection)
 
         return field
 

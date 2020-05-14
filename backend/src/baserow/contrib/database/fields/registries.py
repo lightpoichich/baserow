@@ -120,6 +120,27 @@ class FieldType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
 
         return None
 
+    def after_update(self, field, old_field, model, old_model, connection):
+        """
+        Hook that is called right after a field has been updated. In some cases data
+        mutation still has to be done in order to maintain data integrity. For example
+        when the only the allowing of negative values has been changed for the number
+        field.
+
+        :param field: The new updated field instance.
+        :type: field Field
+        :param old_field: The old instance of the updated field. It is not
+            recommended to call the save function as this undo part of the changes
+            that have been made. This is just for comparing values.
+        :type old_field: Field
+        :param model: The used generated model containing only the new field.
+        :type model: Model
+        :param old_model: The old generated model containing only the old field.
+        :type old_model: Model
+        :param connection: The connection used to make the database schema change.
+        :type connection: DatabaseWrapper
+        """
+
 
 class FieldTypeRegistry(CustomFieldsRegistryMixin, ModelRegistryMixin, Registry):
     """

@@ -71,7 +71,36 @@ def test_alter_number_field_column_type(expected, field_kwargs, data_fixture):
 
 
 @pytest.mark.django_db
-def test_alter_number_field_column_type(data_fixture):
+def test_alter_number_field_column_type_negative(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(table=table, order=1,
+                                                    number_negative=True)
+    decimal_field = data_fixture.create_number_field(table=table, order=2,
+                                                     number_type='DECIMAL',
+                                                     number_negative=True,
+                                                     number_decimal_places=2)
+
+    model = table.get_model()
+    model.objects.create(**{
+        f'field_{number_field.id}': -10,
+        f'field_{decimal_field.id}': Decimal('-10.10')
+    })
+
+    handler = FieldHandler()
+    number_field = handler.update_field(user=user, field=number_field,
+                                        number_negative=False)
+    decimal_field = handler.update_field(user=user, field=decimal_field,
+                                         number_negative=False)
+
+    model = table.get_model()
+    rows = model.objects.all()
+    assert getattr(rows[0], f'field_{number_field.id}') == 0
+    assert getattr(rows[0], f'field_{decimal_field.id}') == 0.00
+
+
+@pytest.mark.django_db
+def test_alter_boolean_field_column_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(table=table, order=1)

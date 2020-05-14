@@ -100,6 +100,30 @@ class NumberFieldType(FieldType):
 
         return super().get_alter_column_type_function(connection, instance)
 
+    def after_update(self, field, old_field, model, old_model, connection):
+        """
+        The allowing of negative values isn't stored in the database field type. If
+        the type hasn't changed, but the allowing of negative values has it means that
+        the column data hasn't been converted to positive values yet. We need to do
+        this here. All the negatives values are set to 0.
+        """
+
+        old_type = old_model._meta.get_field(field.db_column).db_parameters(
+            connection=connection)['type']
+        new_type = model._meta.get_field(field.db_column).db_parameters(
+            connection=connection)['type']
+
+        if (
+            old_type == new_type
+            and not field.number_negative
+            and old_field.number_negative
+        ):
+            model.objects.filter(**{
+                f'field_{field.id}__lt': 0
+            }).update(**{
+                f'field_{field.id}': 0
+            })
+
 
 class BooleanFieldType(FieldType):
     type = 'boolean'

@@ -106,11 +106,12 @@ class FieldType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
         applied. The connection can be used to see which engine is used, postgresql,
         mysql or sqlite.
 
-        Example when a string is converted to an number the function could be:
+        Example when a string is converted to a number, the function could be:
         REGEXP_REPLACE(p_in, '[^0-9]', '', 'g') which would remove all non numeric
         characters. The p_in variable is the old value as a string.
 
-        :param connection: The connection to check the database engine.
+        :param connection: The used connection. This can for example be used to check
+            the database engine type.
         :type connection: DatabaseWrapper
         :param instance: The new field instance.
         :type instance: Field
@@ -120,25 +121,29 @@ class FieldType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
 
         return None
 
-    def after_update(self, field, old_field, model, old_model, connection):
+    def after_update(self, field, old_field, model, old_model, connection,
+                     altered_column):
         """
-        Hook that is called right after a field has been updated. In some cases data
+        This hook is called right after a field has been updated. In some cases data
         mutation still has to be done in order to maintain data integrity. For example
         when the only the allowing of negative values has been changed for the number
         field.
 
-        :param field: The new updated field instance.
+        :param field: The updated field instance.
         :type: field Field
-        :param old_field: The old instance of the updated field. It is not
-            recommended to call the save function as this undo part of the changes
-            that have been made. This is just for comparing values.
+        :param old_field: The old field instance. It is not recommended to call the
+            save function as this will undo part of the changes that have been made.
+            This is just for comparing values.
         :type old_field: Field
-        :param model: The used generated model containing only the new field.
+        :param model: The generated model containing only the new field.
         :type model: Model
         :param old_model: The old generated model containing only the old field.
         :type old_model: Model
         :param connection: The connection used to make the database schema change.
         :type connection: DatabaseWrapper
+        :param altered_column: Indicates whether the column has been altered in the
+            table. Sometimes data has to be updated if the column hasn't been altered.
+        :type altered_column: bool
         """
 
 

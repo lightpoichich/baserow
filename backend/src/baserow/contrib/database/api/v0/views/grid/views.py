@@ -72,7 +72,8 @@ class GridViewView(APIView):
     @validate_body(GridViewFilterSerializer)
     def post(self, request, view_id, data):
         """
-        Lists only the requested rows and only the requested fields.
+        Row filter endpoint that only lists the requested rows and optionally only the
+        requested fields.
         """
 
         view = ViewHandler().get_view(request.user, view_id, GridView)

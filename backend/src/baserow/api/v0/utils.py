@@ -22,28 +22,25 @@ def validate_data(serializer_class, data):
     :rtype: dict
     """
 
+    def add(details, key, error_list):
+        if 'key' not in details:
+            details[key] = []
+        for error in error_list:
+            details[key].append({
+                'error': force_text(error),
+                'code': error.code
+            })
+
     serializer = serializer_class(data=data)
     if not serializer.is_valid():
-        # Create a serialized detail dict about why the validation failed.
-        # @TODO we might want to make this function a bit clearer.
         detail = {}
         for key, errors in serializer.errors.items():
             if isinstance(errors, dict):
                 detail[key] = {}
                 for group_key, group_errors in errors.items():
-                    detail[key][group_key] = []
-                    for error in group_errors:
-                        detail[key][group_key].append({
-                            'error': force_text(error),
-                            'code': error.code
-                        })
+                    add(detail[key], group_key, group_errors)
             else:
-                detail[key] = []
-                for error in errors:
-                    detail[key].append({
-                        'error': force_text(error),
-                        'code': error.code
-                    })
+                add(detail, key, errors)
 
         raise RequestBodyValidationException(detail)
 

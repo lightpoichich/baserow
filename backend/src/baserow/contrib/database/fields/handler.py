@@ -132,7 +132,12 @@ class FieldHandler:
                 logger.error(message)
                 raise CannotChangeFieldType(message)
 
-        field_type.after_update(field, old_field, to_model, from_model, connection)
+        from_model_field_type = from_model_field.db_parameters(connection)['type']
+        to_model_field_type = to_model_field.db_parameters(connection)['type']
+        altered_column = from_model_field_type != to_model_field_type
+
+        field_type.after_update(field, old_field, to_model, from_model, connection,
+                                altered_column)
 
         return field
 

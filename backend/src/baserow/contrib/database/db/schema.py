@@ -5,8 +5,8 @@ class PostgresqlLenientDatabaseSchemaEditor:
     """
     Class changes the behavior of the postgres database schema editor slightly. Normally
     when the field type is altered and one of the data columns doesn't have a value that
-    can be casted to the new type it fails. This class introduces the possibility to run
-    a custom function, like REGEXP_REPLACE, to convert the data to the correct
+    can be casted to the new type, it fails. This class introduces the possibility to
+    run a custom function, like REGEXP_REPLACE, to convert the data to the correct
     format. If the casting still fails the value will be set to null.
     """
 
@@ -60,11 +60,11 @@ def lenient_schema_editor(connection, alert_column_type_function=None):
     to convert the value and if it does not succeed the value will be set to null,
     but it will never fail.
 
-    :param connection: The connection which to generate the lenient schema editor
-        class for.
+    :param connection: The current connection for which to generate the schema editor
+        for.
     :type connection: DatabaseWrapper
     :param alert_column_type_function: Optionally the string of a SQL function to
-        convert data value to the the new type. The function will have the variable
+        convert the data value to the the new type. The function will have the variable
         `p_in` as old value.
     :type alert_column_type_function: None or str
     """

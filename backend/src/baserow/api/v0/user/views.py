@@ -53,7 +53,7 @@ class SendResetPasswordEmailView(APIView):
     @validate_body(SendResetPasswordEmailBodyValidationSerializer)
     def post(self, request, data):
         """
-        If the user is found, an email containing the password reset link is send to
+        If the email is found, an email containing the password reset link is send to
         the user.
         """
 
@@ -79,7 +79,7 @@ class ResetPasswordView(APIView):
     })
     @validate_body(ResetPasswordBodyValidationSerializer)
     def post(self, request, data):
-        """Changes the password of user if the provided token is valid."""
+        """Changes users password if the provided token is valid."""
 
         handler = UserHandler()
         handler.reset_password(data['token'], data['password'])

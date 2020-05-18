@@ -17,7 +17,7 @@ User = get_user_model()
 class UserHandler:
     def get_user(self, user_id=None, email=None):
         """
-        Finds and returns a single user object based on the provided parameters.
+        Finds and returns a single user instance based on the provided parameters.
 
         :param user_id: The user id of the user.
         :type user_id: int
@@ -45,7 +45,7 @@ class UserHandler:
 
     def create_user(self, name, email, password):
         """
-        Create a new user with the provided information and create a new group and
+        Creates a new user with the provided information and creates a new group and
         application for him.
 
         :param name: The name of the new user.
@@ -74,7 +74,7 @@ class UserHandler:
 
     def get_reset_password_signer(self):
         """
-        The password reset serializer that can dump and load values.
+        Instantiates the password reset serializer that can dump and load values.
 
         :return: The itsdangerous serializer.
         :rtype: URLSafeTimedSerializer
@@ -86,9 +86,9 @@ class UserHandler:
         """
         Sends an email containing a password reset url to the user.
 
-        :param user: The user object.
+        :param user: The user instance.
         :type user: User
-        :param base_url: The base url of the frontend where the user can reset his
+        :param base_url: The base url of the frontend, where the user can reset his
             password. The reset token is appended to the URL (base_url + '/TOKEN').
         :type base_url: str
         """

@@ -6,7 +6,7 @@ from django.utils.html import strip_tags
 
 class BaseEmailMessage(EmailMultiAlternatives):
     """
-    The base email message class that can be used to create reusable email classes for
+    The base email message class can be used to create reusable email classes for
     each email. The template_name is rendered to a string and attached as html
     alternative. This content is automatically converted to plain text. The get_context
     method can be extended to add additional context variables while rendering the

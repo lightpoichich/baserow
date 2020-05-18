@@ -83,7 +83,7 @@ class TableHandler:
 
         :param user: The user on whose behalf the table is filled.
         :type: user: User
-        :param table: The table that wants the initial data.
+        :param table: The table that needs the initial data.
         :type table: User
         """
 

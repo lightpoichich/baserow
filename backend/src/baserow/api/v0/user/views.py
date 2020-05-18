@@ -6,10 +6,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework_jwt.settings import api_settings
 
 from baserow.api.v0.decorators import map_exceptions, validate_body
-from baserow.user.handler import UserHandler
-from baserow.user.exceptions import UserAlreadyExist
+from baserow.core.user.handler import UserHandler
+from baserow.core.user.exceptions import UserAlreadyExist, UserNotFound
 
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import (
+    RegisterSerializer, UserSerializer, SendResetPasswordBodyValidationSerializer
+)
 from .errors import ERROR_ALREADY_EXISTS
 
 
@@ -39,3 +41,25 @@ class UserView(APIView):
             response.update(token=token)
 
         return Response(response)
+
+
+class SendResetPasswordEmail(APIView):
+    permission_classes = (AllowAny,)
+
+    @transaction.atomic
+    @validate_body(SendResetPasswordBodyValidationSerializer)
+    def post(self, request, data):
+        """
+        If the user is found, an email containing the password reset link is send to
+        the user.
+        """
+
+        handler = UserHandler()
+
+        try:
+            user = handler.get_user(email=data['email'])
+            handler.send_reset_password_email(user, data['base_url'])
+        except UserNotFound:
+            pass
+
+        return Response('', status=204)

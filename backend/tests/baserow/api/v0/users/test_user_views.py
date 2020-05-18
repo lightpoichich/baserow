@@ -35,3 +35,43 @@ def test_create_user(client):
     }, format='json')
 
     assert response_failed_2.status_code == 400
+
+
+@pytest.mark.django_db
+def test_send_password_reset_email(data_fixture, client, mailoutbox):
+    data_fixture.create_user(email='test@localhost')
+
+    response = client.post(
+        reverse('api_v0:user:send_password_reset_email'),
+        {},
+        format='json'
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+
+    response = client.post(
+        reverse('api_v0:user:send_password_reset_email'),
+        {
+            'email': 'unknown@localhost',
+            'base_url': 'http://test.nl'
+        },
+        format='json'
+    )
+    assert response.status_code == 204
+    assert len(mailoutbox) == 0
+
+    response = client.post(
+        reverse('api_v0:user:send_password_reset_email'),
+        {
+            'email': 'test@localhost',
+            'base_url': 'http://test.nl'
+        },
+        format='json'
+    )
+    assert response.status_code == 204
+    assert len(mailoutbox) == 1
+
+    email = mailoutbox[0]
+    assert 'test@localhost' in email.to
+    assert email.body.index('http://test.nl')

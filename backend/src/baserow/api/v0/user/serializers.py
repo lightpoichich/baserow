@@ -20,3 +20,8 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(max_length=32)
     authenticate = serializers.BooleanField(required=False, default=False)
+
+
+class SendResetPasswordBodyValidationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    base_url = serializers.URLField()

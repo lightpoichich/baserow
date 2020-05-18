@@ -1,5 +1,7 @@
-from baserow.core.emails import BaseEmailMessage
+from django.conf import settings
 from django.utils.translation import gettext as _
+
+from baserow.core.emails import BaseEmailMessage
 
 
 class ResetPasswordEmail(BaseEmailMessage):
@@ -13,5 +15,6 @@ class ResetPasswordEmail(BaseEmailMessage):
 
     def get_context(self):
         context = super().get_context()
-        context.update(user=self.user, reset_url=self.reset_url)
+        context.update(user=self.user, reset_url=self.reset_url,
+                       expire_hours=settings.RESET_PASSWORD_TOKEN_MAX_AGE / 60 / 60)
         return context

@@ -154,4 +154,7 @@ PUBLIC_BACKEND_DOMAIN = 'localhost:8000'
 PUBLIC_BACKEND_URL = 'http://localhost:8000'
 PUBLIC_WEB_FRONTEND_DOMAIN = 'localhost:3000'
 PUBLIC_WEB_FRONTEND_URL = 'http://localhost:3000'
+
 FROM_EMAIL = 'no-reply@localhost'
+
+RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours

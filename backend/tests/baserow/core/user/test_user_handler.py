@@ -1,5 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
+from freezegun import freeze_time
+
+from itsdangerous.exc import SignatureExpired, BadSignature
 
 from baserow.core.models import Group
 from baserow.core.registries import plugin_registry
@@ -92,3 +95,35 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
 
     user_id = signer.loads(token)
     assert user_id == user.id
+
+
+@pytest.mark.django_db
+def test_reset_password(data_fixture):
+    user = data_fixture.create_user(email='test@localhost')
+    handler = UserHandler()
+
+    signer = handler.get_reset_password_signer()
+
+    with pytest.raises(BadSignature):
+        handler.reset_password('test', 'test')
+        assert not user.check_password('test')
+
+    with freeze_time('2020-01-01 12:00'):
+        token = signer.dumps(9999)
+
+    with freeze_time('2020-01-02 12:00'):
+        with pytest.raises(UserNotFound):
+            handler.reset_password(token, 'test')
+            assert not user.check_password('test')
+
+    with freeze_time('2020-01-01 12:00'):
+        token = signer.dumps(user.id)
+
+    with freeze_time('2020-01-04 12:00'):
+        with pytest.raises(SignatureExpired):
+            handler.reset_password(token, 'test')
+            assert not user.check_password('test')
+
+    with freeze_time('2020-01-02 12:00'):
+        user = handler.reset_password(token, 'test')
+        assert user.check_password('test')

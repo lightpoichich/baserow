@@ -99,3 +99,24 @@ class UserHandler:
 
         email = ResetPasswordEmail(user, reset_url, to=[user.email])
         email.send()
+
+    def reset_password(self, token, password):
+        """
+        Changes the password of a user if the provided token is valid.
+
+        :param token: The signed token that was send to the user.
+        :type token: str
+        :param password: The new password of the user.
+        :type password: str
+        :return: The updated user instance.
+        :rtype: User
+        """
+
+        signer = self.get_reset_password_signer()
+        user_id = signer.loads(token, max_age=settings.RESET_PASSWORD_TOKEN_MAX_AGE)
+
+        user = self.get_user(user_id=user_id)
+        user.set_password(password)
+        user.save()
+
+        return user

@@ -144,7 +144,7 @@ export default {
     },
     /**
      * While editing we want to disable the arrow keys to select the next of
-     * previous field. The tab key is enabled to select the next field.
+     * previous field. The tab key stays enabled.
      */
     canSelectNext(event) {
       const arrowKeys = [37, 38, 39, 40]

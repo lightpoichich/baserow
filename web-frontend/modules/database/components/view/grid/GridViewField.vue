@@ -105,8 +105,8 @@ export default {
         }
         document.body.addEventListener('click', this.$el.clickOutsideEvent)
 
-        // If the tab key or arrow keys are pressed we want to select the next field.
-        // This is however out of the scope of this component so we emit the selectNext
+        // If the tab or arrow keys are pressed we want to select the next field. This
+        // is however out of the scope of this component so we emit the selectNext
         // event that the GridView can handle.
         this.$el.keyPressedNextFieldEvent = (event) => {
           // We will first ask if we can select the next field. If that is not allowed

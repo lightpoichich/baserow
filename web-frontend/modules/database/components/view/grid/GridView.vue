@@ -497,9 +497,8 @@ export default {
       }
     },
     /**
-     * When a field is selected we want to make sure it is visible in the viewport so
-     * we might need to scroll a little bit. Because the primary fields are always
-     * visible we don't have to do anything when those are selected.
+     * When a field is selected we want to make sure it is visible in the viewport, so
+     * we might need to scroll a little bit.
      */
     selectedField(field, component) {
       const element = component.$el

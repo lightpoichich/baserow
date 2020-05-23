@@ -49,8 +49,51 @@ def test_long_text_field_type(api_client, data_fixture):
     assert response_json[f'field_{field_id}'] == text
 
     model = table.get_model(attribute_names=True)
-    rows = model.objects.all()
-    assert rows[0].long_text_2 == text
+    row = model.objects.all().last()
+    assert row.long_text_2 == text
+
+    response = api_client.post(
+        reverse('api_v0:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': ''
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == ''
+
+    row = model.objects.all().last()
+    assert row.long_text_2 == ''
+
+    response = api_client.post(
+        reverse('api_v0:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': None
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == None
+
+    row = model.objects.all().last()
+    assert row.long_text_2 == None
+
+    response = api_client.post(
+        reverse('api_v0:database:rows:list', kwargs={'table_id': table.id}),
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == None
+
+    row = model.objects.all().last()
+    assert row.long_text_2 == None
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': field_id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')

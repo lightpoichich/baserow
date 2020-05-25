@@ -275,7 +275,7 @@ export class BooleanFieldType extends FieldType {
    */
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text').toLowerCase()
-    const allowed = ['y', 't', 'y', 'yes', 'true', 'on']
+    const allowed = ['1', 'y', 't', 'y', 'yes', 'true', 'on']
     return allowed.includes(value)
   }
 }

@@ -9,7 +9,7 @@
       <div class="alert-title">Password changed</div>
       <p class="alert-content">
         Your password has been changed. The next time you want to login, you
-        have to use the new password.
+        have to use your new password.
       </p>
     </div>
     <form v-if="!success" @submit.prevent="changePassword">

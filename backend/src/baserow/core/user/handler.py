@@ -126,7 +126,8 @@ class UserHandler:
 
     def change_password(self, user, old_password, new_password):
         """
-        Changes the password of the provided user if the old password if correct.
+        Changes the password of the provided user if the old password is matches the
+        existing one.
 
         :param user: The user for which the password needs to be changed.
         :type user: User

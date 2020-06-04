@@ -46,7 +46,7 @@
                     @click="
                       ;[
                         $refs.settingsModal.show('password'),
-                        $refs.userContext.hide()
+                        $refs.userContext.hide(),
                       ]
                     "
                   >

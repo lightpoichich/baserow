@@ -26,4 +26,4 @@
 * Introduced copy, paste and delete functionality of selected fields.
 * Added date/datetime field.
 * Improved grid view scrolling for touch devices.
-* Implemented password reset function and settings popup.
+* Implemented password change function and settings popup.

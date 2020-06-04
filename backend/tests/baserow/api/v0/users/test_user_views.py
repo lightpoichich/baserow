@@ -188,6 +188,16 @@ def test_change_password(data_fixture, client):
 
     response = client.post(
         reverse('api_v0:user:change_password'),
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+
+    response = client.post(
+        reverse('api_v0:user:change_password'),
         {
             'old_password': 'INCORRECT',
             'new_password': 'new'

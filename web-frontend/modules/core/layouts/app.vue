@@ -115,9 +115,6 @@ export default {
       nameAbbreviation: 'auth/getNameAbbreviation',
     }),
   },
-  mounted() {
-    this.$refs.settingsModal.show('password')
-  },
   methods: {
     logoff() {
       this.$store.dispatch('auth/logoff')

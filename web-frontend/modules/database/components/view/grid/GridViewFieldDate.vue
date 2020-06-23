@@ -118,8 +118,7 @@ export default {
       // this is needed because in some cases the date picker refreshes all his child
       // elements. Because that is done we can't simply check if the date context
       // contains the event target. That would result in hiding the date picker when we
-      // don't want to do that. This makes sure everything the date picker stays
-      // visible.
+      // don't want to do that. This makes sure that the date picker stays visible.
       if (this.editing && this.preventNextUnselect) {
         this.preventNextUnselect = false
         return false

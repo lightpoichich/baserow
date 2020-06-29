@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django.db import transaction
 
 from rest_framework.views import APIView
@@ -12,7 +11,7 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
-from baserow.core.models import Group, GroupUser
+from baserow.core.models import GroupUser
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import UserNotInGroupError, GroupDoesNotExist
 

@@ -60,13 +60,13 @@ Building backend
 ...
 Starting baserow_db_1   ... done
 Starting baserow_mjml_1 ... done
-Recreating backend      ... done
-Recreating web-frontend ... done
+Starting backend        ... done
+Starting web-frontend   ... done
 ```
 
 Once everything has finished and you can visit http://localhost:3000 in your browser
-and you should be redirected to the login screen. Via here can create a new account and 
-start using the software.
+and you should be redirected to the login screen. Via here you can create a new account
+and start using the software.
 
-> I strongly discourage running these images in production. This is just for demo
+> I strongly discourage running these images in production. These are just for demo
 > purposes only.

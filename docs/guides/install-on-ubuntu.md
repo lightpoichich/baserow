@@ -1,4 +1,4 @@
-# Install on Ubuntu
+# Install on Ubuntu (WIP)
 
 While writing this tutorial I used a clean Droplet at Digital Ocean running Ubuntu 
 18.04.3 LTS. We also expect root access.

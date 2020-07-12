@@ -108,8 +108,9 @@ is added to and the eslint loader is added to webpack.
 
 ### modules
 
-* `core`: @TODO
-* `database`: @TODO
+All the modules follow the common directory structure of Nuxt. More information can be 
+found in the 
+[nuxt documentation about the directory structure](https://nuxtjs.org/guide/directory-structure/).
 
 ### tests
 

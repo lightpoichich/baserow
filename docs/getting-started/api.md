@@ -89,7 +89,7 @@ or
 curl -X GET -H 'Content-Type: application/json' -H 'Authorization: JWT {YOUR_TOKEN}' -i https://api.baserow.io/api/groups/'
 ```
 
-## FAQ
+## Common issues
 
 ### 415 Unsupported Media Type
 

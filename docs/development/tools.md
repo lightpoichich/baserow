@@ -13,9 +13,18 @@ https://www.postgresql.org/
 
 ### Django
 
+At the core of the backend we run the Django framework. A framework where lots of 
+people already have experience with was needed to lower the barrier of creating a 
+plugin. We also looked for a batteries included, simple and proven framework. Django 
+was the obvious choice.
+
 https://www.djangoproject.com
 
 ### Django REST framework
+
+To quickly create endpoints, handle authentication, object serialization, validation 
+and do many more things we use Django REST Framework. You will find it at the base or
+every endpoint.
 
 https://www.django-rest-framework.org/
 
@@ -23,9 +32,9 @@ https://www.django-rest-framework.org/
 
 To easily and automatically test all the python code we use pytest. Most of the backend
 code is covered with tests and we like to keep it that way! The code is also tested
-in the continuous integration pipline. It can also be tested manually in the development
-environment. Make sure that you are in the `backend` container and execute the following
-command.
+in the continuous integration pipeline. It can also be tested manually in the 
+development environment. Make sure that you are in the `backend` container and execute 
+the following command.
 
 ```
 $ make test
@@ -81,9 +90,18 @@ https://vuejs.org/
 
 ### Nuxt.js
 
+Because of out experience with Vue.js and the great features Nuxt.js offers the choice
+was obvious. It offers server side rendering, automated code splitting, good project
+structure, modularity and lots of other features out of the box. All of which were 
+needed for Baserow.
+
 https://nuxtjs.org/
 
 ### Stylelint
+
+The tool Stylelint is used to make sure all the SCSS code is in the correct format. It
+is used when the `make stylelint` is called and live in the development environment via
+prettier.
 
 https://stylelint.io/
 
@@ -95,7 +113,10 @@ https://eslint.org/
 
 https://prettier.io/
 
-### Webpack
+### webpack
+
+To bundle all the assets of Baserow we use webpack. This is being used by default with
+Nuxt.js.
 
 https://webpack.js.org/
 
@@ -105,8 +126,26 @@ https://sass-lang.com/
 
 ### JEST
 
+Because of its simplicity and compatibility with Vue and Nuxt we have chosen to include
+JEST as the framework for the web frontend tests. Almost no code is covered yet so we
+can definitely improve on that. The code is also tested in the continuous integration 
+pipeline. It can also be tested manually in the  development environment. Make sure 
+that you are in the `web-frontend` container and execute the following command.
+
+```
+$ make jest
+```
+
 https://jestjs.io/
 
 ### Font Awesome 5
 
+To improve the user experience we are using the Font Awesome icon set in the web 
+frontend.
+
 https://fontawesome.com/
+
+## Thanks!
+
+Big thanks to creators and and contributors of the tools described above! Without you
+Baserow would not have been where it it today.

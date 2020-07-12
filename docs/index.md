@@ -27,7 +27,7 @@ Need some help with setting things up?
   `docker-compose`.
 * [Install on Ubuntu](./guides/install-on-ubuntu.md): Install Baserow on a clean server
   running Ubuntu. (WIP)
-  
+
 ## Development
 
 Everything related to contributing and developing for Baserow.

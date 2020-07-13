@@ -28,7 +28,7 @@ setup(
     scripts=['baserow'],
     author='Bram Wiepjes (Cloud 3)',
     author_email='bram@baserow.io',
-    description='Open source online database tool.',
+    description='Open source online database.',
     long_description='',
     platforms=['linux'],
     package_dir={'': 'src'},

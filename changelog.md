@@ -13,8 +13,9 @@
   first time.
 * Improved API 404 errors by providing a machine readable error.
 * Added documentation markdown files.
+* Added cookiecutter plugin boilerplate.
 
-## Released (2020-08-06)
+## Released (2020-06-08)
 
 * Fixed not handling 500 errors.
 * Prevent row context menu when right clicking on a field that's being edited.

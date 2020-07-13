@@ -115,9 +115,9 @@ export default ({ store, app }) => {
 
 Once you have added this code you should be able to use the "Create new" button in the
 sidebar of the web-frontend to create a new text file. Of course if you click on it in 
-state right now it does not do anything. There are several methods that can override
-in the `TextFileApplicationType` class. You can for example create a new route and 
-provide that route name in the `getRouteName` method if you want to navigate to that
-route when the user clicks on the text file in the sidebar. You might want to inspect
-the `web-frontend/modules/core/applicationTypes.js` file in the Baserow repository for
-all the options.
+the state right now it does not do anything. There are several methods that can 
+be overridden in the `TextFileApplicationType` class. You can for example create a new 
+route and provide that route name in the `getRouteName` method if you want to navigate 
+to that route when the user clicks on the text file in the sidebar. You might want to 
+inspect the `web-frontend/modules/core/applicationTypes.js` file in the Baserow 
+repository for all the options.

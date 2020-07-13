@@ -25,7 +25,8 @@ plugin "My Baserow Plugin". You can choose how you want to name your plugin via 
 cookiecutter input prompts.
 
 > The python module depends on the given project name. If we for example go with 
-> "My Baserow Plugin" the module name will be my_baserow_plugin.
+> "My Baserow Plugin" the Django app name will be my_baserow_plugin and the Nuxt module
+> name will be my-baserow-plugin.
 
 ```
 $ cookiecutter baserow/plugin-boilerplate
@@ -88,9 +89,9 @@ is working!
 ## First changes
 
 The most important part inside the my-baserow-plugin folder is the 
-plugins/my_baserow_plugin folder. Here you will find all the code of your plugin 
-separated. For example purposes we are going to add a simple endpoint which always 
-returns the same text and we are going to show this text on a page in the web-frontend.
+plugins/my_baserow_plugin folder. Here you will find all the code of your plugin. For
+example purposes we are going to add a simple endpoint which always returns the same 
+response and we are going to show this text on a page in the web frontend.
 
 ### Backend changes
 
@@ -192,7 +193,7 @@ commands in the correct container.
 * `make eslint` (web-frontend): all the javascript code will be checked with eslint.
 * `make stylelint` (web-frontend): all the scss code will be checked with stylelint.
 
-## FAQ
+## Common problems
 
 ### Distribution not found
 

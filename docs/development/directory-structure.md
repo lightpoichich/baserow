@@ -27,8 +27,8 @@ This whole directory is also added to the backend container.
   backend.
 * `Dockerfile.dev`: the dockerfile that is used to build the development image of the
   backend.
-* `Makefile`: contains a few command install the dependencies, run the linter and run 
-  the tests.
+* `Makefile`: contains a few commands to install the dependencies, run the linter and
+  run the tests.
 * `pytest.ini`: pytest configuration when running the tests.
 * `setup.py`: setuptools file to install Baserow as a dependency.
 
@@ -36,14 +36,14 @@ This whole directory is also added to the backend container.
 
 The src directory contains the full source code of the Baserow backend module.
 
-* `api`: is a Django app that exposes Baserow via a REST API. Even though is an 
+* `api`: is a Django app that exposes Baserow via a REST API. Even though it is an 
   optional app it is by default installed and it is highly recommend to use this.
   It contains several directories each with their urls, views, serializers and errors 
   related to a specific part. For example the groups and application both have their 
   own directory. There are also several modules that contain some generic classes, 
   functions, decorators that are reused throughout the code. The `urls.py` module is 
   included by the root url config under the namespace `api`.
-* `config`: is a module that contains base settings and some settings that are for a 
+* `config`: is a module that contains base settings and some settings that are for
    specific environments. It also contains the root url config that includes the api 
    under the namespace `api` and adds a `_health` route for health checking. There is
    also a wsgi.py file which can be used to expose the applications.
@@ -54,7 +54,7 @@ The src directory contains the full source code of the Baserow backend module.
   concepts that are reused throughout the backend. It also contains the code for the 
   group and application concepts that are at the core of Baserow. Of course there are
   also helper classes, functions and decorators that can be reused.
-* `manage.py`: the django manage.py file to execute management commands.
+* `manage.py`: the Django manage.py file to execute management commands.
 
 ### tests
 
@@ -70,8 +70,8 @@ test.
 
 ```python
 def test_something_important(data_fixture):
-    # A table, database and group have also been created because they are needed for 
-    # the text field to exist.
+    # A table, database and group have also been created because the text field depends
+    # on them.
     field = data_fixture.create_text_field()
 ```
 
@@ -115,7 +115,7 @@ found in the
 ### tests
 
 At the moment there are only a few tests related to the web-frontend. Because the tests
-aren't maintained at this point the directory structure is off. The specs should be in 
+aren't maintained at this point, the directory structure is off. The specs should be in 
 the matching directory of the modules.
 
 ## docs
@@ -123,3 +123,8 @@ the matching directory of the modules.
 The docs folder contains markdown files with the full developer documentation of 
 Baserow. The contents of these files are automatically placed on 
 https://baserow.io/docs.
+
+## plugin-boilerplate
+
+Contains a cookiecutter boilerplate for a Baserow plugin. More information can be found
+on the [plugin boilerplate page](../plugins/boilerplate.md).

@@ -20,7 +20,7 @@ contains base settings that can be extended. The REST API is written as a decoup
 component which is not necessary to run Baserow. It is highly recommended though. The
 same goes for the database app, this is written als a plugin for Baserow. Without it
 you would only have the core which only has functionality like authentication, groups 
-and some application abstraction.
+and the application abstraction.
 
 ### Handlers
 
@@ -48,6 +48,12 @@ contains some base config that can be extended. It is basically a user friendly 
 around the backend that can run in your browser. It is made using 
 [NuxtJS](https://nuxtjs.org/).
 
+### Style guide
+
+There is a style guide containing examples of all components on 
+https://baserow.io/style-guide or if you want to see it on your local environment
+http://localhost:8000/style-guide.
+
 ## Concepts
 
 ### Groups
@@ -61,7 +67,7 @@ implemented first. Groups can easily be created, edited and deleted via the
 
 ### Applications
 
-An application is more of an abstraction that be added to a group. By default the 
+An application is more of an abstraction that can be added to a group. By default the 
 database plugin is included which contains the database application. Via the 
 "create new" button in the sidebar a new application instance can be created for the 
 selected group. Once you click on it you will see a context menu with all the 

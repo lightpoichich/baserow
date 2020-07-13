@@ -38,12 +38,13 @@ can of course follow the steps in any directory, but in this tutorial I will ass
 the working directory is `~/baserow`.
 
 First we have to clone the repository. Execute the following commands to clone the 
-master branch. If you are not familiar with git clone, this will download a copy 
+master branch. If you are not familiar with git clone, this will download a copy of
 Baserow's code to your computer.
 
-> Note that if you have already started the demo environment once, you might need to to 
-> rebuild the images for the development environment by using the command 
-> `docker-compose up -d --build` because they have naming conflicts.
+> Note that if you have already started the 
+> [demo environment](../guides/demo-environment.md) once, you might need to to rebuild 
+> the images for the development environment by using the command 
+> `docker-compose up -d --build` because they have container name conflicts.
 
 ```
 $ cd ~/baserow

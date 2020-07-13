@@ -1,8 +1,8 @@
 # Code quality
 
 The quality of the code is very important. That is why we have linters, unit tests, API
-docs, in code docs, these developer docs, modular code and have put a lot of thought in
-the underlying architecture of both the backend and the web-frontend.
+docs, in code docs, developer docs, modular code and have put a lot of thought in the 
+underlying architecture of both the backend and the web-frontend.
 
 ## Running linters and tests
 
@@ -29,17 +29,17 @@ commands are going to be executed in an isolated environment. In order to improv
 they are separated by lint and test stages. It is not allowed to merge the branch if 
 one of these jobs fails.
 
-Another job that has been added is the build job. It will just try to install Baserow
-as a dependency, just to make sure this does not fail.
+The pipeline also has a build job. Via for example the 
+[plugin boilerplate](../plugins/boilerplate.md) Baserow will be installed as a 
+dependency. This job will make sure that that still works.
 
 ### Run the GitLab runners locally
 
-If you want to check if your job would fail before pushing your branch then you can 
+If you want to check if your job would succeeds before pushing your branch then you can 
 also run them locally. Make sure that you have installed the GitLab runner by following
 the steps on https://docs.gitlab.com/runner/install/. After that you should be able to
 run the `gitlab-runner --help` command in your terminal. The jobs can be executed by 
-running the following commands the commands below. Make sure that you are in the root
-of the Baserow repository.
+running the following commands below.
 
 > Make sure that you are in the root of the Baserow repository and that all changes 
 > have been commited because the runner checks out the current branch.

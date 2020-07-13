@@ -12,13 +12,14 @@ your data publicly in a safe way.
 
 There is a full specification of the API available here 
 https://api.baserow.io/api/redoc/. You will find documentation and some examples for 
-each endpoint. The openapi spec can also be downloaded in JSON format here 
+each endpoint. The OpenAPI spec can also be downloaded in JSON format here 
 https://api.baserow.io/api/schema.json.
 
 ## Authentication
 
 In order to use most of the endpoints you need an authorization token and in order to 
-get one you need an account. I have added a small example on how to create an account.
+get one you need an account. Below you will find a small example on how to create an 
+account
 
 ```
 POST /api/user/
@@ -45,8 +46,8 @@ created. The provided email address will be your username. More information abou
 endpoint can be found in the API spec at 
 https://api.baserpw.io/api/redoc/#operation/create_user.
 
-Now that you have created an account we need a JWT token to authorize for each request.
-This can be requested using the following example.
+Now that you have created an account we need a JWT token to authorize each following
+request. This can be requested using the following example.
 
 ```
 POST /api/user/token-auth/

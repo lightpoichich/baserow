@@ -32,9 +32,9 @@ https://www.django-rest-framework.org/
 
 To easily and automatically test all the python code we use pytest. Most of the backend
 code is covered with tests and we like to keep it that way! The code is also tested
-in the continuous integration pipeline. It can also be tested manually in the 
-development environment. Make sure that you are in the `backend` container and execute 
-the following command.
+in the [continuous integration pipeline](./code-quality.md). It can also be tested 
+manually in the development environment. Make sure that you are in the `backend` 
+container and execute  the following command.
 
 ```
 $ make test
@@ -65,7 +65,7 @@ https://itsdangerous.palletsprojects.com/en/1.1.x/
 ### DRF spectacular
 
 Having up to date API documentation and having it in the OpenAPI specification format 
-is a must. To avoid mistakes the contents are close to the code and are automated as 
+is a must. To avoid mistakes, the contents are close to the code and are automated as 
 much as possible. DRF Spectacular could offer all this!
 
 https://pypi.org/project/drf-spectacular/
@@ -77,7 +77,7 @@ it easy to create responsive emails that work with most email clients. This migh
 like a bit of over engineering to use this for only the password forgot email, but more
 complicated emails are going to be added in the future and we wanted to have a solid 
 base. To make this integrate very nicely with Django templates we use the liminispace
-django package.
+django mjml package.
 
 https://mjml.io/
 https://github.com/liminspace/django-mjml
@@ -90,7 +90,7 @@ https://vuejs.org/
 
 ### Nuxt.js
 
-Because of out experience with Vue.js and the great features Nuxt.js offers the choice
+Because of our experience with Vue.js and the great features Nuxt.js offers the choice
 was obvious. It offers server side rendering, automated code splitting, good project
 structure, modularity and lots of other features out of the box. All of which were 
 needed for Baserow.
@@ -107,6 +107,10 @@ https://stylelint.io/
 
 ### ESLint
 
+ESLint is used to make sure all the Javascript code is in the correct format. It is 
+used when the `make eslint` is called and live in the development environment via
+prettier.
+
 https://eslint.org/
 
 ### Prettier
@@ -115,8 +119,7 @@ https://prettier.io/
 
 ### webpack
 
-To bundle all the assets of Baserow we use webpack. This is being used by default with
-Nuxt.js.
+Bundles all the assets of Baserow. This is being used by default with Nuxt.js.
 
 https://webpack.js.org/
 

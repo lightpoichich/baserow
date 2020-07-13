@@ -25,8 +25,6 @@ Need some help with setting things up?
 
 * [Local demo](./guides/demo-environment.md): Run a local demo on your computer using 
   `docker-compose`.
-* [Install on Ubuntu](./guides/install-on-ubuntu.md): Install Baserow on a clean server
-  running Ubuntu. (WIP)
 
 ## Development
 
@@ -38,20 +36,19 @@ Everything related to contributing and developing for Baserow.
   directories in the Baserow repository explained.
 * [Tools](./development/tools.md): The tools (flake8, pytest, eslint, etc) and how to 
   use them. 
-* [Continuous integration](./development/continuous-integration.md): 
-* [Code quality](./development/code-quality.md):
+* [Code quality](./development/code-quality.md): More information about the the code 
+  style, quality, choices and how we enforce them.
 
 ## Plugins
 
 Everything related to custom plugin development.
 
-* [Plugin basics](./plugins/basics.md): The basics about creating a plugin for 
-  Baserow.
+* [Plugin basics](./plugins/introduction.md): An introduction into Baserow plugins.
 * [Plugin boilerplate](./plugins/boilerplate.md): Don't reinvent the wheel, use
   the boilerplate for quick plugin development.
 * [Create application](./plugins/application-type.md): Want to create an application 
   type? Here you find how to do that.
 * [Create database table view](./plugins/view-type.md): Display table data like a 
-  calendar, kanban or however you like by creating a view type.
-* [Create database table field](./plugins/field-type.md): You can store data in a custom 
-  format by creating a field type.
+  calendar, Kanban board or however you like by creating a view type.
+* [Create database table field](./plugins/field-type.md): You can store data in a 
+  custom format by creating a field type.

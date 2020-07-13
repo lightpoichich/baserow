@@ -1,5 +1,7 @@
 # Install on Ubuntu (WIP)
 
+Install Baserow on a clean server running Ubuntu. (WIP)
+
 While writing this tutorial I used a clean Droplet at Digital Ocean running Ubuntu 
 18.04.3 LTS. We also expect root access.
 
@@ -11,7 +13,6 @@ Because we have a clean server we need to update the packages first.
 $ sudo apt-get update
 $ sudo apt-get -y upgrade
 ```
-
 
 ## PostgreSQL
 

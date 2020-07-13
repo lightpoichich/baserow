@@ -26,7 +26,7 @@ the following table with id `id` and you want select all the data.
 ```python
 from baserow.contrib.database.table.models import Table
 
-cars_table = Table.objects.get(pk=10)
+cars_table = Table.objects.get(pk=ID_REFERENCED_TABLE_ABOVE)
 # If you set the attribute_names to True the attribute name is going to be the field 
 # name provided by the user instead of field_{id}
 cars_model = cars_table.get_model(attribute_names=True)
@@ -42,9 +42,9 @@ for car in cars_model.objects.all():
 
 ## Fields
 
-A field is actually a column head of a table only it accepts only a certain type as 
-data value. A field can for example be a number field that accepts two placements after 
-the comma. If a new field is added to a table it is also added as column to the table 
+A field is actually a column head of a table, it accepts only a certain type as data 
+value. A field can for example be a number field that accepts two placements after the 
+comma. If a new field is added to a table it is also added as column to the table 
 representation in the database. The column name in the database will be field_{id}.
 The fields can be created, modified and deleted via the 
 `baserow.contrib.database.fields.handler.FieldHandler` and via the REST API. Several 
@@ -64,7 +64,7 @@ field types have been included by default.
 
 Views define how the table data is displayed to the user. By default the `grid` view 
 type is included and that displays the data in spreadsheet like interface. Per table
-multiple views can be added and each view has its own settings. Of you for example have
+multiple views can be added and each view has its own settings. If you for example have
 two grid views and you change the width of a certain field in grid A then it only 
 changes for grid A and not for grid B. The views can be created, modified and deleted 
 via the `baserow.contrib.database.views.handler.ViewHandler` and via the REST API.

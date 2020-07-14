@@ -79,7 +79,7 @@ https://baserow.io/docs/development/development-environment.
 
 ## Plugin development
 
-Because of the modular architecture of Baserow is it possible to create plugins. Make 
+Because of the modular architecture of Baserow it is possible to create plugins. Make 
 your own fields, views, applications, pages or endpoints. We also have a plugin 
 boilerplate to get you started right away. More information can be found in the 
 [plugin introduction](./docs/plugins/introduction.md) and in the 

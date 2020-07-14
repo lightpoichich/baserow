@@ -88,7 +88,7 @@ boilerplate to get you started right away. More information can be found in the
 ## Official documentation
 
 The official documentation can be found on the website at https://baserow.io/docs/index
-or [here](./docs/index.md) inside the repository. The API docs van be found here at 
+or [here](./docs/index.md) inside the repository. The API docs can be found here at 
 https://api.baserow.io/api/redoc/ or if you are looking for the OpenAPI schema here
 https://api.baserow.io/api/schema.json.
 

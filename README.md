@@ -47,7 +47,7 @@ https://baserow.io/docs/guides/demo-environment.
 If you want to contribute to Baserow you need to setup the development environment. 
 Execute the following commands to start the backend API server.
 
-> Note that the sandbox container might have a different name like `backend_1`.
+> Note that the container might have a different name like `backend_1`.
 
 ```
 $ docker network create baserow_default

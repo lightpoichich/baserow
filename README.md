@@ -18,7 +18,7 @@ you the powers of a developer without leaving your browser.
 * Headless and API first.
 * Modular architecture.
 * Supports plugins.
-* Has as plugin boilerplate.
+* Includes a plugin boilerplate.
 * Unlimited rows.
 * Runs in your browser.
 * Alternative to Airtable.

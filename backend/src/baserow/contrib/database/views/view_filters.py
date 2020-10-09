@@ -10,7 +10,7 @@ from django.db.models.fields.related import ManyToManyField
 
 from baserow.contrib.database.fields.field_types import (
     TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
-    LinkRowFieldType, BooleanFieldType, EmailFieldType
+    LinkRowFieldType, BooleanFieldType
 )
 
 from .registries import ViewFilterType
@@ -35,8 +35,7 @@ class EqualViewFilterType(ViewFilterType):
         LongTextFieldType.type,
         URLFieldType.type,
         NumberFieldType.type,
-        BooleanFieldType.type,
-        EmailFieldType.type,
+        BooleanFieldType.type
     ]
 
     def get_filter(self, field_name, value, model_field):
@@ -71,7 +70,6 @@ class ContainsViewFilterType(ViewFilterType):
         TextFieldType.type,
         LongTextFieldType.type,
         URLFieldType.type,
-        EmailFieldType.type,
     ]
 
     def get_filter(self, field_name, value, model_field):
@@ -250,8 +248,7 @@ class EmptyViewFilterType(ViewFilterType):
         NumberFieldType.type,
         BooleanFieldType.type,
         DateFieldType.type,
-        LinkRowFieldType.type,
-        EmailFieldType.type,
+        LinkRowFieldType.type
     ]
 
     def get_filter(self, field_name, value, model_field):

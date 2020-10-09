@@ -4,7 +4,6 @@ import {
   TextFieldType,
   LongTextFieldType,
   URLFieldType,
-  EmailFieldType,
   LinkRowFieldType,
   NumberFieldType,
   BooleanFieldType,
@@ -55,5 +54,4 @@ export default ({ store, app }) => {
   app.$registry.register('field', new BooleanFieldType())
   app.$registry.register('field', new DateFieldType())
   app.$registry.register('field', new URLFieldType())
-  app.$registry.register('field', new EmailFieldType())
 }

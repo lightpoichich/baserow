@@ -30,6 +30,9 @@ RUN apk add --no-cache --virtual .build-deps \
     libjpeg-turbo-dev zlib-dev pcre-dev \
     mariadb-dev
 
+# Install make
+RUN apk add --update make
+
 # Copy deployment files
 # Adding requirements.txt
 COPY requirements/base.txt requirements/dev.txt /deployment/

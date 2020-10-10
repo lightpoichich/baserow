@@ -9,9 +9,6 @@ ADD . /usr/src/backend
 # the application rather than buffering it.
 ENV PYTHONUNBUFFERED 1
 
-# Include codebase in the PYTHONPATH
-ENV PYTHONPATH $PYTHONPATH:/usr/src/backend/src
-
 # Set the default workdir
 WORKDIR /usr/src/backend
 

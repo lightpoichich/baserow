@@ -34,7 +34,16 @@ services:
       - PORT=8000
     depends_on:
       - db
+      - backend-migration
       - mjml
+
+  backend-migration:
+    image: backend
+    command: python manage.py migrate --noinput
+    volumes:
+      - ./backend:/usr/src/backend
+    depends_on:
+      - db
 
   web-frontend:
     container_name: web-frontend

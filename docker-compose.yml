@@ -32,20 +32,28 @@ services:
       - POSTGRES_USER=baserow
       - POSTGRES_PASSWORD=baserow
       - POSTGRES_DB=baserow
+      - DATABASE_PORT=5432
       - IS_WSGI=False
       - PORT=8000
     depends_on:
       - db
-      - backend-migration
       - mjml
 
   backend-migration:
-    image: backend
-    command: python manage.py migrate --noinput
+    image: baserow_backend
+    command: python src/baserow/manage.py migrate --noinput
+    environment:
+      - POSTGRES_USER=baserow
+      - POSTGRES_PASSWORD=baserow
+      - POSTGRES_DB=baserow
+      - DATABASE_PORT=5432
+      - IS_WSGI=False
+      - PORT=8000
     volumes:
       - ./backend:/usr/src/backend
     depends_on:
       - db
+      - backend
 
   web-frontend:
     container_name: web-frontend

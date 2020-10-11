@@ -13,7 +13,7 @@ set -e
 [ -z "$POSTGRES_DB" ] && echo "ERROR: Need to set POSTGRES_DB_NAME" && exit 1;
 [ -z "$POSTGRES_USER" ] && echo "ERROR: Need to set POSTGRES_USER" && exit 1;
 [ -z "$POSTGRES_PASSWORD" ] && echo "ERROR: Need to set POSTGRES_PASSWORD" && exit 1;
-[ -z "$DATABASE_PORT" ] && echo "ERROR: Need to set POSTGRES_PASSWORD" && exit 1;
+[ -z "$DATABASE_PORT" ] && echo "ERROR: Need to set DATABASE_PORT" && exit 1;
 
 
 # Define help message

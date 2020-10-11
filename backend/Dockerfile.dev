@@ -15,7 +15,7 @@ WORKDIR /usr/src/backend
 # Django port
 EXPOSE 8000
 
-ENV PYTHONPATH $PYTHONPATH:/backend/src/baserow
+ENV PYTHONPATH $PYTHONPATH:/usr/src/backend/src
 ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.dev'
 
 # Install system packages

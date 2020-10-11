@@ -10,12 +10,16 @@ services:
       - POSTGRES_DB=baserow
     ports:
       - 5432:5432
+    networks:
+      local:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
 
   mjml:
     container_name: mjml
     image: liminspace/mjml-tcpserver:latest
+    networks:
+      local:
     ports:
       - 28101:28101
 
@@ -35,6 +39,8 @@ services:
       - DATABASE_PORT=5432
       - IS_WSGI=False
       - PORT=8000
+    networks:
+      local:
     depends_on:
       - db
       - mjml
@@ -51,6 +57,8 @@ services:
       - PORT=8000
     volumes:
       - ./backend:/usr/src/backend
+    networks:
+      local:
     depends_on:
       - db
       - backend
@@ -65,10 +73,11 @@ services:
       - /usr/src/web-frontend/node_modules
     ports:
       - 3000:3000
+    networks:
+      local:
     depends_on:
       - backend
 
 networks:
-  default:
-    external:
-      name: baserow_default
+  local:
+    driver: bridge

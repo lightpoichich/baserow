@@ -1,0 +1,27 @@
+# vim: set ft=dockerfile:
+FROM python:3.6-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.base' \
+    PYTHONPATH="$PYTHONPATH:/backend/src"
+    #EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend'
+
+RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/00InstallRecommends && \
+    apt-get update && apt-get install -qq -y \
+    build-essential \
+    curl \
+    gnupg2 \
+    libmariadb-dev-compat \
+    libpq-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ADD . /backend
+
+WORKDIR /backend
+
+RUN pip install -r requirements/base.txt
+
+VOLUME /media
+
+ENTRYPOINT python src/baserow/manage.py migrate && \
+           gunicorn --workers=3 -b 0.0.0.0:8000 baserow.config.wsgi

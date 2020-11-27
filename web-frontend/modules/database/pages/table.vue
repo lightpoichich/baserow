@@ -54,6 +54,17 @@
             @changed="refresh()"
           ></ViewSort>
         </li>
+        <li
+          v-if="hasSelectedView && view._.type.canHide"
+          class="header__filter-item"
+        >
+          <ViewHide
+            :view="view"
+            :fields="fields"
+            :primary="primary"
+            @changed="refresh()"
+          ></ViewHide>
+        </li>
       </ul>
       <component
         :is="getViewHeaderComponent(view)"
@@ -92,6 +103,7 @@ import { mapState } from 'vuex'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
+import ViewHide from '@baserow/modules/database/components/view/ViewHide'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -103,6 +115,7 @@ export default {
     ViewsContext,
     ViewFilter,
     ViewSort,
+    ViewHide,
   },
   /**
    * Because there is no hook that is called before the route changes, we need the

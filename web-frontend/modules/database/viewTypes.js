@@ -36,6 +36,14 @@ export class ViewType extends Registerable {
     return true
   }
 
+  /**
+   * Indicates whether it is possible to select fields to be hidden. If true
+   * the hide context menu is added to the header.
+   */
+  canHide() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
@@ -43,6 +51,7 @@ export class ViewType extends Registerable {
     this.name = this.getName()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
+    this.canHide = this.canHide()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -127,6 +136,7 @@ export class ViewType extends Registerable {
       name: this.name,
       canFilter: this.canFilter,
       canSort: this.canSort,
+      canHide: this.canHide,
     }
   }
 }

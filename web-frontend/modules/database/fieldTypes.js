@@ -94,6 +94,13 @@ export class FieldType extends Registerable {
     return true
   }
 
+  /**
+   * Indicates whether or not it is possible to hide in a view.
+   */
+  getCanHideInView() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
@@ -101,6 +108,7 @@ export class FieldType extends Registerable {
     this.name = this.getName()
     this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
+    this.canHideInView = this.getCanHideInView()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -133,6 +141,7 @@ export class FieldType extends Registerable {
       name: this.name,
       sortIndicator: this.sortIndicator,
       canSortInView: this.canSortInView,
+      canHideInView: this.canHideInView,
     }
   }
 

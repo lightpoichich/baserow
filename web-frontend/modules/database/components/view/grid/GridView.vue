@@ -155,7 +155,7 @@
       >
         <div class="grid-view__head">
           <GridViewFieldType
-            v-for="field in fields"
+            v-for="field in visibleFields"
             :key="'right-head-field-' + view.id + '-' + field.id"
             :table="table"
             :view="view"
@@ -227,7 +227,7 @@
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <GridViewField
-                  v-for="field in fields"
+                  v-for="field in visibleFields"
                   :ref="'row-' + row.id + '-field-' + field.id"
                   :key="
                     'right-row-field-' + view.id + '-' + row.id + '-' + field.id
@@ -371,6 +371,15 @@ export default {
     }
   },
   computed: {
+    visibleFields() {
+      if (this.fieldOptions && this.fields) {
+        return this.fields.filter((field) => {
+          const fieldOption = this.fieldOptions[field.id]
+          return !fieldOption.hidden
+        })
+      }
+      return []
+    },
     ...mapGetters({
       rows: 'view/grid/getRows',
       count: 'view/grid/getCount',
@@ -507,6 +516,10 @@ export default {
      */
     getCalculatedWidths(primary, fields, fieldOptions) {
       const getFieldWidth = (fieldId) => {
+        if (fieldOptions[fieldId].hidden) {
+          return 0
+        }
+
         return Object.prototype.hasOwnProperty.call(fieldOptions, fieldId)
           ? fieldOptions[fieldId].width
           : 200

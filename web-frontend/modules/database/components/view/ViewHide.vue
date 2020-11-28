@@ -4,12 +4,18 @@
       ref="contextLink"
       class="header__filter-link"
       :class="{
-        'active--warning': view.sortings.length > 0,
+        'active--primary': hiddenFields.length > 0,
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-eye-slash"></i>
-      Hide fields
+      <span v-if="hiddenFields.length === 1"
+        >{{ hiddenFields.length }} hidden field</span
+      >
+      <span v-else-if="hiddenFields.length > 1"
+        >{{ hiddenFields.length }} hidden fields</span
+      >
+      <span v-else>Hide fields</span>
     </a>
     <ViewHideContext
       ref="context"
@@ -22,6 +28,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import ViewHideContext from './ViewHideContext'
 
 export default {
@@ -40,6 +47,16 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  computed: {
+    hiddenFields() {
+      return this.fields.filter((field) => {
+        return this.fieldOptions[field.id].hidden
+      })
+    },
+    ...mapGetters({
+      fieldOptions: 'view/grid/getAllFieldOptions',
+    }),
   },
 }
 </script>

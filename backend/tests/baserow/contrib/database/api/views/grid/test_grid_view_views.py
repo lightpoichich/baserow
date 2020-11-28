@@ -225,9 +225,9 @@ def test_list_rows_include_field_options(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 200
-    assert response_json['field_options'][str(text_field.id)]['hidden'] == False
+    assert response_json['field_options'][str(text_field.id)]['hidden'] is False
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
-    assert response_json['field_options'][str(number_field.id)]['hidden'] == False
+    assert response_json['field_options'][str(number_field.id)]['hidden'] is False
 
 
 @pytest.mark.django_db

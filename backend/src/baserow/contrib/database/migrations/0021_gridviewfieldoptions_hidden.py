@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0017_view_filters_disabled'),
+        ('database', '0020_fix_primary_link_row'),
     ]
 
     operations = [

@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 
 PROJECT_DIR = os.path.dirname(__file__)
 REQUIREMENTS_DIR = os.path.join(PROJECT_DIR, 'requirements')
-VERSION = '0.5.0'
+VERSION = '0.6.0'
 
 
 def get_requirements(env):
@@ -29,7 +29,7 @@ setup(
     author='Bram Wiepjes (Baserow)',
     author_email='bram@baserow.io',
     license='MIT',
-    description='Baserow: open source online database web frontend.',
+    description='Baserow: open source online database backend.',
     long_description='',
     platforms=['linux'],
     package_dir={'': 'src'},

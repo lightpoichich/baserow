@@ -1,5 +1,9 @@
 # Changelog
 
+* Added option to hide fields in a grid view.
+
+## Released (2020-12-01)
+
 * Added select_for_update where it was still missing.
 * Fixed API docs scrollbar size issue.
 * Also lint the backend tests.
@@ -10,6 +14,9 @@
 * Removed the redundant _DOMAIN variables.
 * Set un-secure lax cookie when public web frontend url isn't over a secure connection.
 * Fixed bug where the sort choose field item didn't have a hover effect.
+* Implemented a file field and user files upload.
+* Made it impossible for the `link_row` field to be a primary field because that can
+  cause the primary field to be deleted.
 
 ## Released (2020-11-02)
 

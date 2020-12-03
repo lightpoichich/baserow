@@ -1,6 +1,9 @@
 # Changelog
 
 * Added option to hide fields in a grid view.
+* Fixed bug where the arrow navigation didn't work for the dropdown component in
+  combination with a search query.
+* Fixed bug where the page refreshes if you press enter in an input in the row modal.
 
 ## Released (2020-12-01)
 

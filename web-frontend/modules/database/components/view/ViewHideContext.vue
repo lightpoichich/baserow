@@ -6,14 +6,18 @@
           <SwitchInput
             :value="isFieldVisible(field)"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
-          />
-          <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
-          <span>{{ field.name }}</span>
+          >
+            <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
+            <span>{{ field.name }}</span>
+          </SwitchInput>
         </li>
       </ul>
     </div>
     <div class="hidings__footer">
-      <button class="button button--ghost" @click="updateAll(true)">
+      <button
+        class="button button--ghost first-button"
+        @click="updateAll(true)"
+      >
         Hide all
       </button>
       <button class="button button--ghost" @click="updateAll(false)">
@@ -76,7 +80,7 @@ export default {
           field,
           values,
           oldValues: {
-            hidden: this.isFieldVisible(field),
+            hidden: !this.isFieldVisible(field),
           },
         })
       } catch (error) {

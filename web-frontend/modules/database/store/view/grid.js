@@ -734,7 +734,6 @@ export const actions = {
     try {
       await GridService(this.$client).update({ gridId, values: updateValues })
     } catch (error) {
-      console.log(error)
       commit('SET_FIELD_OPTIONS_OF_FIELD', {
         fieldId: field.id,
         values: oldValues,

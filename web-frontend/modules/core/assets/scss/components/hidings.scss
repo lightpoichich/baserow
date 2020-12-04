@@ -1,8 +1,8 @@
 .hidings {
-  padding: 16px;
+  padding: 0 16px 16px 16px;
 }
 
-li.hidings__item {
+.hidings__item {
   position: relative;
   display: flex;
   flex-direction: row;
@@ -10,14 +10,10 @@ li.hidings__item {
   margin-bottom: 6px;
   padding: 0;
 
-  & > * {
-    &:not(:last-child) {
-      margin-right: 10px;
-    }
-  }
-
-  .switch {
-    margin-right: 16px;
+  .switch i {
+    margin-right: 6px;
+    margin-left: 10px;
+    color: $color-neutral-600;
   }
 }
 
@@ -26,9 +22,7 @@ li.hidings__item {
   flex-direction: row;
   margin-top: 16px;
 
-  > button {
-    &:not(:last-child) {
-      margin-right: 10px;
-    }
+  .first-button {
+    margin-right: 10px;
   }
 }

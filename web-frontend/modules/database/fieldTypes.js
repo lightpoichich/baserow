@@ -97,13 +97,6 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Indicates whether or not it is possible to hide in a view.
-   */
-  getCanHideInView() {
-    return true
-  }
-
-  /**
    * Indicates if is possible for the field type to be the primary field.
    */
   getCanBePrimaryField() {
@@ -117,7 +110,6 @@ export class FieldType extends Registerable {
     this.name = this.getName()
     this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
-    this.canHideInView = this.getCanHideInView()
     this.canBePrimaryField = this.getCanBePrimaryField()
 
     if (this.type === null) {

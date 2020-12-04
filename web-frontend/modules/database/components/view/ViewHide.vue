@@ -50,8 +50,13 @@ export default {
   },
   computed: {
     hiddenFields() {
+      if (!this.fieldOptions) {
+        return []
+      }
       return this.fields.filter((field) => {
-        return this.fieldOptions[field.id].hidden
+        return this.fieldOptions[field.id] && this.fieldOptions[field.id].hidden
+          ? this.fieldOptions[field.id].hidden
+          : false
       })
     },
     ...mapGetters({

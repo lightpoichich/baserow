@@ -516,13 +516,16 @@ export default {
      */
     getCalculatedWidths(primary, fields, fieldOptions) {
       const getFieldWidth = (fieldId) => {
-        if (fieldOptions[fieldId].hidden) {
+        const hasFieldOptions = Object.prototype.hasOwnProperty.call(
+          fieldOptions,
+          fieldId
+        )
+
+        if (hasFieldOptions && fieldOptions[fieldId].hidden) {
           return 0
         }
 
-        return Object.prototype.hasOwnProperty.call(fieldOptions, fieldId)
-          ? fieldOptions[fieldId].width
-          : 200
+        return hasFieldOptions ? fieldOptions[fieldId].width : 200
       }
 
       // Calculate the widths left side of the grid view. This is the sticky side that

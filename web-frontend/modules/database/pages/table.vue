@@ -54,10 +54,7 @@
             @changed="refresh()"
           ></ViewSort>
         </li>
-        <li
-          v-if="hasSelectedView && view._.type.canHide"
-          class="header__filter-item"
-        >
+        <li v-if="hasSelectedView" class="header__filter-item">
           <ViewHide
             :view="view"
             :fields="fields"

@@ -734,10 +734,30 @@ export const actions = {
     try {
       await GridService(this.$client).update({ gridId, values: updateValues })
     } catch (error) {
+      console.log(error)
       commit('SET_FIELD_OPTIONS_OF_FIELD', {
         fieldId: field.id,
         values: oldValues,
       })
+      throw error
+    }
+  },
+  /**
+   * Replaces all field options with new values and also makes an API request to the
+   * backend with the changed values. If the request fails the action is reverted.
+   */
+  async updateFieldOptions(
+    { commit },
+    { gridId, newFieldOptions, oldFieldOptions }
+  ) {
+    commit('REPLACE_ALL_FIELD_OPTIONS', newFieldOptions)
+
+    const updateValues = { field_options: newFieldOptions }
+
+    try {
+      await GridService(this.$client).update({ gridId, values: updateValues })
+    } catch (error) {
+      commit('REPLACE_ALL_FIELD_OPTIONS', oldFieldOptions)
       throw error
     }
   },

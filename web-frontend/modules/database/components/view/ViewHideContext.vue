@@ -51,10 +51,23 @@ export default {
     }),
   },
   methods: {
-    updateAll(value) {
+    async updateAll(hidden) {
+      const newFieldOptions = {}
       this.fields.forEach((field) => {
-        this.updateFieldOptionsOfField(field, { hidden: value })
+        newFieldOptions[field.id] = {
+          hidden,
+          width: this.fieldOptions[field.id].width,
+        }
       })
+      try {
+        await this.$store.dispatch('view/grid/updateFieldOptions', {
+          gridId: this.view.id,
+          newFieldOptions,
+          oldValues: this.fieldOptions,
+        })
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
     },
     async updateFieldOptionsOfField(field, values) {
       try {
@@ -66,7 +79,6 @@ export default {
             hidden: this.isFieldVisible(field),
           },
         })
-        this.$emit('changed')
       } catch (error) {
         notifyIf(error, 'view')
       }

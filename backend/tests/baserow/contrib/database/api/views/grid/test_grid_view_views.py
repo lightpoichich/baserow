@@ -424,6 +424,31 @@ def test_patch_grid_view(api_client, data_fixture):
     url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.patch(
         url,
+        {'field_options': {
+            text_field.id: {'width': 200,},
+            number_field.id: {'hidden': False,}
+        }},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json['field_options']) == 2
+    assert response_json['field_options'][str(text_field.id)]['width'] == 200
+    assert response_json['field_options'][str(text_field.id)]['hidden'] is False
+    assert response_json['field_options'][str(number_field.id)]['width'] == 500
+    assert response_json['field_options'][str(number_field.id)]['hidden'] is False
+    options = grid.get_field_options()
+    assert len(options) == 2
+    assert options[0].field_id == text_field.id
+    assert options[0].width == 200
+    assert options[0].hidden is False
+    assert options[1].field_id == number_field.id
+    assert options[1].hidden is False
+
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
         {},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'

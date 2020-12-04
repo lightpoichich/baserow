@@ -425,8 +425,8 @@ def test_patch_grid_view(api_client, data_fixture):
     response = api_client.patch(
         url,
         {'field_options': {
-            text_field.id: {'width': 200,},
-            number_field.id: {'hidden': False,}
+            text_field.id: {'width': 200, },
+            number_field.id: {'hidden': False, }
         }},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'

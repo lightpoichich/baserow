@@ -301,10 +301,8 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     database = data_fixture.create_database_application(user=user, name='Placeholder')
     table = data_fixture.create_database_table(name='Example', database=database)
     other_select_option = data_fixture.create_select_option()
-    grid = data_fixture.create_grid_view(table=table)
 
     field_handler = FieldHandler()
-    row_handler = RowHandler()
 
     field = field_handler.create_field(
         user=user,

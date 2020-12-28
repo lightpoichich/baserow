@@ -21,3 +21,13 @@ class TablesDatabaseRouter(object):
 
     def db_for_write(self, model, **hints):
         return self.user_table_database_if_generated_table_database(model)
+
+    def allow_relation(self, obj1, obj2, **hints):
+        """
+        We explicitly want to allow relations between the two databases.
+        """
+
+        allowed = ('default', settings.USER_TABLE_DATABASE)
+        if obj1._state.db in allowed and obj2._state.db in allowed:
+            return True
+        return None

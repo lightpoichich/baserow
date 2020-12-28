@@ -46,7 +46,7 @@ class DatabaseConfig(AppConfig):
         from .fields.field_types import (
             TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType,
             BooleanFieldType, DateFieldType, LinkRowFieldType, EmailFieldType,
-            FileFieldType
+            FileFieldType, SingleSelectFieldType
         )
         field_type_registry.register(TextFieldType())
         field_type_registry.register(LongTextFieldType())
@@ -57,6 +57,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(DateFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
+        field_type_registry.register(SingleSelectFieldType())
 
         from .fields.field_converters import LinkRowFieldConverter, FileFieldConverter
         field_converter_registry.register(LinkRowFieldConverter())

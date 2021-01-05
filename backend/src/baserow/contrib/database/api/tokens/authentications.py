@@ -56,6 +56,7 @@ class TokenAuthentication(BaseAuthentication):
                 'error': 'ERROR_TOKEN_DOES_NOT_EXIST'
             })
 
+        handler.update_token_stats(token)
         request.user_token = token
         return token.user, token
 

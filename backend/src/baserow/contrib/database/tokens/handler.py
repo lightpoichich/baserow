@@ -13,6 +13,7 @@ from .exceptions import (
     NoPermissionToTable
 )
 from .models import Token, TokenPermission
+from django.db.models import F
 
 
 class TokenHandler:
@@ -178,6 +179,21 @@ class TokenHandler:
 
         token.name = name
         token.save()
+
+        return token
+    
+    def update_token_stats(self, token):
+        """
+        Updates an existing token call count.
+
+        :param token: The token object that needs to be updated.
+        :type token: Token
+        :return: The updated token instance.
+        :rtype: Token
+        """
+
+        token.call_count = F('call_count') + 1
+        token.save(update_fields=["call_count","updated"] )
 
         return token
 

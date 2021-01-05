@@ -8,6 +8,7 @@ import FieldNumberSubForm from '@baserow/modules/database/components/field/Field
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
+import FieldSingleSelectSubForm from '@baserow/modules/database/components/field/FieldSingleSelectSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
@@ -18,6 +19,7 @@ import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/GridViewFieldDate'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/GridViewFieldFile'
+import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/GridViewFieldSingleSelect'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -28,6 +30,7 @@ import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEdit
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
+import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 
@@ -888,5 +891,56 @@ export class FileFieldType extends FieldType {
         uploaded_at: '2020-11-17T12:16:10.035234+00:00',
       },
     ]
+  }
+}
+
+export class SingleSelectFieldType extends FieldType {
+  static getType() {
+    return 'single_select'
+  }
+
+  getIconClass() {
+    return 'chevron-circle-down '
+  }
+
+  getName() {
+    return 'Single select'
+  }
+
+  getFormComponent() {
+    return FieldSingleSelectSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldSingleSelect
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldSingleSelect
+  }
+
+  prepareValueForUpdate(field, value) {
+    if (value === undefined || value === null) {
+      return null
+    }
+    return value.id
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+    return value.id
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = parseInt(clipboardData.getData('text'))
+
+    for (let i = 0; i <= field.select_options.length; i++) {
+      const option = field.select_options[i]
+      if (option.id === value) {
+        return option
+      }
+    }
   }
 }

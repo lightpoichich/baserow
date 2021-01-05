@@ -723,6 +723,9 @@ class SingleSelectFieldType(FieldType):
         )
 
     def prepare_value_for_db(self, instance, value):
+        if value is None:
+            return value
+
         if isinstance(value, int):
             try:
                 return SelectOption.objects.get(field=instance, id=value)

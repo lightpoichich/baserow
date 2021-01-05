@@ -167,6 +167,12 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     assert getattr(rows[2], f'field_{field.id}') is None
     assert getattr(rows[3], f'field_{field.id}').id == select_options[1].id
 
+    row_4 = row_handler.update_row(user=user, table=table, row_id=row_4.id, values={
+        f'field_{field.id}': None
+    })
+    assert getattr(row_4, f'field_{field.id}') is None
+    assert getattr(row_4, f'field_{field.id}_id') is None
+
 
 @pytest.mark.django_db
 def test_single_select_field_type_api_views(api_client, data_fixture):
@@ -388,6 +394,20 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     assert response_json[f'field_{field.id}']['id'] == select_options[1].id
     assert response_json[f'field_{field.id}']['value'] == 'Option 2'
     assert response_json[f'field_{field.id}']['color'] == 'blue'
+
+    url = reverse('api:database:rows:item', kwargs={
+        'table_id': table.id,
+        'row_id': response_json['id']
+    })
+    response = api_client.patch(
+        url,
+        {f'field_{field.id}': None},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field.id}'] is None
 
     url = reverse('api:database:rows:item', kwargs={
         'table_id': table.id,

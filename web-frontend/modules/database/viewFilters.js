@@ -375,6 +375,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'boolean',
       'link_row',
       'file',
+      'single_select',
     ]
   }
 
@@ -416,6 +417,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'boolean',
       'link_row',
       'file',
+      'single_select',
     ]
   }
 

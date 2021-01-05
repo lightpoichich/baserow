@@ -6,12 +6,13 @@ from dateutil import parser
 from dateutil.parser import ParserError
 
 from django.db.models import Q, IntegerField, BooleanField
-from django.db.models.fields.related import ManyToManyField
+from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.contrib.postgres.fields import JSONField
 
 from baserow.contrib.database.fields.field_types import (
     TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
-    LinkRowFieldType, BooleanFieldType, EmailFieldType, FileFieldType
+    LinkRowFieldType, BooleanFieldType, EmailFieldType, FileFieldType,
+    SingleSelectFieldType
 )
 
 from .registries import ViewFilterType
@@ -253,12 +254,16 @@ class EmptyViewFilterType(ViewFilterType):
         DateFieldType.type,
         LinkRowFieldType.type,
         EmailFieldType.type,
-        FileFieldType.type
+        FileFieldType.type,
+        SingleSelectFieldType.type
     ]
 
     def get_filter(self, field_name, value, model_field):
         # If the model_field is a ManyToMany field we only have to check if it is None.
-        if isinstance(model_field, ManyToManyField):
+        if (
+            isinstance(model_field, ManyToManyField) or
+            isinstance(model_field, ForeignKey)
+        ):
             return Q(**{f'{field_name}': None})
 
         if isinstance(model_field, BooleanField):

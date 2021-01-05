@@ -6,6 +6,7 @@ from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from django.db import models
+from django.db.models import Case, When
 from django.contrib.postgres.fields import JSONField
 from django.core.validators import URLValidator, EmailValidator
 from django.core.exceptions import ValidationError
@@ -836,3 +837,24 @@ class SingleSelectFieldType(FieldType):
             """, variables
 
         return super().get_alter_column_prepare_value(connection, from_field, to_field)
+
+    def get_order(self, field, field_name, view_sort):
+        """
+        If the user wants to sort the results he expects them to be order
+        alphabetically based on the select option value and not in the id which is
+        stored in the table. This method generates a Case expression which maps the id
+        to the correct position.
+        """
+
+        select_options = field.select_options.all().order_by('value')
+        options = [select_option.pk for select_option in select_options]
+        options.insert(0, None)
+
+        if view_sort.order == 'DESC':
+            options.reverse()
+
+        order = Case(*[
+            When(**{field_name: option, 'then': index})
+            for index, option in enumerate(options)
+        ])
+        return order

@@ -369,6 +369,26 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type connection: DatabaseWrapper
         """
 
+    def get_order(self, field, field_name, view_sort):
+        """
+        This hook can be called to generate a different order by expression. By default
+        None is returned which means the normal field sorting will be applied.
+        Optionally a different expression can be generated. This is for example used
+        by the single select field generates a mapping achieve the correct sorting
+        based on the select option value.
+
+        :param field: The related field object instance.
+        :type field: Field
+        :param field_name: The name of the field.
+        :type field_name: str
+        :param view_sort: The view sort that must be applied.
+        :type view_sort: ViewSort
+        :return: The expression that is added directly to the model.objects.order().
+        :rtype: Expression or None
+        """
+
+        return None
+
 
 class FieldTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,
                         ModelRegistryMixin, Registry):

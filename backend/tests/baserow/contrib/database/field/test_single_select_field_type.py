@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption, SingleSelectField
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
 
 
 @pytest.mark.django_db
@@ -420,3 +421,55 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     )
     assert response.status_code == HTTP_204_NO_CONTENT
     assert SelectOption.objects.all().count() == 3
+
+
+@pytest.mark.django_db
+def test_single_select_field_type_get_order(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+    field = data_fixture.create_single_select_field(table=table)
+    option_c = data_fixture.create_select_option(field=field, value='C', color='blue')
+    option_a = data_fixture.create_select_option(field=field, value='A', color='blue')
+    option_b = data_fixture.create_select_option(field=field, value='B', color='blue')
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    view_handler = ViewHandler()
+    row_handler = RowHandler()
+
+    row_1 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_b.id
+    })
+    row_2 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_a.id
+    })
+    row_3 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_c.id
+    })
+    row_4 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_b.id
+    })
+    row_5 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': None
+    })
+
+    sort = data_fixture.create_view_sort(view=grid_view, field=field, order='ASC')
+    model = table.get_model()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_5.id, row_2.id, row_1.id, row_4.id, row_3.id]
+
+    sort.order = 'DESC'
+    sort.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_1.id, row_4.id, row_2.id, row_5.id]
+
+    option_a.value = 'Z'
+    option_a.save()
+    sort.order = 'ASC'
+    sort.save()
+    model = table.get_model()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_5.id, row_1.id, row_4.id, row_3.id, row_2.id]

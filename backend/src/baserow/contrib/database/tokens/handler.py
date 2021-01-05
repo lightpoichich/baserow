@@ -181,7 +181,7 @@ class TokenHandler:
         token.save()
 
         return token
-    
+
     def update_token_stats(self, token):
         """
         Updates an existing token call count.
@@ -193,7 +193,7 @@ class TokenHandler:
         """
 
         token.call_count = F('call_count') + 1
-        token.save(update_fields=["call_count","updated"] )
+        token.save(update_fields=["call_count", "updated"])
 
         return token
 

@@ -25,7 +25,7 @@ class Token(models.Model):
                   'row endpoints.'
     )
     created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True,blank=True)
+    updated = models.DateTimeField(auto_now=True, blank=True)
     call_count = models.IntegerField(default=0)
     user = models.ForeignKey(
         User,

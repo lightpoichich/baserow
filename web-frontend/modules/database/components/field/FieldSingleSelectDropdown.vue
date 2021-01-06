@@ -26,7 +26,7 @@
           @keyup="search(query)"
         />
       </div>
-      <ul ref="items" class="select__items" v-prevent-parent-scroll>
+      <ul ref="items" v-prevent-parent-scroll class="select__items">
         <FieldSingleSelectDropdownItem
           :name="''"
           :value="null"

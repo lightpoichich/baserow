@@ -919,6 +919,17 @@ export class SingleSelectFieldType extends FieldType {
     return RowEditFieldSingleSelect
   }
 
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name].value
+      const stringB = b[name] === null ? '' : '' + b[name].value
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
   prepareValueForUpdate(field, value) {
     if (value === undefined || value === null) {
       return null

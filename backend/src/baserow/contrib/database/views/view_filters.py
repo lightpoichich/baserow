@@ -269,6 +269,7 @@ class DateInNearFutureViewFilterType(ViewFilterType):
 
         return Q(**{f'{field_name}__lte': lastDay, f'{field_name}__gte': today})
 
+
 class DateInNearPastViewFilterType(ViewFilterType):
     """
     The date filter parses the provided value as date and checks if the field value is

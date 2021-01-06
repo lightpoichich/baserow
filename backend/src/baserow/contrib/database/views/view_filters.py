@@ -186,6 +186,7 @@ class DateEqualTodayViewFilterType(ViewFilterType):
             f'{field_name}__day': today.day
         })
 
+
 class DateInThisMonthViewFilterType(ViewFilterType):
     """
     The date filter parses the provided value as date and checks if the field value is
@@ -212,6 +213,7 @@ class DateInThisMonthViewFilterType(ViewFilterType):
             f'{field_name}__month': today.month
         })
 
+
 class DateInThisYearViewFilterType(ViewFilterType):
     """
     The date filter parses the provided value as date and checks if the field value is
@@ -236,6 +238,7 @@ class DateInThisYearViewFilterType(ViewFilterType):
         return Q(**{
             f'{field_name}__year': today.year,
         })
+
 
 class DateInNearFutureViewFilterType(ViewFilterType):
     """
@@ -263,8 +266,8 @@ class DateInNearFutureViewFilterType(ViewFilterType):
         today = datetime.utcnow()
 
         lastDay = today + timedelta(days=value)
-        
-        return Q(**{f'{field_name}__lte': lastDay,f'{field_name}__gte': today})
+
+        return Q(**{f'{field_name}__lte': lastDay, f'{field_name}__gte': today})
 
 class DateInNearPastViewFilterType(ViewFilterType):
     """
@@ -292,8 +295,9 @@ class DateInNearPastViewFilterType(ViewFilterType):
         today = datetime.utcnow()
 
         lastDay = today - timedelta(days=value)
-        
-        return Q(**{f'{field_name}__lte': today,f'{field_name}__gte': lastDay})
+
+        return Q(**{f'{field_name}__lte': today, f'{field_name}__gte': lastDay})
+
 
 class DateEqualViewFilterType(ViewFilterType):
     """

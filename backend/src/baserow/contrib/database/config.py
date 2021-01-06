@@ -68,8 +68,9 @@ class DatabaseConfig(AppConfig):
         from .views.view_filters import (
             EqualViewFilterType, NotEqualViewFilterType, EmptyViewFilterType,
             NotEmptyViewFilterType, DateEqualViewFilterType, DateNotEqualViewFilterType,
-            DateEqualTodayViewFilterType,DateInNearFutureViewFilterType,DateInNearPastViewFilterType,
-            DateInThisMonthViewFilterType,DateInThisYearViewFilterType,
+            DateEqualTodayViewFilterType, DateInNearFutureViewFilterType,
+            DateInNearPastViewFilterType,
+            DateInThisMonthViewFilterType, DateInThisYearViewFilterType,
             HigherThanViewFilterType, LowerThanViewFilterType, ContainsViewFilterType,
             ContainsNotViewFilterType, BooleanViewFilterType
         )

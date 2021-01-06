@@ -220,7 +220,11 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
         if value == '':
             return Q()
 
-        return Q(**{f'{field_name}_id': value})
+        try:
+            int(value)
+            return Q(**{f'{field_name}_id': value})
+        except Exception:
+            return Q()
 
 
 class SingleSelectNotEqualViewFilterType(NotViewFilterTypeMixin,

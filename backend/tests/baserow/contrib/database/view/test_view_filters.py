@@ -445,6 +445,11 @@ def test_single_select_equal_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
+    filter.value = 'Test'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
 
 @pytest.mark.django_db
 def test_single_select_not_equal_filter_type(data_fixture):
@@ -492,6 +497,11 @@ def test_single_select_not_equal_filter_type(data_fixture):
     assert row_3.id in ids
 
     filter.value = '-1'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.value = 'Test'
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3

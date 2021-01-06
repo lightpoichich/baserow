@@ -83,8 +83,9 @@ def lenient_schema_editor(connection, alter_column_prepare_value=None,
     :param connection: The current connection for which to generate the schema editor
         for.
     :type connection: DatabaseWrapper
-    :param alter_column_prepare_value:
-    :type alter_column_prepare_value:
+    :param alter_column_prepare_value: Optionally a query statement converting the
+        `p_in` value to a string format.
+    :type alter_column_prepare_value: None or str
     :param alert_column_type_function: Optionally the string of a SQL function to
         convert the data value to the the new type. The function will have the variable
         `p_in` as old value.

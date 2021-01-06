@@ -973,7 +973,7 @@ export class SingleSelectFieldType extends FieldType {
       .join('\n')
 
     return `
-      Accepts the ID of one options or null if none is selected.
+      Accepts an integer representing the chosen select option id or null if none is selected.
       <br />
       ${options}
     `

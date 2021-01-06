@@ -207,8 +207,8 @@ class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType
 
 class SingleSelectEqualViewFilterType(ViewFilterType):
     """
-    The single select equal filter accepts an option id as filter value. This filter
-    is only compatible with the SingleSelectFieldType field type.
+    The single select equal filter accepts a select option id as filter value. This
+    filter is only compatible with the SingleSelectFieldType field type.
     """
 
     type = 'single_select_equal'

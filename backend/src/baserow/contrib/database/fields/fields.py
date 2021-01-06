@@ -5,7 +5,7 @@ from django.db.models.fields.related_descriptors import ForwardManyToOneDescript
 class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
     def get_object(self, instance):
         """
-        Tries to fetch the reference object, but if is fails because it doesn't exit
+        Tries to fetch the reference object, but if it fails because it doesn't exist,
         the value will be set to None instead of failing hard.
         """
 

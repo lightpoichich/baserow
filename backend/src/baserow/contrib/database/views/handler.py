@@ -472,8 +472,8 @@ class ViewHandler:
 
             order = field_type.get_order(field, field_name, view_sort)
 
-            # If the field does not have a specific ordering we can order them the
-            # default way.
+            # If the field type does not have a specific ordering expression we can
+            # order the default way.
             if not order:
                 order = F(field_name)
 

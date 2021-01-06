@@ -736,7 +736,7 @@ class SingleSelectFieldType(FieldType):
         if isinstance(value, SelectOption) and value.field_id == instance.id:
             return value
 
-        # If the select option is not found or if it does not belong to the right
+        # If the select option is not found or if it does not belong to the right field
         # then the provided value is invalid and a validation error can be raised.
         raise ValidationError(f'The provided value is not a valid option.')
 
@@ -788,8 +788,8 @@ class SingleSelectFieldType(FieldType):
 
     def get_alter_column_prepare_value(self, connection, from_field, to_field):
         """
-        If the new field type isn't a single select field we can convert the value to
-        plain text value of the option and maybe that can be used by the new field.
+        If the new field type isn't a single select field we can convert the plain
+        text value of the option and maybe that can be used by the new field.
         """
 
         to_field_type = field_type_registry.get_by_model(to_field)
@@ -840,7 +840,7 @@ class SingleSelectFieldType(FieldType):
 
     def get_order(self, field, field_name, view_sort):
         """
-        If the user wants to sort the results he expects them to be order
+        If the user wants to sort the results he expects them to be ordered
         alphabetically based on the select option value and not in the id which is
         stored in the table. This method generates a Case expression which maps the id
         to the correct position.

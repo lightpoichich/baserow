@@ -12,8 +12,7 @@ export default {
   },
   methods: {
     /**
-     * Checks if the new value is the same as the old value and if not it will be
-     * updated.
+     * Checks if the new value has changed and if so it will be updated.
      */
     updateValue(newId, oldValue) {
       const newValue =
@@ -25,8 +24,9 @@ export default {
       }
     },
     /**
-     * Adds a new select option the field and then updates the field. This is called
-     * from the dropdown, the user can create a new option if it is not found.
+     * Adds a new select option to the field and then updates the field. This method is
+     * called from the dropdown, the user can create a new optionfrom  there if no
+     * options are found matching his search query.
      */
     async createOption({ value, done }) {
       const values = { select_options: clone(this.field.select_options) }

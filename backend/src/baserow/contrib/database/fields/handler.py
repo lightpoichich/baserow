@@ -236,8 +236,7 @@ class FieldHandler:
                 try:
                     schema_editor.alter_field(from_model, from_model_field,
                                               to_model_field)
-                except (ProgrammingError, DataError) as e:
-                    print(e)
+                except (ProgrammingError, DataError):
                     # If something is going wrong while changing the schema we will
                     # just raise a specific exception. In the future we want to have
                     # some sort of converter abstraction where the values of certain
@@ -345,7 +344,7 @@ class FieldHandler:
         if len(to_delete) > 0:
             SelectOption.objects.filter(field=field, id__in=to_delete).delete()
 
-        # Checks which existing instances must be selected all at once.
+        # Checks which existing instances must be fetched using a single query.
         to_select = [
             select_option['id']
             for select_option in select_options

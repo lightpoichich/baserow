@@ -3,7 +3,9 @@
     <FieldSingleSelectDropdown
       :value="valueId"
       :options="field.select_options"
+      :allow-create-option="true"
       @input="updateValue($event, value)"
+      @create-option="createOption($event)"
     ></FieldSingleSelectDropdown>
   </div>
 </template>

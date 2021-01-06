@@ -30,6 +30,7 @@ export default {
       name: null,
       icon: null,
       query: '',
+      hasItems: true,
       hover: null,
     }
   },
@@ -171,8 +172,11 @@ export default {
      * If not empty it will only show children that contain the given query.
      */
     search(query) {
+      this.hasItems = query === ''
       this.$children.forEach((item) => {
-        item.search(query)
+        if (item.search(query)) {
+          this.hasItems = true
+        }
       })
     },
     /**

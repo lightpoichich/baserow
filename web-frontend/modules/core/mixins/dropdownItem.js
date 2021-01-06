@@ -39,6 +39,7 @@ export default {
     },
     search(query) {
       this.query = query
+      return this.isVisible(query)
     },
     isVisible(query) {
       const regex = new RegExp('(' + escapeRegExp(query) + ')', 'i')

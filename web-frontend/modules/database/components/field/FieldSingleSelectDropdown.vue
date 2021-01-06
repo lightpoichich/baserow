@@ -40,6 +40,21 @@
           :color="option.color"
         ></FieldSingleSelectDropdownItem>
       </ul>
+      <template v-if="canCreateOption">
+        <div class="select__description">
+          Option not found
+        </div>
+        <div class="select__footer">
+          <a
+            @click="createOption(query)"
+            class="select__footer-button"
+            :class="{ 'button--loading': createOptionLoading }"
+          >
+            <i class="fas fa-plus"></i>
+            Create {{ query }}
+          </a>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -57,8 +72,21 @@ export default {
       type: Array,
       required: true,
     },
+    allowCreateOption: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      createOptionLoading: false,
+    }
   },
   computed: {
+    canCreateOption() {
+      return this.allowCreateOption && this.query !== '' && !this.hasItems
+    },
     selectedColor() {
       return this.getSelectedProperty(this.value, 'color')
     },
@@ -67,6 +95,26 @@ export default {
     forceRefreshSelectedValue() {
       this._computedWatchers.selectedColor.run()
       dropdown.methods.forceRefreshSelectedValue.call(this)
+    },
+    createOption(value) {
+      if (this.createOptionLoading) {
+        return
+      }
+
+      this.createOptionLoading = true
+      const done = (success) => {
+        this.createOptionLoading = false
+
+        // If the option was created successfully whe have to find that option, select
+        // it and hide the dropdown.
+        if (success) {
+          const option = this.options.find((o) => o.value === value)
+          if (option !== undefined) {
+            this.select(option.id)
+          }
+        }
+      }
+      this.$emit('create-option', { value, done })
     },
   },
 }

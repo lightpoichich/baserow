@@ -954,4 +954,40 @@ export class SingleSelectFieldType extends FieldType {
       }
     }
   }
+
+  getDocsDataType() {
+    return 'integer'
+  }
+
+  getDocsDescription(field) {
+    const options = field.select_options
+      .map(
+        (option) =>
+          // @TODO move this template to a component.
+          `<div class="select-options-listing">
+              <div class="select-options-listing__id">${option.id}</div>
+              <div class="select-options-listing__value background-color--${option.color}">${option.value}</div>
+           </div>
+          `
+      )
+      .join('\n')
+
+    return `
+      Accepts the ID of one options or null if none is selected.
+      <br />
+      ${options}
+    `
+  }
+
+  getDocsRequestExample() {
+    return 1
+  }
+
+  getDocsResponseExample() {
+    return {
+      id: 1,
+      value: 'Option',
+      color: 'light-blue',
+    }
+  }
 }

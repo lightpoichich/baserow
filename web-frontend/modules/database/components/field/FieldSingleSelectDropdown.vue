@@ -46,9 +46,9 @@
         </div>
         <div class="select__footer">
           <a
-            @click="createOption(query)"
             class="select__footer-button"
             :class="{ 'button--loading': createOptionLoading }"
+            @click="createOption(query)"
           >
             <i class="fas fa-plus"></i>
             Create {{ query }}

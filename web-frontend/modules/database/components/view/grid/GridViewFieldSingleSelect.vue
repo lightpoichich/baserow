@@ -36,6 +36,7 @@
 
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
+import { isCharacterKeyPress } from '@baserow/modules/core/utils/events'
 import singleSelectField from '@baserow/modules/database/mixins/singleSelectField'
 
 export default {
@@ -46,18 +47,25 @@ export default {
     }
   },
   methods: {
-    toggleDropdown(value) {
+    toggleDropdown(value, query) {
       if (!this.selected) {
         return
       }
 
-      this.$refs.dropdown.toggle(this.$refs.dropdownLink, value)
+      this.$refs.dropdown.toggle(this.$refs.dropdownLink, value, query)
     },
     hideDropdown() {
       this.$refs.dropdown.hide()
     },
     select() {
       this.$el.keydownEvent = (event) => {
+        // If the tab or arrow keys are pressed we don't want to do anything because
+        // the GridViewField component will select the next field.
+        const ignoredKeys = [9, 37, 38, 39, 40]
+        if (ignoredKeys.includes(event.keyCode)) {
+          return
+        }
+
         // When the escape key is pressed while editing the value we can hide the
         // dropdown.
         if (event.keyCode === 27 && this.editing) {
@@ -67,7 +75,10 @@ export default {
 
         // When the enter key is pressed when not editing the value we want to show the
         // dropdown.
-        if (event.keyCode === 13 && !this.editing) {
+        if (
+          !this.editing &&
+          (event.keyCode === 13 || isCharacterKeyPress(event))
+        ) {
           this.toggleDropdown()
         }
       }

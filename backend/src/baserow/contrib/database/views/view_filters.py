@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from dateutil import parser
 from dateutil.parser import ParserError
+from datetime import datetime, timedelta
 
 from django.db.models import Q, IntegerField, BooleanField
 from django.db.models.fields.related import ManyToManyField
@@ -157,6 +158,142 @@ class LowerThanViewFilterType(ViewFilterType):
 
         return Q()
 
+
+class DateEqualTodayViewFilterType(ViewFilterType):
+    """
+    The date filter parses the provided value as date and checks if the field value is
+    the same date. It only works if a valid ISO date is provided as value and it is
+    only compatible with models.DateField and models.DateTimeField.
+    """
+
+    type = 'date_equal_today'
+    compatible_field_types = [DateFieldType.type]
+
+    def get_filter(self, field_name, value, model_field):
+        """
+        Parses the provided value string and converts it to an aware datetime object.
+        That object will used to make a comparison with today.
+        """
+
+        try:
+            today = datetime.utcnow()
+        except (ParserError, ValueError):
+            return Q()
+
+        return Q(**{
+            f'{field_name}__year': today.year,
+            f'{field_name}__month': today.month,
+            f'{field_name}__day': today.day
+        })
+
+class DateInThisMonthViewFilterType(ViewFilterType):
+    """
+    The date filter parses the provided value as date and checks if the field value is
+    the same date. It only works if a valid ISO date is provided as value and it is
+    only compatible with models.DateField and models.DateTimeField.
+    """
+
+    type = 'date_in_this_month'
+    compatible_field_types = [DateFieldType.type]
+
+    def get_filter(self, field_name, value, model_field):
+        """
+        Parses the provided value string and converts it to an aware datetime object.
+        That object will used to make a comparison with today.
+        """
+
+        try:
+            today = datetime.utcnow()
+        except (ParserError, ValueError):
+            return Q()
+
+        return Q(**{
+            f'{field_name}__year': today.year,
+            f'{field_name}__month': today.month
+        })
+
+class DateInThisYearViewFilterType(ViewFilterType):
+    """
+    The date filter parses the provided value as date and checks if the field value is
+    the same date. It only works if a valid ISO date is provided as value and it is
+    only compatible with models.DateField and models.DateTimeField.
+    """
+
+    type = 'date_in_this_year'
+    compatible_field_types = [DateFieldType.type]
+
+    def get_filter(self, field_name, value, model_field):
+        """
+        Parses the provided value string and converts it to an aware datetime object.
+        That object will used to make a comparison with today.
+        """
+
+        try:
+            today = datetime.utcnow()
+        except (ParserError, ValueError):
+            return Q()
+
+        return Q(**{
+            f'{field_name}__year': today.year,
+        })
+
+class DateInNearFutureViewFilterType(ViewFilterType):
+    """
+    The date filter parses the provided value as date and checks if the field value is
+    the same date. It only works if a valid ISO date is provided as value and it is
+    only compatible with models.DateField and models.DateTimeField.
+    """
+
+    type = 'date_in_near_future'
+    compatible_field_types = [DateFieldType.type]
+
+    def get_filter(self, field_name, value, model_field):
+        """
+        Parses the provided value string and converts it to an aware datetime object.
+        That object will used to make a comparison with the provided field name.
+        """
+        try:
+            value = int(value.strip())
+        except (ParserError, ValueError):
+            return Q()
+
+        if value == '':
+            return Q()
+
+        today = datetime.utcnow()
+
+        lastDay = today + timedelta(days=value)
+        
+        return Q(**{f'{field_name}__lte': lastDay,f'{field_name}__gte': today})
+
+class DateInNearPastViewFilterType(ViewFilterType):
+    """
+    The date filter parses the provided value as date and checks if the field value is
+    the same date. It only works if a valid ISO date is provided as value and it is
+    only compatible with models.DateField and models.DateTimeField.
+    """
+
+    type = 'date_in_near_past'
+    compatible_field_types = [DateFieldType.type]
+
+    def get_filter(self, field_name, value, model_field):
+        """
+        Parses the provided value string and converts it to an aware datetime object.
+        That object will used to make a comparison with the provided field name.
+        """
+        try:
+            value = int(value.strip())
+        except (ParserError, ValueError):
+            return Q()
+
+        if value == '':
+            return Q()
+
+        today = datetime.utcnow()
+
+        lastDay = today - timedelta(days=value)
+        
+        return Q(**{f'{field_name}__lte': today,f'{field_name}__gte': lastDay})
 
 class DateEqualViewFilterType(ViewFilterType):
     """

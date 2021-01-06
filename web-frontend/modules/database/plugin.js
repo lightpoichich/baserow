@@ -15,6 +15,11 @@ import {
   EqualViewFilterType,
   NotEqualViewFilterType,
   DateEqualViewFilterType,
+  DateEqualTodayViewFilterType,
+  DateInNearFutureViewFilterType,
+  DateInNearPastViewFilterType,
+  DateInThisMonthViewFilterType,
+  DateInThisYearViewFilterType,
   DateNotEqualViewFilterType,
   ContainsViewFilterType,
   ContainsNotViewFilterType,
@@ -46,6 +51,11 @@ export default ({ store, app }) => {
   app.$registry.register('viewFilter', new EqualViewFilterType())
   app.$registry.register('viewFilter', new NotEqualViewFilterType())
   app.$registry.register('viewFilter', new DateEqualViewFilterType())
+  app.$registry.register('viewFilter', new DateEqualTodayViewFilterType())
+  app.$registry.register('viewFilter', new DateInNearFutureViewFilterType())
+  app.$registry.register('viewFilter', new DateInNearPastViewFilterType())
+  app.$registry.register('viewFilter', new DateInThisMonthViewFilterType())
+  app.$registry.register('viewFilter', new DateInThisYearViewFilterType())
   app.$registry.register('viewFilter', new DateNotEqualViewFilterType())
   app.$registry.register('viewFilter', new ContainsViewFilterType())
   app.$registry.register('viewFilter', new ContainsNotViewFilterType())

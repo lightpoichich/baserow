@@ -68,6 +68,8 @@ class DatabaseConfig(AppConfig):
         from .views.view_filters import (
             EqualViewFilterType, NotEqualViewFilterType, EmptyViewFilterType,
             NotEmptyViewFilterType, DateEqualViewFilterType, DateNotEqualViewFilterType,
+            DateEqualTodayViewFilterType,DateInNearFutureViewFilterType,DateInNearPastViewFilterType,
+            DateInThisMonthViewFilterType,DateInThisYearViewFilterType,
             HigherThanViewFilterType, LowerThanViewFilterType, ContainsViewFilterType,
             ContainsNotViewFilterType, BooleanViewFilterType
         )
@@ -78,6 +80,11 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(HigherThanViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
+        view_filter_type_registry.register(DateEqualTodayViewFilterType())
+        view_filter_type_registry.register(DateInNearFutureViewFilterType())
+        view_filter_type_registry.register(DateInNearPastViewFilterType())
+        view_filter_type_registry.register(DateInThisMonthViewFilterType())
+        view_filter_type_registry.register(DateInThisYearViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())
         view_filter_type_registry.register(EmptyViewFilterType())

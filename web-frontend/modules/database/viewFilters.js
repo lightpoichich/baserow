@@ -220,6 +220,171 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 }
 
+export class DateInNearPastViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_in_near_past'
+  }
+
+  getName() {
+    return 'is in last few days'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumber
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    const rowDate = new Date(rowValue)
+
+    const today = new Date()
+    const difference = rowDate - today
+    return !isNaN(filterValue) && filterValue <= difference
+  }
+}
+
+export class DateInNearFutureViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_in_near_future'
+  }
+
+  getName() {
+    return 'is in coming days'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumber
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    const rowDate = new Date(rowValue)
+
+    const today = new Date()
+    const difference = today - rowDate
+    return !isNaN(filterValue) && difference <= filterValue
+  }
+}
+
+export class DateEqualTodayViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_equal_today'
+  }
+
+  getName() {
+    return 'is today'
+  }
+
+  prepareValue(value) {
+    return new Date().toDateString()
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    rowValue = rowValue.toString().toLowerCase().trim()
+    rowValue = rowValue.slice(0, 10)
+
+    return filterValue === '' || rowValue === filterValue
+  }
+}
+
+export class DateInThisMonthViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_in_this_month'
+  }
+
+  getName() {
+    return 'is in this month'
+  }
+
+  prepareValue(value) {
+    return new Date()
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    const sameYear = rowValue.getYear() === filterValue.getYear()
+    const sameMonth = rowValue.getMonth() === filterValue.getMonth()
+
+    return filterValue === '' || (sameYear && sameMonth)
+  }
+}
+
+export class DateInThisYearViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_in_this_year'
+  }
+
+  getName() {
+    return 'is in this year'
+  }
+
+  prepareValue(value) {
+    return new Date()
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+    const sameYear = rowValue.getYear() === filterValue.getYear()
+
+    return filterValue === '' || sameYear
+  }
+}
+
 export class DateNotEqualViewFilterType extends ViewFilterType {
   static getType() {
     return 'date_not_equal'

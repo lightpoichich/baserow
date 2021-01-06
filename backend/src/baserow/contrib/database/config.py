@@ -70,7 +70,8 @@ class DatabaseConfig(AppConfig):
             EqualViewFilterType, NotEqualViewFilterType, EmptyViewFilterType,
             NotEmptyViewFilterType, DateEqualViewFilterType, DateNotEqualViewFilterType,
             HigherThanViewFilterType, LowerThanViewFilterType, ContainsViewFilterType,
-            ContainsNotViewFilterType, BooleanViewFilterType
+            ContainsNotViewFilterType, BooleanViewFilterType,
+            SingleSelectEqualViewFilterType, SingleSelectNotEqualViewFilterType
         )
         view_filter_type_registry.register(EqualViewFilterType())
         view_filter_type_registry.register(NotEqualViewFilterType())
@@ -80,6 +81,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
+        view_filter_type_registry.register(SingleSelectEqualViewFilterType())
+        view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())
         view_filter_type_registry.register(EmptyViewFilterType())
         view_filter_type_registry.register(NotEmptyViewFilterType())

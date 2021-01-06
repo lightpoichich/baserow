@@ -398,6 +398,106 @@ def test_contains_not_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_single_select_equal_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_single_select_field(table=table)
+    option_a = data_fixture.create_select_option(field=field, value='A', color='blue')
+    option_b = data_fixture.create_select_option(field=field, value='B', color='red')
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(**{
+        f'field_{field.id}_id': option_a.id,
+    })
+    row_2 = model.objects.create(**{
+        f'field_{field.id}_id': option_b.id,
+    })
+    model.objects.create(**{
+        f'field_{field.id}_id': None,
+    })
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=field,
+        type='single_select_equal',
+        value=''
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.value = str(option_a.id)
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    filter.value = str(option_b.id)
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_2.id in ids
+
+    filter.value = '-1'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+
+@pytest.mark.django_db
+def test_single_select_not_equal_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_single_select_field(table=table)
+    option_a = data_fixture.create_select_option(field=field, value='A', color='blue')
+    option_b = data_fixture.create_select_option(field=field, value='B', color='red')
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(**{
+        f'field_{field.id}_id': option_a.id,
+    })
+    row_2 = model.objects.create(**{
+        f'field_{field.id}_id': option_b.id,
+    })
+    row_3 = model.objects.create(**{
+        f'field_{field.id}_id': None,
+    })
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=field,
+        type='single_select_not_equal',
+        value=''
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.value = str(option_a.id)
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    filter.value = str(option_b.id)
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids
+
+    filter.value = '-1'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+
+@pytest.mark.django_db
 def test_boolean_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

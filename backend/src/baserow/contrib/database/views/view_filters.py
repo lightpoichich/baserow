@@ -205,6 +205,29 @@ class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType
     type = 'date_not_equal'
 
 
+class SingleSelectEqualViewFilterType(ViewFilterType):
+    """
+    The single select equal filter accepts an option id as filter value. This filter
+    is only compatible with the SingleSelectFieldType field type.
+    """
+
+    type = 'single_select_equal'
+    compatible_field_types = [SingleSelectFieldType.type]
+
+    def get_filter(self, field_name, value, model_field):
+        value = value.strip()
+
+        if value == '':
+            return Q()
+
+        return Q(**{f'{field_name}_id': value})
+
+
+class SingleSelectNotEqualViewFilterType(NotViewFilterTypeMixin,
+                                         SingleSelectEqualViewFilterType):
+    type = 'single_select_not_equal'
+
+
 class BooleanViewFilterType(ViewFilterType):
     """
     The boolean filter tries to convert the provided filter value to a boolean and

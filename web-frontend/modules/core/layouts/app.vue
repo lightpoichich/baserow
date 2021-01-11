@@ -115,6 +115,13 @@ export default {
       nameAbbreviation: 'auth/getNameAbbreviation',
     }),
   },
+  mounted() {
+    // Connect the web socket so we can start receiving live updates.
+    this.$realtime.connect()
+  },
+  beforeDestroy() {
+    this.$realtime.disconnect()
+  },
   methods: {
     logoff() {
       this.$store.dispatch('auth/logoff')

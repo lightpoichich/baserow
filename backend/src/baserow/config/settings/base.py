@@ -66,17 +66,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'baserow.config.wsgi.application'
 ASGI_APPLICATION = 'baserow.config.asgi.application'
 
-
 REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
 REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+REDIS_USERNAME = os.getenv('REDIS_USER', '')
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
+REDIS_PROTOCOL = os.getenv('REDIS_PROTOCOL', 'redis')
+REDIS_URL = (
+    f'{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0'
+)
 
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
+CELERY_BROKER_URL = REDIS_URL
 
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
+            "hosts": [REDIS_URL],
         },
     },
 }

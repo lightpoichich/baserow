@@ -1,3 +1,5 @@
+import { isSecureURL } from '@baserow/modules/core/utils/string'
+
 export class RealTimeHandler {
   constructor(context) {
     this.context = context
@@ -21,8 +23,9 @@ export class RealTimeHandler {
 
     // Because the web socket url is the same as the PUBLIC_BACKEND_URL apart from
     // the protocol.
-    const url = new URL(this.context.app.$env.PUBLIC_BACKEND_URL)
-    url.protocol = 'ws'
+    const rawUrl = this.context.app.$env.PUBLIC_BACKEND_URL
+    const url = new URL(rawUrl)
+    url.protocol = isSecureURL(rawUrl) ? 'wss:' : 'ws:'
     url.pathname = '/ws/core/'
 
     this.socket = new WebSocket(`${url}?jwt_token=${token}`)

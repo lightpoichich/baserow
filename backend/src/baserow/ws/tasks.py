@@ -1,5 +1,3 @@
-from asgiref.sync import async_to_sync
-
 from baserow.config.celery import app
 
 
@@ -18,6 +16,8 @@ def broadcast_to_users(self, user_ids, payload, ignore_web_socket_id=None):
         request.
     :type ignore_web_socket_id: str
     """
+
+    from asgiref.sync import async_to_sync
 
     from channels.layers import get_channel_layer
 

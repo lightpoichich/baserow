@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Implemented real time collaboration.
+
 ## Released (2021-01-06)
 
 * Allow larger values for the number field and improved the validation.

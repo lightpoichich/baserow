@@ -40,6 +40,8 @@ class DatabaseConfig(AppConfig):
     def ready(self):
         self.prevent_generated_model_for_registering()
 
+        import baserow.contrib.database.ws.signals  # noqa: F403, F401
+
         from .plugins import DatabasePlugin
         plugin_registry.register(DatabasePlugin())
 

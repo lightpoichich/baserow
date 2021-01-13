@@ -53,9 +53,9 @@ export class RealTimeHandler {
         Object.prototype.hasOwnProperty.call(data, 'type') &&
         Object.prototype.hasOwnProperty.call(this.events, data.type)
       ) {
-        this.events[data.type](data, this.context)
+        this.events[data.type](this.context, data)
       } else {
-        console.log('Invalid message', message.data)
+        console.log('Type is missing from message', message.data)
       }
     }
 
@@ -115,33 +115,33 @@ export class RealTimeHandler {
     // auth store. Every AJAX request will include the web socket id as header, this
     // way the backend knows that this client does not has to receive the event
     // because we already know about the change.
-    this.registerEvent('authentication', (data, { store }) => {
+    this.registerEvent('authentication', ({ store }, data) => {
       store.dispatch('auth/setWebSocketId', data.web_socket_id)
     })
 
-    this.registerEvent('group_created', (data, { store }) => {
+    this.registerEvent('group_created', ({ store }, data) => {
       store.dispatch('group/forceCreate', data.group)
     })
 
-    this.registerEvent('group_updated', (data, { store }) => {
+    this.registerEvent('group_updated', ({ store }, data) => {
       const group = store.getters['group/get'](data.group_id)
       if (group !== undefined) {
         store.dispatch('group/forceUpdate', { group, values: data.group })
       }
     })
 
-    this.registerEvent('group_deleted', (data, { store }) => {
+    this.registerEvent('group_deleted', ({ store }, data) => {
       const group = store.getters['group/get'](data.group_id)
       if (group !== undefined) {
         store.dispatch('group/forceDelete', group)
       }
     })
 
-    this.registerEvent('application_created', (data, { store }) => {
+    this.registerEvent('application_created', ({ store }, data) => {
       store.dispatch('application/forceCreate', { data: data.application })
     })
 
-    this.registerEvent('application_updated', (data, { store }) => {
+    this.registerEvent('application_updated', ({ store }, data) => {
       const application = store.getters['application/get'](data.application_id)
       if (application !== undefined) {
         store.dispatch('application/forceUpdate', {
@@ -151,7 +151,7 @@ export class RealTimeHandler {
       }
     })
 
-    this.registerEvent('application_deleted', (data, { store }) => {
+    this.registerEvent('application_deleted', ({ store }, data) => {
       const application = store.getters['application/get'](data.application_id)
       if (application !== undefined) {
         store.dispatch('application/forceDelete', application)

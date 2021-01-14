@@ -31,6 +31,36 @@ def broadcast_to_users(self, user_ids, payload, ignore_web_socket_id=None):
 
 
 @app.task(bind=True)
+def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
+    """
+    Broadcasts a JSON payload all the users within the channel group having the
+    provided name.
+
+    :param group: The name of the channel group the the payload must be broad casted
+        to.
+    :type group: str
+    :param payload: A dictionary object containing the payload that must be
+        broadcasted.
+    :type payload: dict
+    :param ignore_web_socket_id: The web socket id to which the message must not be
+        send. This is normally the web socket id that has originally made the change
+        request.
+    :type ignore_web_socket_id: str
+    """
+
+    from asgiref.sync import async_to_sync
+
+    from channels.layers import get_channel_layer
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(group, {
+        'type': 'broadcast_to_group',
+        'payload': payload,
+        'ignore_web_socket_id': ignore_web_socket_id
+    })
+
+
+@app.task(bind=True)
 def broadcast_to_group(self, group_id, payload, ignore_web_socket_id=None):
     """
     Broadcasts a JSON payload to all users that are in provided group id.

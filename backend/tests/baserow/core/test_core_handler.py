@@ -289,5 +289,6 @@ def test_delete_database_application(send_mock, data_fixture):
     assert f'database_table_{table.id}' not in connection.introspection.table_names()
 
     send_mock.assert_called_once()
+    assert send_mock.call_args[1]['application_id'] == database.id
     assert send_mock.call_args[1]['application'].id == database.id
     assert send_mock.call_args[1]['user'].id == user.id

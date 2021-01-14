@@ -91,12 +91,11 @@ class ViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = View
-        fields = ('id', 'name', 'order', 'type', 'table', 'filter_type', 'filters',
-                  'sortings', 'filters_disabled')
+        fields = ('id', 'table_id', 'name', 'order', 'type', 'table', 'filter_type',
+                  'filters', 'sortings', 'filters_disabled')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True},
+            'table_id': {'read_only': True}
         }
 
     def __init__(self, *args, **kwargs):

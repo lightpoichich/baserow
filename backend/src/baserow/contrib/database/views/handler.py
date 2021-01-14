@@ -15,6 +15,7 @@ from .registries import view_type_registry, view_filter_type_registry
 from .models import (
     View, GridViewFieldOptions, ViewFilter, ViewSort, FILTER_TYPE_AND, FILTER_TYPE_OR
 )
+from .signals import view_created, view_updated, view_deleted
 
 
 class ViewHandler:
@@ -95,6 +96,9 @@ class ViewHandler:
         instance = model_class.objects.create(table=table, order=last_order,
                                               **view_values)
 
+        view_created.send(self, view=instance, user=user,
+                          type_name=type_name)
+
         return instance
 
     def update_view(self, user, view, **kwargs):
@@ -129,6 +133,8 @@ class ViewHandler:
         view = set_allowed_attrs(kwargs, allowed_fields, view)
         view.save()
 
+        view_updated.send(self, view=view, user=user)
+
         return view
 
     def delete_view(self, user, view):
@@ -150,7 +156,10 @@ class ViewHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        view_id = view.id
         view.delete()
+
+        view_deleted.send(self, view_id=view_id, view=view, user=user)
 
     def update_grid_view_field_options(self, grid_view, field_options, fields=None):
         """

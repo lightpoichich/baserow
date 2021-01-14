@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroupError
@@ -57,14 +58,20 @@ def test_get_view(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_view(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_created.send')
+def test_create_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table(user=user)
 
     handler = ViewHandler()
-    handler.create_view(user=user, table=table, type_name='grid', name='Test grid')
+    view = handler.create_view(user=user, table=table, type_name='grid',
+                               name='Test grid')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view'].id == view.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     assert View.objects.all().count() == 1
     assert GridView.objects.all().count() == 1
@@ -109,7 +116,8 @@ def test_create_view(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_view(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_updated.send')
+def test_update_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -123,7 +131,11 @@ def test_update_view(data_fixture):
     with pytest.raises(ValueError):
         handler.update_view(user=user, view=object(), name='Test 1')
 
-    handler.update_view(user=user, view=grid, name='Test 1')
+    view = handler.update_view(user=user, view=grid, name='Test 1')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view'].id == view.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     grid.refresh_from_db()
     assert grid.name == 'Test 1'
@@ -138,7 +150,8 @@ def test_update_view(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_view(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_deleted.send')
+def test_delete_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -152,9 +165,16 @@ def test_delete_view(data_fixture):
     with pytest.raises(ValueError):
         handler.delete_view(user=user_2, view=object())
 
+    view_id = grid.id
+
     assert View.objects.all().count() == 1
     handler.delete_view(user=user, view=grid)
     assert View.objects.all().count() == 0
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_id'] == view_id
+    assert send_mock.call_args[1]['view'].id == view_id
+    assert send_mock.call_args[1]['user'].id == user.id
 
 
 @pytest.mark.django_db

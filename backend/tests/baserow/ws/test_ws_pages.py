@@ -25,7 +25,7 @@ async def test_join_page(data_fixture):
         'page': 'table',
         'table_id': table_1.id
     })
-    response = await communicator_1.receive_json_from(0.01)
+    response = await communicator_1.receive_json_from(0.1)
     assert response['type'] == 'page_add'
     assert response['page'] == 'table'
     assert response['parameters']['table_id'] == table_1.id
@@ -33,7 +33,7 @@ async def test_join_page(data_fixture):
     # When switching to a not existing page we expect to be discarded from the
     # current page.
     await communicator_1.send_json_to({'page': ''})
-    response = await communicator_1.receive_json_from(0.01)
+    response = await communicator_1.receive_json_from(0.1)
     assert response['type'] == 'page_discard'
     assert response['page'] == 'table'
     assert response['parameters']['table_id'] == table_1.id

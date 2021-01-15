@@ -11,7 +11,7 @@ from baserow.ws.tasks import (
 )
 
 
-@pytest.mark.run(order=1)
+@pytest.mark.run(order=4)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_broadcast_to_users(data_fixture):
@@ -57,7 +57,7 @@ async def test_broadcast_to_users(data_fixture):
     await communicator_2.disconnect()
 
 
-@pytest.mark.run(order=2)
+@pytest.mark.run(order=5)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_broadcast_to_channel_group(data_fixture):
@@ -183,7 +183,7 @@ async def test_broadcast_to_channel_group(data_fixture):
     await communicator_2.disconnect()
 
 
-@pytest.mark.run(order=3)
+@pytest.mark.run(order=6)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_broadcast_to_group(data_fixture):

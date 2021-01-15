@@ -7,6 +7,7 @@ from baserow.config.asgi import application
 from baserow.ws.auth import get_user
 
 
+@pytest.mark.run(order=1)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_get_user(data_fixture):
@@ -18,6 +19,7 @@ async def test_get_user(data_fixture):
     assert user.id == u.id
 
 
+@pytest.mark.run(order=2)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_token_auth_middleware(data_fixture):

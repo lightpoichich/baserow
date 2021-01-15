@@ -5,6 +5,7 @@ from channels.testing import WebsocketCommunicator
 from baserow.config.asgi import application
 
 
+@pytest.mark.run(order=3)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_join_page(data_fixture):

@@ -3,6 +3,7 @@ import pytest
 from asgiref.sync import sync_to_async
 
 from channels.testing import WebsocketCommunicator
+from channels.db import database_sync_to_async
 
 from baserow.config.asgi import application
 from baserow.ws.tasks import (
@@ -10,6 +11,7 @@ from baserow.ws.tasks import (
 )
 
 
+@pytest.mark.run(order=1)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_broadcast_to_users(data_fixture):
@@ -55,6 +57,7 @@ async def test_broadcast_to_users(data_fixture):
     await communicator_2.disconnect()
 
 
+@pytest.mark.run(order=2)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_broadcast_to_channel_group(data_fixture):
@@ -180,6 +183,7 @@ async def test_broadcast_to_channel_group(data_fixture):
     await communicator_2.disconnect()
 
 
+@pytest.mark.run(order=3)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 async def test_broadcast_to_group(data_fixture):
@@ -216,16 +220,15 @@ async def test_broadcast_to_group(data_fixture):
     await communicator_3.connect()
     await communicator_3.receive_json_from()
 
-    await sync_to_async(broadcast_to_group)(group_1.id, {'message': 'test'})
-
+    await database_sync_to_async(broadcast_to_group)(group_1.id, {'message': 'test'})
     response_1 = await communicator_1.receive_json_from(0.01)
     response_2 = await communicator_2.receive_json_from(0.01)
-    communicator_3.receive_nothing(0.01)
+    await communicator_3.receive_nothing(0.01)
 
     assert response_1['message'] == 'test'
     assert response_2['message'] == 'test'
 
-    await sync_to_async(broadcast_to_group)(
+    await database_sync_to_async(broadcast_to_group)(
         group_1.id,
         {'message': 'test2'},
         ignore_web_socket_id=web_socket_id_1
@@ -237,7 +240,7 @@ async def test_broadcast_to_group(data_fixture):
 
     assert response_2['message'] == 'test2'
 
-    await sync_to_async(broadcast_to_group)(
+    await database_sync_to_async(broadcast_to_group)(
         group_2.id,
         {'message': 'test3'},
         ignore_web_socket_id=web_socket_id_2

@@ -63,7 +63,7 @@ def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
 @app.task(bind=True)
 def broadcast_to_group(self, group_id, payload, ignore_web_socket_id=None):
     """
-    Broadcasts a JSON payload to all users that are in provided group id.
+    Broadcasts a JSON payload to all users that are in provided group (Group model) id.
 
     :param group_id: The message will only be broadcasted to the users within the
         provided group id.

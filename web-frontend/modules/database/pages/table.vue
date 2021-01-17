@@ -211,6 +211,12 @@ export default {
     this.$store.dispatch('table/unselect')
     next()
   },
+  mounted() {
+    this.$realtime.subscribe('table', { table_id: this.table.id })
+  },
+  beforeDestroy() {
+    this.$realtime.subscribe(null)
+  },
   methods: {
     getViewComponent(view) {
       const type = this.$registry.get('view', view.type)

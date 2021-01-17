@@ -9,6 +9,9 @@ export class RealTimeHandler {
     this.reconnectTimeout = null
     this.events = {}
     this.attempts = 0
+    this.page = null
+    this.pageParameters = {}
+    this.subscribedToPage = true
     this.registerCoreEvents()
   }
 
@@ -33,6 +36,12 @@ export class RealTimeHandler {
       this.context.store.dispatch('notification/setConnecting', false)
       this.connected = true
       this.attempts = 0
+
+      // If the client needs to be subscribed to a page we can do that directly
+      // after connecting.
+      if (!this.subscribedToPage) {
+        this.subscribeToPage()
+      }
     }
 
     /**
@@ -66,6 +75,9 @@ export class RealTimeHandler {
      */
     this.socket.onclose = () => {
       this.connected = false
+      // By default the user not subscribed to a page a.k.a `null`, so if the current
+      // page is already null we can mark it as subscribed.
+      this.subscribedToPage = this.page === null
 
       // Automatically reconnect if the socket closes.
       if (this.reconnect) {
@@ -81,6 +93,41 @@ export class RealTimeHandler {
         )
       }
     }
+
+    // @TODO do something when it goes wrong.
+    this.socket.onerror = () => {
+      console.log('@TODO something went wrong with the socket')
+    }
+  }
+
+  /**
+   * Subscribes the client to a given page. After subscribing the client will
+   * receive updated related to that page. This is for example used when a user
+   * opens a table.
+   */
+  subscribe(page, parameters) {
+    this.page = page
+    this.pageParameters = parameters
+    this.subscribedToPage = false
+
+    // If the client is already connected we can directly subscribe to the page.
+    if (this.connected) {
+      this.subscribeToPage()
+    }
+  }
+
+  /**
+   * Sends a request to the real time server that updates for a certain page +
+   * parameters must be received.
+   */
+  subscribeToPage() {
+    this.socket.send(
+      JSON.stringify({
+        page: this.page === null ? '' : this.page,
+        ...this.pageParameters,
+      })
+    )
+    this.subscribedToPage = true
   }
 
   /**

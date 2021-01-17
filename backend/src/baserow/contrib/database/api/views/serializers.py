@@ -17,9 +17,7 @@ class ViewFilterSerializer(serializers.ModelSerializer):
         model = ViewFilter
         fields = ('id', 'view', 'field', 'type', 'value')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True}
         }
 
 
@@ -58,9 +56,7 @@ class ViewSortSerializer(serializers.ModelSerializer):
         model = ViewSort
         fields = ('id', 'view', 'field', 'order')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True}
         }
 
 

@@ -41,8 +41,6 @@ class DatabaseConfig(AppConfig):
     def ready(self):
         self.prevent_generated_model_for_registering()
 
-        import baserow.contrib.database.ws.signals  # noqa: F403, F401
-
         from .plugins import DatabasePlugin
         plugin_registry.register(DatabasePlugin())
 
@@ -95,3 +93,7 @@ class DatabaseConfig(AppConfig):
 
         from .ws.pages import TablePageType
         page_registry.register(TablePageType())
+
+        # The signals must always be imported last because they use the registries
+        # which need to be filled first.
+        import baserow.contrib.database.ws.signals  # noqa: F403, F401

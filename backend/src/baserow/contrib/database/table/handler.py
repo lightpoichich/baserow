@@ -215,7 +215,8 @@ class TableHandler:
             active.id: {'width': 100}
         }
         fields = [notes, active]
-        view_handler.update_grid_view_field_options(view, field_options, fields=fields)
+        view_handler.update_grid_view_field_options(user, view, field_options,
+                                                    fields=fields)
 
         model = table.get_model(attribute_names=True)
         model.objects.create(name='Tesla', active=True, order=1)

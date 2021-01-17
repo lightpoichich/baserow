@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 
 from decimal import Decimal
 
@@ -128,7 +129,8 @@ def test_extract_manytomany_values(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_row(data_fixture):
+@patch('baserow.contrib.database.rows.signals.row_created.send')
+def test_create_row(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name='Car', user=user)
@@ -165,6 +167,11 @@ def test_create_row(data_fixture):
     assert getattr(row_1, f'field_{price_field.id}') == Decimal('59999.99')
     assert not getattr(row_1, f'field_9999', None)
     assert row_1.order == Decimal('1.00000000000000000000')
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['row'].id == row_1.id
+    assert send_mock.call_args[1]['user'].id == user.id
+    assert send_mock.call_args[1]['table'].id == table.id
+    assert send_mock.call_args[1]['model']._generated_table_model
 
     row_2 = handler.create_row(user=user, table=table)
     assert getattr(row_2, f'field_{name_field.id}') == 'Test'
@@ -289,7 +296,8 @@ def test_get_row(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_row(data_fixture):
+@patch('baserow.contrib.database.rows.signals.row_updated.send')
+def test_update_row(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name='Car', user=user)
@@ -328,10 +336,16 @@ def test_update_row(data_fixture):
     assert getattr(row, f'field_{name_field.id}') == 'Tesla'
     assert getattr(row, f'field_{speed_field.id}') == 240
     assert getattr(row, f'field_{price_field.id}') == Decimal('59999.99')
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['row'].id == row.id
+    assert send_mock.call_args[1]['user'].id == user.id
+    assert send_mock.call_args[1]['table'].id == table.id
+    assert send_mock.call_args[1]['model']._generated_table_model
 
 
 @pytest.mark.django_db
-def test_delete_row(data_fixture):
+@patch('baserow.contrib.database.rows.signals.row_deleted.send')
+def test_delete_row(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name='Car', user=user)
@@ -348,5 +362,12 @@ def test_delete_row(data_fixture):
     with pytest.raises(RowDoesNotExist):
         handler.delete_row(user=user, table=table, row_id=99999)
 
+    row_id = row.id
     handler.delete_row(user=user, table=table, row_id=row.id)
     assert model.objects.all().count() == 1
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['row_id'] == row_id
+    assert send_mock.call_args[1]['row']
+    assert send_mock.call_args[1]['user'].id == user.id
+    assert send_mock.call_args[1]['table'].id == table.id
+    assert send_mock.call_args[1]['model']._generated_table_model

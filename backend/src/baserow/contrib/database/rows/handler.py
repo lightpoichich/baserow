@@ -11,6 +11,7 @@ from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.models import Field
 
 from .exceptions import RowDoesNotExist
+from .signals import row_created, row_updated, row_deleted
 
 
 class RowHandler:
@@ -234,6 +235,8 @@ class RowHandler:
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)
 
+        row_created.send(self, row=instance, user=user, table=table, model=model)
+
         return instance
 
     def update_row(self, user, table, row_id, values, model=None):
@@ -285,6 +288,8 @@ class RowHandler:
             for name, value in manytomany_values.items():
                 getattr(row, name).set(value)
 
+        row_updated.send(self, row=row, user=user, table=table, model=model)
+
         return row
 
     def delete_row(self, user, table, row_id):
@@ -312,4 +317,8 @@ class RowHandler:
         except model.DoesNotExist:
             raise RowDoesNotExist(f'The row with id {row_id} does not exist.')
 
+        row_id = row.id
         row.delete()
+
+        row_deleted.send(self, row_id=row_id, row=row, user=user, table=table,
+                         model=model)

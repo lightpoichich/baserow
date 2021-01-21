@@ -167,10 +167,12 @@ def test_create_row(send_mock, data_fixture):
     assert getattr(row_1, f'field_{price_field.id}') == Decimal('59999.99')
     assert not getattr(row_1, f'field_9999', None)
     assert row_1.order == Decimal('1.00000000000000000000')
+
     send_mock.assert_called_once()
     assert send_mock.call_args[1]['row'].id == row_1.id
     assert send_mock.call_args[1]['user'].id == user.id
     assert send_mock.call_args[1]['table'].id == table.id
+    assert send_mock.call_args[1]['before'] is None
     assert send_mock.call_args[1]['model']._generated_table_model
 
     row_2 = handler.create_row(user=user, table=table)
@@ -187,6 +189,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_1.order == Decimal('1.00000000000000000000')
     assert row_2.order == Decimal('2.00000000000000000000')
     assert row_3.order == Decimal('1.99999999999999999999')
+    assert send_mock.call_args[1]['before'].id == row_2.id
 
     row_4 = handler.create_row(user=user, table=table, before=row_2)
     row_1.refresh_from_db()

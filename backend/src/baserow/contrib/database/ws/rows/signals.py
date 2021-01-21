@@ -10,7 +10,7 @@ from baserow.contrib.database.api.rows.serializers import (
 
 
 @receiver(row_signals.row_created)
-def row_created(sender, row, user, table, model, **kwargs):
+def row_created(sender, row, before, user, table, model, **kwargs):
     table_page_type = page_registry.get('table')
     transaction.on_commit(lambda: table_page_type.broadcast(
         {
@@ -20,7 +20,8 @@ def row_created(sender, row, user, table, model, **kwargs):
                 model,
                 RowSerializer,
                 is_response=True
-            )(row).data
+            )(row).data,
+            'before_row_id': before.id if before else None
         },
         getattr(user, 'web_socket_id', None),
         table_id=table.id

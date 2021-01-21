@@ -235,7 +235,8 @@ class RowHandler:
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)
 
-        row_created.send(self, row=instance, user=user, table=table, model=model)
+        row_created.send(self, row=instance, before=before, user=user, table=table,
+                         model=model)
 
         return instance
 
@@ -265,8 +266,7 @@ class RowHandler:
             raise UserNotInGroupError(user, group)
 
         if not model:
-            field_ids = self.extract_field_ids_from_dict(values)
-            model = table.get_model(field_ids=field_ids)
+            model = table.get_model()
 
         # Because it is possible to have a different database for the user tables we
         # need to start another transaction here, otherwise it is not possible to use

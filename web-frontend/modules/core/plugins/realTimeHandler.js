@@ -54,7 +54,6 @@ export class RealTimeHandler {
       try {
         data = JSON.parse(message.data)
       } catch {
-        console.log('Malformed message', message.data)
         return
       }
 
@@ -63,8 +62,6 @@ export class RealTimeHandler {
         Object.prototype.hasOwnProperty.call(this.events, data.type)
       ) {
         this.events[data.type](this.context, data)
-      } else {
-        console.log('Type is missing from message', message.data)
       }
     }
 
@@ -84,7 +81,7 @@ export class RealTimeHandler {
         this.attempts++
         this.context.store.dispatch('notification/setConnecting', true)
 
-        setTimeout(
+        this.reconnectTimeout = setTimeout(
           () => {
             this.connect(true)
           },
@@ -92,11 +89,6 @@ export class RealTimeHandler {
           this.attempts > 0 ? 5000 : 0
         )
       }
-    }
-
-    // @TODO do something when it goes wrong.
-    this.socket.onerror = () => {
-      console.log('@TODO something went wrong with the socket')
     }
   }
 

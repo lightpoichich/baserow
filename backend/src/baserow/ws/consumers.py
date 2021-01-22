@@ -29,13 +29,13 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
 
     async def add_to_page(self, content):
         """
-        Subscribes a user to a page abstraction. Based on the provided the page type
-        we can figure out to which page the users wants to subscribe to. This is for
-        example used when the users visits a page that he might want to receive real
-        time updates for.
+        Subscribes the connection to a page abstraction. Based on the provided the page
+        type we can figure out to which page the connection wants to subscribe to. This
+        is for example used when the users visits a page that he might want to
+        receive real time updates for.
 
-        :param content: The provided payload by the user. This contains the page type
-            and additional parameters.
+        :param content: The provided payload by the user. This should contain the page
+            type and additional parameters.
         :type content: dict
         """
 
@@ -78,7 +78,8 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
 
     async def discard_current_page(self):
         """
-        If the user has subscribed to a page then he will be discarded from that group.
+        If the user has subscribed to another page then he will be unsubscribed from
+        the last page.
         """
 
         page = self.scope.get('page')
@@ -123,7 +124,7 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
 
     async def broadcast_to_group(self, event):
         """
-        Broadcasts a message to all the users that are in the provided groups name.
+        Broadcasts a message to all the users that are in the provided group name.
 
         :param event: The event containing the payload, group name and the web socket
             id that must be ignored.

@@ -16,7 +16,7 @@ export class RealTimeHandler {
   }
 
   /**
-   * Creates a new connection with the web socket so that real time updates can be
+   * Creates a new connection with to the web socket so that real time updates can be
    * received.
    */
   connect(reconnect = true) {
@@ -24,8 +24,8 @@ export class RealTimeHandler {
 
     const token = this.context.store.getters['auth/token']
 
-    // Because the web socket url is the same as the PUBLIC_BACKEND_URL apart from
-    // the protocol.
+    // The web socket url is the same as the PUBLIC_BACKEND_URL apart from the
+    // protocol.
     const rawUrl = this.context.app.$env.PUBLIC_BACKEND_URL
     const url = new URL(rawUrl)
     url.protocol = isSecureURL(rawUrl) ? 'wss:' : 'ws:'
@@ -68,7 +68,7 @@ export class RealTimeHandler {
     /**
      * When the connection closes we want to reconnect immediately because we don't
      * want to miss any important real time updates. After the first attempt we want to
-     * delay retry every 5 seconds.
+     * delay retry with 5 seconds.
      */
     this.socket.onclose = () => {
       this.connected = false
@@ -95,7 +95,7 @@ export class RealTimeHandler {
   /**
    * Subscribes the client to a given page. After subscribing the client will
    * receive updated related to that page. This is for example used when a user
-   * opens a table.
+   * opens a table page.
    */
   subscribe(page, parameters) {
     this.page = page
@@ -150,7 +150,7 @@ export class RealTimeHandler {
    * Registers all the core event handlers, which is for the groups and applications.
    */
   registerCoreEvents() {
-    // When the authentication is succesful we want to store the web socket id in
+    // When the authentication is successful we want to store the web socket id in
     // auth store. Every AJAX request will include the web socket id as header, this
     // way the backend knows that this client does not has to receive the event
     // because we already know about the change.

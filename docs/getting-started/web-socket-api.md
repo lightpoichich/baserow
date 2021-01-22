@@ -128,7 +128,7 @@ you are subscribed to the page.
 * `application_updated`
 * `application_deleted`
 
-### Database message type
+### Database message types
 
 * `table_created`
 * `table_updated`

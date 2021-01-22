@@ -119,22 +119,22 @@ export class ViewType extends Registerable {
 
   /**
    * Event that is called when a row is created from an outside source, so for example
-   * via a real time event by another user. This is not due the action of the current
-   * user. It can be used to check if data in an store needs to be updated.
+   * via a real time event by another user. It can be used to check if data in an store
+   * needs to be updated.
    */
   rowCreated(context, tableId, rowValues) {}
 
   /**
    * Event that is called when a row is updated from an outside source, so for example
-   * via a real time event by another user. This is not due the action of the current
-   * user. It can be used to check if data in an store needs to be updated.
+   * via a real time event by another user. It can be used to check if data in an store
+   * needs to be updated.
    */
   rowUpdated(context, tableId, rowValues) {}
 
   /**
    * Event that is called when a row is deleted from an outside source, so for example
-   * via a real time event by another user. This is not due the action of the current
-   * user. It can be used to check if data in an store needs to be updated.
+   * via a real time event by another user. It can be used to check if data in an store
+   * needs to be updated.
    */
   rowDeleted(context, tableId, rowId) {}
 

@@ -1,9 +1,9 @@
 import { clone } from '@baserow/modules/core/utils/object'
 
 /**
- * Registers the real time events related to the database module. When an event comes
- * in, the state of state of the stores will be updated to match the latest update. In
- * some cases some other events like refreshing all the data needs to be triggered.
+ * Registers the real time events related to the database module. When a message comes
+ * in, the state of the stores will be updated to match the latest update. In some
+ * cases some other events like refreshing all the data needs to be triggered.
  */
 export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent('table_created', ({ store }, data) => {

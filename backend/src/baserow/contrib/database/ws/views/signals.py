@@ -41,7 +41,7 @@ def view_updated(sender, view, user, **kwargs):
                 ViewSerializer,
                 # We do not want to broad cast the filters and sortings every time
                 # the view changes. There are separate views and handlers for them
-                # each will broad cast their own event.
+                # each will broad cast their own message.
                 filters=False,
                 sortings=False
             ).data

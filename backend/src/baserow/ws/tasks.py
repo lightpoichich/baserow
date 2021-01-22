@@ -36,7 +36,7 @@ def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
     Broadcasts a JSON payload all the users within the channel group having the
     provided name.
 
-    :param group: The name of the channel group the the payload must be broad casted
+    :param group: The name of the channel group where the payload must be broad casted
         to.
     :type group: str
     :param payload: A dictionary object containing the payload that must be

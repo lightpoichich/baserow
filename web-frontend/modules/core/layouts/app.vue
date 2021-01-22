@@ -116,7 +116,7 @@ export default {
     }),
   },
   mounted() {
-    // Connect the web socket so we can start receiving live updates.
+    // Connect to the web socket so we can start receiving real time updates.
     this.$realtime.connect()
   },
   beforeDestroy() {

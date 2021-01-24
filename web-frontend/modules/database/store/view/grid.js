@@ -1,11 +1,15 @@
 import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
+import BigNumber from 'bignumber.js'
 
 import { uuid } from '@baserow/modules/core/utils/string'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
-import { getRowSortFunction } from '@baserow/modules/database/utils/view'
+import {
+  getRowSortFunction,
+  rowMatchesFilters,
+} from '@baserow/modules/database/utils/view'
 
 export function populateRow(row) {
   row._ = {
@@ -81,7 +85,7 @@ export const mutations = {
   /**
    * It will add and remove rows to the state based on the provided values. For example
    * if prependToRows is a positive number that amount of the provided rows will be
-   * added to the state. If that number is negative that amoun will be removed from
+   * added to the state. If that number is negative that amount will be removed from
    * the state. Same goes for the appendToRows, only then it will be appended.
    */
   ADD_ROWS(
@@ -108,6 +112,29 @@ export const mutations = {
         state.rows.length - Math.abs(appendToRows)
       )
     }
+  },
+  /**
+   * Inserts a new row at a specific index.
+   */
+  INSERT_ROW_AT(state, { row, index }) {
+    state.count++
+    state.bufferLimit++
+
+    const min = new BigNumber(row.order.split('.')[0])
+    const max = new BigNumber(row.order)
+
+    // Decrease all the orders that have already have been inserted before the same
+    // row.
+    state.rows.forEach((row) => {
+      const order = new BigNumber(row.order)
+      if (order.isGreaterThan(min) && order.isLessThanOrEqualTo(max)) {
+        row.order = order
+          .minus(new BigNumber('0.00000000000000000001'))
+          .toString()
+      }
+    })
+
+    state.rows.splice(index, 0, row)
   },
   SET_ROWS_INDEX(state, { startIndex, endIndex, top }) {
     state.rowsStartIndex = startIndex
@@ -137,12 +164,19 @@ export const mutations = {
       state.rows.splice(index, 1)
     }
   },
-  FINALIZE_ROW(state, { index, id }) {
-    state.rows[index].id = id
-    state.rows[index]._.loading = false
+  FINALIZE_ROW(state, { oldId, id, order }) {
+    const index = state.rows.findIndex((item) => item.id === oldId)
+    if (index !== -1) {
+      state.rows[index].id = id
+      state.rows[index].order = order
+      state.rows[index]._.loading = false
+    }
   },
   SET_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
+  },
+  UPDATE_ROW(state, { row, values }) {
+    _.assign(row, values)
   },
   UPDATE_ROWS(state, { rows }) {
     rows.forEach((newRow) => {
@@ -155,7 +189,7 @@ export const mutations = {
   SORT_ROWS(state, sortFunction) {
     state.rows.sort(sortFunction)
 
-    // Because all the rows have been sorted again we can safely asume they are all in
+    // Because all the rows have been sorted again we can safely assume they are all in
     // the right order again.
     state.rows.forEach((row) => {
       if (!row._.matchSortings) {
@@ -533,30 +567,19 @@ export const actions = {
    * override values that not actually belong to the row to do some preliminary checks.
    */
   updateMatchFilters({ commit }, { view, row, overrides = {} }) {
-    const isValid = (filters, values) => {
-      for (const i in filters) {
-        const filterType = this.$registry.get('viewFilter', filters[i].type)
-        const filterValue = filters[i].value
-        const rowValue = values[`field_${filters[i].field}`]
-        const matches = filterType.matches(rowValue, filterValue)
-        if (view.filter_type === 'AND' && !matches) {
-          return false
-        } else if (view.filter_type === 'OR' && matches) {
-          return true
-        }
-      }
-      if (view.filter_type === 'AND') {
-        return true
-      } else if (view.filter_type === 'OR') {
-        return false
-      }
-    }
     const values = JSON.parse(JSON.stringify(row))
     Object.keys(overrides).forEach((key) => {
       values[key] = overrides[key]
     })
     // The value is always valid if the filters are disabled.
-    const matches = view.filters_disabled ? true : isValid(view.filters, values)
+    const matches = view.filters_disabled
+      ? true
+      : rowMatchesFilters(
+          this.$registry,
+          view.filter_type,
+          view.filters,
+          values
+        )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
   /**
@@ -566,7 +589,7 @@ export const actions = {
    */
   updateMatchSortings(
     { commit, getters, rootGetters },
-    { view, row, fields, primary, overrides = {} }
+    { view, row, fields, primary = null, overrides = {} }
   ) {
     const values = JSON.parse(JSON.stringify(row))
     Object.keys(overrides).forEach((key) => {
@@ -616,7 +639,7 @@ export const actions = {
    */
   async create(
     { commit, getters, rootGetters, dispatch },
-    { view, table, fields, values = {} }
+    { view, table, fields, values = {}, before = null }
   ) {
     // Fill the not provided values with the empty value of the field type so we can
     // immediately commit the created row to the state.
@@ -636,6 +659,60 @@ export const actions = {
     row.id = uuid()
     row._.loading = true
 
+    if (before !== null) {
+      // If the row has been placed before another row we can specifically insert to
+      // the row at a calculated index.
+      const index = getters.getAllRows.findIndex((r) => r.id === before.id)
+      const change = new BigNumber('0.00000000000000000001')
+      row.order = new BigNumber(before.order).minus(change).toString()
+      commit('INSERT_ROW_AT', { row, index })
+    } else {
+      // By default the row is inserted at the end.
+      commit('ADD_ROWS', {
+        rows: [row],
+        prependToRows: 0,
+        appendToRows: 1,
+        count: getters.getCount + 1,
+        bufferStartIndex: getters.getBufferStartIndex,
+        bufferLimit: getters.getBufferLimit + 1,
+      })
+    }
+
+    // Recalculate all the values.
+    dispatch('visibleByScrollTop', {
+      scrollTop: null,
+      windowHeight: null,
+    })
+
+    // Check if the newly created row matches the filters.
+    dispatch('updateMatchFilters', { view, row })
+
+    // Check if the newly created row matches the sortings.
+    dispatch('updateMatchSortings', { view, fields, row })
+
+    try {
+      const { data } = await RowService(this.$client).create(
+        table.id,
+        values,
+        before !== null ? before.id : null
+      )
+      commit('FINALIZE_ROW', { oldId: row.id, id: data.id, order: data.order })
+    } catch (error) {
+      commit('DELETE_ROW', row.id)
+      throw error
+    }
+  },
+  /**
+   * Forcefully create a new row without making a call to the backend. It also
+   * checks if the row matches the filters and sortings and if not it will be
+   * removed from the buffer.
+   */
+  forceCreate(
+    { commit, dispatch, getters },
+    { view, fields, primary, values, getScrollTop }
+  ) {
+    const row = _.assign({}, values)
+    populateRow(row)
     commit('ADD_ROWS', {
       rows: [row],
       prependToRows: 0,
@@ -648,18 +725,36 @@ export const actions = {
       scrollTop: null,
       windowHeight: null,
     })
-    const index = getters.getRowsLength - 1
-
-    // Check if the newly created row matches the filters.
     dispatch('updateMatchFilters', { view, row })
-
-    try {
-      const { data } = await RowService(this.$client).create(table.id, values)
-      commit('FINALIZE_ROW', { index, id: data.id })
-    } catch (error) {
-      commit('DELETE_ROW', row.id)
-      throw error
+    dispatch('updateMatchSortings', { view, fields, primary, row })
+    dispatch('refreshRow', { grid: view, row, fields, primary, getScrollTop })
+  },
+  /**
+   * Forcefully update an existing row without making a call to the backend. It
+   * could be that the row does not exist in the buffer, but actually belongs in
+   * there. So after creating or updating the row we can check if it belongs
+   * there and if not it will be deleted.
+   */
+  forceUpdate(
+    { dispatch, commit, getters },
+    { view, fields, primary, values, getScrollTop }
+  ) {
+    const row = getters.getRow(values.id)
+    if (row === undefined) {
+      return dispatch('forceCreate', {
+        view,
+        fields,
+        primary,
+        values,
+        getScrollTop,
+      })
+    } else {
+      commit('UPDATE_ROW', { row, values })
     }
+
+    dispatch('updateMatchFilters', { view, row })
+    dispatch('updateMatchSortings', { view, fields, primary, row })
+    dispatch('refreshRow', { grid: view, row, fields, primary, getScrollTop })
   },
   /**
    * Deletes an existing row of the provided table. After deleting, the visible rows
@@ -770,6 +865,12 @@ export const actions = {
       values,
     })
   },
+  /**
+   * Forcefully updates all field options without making a call to the backend.
+   */
+  forceUpdateAllFieldOptions({ commit }, fieldOptions) {
+    commit('REPLACE_ALL_FIELD_OPTIONS', fieldOptions)
+  },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })
   },
@@ -860,6 +961,9 @@ export const getters = {
   },
   getAllRows(state) {
     return state.rows
+  },
+  getRow: (state) => (id) => {
+    return state.rows.find((row) => row.id === id)
   },
   getRows(state) {
     return state.rows.slice(state.rowsStartIndex, state.rowsEndIndex)

@@ -1,4 +1,5 @@
 from django.utils.functional import lazy
+from django.db import models
 
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
@@ -16,11 +17,10 @@ class FieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ('id', 'name', 'order', 'type', 'primary')
+        fields = ('id', 'table_id', 'name', 'order', 'type', 'primary')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True},
+            'table_id': {'read_only': True},
         }
 
     @extend_schema_field(OpenApiTypes.STR)
@@ -33,6 +33,12 @@ class FieldSerializer(serializers.ModelSerializer):
             field = field_type_registry.get_by_model(instance.specific_class)
 
         return field.type
+
+
+class SelectOptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    value = serializers.CharField(max_length=255, required=True)
+    color = serializers.CharField(max_length=255, required=True)
 
 
 class CreateFieldSerializer(serializers.ModelSerializer):
@@ -58,6 +64,21 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'name': {'required': False},
         }
+
+
+class LinkRowListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        """
+        Data that is fetched is always from another Table model and when fetching
+        that data we always need to respect the field enhancements. Otherwise it
+        could for example fail when we want to fetch the related select options that
+        could be in another database and table.
+        """
+
+        if isinstance(data, models.Manager):
+            data = data.all().enhance_by_fields()
+
+        return super().to_representation(data)
 
 
 class LinkRowValueSerializer(serializers.Serializer):

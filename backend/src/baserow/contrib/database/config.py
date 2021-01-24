@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 from baserow.core.registries import plugin_registry, application_type_registry
+from baserow.ws.registries import page_registry
 
 from .views.registries import view_type_registry, view_filter_type_registry
 from .fields.registries import field_type_registry, field_converter_registry
@@ -46,7 +47,7 @@ class DatabaseConfig(AppConfig):
         from .fields.field_types import (
             TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType,
             BooleanFieldType, DateFieldType, LinkRowFieldType, EmailFieldType,
-            FileFieldType
+            FileFieldType, SingleSelectFieldType
         )
         field_type_registry.register(TextFieldType())
         field_type_registry.register(LongTextFieldType())
@@ -57,6 +58,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(DateFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
+        field_type_registry.register(SingleSelectFieldType())
 
         from .fields.field_converters import LinkRowFieldConverter, FileFieldConverter
         field_converter_registry.register(LinkRowFieldConverter())
@@ -69,7 +71,8 @@ class DatabaseConfig(AppConfig):
             EqualViewFilterType, NotEqualViewFilterType, EmptyViewFilterType,
             NotEmptyViewFilterType, DateEqualViewFilterType, DateNotEqualViewFilterType,
             HigherThanViewFilterType, LowerThanViewFilterType, ContainsViewFilterType,
-            ContainsNotViewFilterType, BooleanViewFilterType
+            ContainsNotViewFilterType, BooleanViewFilterType,
+            SingleSelectEqualViewFilterType, SingleSelectNotEqualViewFilterType
         )
         view_filter_type_registry.register(EqualViewFilterType())
         view_filter_type_registry.register(NotEqualViewFilterType())
@@ -79,9 +82,18 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
+        view_filter_type_registry.register(SingleSelectEqualViewFilterType())
+        view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())
         view_filter_type_registry.register(EmptyViewFilterType())
         view_filter_type_registry.register(NotEmptyViewFilterType())
 
         from .application_types import DatabaseApplicationType
         application_type_registry.register(DatabaseApplicationType())
+
+        from .ws.pages import TablePageType
+        page_registry.register(TablePageType())
+
+        # The signals must always be imported last because they use the registries
+        # which need to be filled first.
+        import baserow.contrib.database.ws.signals  # noqa: F403, F401

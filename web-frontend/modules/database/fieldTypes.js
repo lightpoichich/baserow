@@ -1,4 +1,5 @@
 import moment from 'moment'
+import BigNumber from 'bignumber.js'
 
 import { isValidURL, isValidEmail } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
@@ -7,6 +8,7 @@ import FieldNumberSubForm from '@baserow/modules/database/components/field/Field
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
+import FieldSingleSelectSubForm from '@baserow/modules/database/components/field/FieldSingleSelectSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
@@ -17,6 +19,7 @@ import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/GridViewFieldDate'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/GridViewFieldFile'
+import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/GridViewFieldSingleSelect'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -27,8 +30,13 @@ import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEdit
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
+import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
+import {
+  getDateMomentFormat,
+  getTimeMomentFormat,
+} from '@baserow/modules/database/utils/date'
 
 export class FieldType extends Registerable {
   /**
@@ -148,7 +156,11 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Should return a for humans readable representation of the value.
+   * Should return a for humans readable representation of the value. This is for
+   * example used by the link row field and row modal. This is not a problem with most
+   * fields like text or number, but some store a more complex object object like
+   * the single select or file field. In this case, the object might needs to be
+   * converted to string.
    */
   toHumanReadableString(field, value) {
     return value
@@ -447,6 +459,10 @@ export class LinkRowFieldType extends FieldType {
 }
 
 export class NumberFieldType extends FieldType {
+  static getMaxNumberLength() {
+    return 50
+  }
+
   static getType() {
     return 'number'
   }
@@ -494,7 +510,12 @@ export class NumberFieldType extends FieldType {
    */
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
-    if (isNaN(parseFloat(value)) || !isFinite(value)) {
+    if (
+      isNaN(parseFloat(value)) ||
+      !isFinite(value) ||
+      value.split('.')[0].replace('-', '').length >
+        NumberFieldType.getMaxNumberLength()
+    ) {
       return null
     }
     return this.constructor.formatNumber(field, value)
@@ -511,15 +532,15 @@ export class NumberFieldType extends FieldType {
     }
     const decimalPlaces =
       field.number_type === 'DECIMAL' ? field.number_decimal_places : 0
-    let number = parseFloat(value)
-    if (!field.number_negative && number < 0) {
+    let number = new BigNumber(value)
+    if (!field.number_negative && number.isLessThan(0)) {
       number = 0
     }
     return number.toFixed(decimalPlaces)
   }
 
   getDocsDataType(field) {
-    return field.number_type === 'DECIMAL' ? 'decimal' : 'integer'
+    return field.number_type === 'DECIMAL' ? 'decimal' : 'number'
   }
 
   getDocsDescription(field) {
@@ -646,6 +667,24 @@ export class DateFieldType extends FieldType {
       const timeA = new Date(a[name]).getTime()
       const timeB = new Date(b[name]).getTime()
       return order === 'ASC' ? timeA - timeB : timeB - timeA
+    }
+  }
+
+  toHumanReadableString(field, value) {
+    const date = moment.utc(value)
+
+    if (date.isValid()) {
+      const dateFormat = getDateMomentFormat(field.date_format)
+      let dateString = date.format(dateFormat)
+
+      if (field.date_include_time) {
+        const timeFormat = getTimeMomentFormat(field.date_time_format)
+        dateString = `${dateString} ${date.format(timeFormat)}`
+      }
+
+      return dateString
+    } else {
+      return ''
     }
   }
 
@@ -800,6 +839,10 @@ export class FileFieldType extends FieldType {
     return RowEditFieldFile
   }
 
+  toHumanReadableString(field, value) {
+    return value.map((file) => file.visible_name).join(', ')
+  }
+
   prepareValueForCopy(field, value) {
     return JSON.stringify(value)
   }
@@ -879,5 +922,110 @@ export class FileFieldType extends FieldType {
         uploaded_at: '2020-11-17T12:16:10.035234+00:00',
       },
     ]
+  }
+}
+
+export class SingleSelectFieldType extends FieldType {
+  static getType() {
+    return 'single_select'
+  }
+
+  getIconClass() {
+    return 'chevron-circle-down '
+  }
+
+  getName() {
+    return 'Single select'
+  }
+
+  getFormComponent() {
+    return FieldSingleSelectSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldSingleSelect
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldSingleSelect
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name].value
+      const stringB = b[name] === null ? '' : '' + b[name].value
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  prepareValueForUpdate(field, value) {
+    if (value === undefined || value === null) {
+      return null
+    }
+    return value.id
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+    return value.id
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = parseInt(clipboardData.getData('text'))
+
+    for (let i = 0; i <= field.select_options.length; i++) {
+      const option = field.select_options[i]
+      if (option.id === value) {
+        return option
+      }
+    }
+  }
+
+  toHumanReadableString(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+    return value.value
+  }
+
+  getDocsDataType() {
+    return 'integer'
+  }
+
+  getDocsDescription(field) {
+    const options = field.select_options
+      .map(
+        (option) =>
+          // @TODO move this template to a component.
+          `<div class="select-options-listing">
+              <div class="select-options-listing__id">${option.id}</div>
+              <div class="select-options-listing__value background-color--${option.color}">${option.value}</div>
+           </div>
+          `
+      )
+      .join('\n')
+
+    return `
+      Accepts an integer representing the chosen select option id or null if none is selected.
+      <br />
+      ${options}
+    `
+  }
+
+  getDocsRequestExample() {
+    return 1
+  }
+
+  getDocsResponseExample() {
+    return {
+      id: 1,
+      value: 'Option',
+      color: 'light-blue',
+    }
   }
 }

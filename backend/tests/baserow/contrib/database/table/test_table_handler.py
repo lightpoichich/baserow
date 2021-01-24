@@ -1,7 +1,9 @@
 import pytest
+from unittest.mock import patch
 
 from django.db import connection
 from django.conf import settings
+from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
@@ -41,7 +43,8 @@ def test_get_database_table(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_database_table(data_fixture):
+@patch('baserow.contrib.database.table.signals.table_created.send')
+def test_create_database_table(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
@@ -61,6 +64,10 @@ def test_create_database_table(data_fixture):
     assert primary_field.table == table
     assert primary_field.primary
     assert primary_field.name == 'Name'
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['table'].id == table.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     with pytest.raises(UserNotInGroupError):
         handler.create_table(user=user_2, database=database, name='')
@@ -85,7 +92,8 @@ def test_fill_example_table_data(data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     table_handler = TableHandler()
-    table_handler.create_table(user, database, fill_example=True, name='Table 1')
+    table = table_handler.create_table(user, database, fill_example=True,
+                                       name='Table 1')
 
     assert Table.objects.all().count() == 1
     assert GridView.objects.all().count() == 1
@@ -93,6 +101,13 @@ def test_fill_example_table_data(data_fixture):
     assert LongTextField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 1
     assert GridViewFieldOptions.objects.all().count() == 2
+
+    model = table.get_model()
+    results = model.objects.all()
+
+    assert len(results) == 2
+    assert results[0].order == Decimal('1.00000000000000000000')
+    assert results[1].order == Decimal('2.00000000000000000000')
 
 
 @pytest.mark.django_db
@@ -136,6 +151,10 @@ def test_fill_table_with_initial_data(data_fixture):
 
     model = table.get_model()
     results = model.objects.all()
+
+    assert results[0].order == Decimal('1.00000000000000000000')
+    assert results[1].order == Decimal('2.00000000000000000000')
+    assert results[2].order == Decimal('3.00000000000000000000')
 
     assert getattr(results[0], f'field_{text_fields[0].id}') == '1-1'
     assert getattr(results[0], f'field_{text_fields[1].id}') == '1-2'
@@ -186,7 +205,8 @@ def test_fill_table_with_initial_data(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_database_table(data_fixture):
+@patch('baserow.contrib.database.table.signals.table_updated.send')
+def test_update_database_table(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
@@ -200,13 +220,18 @@ def test_update_database_table(data_fixture):
 
     handler.update_table(user=user, table=table, name='Test 1')
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['table'].id == table.id
+    assert send_mock.call_args[1]['user'].id == user.id
+
     table.refresh_from_db()
 
     assert table.name == 'Test 1'
 
 
 @pytest.mark.django_db
-def test_delete_database_table(data_fixture):
+@patch('baserow.contrib.database.table.signals.table_deleted.send')
+def test_delete_database_table(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
@@ -221,7 +246,12 @@ def test_delete_database_table(data_fixture):
     assert Table.objects.all().count() == 1
     assert f'database_table_{table.id}' in connection.introspection.table_names()
 
+    table_id = table.id
     handler.delete_table(user=user, table=table)
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['table_id'] == table_id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     assert Table.objects.all().count() == 0
     assert f'database_table_{table.id}' not in connection.introspection.table_names()

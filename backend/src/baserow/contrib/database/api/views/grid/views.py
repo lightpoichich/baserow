@@ -116,7 +116,7 @@ class GridViewView(APIView):
         view = view_handler.get_view(request.user, view_id, GridView)
 
         model = view.table.get_model()
-        queryset = model.objects.all().enhance_by_fields().order_by('id')
+        queryset = model.objects.all().enhance_by_fields()
 
         # Applies the view filters and sortings to the queryset if there are any.
         queryset = view_handler.apply_filters(view, queryset)
@@ -252,5 +252,9 @@ class GridViewView(APIView):
 
         handler = ViewHandler()
         view = handler.get_view(request.user, view_id, GridView)
-        handler.update_grid_view_field_options(view, data['field_options'])
+        handler.update_grid_view_field_options(
+            request.user,
+            view,
+            data['field_options']
+        )
         return Response(GridViewSerializer(view).data)

@@ -15,6 +15,11 @@ from .registries import view_type_registry, view_filter_type_registry
 from .models import (
     View, GridViewFieldOptions, ViewFilter, ViewSort, FILTER_TYPE_AND, FILTER_TYPE_OR
 )
+from .signals import (
+    view_created, view_updated, view_deleted, view_filter_created, view_filter_updated,
+    view_filter_deleted, view_sort_created, view_sort_updated, view_sort_deleted,
+    grid_view_field_options_updated
+)
 
 
 class ViewHandler:
@@ -95,6 +100,9 @@ class ViewHandler:
         instance = model_class.objects.create(table=table, order=last_order,
                                               **view_values)
 
+        view_created.send(self, view=instance, user=user,
+                          type_name=type_name)
+
         return instance
 
     def update_view(self, user, view, **kwargs):
@@ -129,6 +137,8 @@ class ViewHandler:
         view = set_allowed_attrs(kwargs, allowed_fields, view)
         view.save()
 
+        view_updated.send(self, view=view, user=user)
+
         return view
 
     def delete_view(self, user, view):
@@ -150,13 +160,19 @@ class ViewHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        view_id = view.id
         view.delete()
 
-    def update_grid_view_field_options(self, grid_view, field_options, fields=None):
+        view_deleted.send(self, view_id=view_id, view=view, user=user)
+
+    def update_grid_view_field_options(self, user, grid_view, field_options,
+                                       fields=None):
         """
         Updates the field options with the provided values if the field id exists in
         the table related to the grid view.
 
+        :param user: The user on whose behalf the request is made.
+        :type user: User
         :param grid_view: The grid view for which the field options need to be updated.
         :type grid_view: Model
         :param field_options: A dict with the field ids as the key and a dict
@@ -180,6 +196,8 @@ class ViewHandler:
             GridViewFieldOptions.objects.update_or_create(
                 grid_view=grid_view, field_id=field_id, defaults=options
             )
+
+        grid_view_field_options_updated.send(self, grid_view=grid_view, user=user)
 
     def field_type_changed(self, field):
         """
@@ -340,8 +358,7 @@ class ViewHandler:
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
             raise ViewFilterTypeNotAllowedForField(
-                f'The view filter type {type_name} is not supported for field type '
-                f'{field_type.type}.'
+                type_name, field_type.type
             )
 
         # Check if field belongs to the grid views table
@@ -349,12 +366,16 @@ class ViewHandler:
             raise FieldNotInTable(f'The field {field.pk} does not belong to table '
                                   f'{view.table.id}.')
 
-        return ViewFilter.objects.create(
+        view_filter = ViewFilter.objects.create(
             view=view,
             field=field,
             type=view_filter_type.type,
             value=value
         )
+
+        view_filter_created.send(self, view_filter=view_filter, user=user)
+
+        return view_filter
 
     def update_filter(self, user, view_filter, **kwargs):
         """
@@ -389,8 +410,8 @@ class ViewHandler:
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
             raise ViewFilterTypeNotAllowedForField(
-                f'The view filter type {type_name} is not supported for field type '
-                f'{field_type.type}.'
+                type_name,
+                field_type.type
             )
 
         # If the field has changed we need to check if the field belongs to the table.
@@ -405,6 +426,8 @@ class ViewHandler:
         view_filter.value = value
         view_filter.type = type_name
         view_filter.save()
+
+        view_filter_updated.send(self, view_filter=view_filter, user=user)
 
         return view_filter
 
@@ -423,7 +446,11 @@ class ViewHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        view_filter_id = view_filter.id
         view_filter.delete()
+
+        view_filter_deleted.send(self, view_filter_id=view_filter_id,
+                                 view_filter=view_filter, user=user)
 
     def apply_sorting(self, view, queryset):
         """
@@ -460,23 +487,32 @@ class ViewHandler:
 
         order_by = []
 
-        for view_filter in view.viewsort_set.all():
+        for view_sort in view.viewsort_set.all():
             # If the to be sort field is not present in the `_field_objects` we
             # cannot filter so we raise a ValueError.
-            if view_filter.field_id not in model._field_objects:
+            if view_sort.field_id not in model._field_objects:
                 raise ValueError(f'The table model does not contain field '
-                                 f'{view_filter.field_id}.')
+                                 f'{view_sort.field_id}.')
 
-            field_name = model._field_objects[view_filter.field_id]['name']
-            order = F(field_name)
+            field = model._field_objects[view_sort.field_id]['field']
+            field_name = model._field_objects[view_sort.field_id]['name']
+            field_type = model._field_objects[view_sort.field_id]['type']
 
-            if view_filter.order == 'ASC':
-                order = order.asc(nulls_first=True)
-            else:
-                order = order.desc(nulls_last=True)
+            order = field_type.get_order(field, field_name, view_sort)
+
+            # If the field type does not have a specific ordering expression we can
+            # order the default way.
+            if not order:
+                order = F(field_name)
+
+                if view_sort.order == 'ASC':
+                    order = order.asc(nulls_first=True)
+                else:
+                    order = order.desc(nulls_last=True)
 
             order_by.append(order)
 
+        order_by.append('order')
         order_by.append('id')
         queryset = queryset.order_by(*order_by)
 
@@ -567,11 +603,15 @@ class ViewHandler:
             raise ViewSortFieldAlreadyExist(f'A sort with the field {field.pk} '
                                             f'already exists.')
 
-        return ViewSort.objects.create(
+        view_sort = ViewSort.objects.create(
             view=view,
             field=field,
             order=order
         )
+
+        view_sort_created.send(self, view_sort=view_sort, user=user)
+
+        return view_sort
 
     def update_sort(self, user, view_sort, **kwargs):
         """
@@ -628,6 +668,8 @@ class ViewHandler:
         view_sort.order = order
         view_sort.save()
 
+        view_sort_updated.send(self, view_sort=view_sort, user=user)
+
         return view_sort
 
     def delete_sort(self, user, view_sort):
@@ -645,4 +687,8 @@ class ViewHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        view_sort_id = view_sort.id
         view_sort.delete()
+
+        view_sort_deleted.send(self, view_sort_id=view_sort_id, view_sort=view_sort,
+                               user=user)

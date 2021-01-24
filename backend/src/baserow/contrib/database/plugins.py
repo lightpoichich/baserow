@@ -46,6 +46,7 @@ class DatabasePlugin(Plugin):
             user, table, BooleanFieldType.type, name='Active'
         )
         view_handler.update_grid_view_field_options(
+            user,
             customers_view,
             {
                 notes_field.id: {'width': 400},
@@ -54,7 +55,7 @@ class DatabasePlugin(Plugin):
             fields=[notes_field, active_field]
         )
         model = table.get_model(attribute_names=True)
-        model.objects.create(name='Elon', last_name='Musk', active=True)
+        model.objects.create(name='Elon', last_name='Musk', active=True, order=1)
         model.objects.create(
             name='Bill',
             last_name='Gates',
@@ -63,10 +64,11 @@ class DatabasePlugin(Plugin):
                 'dignissim, urna eget rutrum sollicitudin, sapien diam interdum nisi, '
                 'quis malesuada nibh eros a est.'
             ),
-            active=False
+            active=False,
+            order=2
         )
-        model.objects.create(name='Mark', last_name='Zuckerburg', active=True)
-        model.objects.create(name='Jeffrey', last_name='Bezos', active=True)
+        model.objects.create(name='Mark', last_name='Zuckerburg', active=True, order=3)
+        model.objects.create(name='Jeffrey', last_name='Bezos', active=True, order=4)
 
         # Creating the example projects table.
         table_2 = table_handler.create_table(user, database, name='Projects')
@@ -80,10 +82,13 @@ class DatabasePlugin(Plugin):
             user, table_2, BooleanFieldType.type,  name='Active'
         )
         model = table_2.get_model(attribute_names=True)
-        model.objects.create(name='Tesla', active=True, started=date(2020, 6, 1))
-        model.objects.create(name='SpaceX', active=False)
-        model.objects.create(name='Amazon', active=False, started=date(2018, 1, 1))
+        model.objects.create(name='Tesla', active=True, started=date(2020, 6, 1),
+                             order=1)
+        model.objects.create(name='SpaceX', active=False, order=2)
+        model.objects.create(name='Amazon', active=False, started=date(2018, 1, 1),
+                             order=3)
         view_handler.update_grid_view_field_options(
+            user,
             projects_view,
             {active_field.id: {'width': 100}},
             fields=[active_field]

@@ -384,13 +384,13 @@ export default {
   },
   computed: {
     visibleFields() {
-      if (this.fieldOptions && this.fields) {
-        return this.fields.filter((field) => {
-          const fieldOption = this.fieldOptions[field.id]
-          return !fieldOption.hidden
-        })
-      }
-      return []
+      return this.fields.filter((field) => {
+        const exists = Object.prototype.hasOwnProperty.call(
+          this.fieldOptions,
+          field.id
+        )
+        return !exists || (exists && !this.fieldOptions[field.id].hidden)
+      })
     },
     ...mapGetters({
       rows: 'view/grid/getRows',

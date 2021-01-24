@@ -15,7 +15,7 @@ grid_view_field_options_schema = {
                 'hidden': {
                     'type': 'boolean',
                     'example': True,
-                    'description': 'Whether or not the field should be hidden in the'
+                    'description': 'Whether or not the field should be hidden in the '
                                    'current view.'
                 }
             }

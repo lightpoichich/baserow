@@ -17,28 +17,22 @@
       >
       <span v-else>Hide fields</span>
     </a>
-    <ViewHideContext
+    <GridViewHideContext
       ref="context"
       :view="view"
       :fields="fields"
-      :primary="primary"
-      @changed="$emit('changed')"
-    ></ViewHideContext>
+    ></GridViewHideContext>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import ViewHideContext from './ViewHideContext'
+import GridViewHideContext from '@baserow/modules/database/components/view/grid/GridViewHideContext'
 
 export default {
-  name: 'ViewHide',
-  components: { ViewHideContext },
+  name: 'GridViewHide',
+  components: { GridViewHideContext },
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,

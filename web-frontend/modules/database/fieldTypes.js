@@ -150,7 +150,6 @@ export class FieldType extends Registerable {
       iconClass: this.iconClass,
       name: this.name,
       sortIndicator: this.sortIndicator,
-      canHideInView: this.canHideInView,
       canSortInView: this.canSortInView,
     }
   }

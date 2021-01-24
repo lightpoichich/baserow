@@ -4,7 +4,7 @@
       <ul class="context__menu">
         <li v-for="field in fields" :key="field.id" class="hidings__item">
           <SwitchInput
-            :value="isFieldVisible(field)"
+            :value="!isHidden(field.id)"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
           >
             <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
@@ -16,11 +16,14 @@
     <div class="hidings__footer">
       <button
         class="button button--ghost first-button"
-        @click="updateAll(true)"
+        @click="!noneSelected && updateAllFieldOptions({ hidden: true })"
       >
         Hide all
       </button>
-      <button class="button button--ghost" @click="updateAll(false)">
+      <button
+        class="button button--ghost"
+        @click="!allSelected && updateAllFieldOptions({ hidden: false })"
+      >
         Show all
       </button>
     </div>
@@ -28,18 +31,16 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@/modules/core/utils/error'
-import { mapGetters } from 'vuex'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export default {
   name: 'ViewHideContext',
   mixins: [context],
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -50,24 +51,41 @@ export default {
     },
   },
   computed: {
+    noneSelected() {
+      for (const i in this.fields) {
+        if (!this.isHidden(this.fields[i].id)) {
+          return false
+        }
+      }
+      return true
+    },
+    allSelected() {
+      for (const i in this.fields) {
+        if (this.isHidden(this.fields[i].id)) {
+          return false
+        }
+      }
+      return true
+    },
     ...mapGetters({
       fieldOptions: 'view/grid/getAllFieldOptions',
     }),
   },
   methods: {
-    async updateAll(hidden) {
+    async updateAllFieldOptions(values) {
       const newFieldOptions = {}
+      const oldFieldOptions = clone(this.fieldOptions)
       this.fields.forEach((field) => {
-        newFieldOptions[field.id] = {
-          hidden,
-          width: this.fieldOptions[field.id].width,
+        if (!field.primary) {
+          newFieldOptions[field.id] = values
         }
       })
+
       try {
-        await this.$store.dispatch('view/grid/updateFieldOptions', {
+        await this.$store.dispatch('view/grid/updateAllFieldOptions', {
           gridId: this.view.id,
           newFieldOptions,
-          oldValues: this.fieldOptions,
+          oldFieldOptions,
         })
       } catch (error) {
         notifyIf(error, 'view')
@@ -79,16 +97,18 @@ export default {
           gridId: this.view.id,
           field,
           values,
-          oldValues: {
-            hidden: !this.isFieldVisible(field),
-          },
+          oldValues: { hidden: this.fieldOptions[field.id].hidden },
         })
       } catch (error) {
         notifyIf(error, 'view')
       }
     },
-    isFieldVisible(field) {
-      return !this.fieldOptions[field.id].hidden
+    isHidden(fieldId) {
+      const exists = Object.prototype.hasOwnProperty.call(
+        this.fieldOptions,
+        fieldId
+      )
+      return exists ? this.fieldOptions[fieldId].hidden : false
     },
   },
 }

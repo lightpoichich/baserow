@@ -45,7 +45,6 @@ class Token(models.Model):
         help_text='Timestamp when the last call was handled using this token.'
     )
 
-
     class Meta:
         ordering = ('id',)
 

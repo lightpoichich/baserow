@@ -112,6 +112,9 @@ class GridViewView(APIView):
         `field_options` are provided in the includes GET parameter.
         """
 
+        from time import sleep
+        sleep(0.5)
+
         view_handler = ViewHandler()
         view = view_handler.get_view(request.user, view_id, GridView)
 

@@ -22,7 +22,7 @@
             :field="primary"
             :filters="view.filters"
             :style="{ width: widths.fields[primary.id] + 'px' }"
-            @refresh="$emit('refresh')"
+            @refresh="$emit('refresh', $event)"
           ></GridViewFieldType>
         </div>
         <div ref="leftBody" class="grid-view__body">
@@ -162,7 +162,7 @@
             :field="field"
             :filters="view.filters"
             :style="{ width: widths.fields[field.id] + 'px' }"
-            @refresh="$emit('refresh')"
+            @refresh="$emit('refresh', $event)"
           >
             <GridViewFieldWidthHandle
               class="grid-view__description-width"
@@ -324,7 +324,7 @@
       :fields="fields"
       @update="updateValue"
       @hidden="rowEditModalHidden"
-      @field-updated="$emit('refresh')"
+      @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
     ></RowEditModal>
   </div>

@@ -9,6 +9,7 @@
 * Implemented real time collaboration.
 * Added option to hide fields in a grid view.
 * Keep token usage details.
+* Fixed bug where an incompatible value was visible while changing the field type.
 
 ## Released (2021-01-06)
 

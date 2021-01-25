@@ -145,7 +145,7 @@ export const actions = {
   /**
    * Updates the values of the provided field.
    */
-  async update(context, { field, type, values }) {
+  async update(context, { field, type, values, forceUpdate = true }) {
     const { dispatch } = context
 
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
@@ -164,7 +164,17 @@ export const actions = {
     postData.type = type
 
     const { data } = await FieldService(this.$client).update(field.id, postData)
-    await dispatch('forceUpdate', { field, oldField, data })
+    const forceUpdateParams = { field, oldField, data }
+
+    const forceUpdateCallback = async () => {
+      return await dispatch('forceUpdate', forceUpdateParams)
+    }
+
+    if (forceUpdate) {
+      return await forceUpdateCallback()
+    } else {
+      return forceUpdateCallback
+    }
   },
   /**
    * Forcefully update an existing field without making a request to the backend.

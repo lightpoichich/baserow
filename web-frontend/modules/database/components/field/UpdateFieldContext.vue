@@ -52,15 +52,29 @@ export default {
       delete values.type
 
       try {
-        await this.$store.dispatch('field/update', {
+        const forceUpdateCallback = await this.$store.dispatch('field/update', {
           field: this.field,
           type,
           values,
+          forceUpdate: false,
         })
-        this.loading = false
-        this.$refs.form.reset()
-        this.hide()
-        this.$emit('update')
+        // await this.$emit('update')
+        // await forceUpdateCallback()
+        // this.$refs.form.reset()
+        // this.loading = false
+        // this.hide()
+
+        // The callback must be called as soon the parent page has refreshed the rows.
+        // This is to prevent incompatible values when the field changes before the
+        // actual column value has been updated.
+        const callback = async () => {
+          await forceUpdateCallback()
+          this.$refs.form.reset()
+          this.loading = false
+          this.hide()
+          this.$emit('updated')
+        }
+        this.$emit('update', { callback })
       } catch (error) {
         this.loading = false
         notifyIf(error, 'field')

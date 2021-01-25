@@ -225,9 +225,6 @@ class FieldView(APIView):
     def patch(self, request, field_id):
         """Updates the field if the user belongs to the group."""
 
-        from time import sleep
-        sleep(0.5)
-
         field = FieldHandler().get_field(
             request.user, field_id, base_queryset=Field.objects.select_for_update()
         ).specific

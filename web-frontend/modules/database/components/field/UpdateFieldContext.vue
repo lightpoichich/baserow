@@ -39,6 +39,16 @@ export default {
       required: true,
     },
   },
+  watch: {
+    field() {
+      // If the field values every update via an outside source, think of real time
+      // collaboration or via the modal, want to reset the so that it contains the
+      // correct base values.
+      this.$nextTick(() => {
+        this.$refs.form.reset()
+      })
+    },
+  },
   data() {
     return {
       loading: false,

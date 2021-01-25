@@ -58,15 +58,10 @@ export default {
           values,
           forceUpdate: false,
         })
-        // await this.$emit('update')
-        // await forceUpdateCallback()
-        // this.$refs.form.reset()
-        // this.loading = false
-        // this.hide()
-
         // The callback must be called as soon the parent page has refreshed the rows.
         // This is to prevent incompatible values when the field changes before the
-        // actual column value has been updated.
+        // actual column value has been updated. If there is nothing to refresh then
+        // the callback must still be called.
         const callback = async () => {
           await forceUpdateCallback()
           this.$refs.form.reset()

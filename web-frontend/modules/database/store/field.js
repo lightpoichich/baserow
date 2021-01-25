@@ -164,17 +164,11 @@ export const actions = {
     postData.type = type
 
     const { data } = await FieldService(this.$client).update(field.id, postData)
-    const forceUpdateParams = { field, oldField, data }
-
     const forceUpdateCallback = async () => {
-      return await dispatch('forceUpdate', forceUpdateParams)
+      return await dispatch('forceUpdate', { field, oldField, data })
     }
 
-    if (forceUpdate) {
-      return await forceUpdateCallback()
-    } else {
-      return forceUpdateCallback
-    }
+    return forceUpdate ? await forceUpdateCallback() : forceUpdateCallback
   },
   /**
    * Forcefully update an existing field without making a request to the backend.

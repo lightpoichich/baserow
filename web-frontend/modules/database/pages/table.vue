@@ -244,10 +244,10 @@ export default {
       ) {
         await this.$refs.view.refresh()
       }
-      // It might be possible that the has a call that needs to be called after the
-      // rows are refreshed. This for example happens when a field has changed, but we
-      // we want to update the field in the store after the the rows have been
-      // refreshed.
+      // It might be possible that the event has a callback that needs to be called
+      // after the rows are refreshed. This for example the case when a field has
+      // changed. In that case we want to update the field in the store after the rows
+      // have been refreshed to prevent incompatible values in field types.
       if (event && Object.prototype.hasOwnProperty.call(event, 'callback')) {
         await event.callback()
       }

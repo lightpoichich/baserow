@@ -49,7 +49,7 @@ export const registerRealtimeEvents = (realtime) => {
     if (field !== undefined) {
       const oldField = clone(field)
       // We want to wait for the table to reload before actually updating the field
-      // in order to prevent invalid values for the field.
+      // in order to prevent incompatible values for the field.
       const callback = async () => {
         await store.dispatch('field/forceUpdate', {
           field,

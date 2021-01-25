@@ -7,7 +7,10 @@
             :value="!isHidden(field.id)"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
           >
-            <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
+            <i
+              class="fas fa-fw switch__icon"
+              :class="'fa-' + field._.type.iconClass"
+            ></i>
             <span>{{ field.name }}</span>
           </SwitchInput>
         </li>
@@ -15,7 +18,7 @@
     </div>
     <div class="hidings__footer">
       <button
-        class="button button--ghost first-button"
+        class="button button--ghost hidings__footer-button"
         @click="!noneSelected && updateAllFieldOptions({ hidden: true })"
       >
         Hide all

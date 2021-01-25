@@ -44,13 +44,12 @@ export default {
   },
   computed: {
     hiddenFields() {
-      if (!this.fieldOptions) {
-        return []
-      }
       return this.fields.filter((field) => {
-        return this.fieldOptions[field.id] && this.fieldOptions[field.id].hidden
-          ? this.fieldOptions[field.id].hidden
-          : false
+        const exists = Object.prototype.hasOwnProperty.call(
+          this.fieldOptions,
+          field.id
+        )
+        return !exists || (exists && this.fieldOptions[field.id].hidden)
       })
     },
     ...mapGetters({

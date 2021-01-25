@@ -426,7 +426,8 @@ class TokenHandler:
 
     def update_token_usage(self, token):
         """
-        Increases the amount of handled calls and the last call timestamp of the token.
+        Increases the amount of handled calls and updates the last call timestamp of
+        the token.
 
         :param token: The token instance that needs to be updated.
         :param token: Token

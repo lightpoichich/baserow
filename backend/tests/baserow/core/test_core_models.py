@@ -4,6 +4,7 @@ from freezegun import freeze_time
 from datetime import datetime
 
 from baserow.core.models import GroupUser, Group
+from baserow.core.exceptions import UserInvalidGroupPermissionsError
 from baserow.contrib.database.models import Database
 
 
@@ -44,6 +45,47 @@ def test_group_has_user(data_fixture):
 
     assert user_group.group.has_user(user_group.user)
     assert not user_group.group.has_user(user)
+
+
+@pytest.mark.django_db
+def test_group_has_user_with_permissions(data_fixture):
+    user = data_fixture.create_user()
+    user_group = data_fixture.create_user_group(permissions='ADMIN')
+
+    assert not user_group.group.has_user_with_permissions(user, 'ADMIN')
+    assert not user_group.group.has_user_with_permissions(user, ['ADMIN', 'MEMBER'])
+
+    assert not user_group.group.has_user_with_permissions(user_group.user, 'MEMBER')
+    assert user_group.group.has_user_with_permissions(user_group.user, 'ADMIN')
+    assert user_group.group.has_user_with_permissions(
+        user_group.user, ['ADMIN', 'MEMBER']
+    )
+
+    user_group.permissions = 'MEMBER'
+    user_group.save()
+
+    assert not user_group.group.has_user_with_permissions(user, 'ADMIN')
+    assert user_group.group.has_user_with_permissions(user_group.user, 'MEMBER')
+    assert user_group.group.has_user_with_permissions(
+        user_group.user, ['ADMIN', 'MEMBER']
+    )
+
+
+@pytest.mark.django_db
+def test_group_check_user_permissions(data_fixture):
+    user = data_fixture.create_user()
+    user_group = data_fixture.create_user_group(permissions='ADMIN')
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        assert not user_group.group.check_user_permissions(user, 'ADMIN')
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        assert not user_group.group.check_user_permissions(
+            user,
+            ['ADMIN', 'MEMBER']
+        )
+
+    user_group.group.check_user_permissions(user_group.user, 'ADMIN')
 
 
 @pytest.mark.django_db

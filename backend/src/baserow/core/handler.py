@@ -1,12 +1,25 @@
-from .models import Group, GroupUser, Application
-from .exceptions import UserNotInGroupError
+from urllib.parse import urlparse, urljoin
+from itsdangerous import URLSafeSerializer
+
+from django.conf import settings
+
+from baserow.core.user.utils import normalize_email_address
+
+from .models import (
+    Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_CHOICES,
+    GROUP_USER_PERMISSION_ADMIN
+)
+from .exceptions import UserNotInGroupError, GroupInvitationEmailMismatch
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
-from .exceptions import GroupDoesNotExist, ApplicationDoesNotExist
+from .exceptions import (
+    GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed
+)
 from .signals import (
     application_created, application_updated, application_deleted, group_created,
     group_updated, group_deleted
 )
+from .emails import GroupInvitationEmail
 
 
 class CoreHandler:
@@ -85,7 +98,12 @@ class CoreHandler:
         group_values = extract_allowed(kwargs, ['name'])
         group = Group.objects.create(**group_values)
         last_order = GroupUser.get_last_order(user)
-        group_user = GroupUser.objects.create(group=group, user=user, order=last_order)
+        group_user = GroupUser.objects.create(
+            group=group,
+            user=user,
+            order=last_order,
+            permissions=GROUP_USER_PERMISSION_ADMIN
+        )
 
         group_created.send(self, group=group, user=user)
 
@@ -167,6 +185,204 @@ class CoreHandler:
                 user=user,
                 group_id=group_id
             ).update(order=index + 1)
+
+    def get_group_invitation_signer(self):
+        """
+        Returns the group invitation signer. This is for example used to create a url
+        safe signed version of the invitation id which is used when sending a public
+        accept link to the user.
+
+        :return: The itsdangerous serializer.
+        :rtype: URLSafeSerializer
+        """
+
+        return URLSafeSerializer(settings.SECRET_KEY, 'group-invite')
+
+    def send_group_invitation_email(self, invitation, base_url):
+        """
+        Sends out a group invitation email to the user based on the provided
+        invitation instance.
+
+        :param invitation: The invitation instance for which the email must be send.
+        :type invitation: GroupInvitation
+        :param base_url: The base url of the frontend, where the user can accept his
+            invitation. The signed invitation id is appended to the URL (base_url +
+            '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
+        :type base_url: str
+        :raises BaseURLHostnameNotAllowed: When the host name of the base_url is not
+            allowed.
+        """
+
+        parsed_base_url = urlparse(base_url)
+        if parsed_base_url.hostname != settings.PUBLIC_WEB_FRONTEND_HOSTNAME:
+            raise BaseURLHostnameNotAllowed(
+                f'The hostname {parsed_base_url.netloc} is not allowed.'
+            )
+
+        signer = self.get_group_invitation_signer()
+        signed_invitation_id = signer.dumps(invitation.id)
+
+        if not base_url.endswith('/'):
+            base_url += '/'
+
+        public_accept_url = urljoin(base_url, signed_invitation_id)
+
+        email = GroupInvitationEmail(
+            invitation,
+            public_accept_url,
+            to=[invitation.email]
+        )
+        email.send()
+
+    def create_group_invitation(self, user, group, email, permissions, message,
+                                base_url):
+        """
+        Creates a new group invitation for the given email address and sends out an
+        email containing the invitation.
+
+        :param user: The user on whose behalf the invitation is created.
+        :type user: User
+        :param group: To group to which the email address is invites to.
+        :type group: Group
+        :param email: The email address of the person that is invited to the group.
+        :type email: str
+        :param permissions: The group permissions the user will get once he has
+            accepted the invitation.
+        :type permissions: str
+        :param message: A custom message that will be included in the invitation email.
+        :type message: str
+        :param base_url: The base url of the frontend, where the user can accept his
+            invitation. The signed invitation id is appended to the URL (base_url +
+            '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
+        :type base_url: str
+        :raises ValueError: If the provided permissions are not allowed.
+        :raises UserInvalidGroupPermissionsError: If the user does not belong to the
+            group or doesn't have right permissions in the group.
+        :return: The created group invitation.
+        :rtype: GroupInvitation
+        """
+
+        group.check_user_permissions(user, 'ADMIN')
+
+        if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
+            raise ValueError('Incorrect permissions provided.')
+
+        invitation, created = GroupInvitation.objects.update_or_create(
+            group=group,
+            email=normalize_email_address(email),
+            defaults={
+                'message': message,
+                'permissions': permissions,
+                'invited_by': user
+            }
+        )
+
+        self.send_group_invitation_email(invitation, base_url)
+
+        return invitation
+
+    def update_group_invitation(self, user, invitation, permissions):
+        """
+        Updates the permissions of an existing invitation of the user has ADMIN
+        permissions to the related group.
+
+        :param user: The user on whose behalf the application is requested.
+        :type user: User
+        :param invitation: The invitation that must be updated.
+        :type invitation: GroupInvitation
+        :param permissions: The new permissions of the invitation that the user must
+            get after accepting.
+        :type permissions: str
+        :raises ValueError: If the provided permissions is not allowed.
+        :raises UserInvalidGroupPermissionsError: If the user does not belong to the
+            group or doesn't have right permissions in the group.
+        :return: The updated group permissions instance.
+        :rtype: GroupInvitation
+        """
+
+        invitation.group.check_user_permissions(user, 'ADMIN')
+
+        if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
+            raise ValueError('Incorrect permissions provided.')
+
+        invitation.permissions = permissions
+        invitation.save()
+
+        return invitation
+
+    def delete_group_invitation(self, user, invitation):
+        """
+        Deletes an existing group invitation if the user has ADMIN permissions to the
+        related group.
+
+        :param user: The user on whose behalf the application is requested.
+        :type user: User
+        :param invitation: The invitation that must be deleted.
+        :type invitation: GroupInvitation
+        :raises UserInvalidGroupPermissionsError: If the user does not belong to the
+            group or doesn't have right permissions in the group.
+        """
+
+        invitation.group.check_user_permissions(user, 'ADMIN')
+        invitation.delete()
+
+    def reject_group_invitation(self, user, invitation):
+        """
+        Rejects a group invitation by deleting the invitation so that can't be reused
+        again. It can only be rejected if the invitation was addressed to the email
+        address of the user.
+
+        :param user: The user who wants to reject the invitation.
+        :type user: User
+        :param invitation: The invitation that must be rejected.
+        :type invitation: GroupInvitation
+        :raises GroupInvitationEmailMismatch: If the invitation email does not match
+            the one of the user.
+        """
+
+        if user.username != invitation.email:
+            raise GroupInvitationEmailMismatch(
+                'The email address of the invitation does not match the one of the '
+                'user.'
+            )
+
+        invitation.delete()
+
+    def accept_group_invitation(self, user, invitation):
+        """
+        Accepts a group invitation by adding the user to the correct group with the
+        right permissions. It can only be accepted if the invitation was addressed to
+        the email address of the user. Because the invitation has been accepted it
+        can then be deleted. If the user is already a member of the group then the
+        permissions are updated.
+
+        :param user: The user who has accepted the invitation.
+        :type: user: User
+        :param invitation: The invitation that must be accepted.
+        :type invitation: GroupInvitation
+        :raises GroupInvitationEmailMismatch: If the invitation email does not match
+            the one of the user.
+        :return: The group user relationship related to the invite.
+        :rtype: GroupUser
+        """
+
+        if user.username != invitation.email:
+            raise GroupInvitationEmailMismatch(
+                'The email address of the invitation does not match the one of the '
+                'user.'
+            )
+
+        group_user, created = GroupUser.objects.update_or_create(
+            user=user,
+            group=invitation.group,
+            defaults={
+                'order': GroupUser.get_last_order(user),
+                'permissions': invitation.permissions
+            }
+        )
+        invitation.delete()
+
+        return group_user
 
     def get_application(self, user, application_id, base_queryset=None):
         """

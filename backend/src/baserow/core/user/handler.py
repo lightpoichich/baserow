@@ -7,10 +7,9 @@ from django.db import IntegrityError
 
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
+from baserow.core.exceptions import BaseURLHostnameNotAllowed
 
-from .exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
-)
+from .exceptions import UserAlreadyExist, UserNotFound, InvalidPassword
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
 

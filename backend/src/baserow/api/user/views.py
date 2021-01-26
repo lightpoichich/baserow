@@ -18,10 +18,9 @@ from rest_framework_jwt.views import (
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE
 from baserow.api.schemas import get_error_schema
+from baserow.core.exceptions import BaseURLHostnameNotAllowed
 from baserow.core.user.handler import UserHandler
-from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
-)
+from baserow.core.user.exceptions import UserAlreadyExist, UserNotFound, InvalidPassword
 
 from .serializers import (
     RegisterSerializer, UserSerializer, SendResetPasswordEmailBodyValidationSerializer,

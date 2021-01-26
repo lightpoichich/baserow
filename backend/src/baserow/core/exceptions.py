@@ -9,6 +9,21 @@ class UserNotInGroupError(Exception):
             super().__init__('The user doesn\'t belong to the group', *args, **kwargs)
 
 
+class UserInvalidGroupPermissionsError(Exception):
+    """Raised when a user doesn't have the right permissions for the related group."""
+
+    def __init__(self, user, group, permissions, *args, **kwargs):
+        self.user = user
+        self.group = group
+        self.permissions = permissions
+        super().__init__(
+            f'The user {user} doesn\'t have the right permissions {permissions} to '
+            f'{group}.',
+            *args,
+            **kwargs
+        )
+
+
 class GroupDoesNotExist(Exception):
     """Raised when trying to get a group that does not exist."""
 
@@ -39,3 +54,16 @@ class ApplicationTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
 
 class ApplicationTypeDoesNotExist(InstanceTypeDoesNotExist):
     pass
+
+
+class BaseURLHostnameNotAllowed(Exception):
+    """
+    Raised when the provided base url is not allowed when requesting a password
+    reset email.
+    """
+
+
+class GroupInvitationEmailMismatch(Exception):
+    """
+    Raised when the group invitation email is not the expected email address.
+    """

@@ -11,8 +11,9 @@ from baserow.contrib.database.models import (
     Database, Table, GridView, TextField, LongTextField, BooleanField, DateField
 )
 from baserow.contrib.database.views.models import GridViewFieldOptions
+from baserow.core.exceptions import BaseURLHostnameNotAllowed
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
+    UserAlreadyExist, UserNotFound, InvalidPassword
 )
 from baserow.core.user.handler import UserHandler
 

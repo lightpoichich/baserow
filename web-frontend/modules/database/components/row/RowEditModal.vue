@@ -72,9 +72,9 @@ export default {
      * the most up to the date row based on the provided id. We need to do it this way
      * because it is possible that the rows are refreshed after for example a field
      * update and we always need the most up to date row. This way eventually prevents
-     * incompatible field values.
+     * incompatible row values.
      *
-     * Small side effect is that is the user is editing a row via the modal and another
+     * Small side effect is that if the user is editing a row via the modal and another
      * user changes the filters of the same view, then the rows are refreshed for both
      * users. If the current row is then not in the buffer anymore then the modal does
      * not have a data source anymore and is forced to close. This is, in my opinion,
@@ -84,8 +84,8 @@ export default {
     row() {
       const row = this.rows.find((row) => row.id === this.rowId)
       if (row === undefined) {
-        // If the row is not found in the provided rows we don't have a row data source
-        // anymore which means we can close the modal.
+        // If the row is not found in the provided rows then we don't have a row data
+        // source anymore which means we can close the modal.
         if (
           this.$refs &&
           Object.prototype.hasOwnProperty.call(this.$refs, 'modal') &&

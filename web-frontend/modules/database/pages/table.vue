@@ -235,7 +235,6 @@ export default {
      * the same as seeing the view for the first time.
      */
     async refresh(event) {
-      console.log(event)
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       await type.refresh({ store: this.$store }, this.view)
@@ -246,7 +245,7 @@ export default {
         await this.$refs.view.refresh()
       }
       // It might be possible that the event has a callback that needs to be called
-      // after the rows are refreshed. This for example the case when a field has
+      // after the rows are refreshed. This is for example the case when a field has
       // changed. In that case we want to update the field in the store after the rows
       // have been refreshed to prevent incompatible values in field types.
       if (event && Object.prototype.hasOwnProperty.call(event, 'callback')) {

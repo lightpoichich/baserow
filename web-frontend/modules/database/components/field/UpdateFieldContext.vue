@@ -39,6 +39,11 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      loading: false,
+    }
+  },
   watch: {
     field() {
       // If the field values every update via an outside source, think of real time
@@ -48,11 +53,6 @@ export default {
         this.$refs.form.reset()
       })
     },
-  },
-  data() {
-    return {
-      loading: false,
-    }
   },
   methods: {
     async submit(values) {

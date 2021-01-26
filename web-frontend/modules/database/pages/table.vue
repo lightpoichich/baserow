@@ -235,6 +235,7 @@ export default {
      * the same as seeing the view for the first time.
      */
     async refresh(event) {
+      console.log(event)
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       await type.refresh({ store: this.$store }, this.view)

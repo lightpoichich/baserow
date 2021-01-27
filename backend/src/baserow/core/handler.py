@@ -9,7 +9,9 @@ from .models import (
     Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_CHOICES,
     GROUP_USER_PERMISSION_ADMIN
 )
-from .exceptions import UserNotInGroupError, GroupInvitationEmailMismatch
+from .exceptions import (
+    UserNotInGroupError, GroupInvitationEmailMismatch, GroupInvitationDoesNotExist
+)
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
 from .exceptions import (
@@ -233,6 +235,35 @@ class CoreHandler:
             to=[invitation.email]
         )
         email.send()
+
+    def get_group_invitation(self, group_invitation_id, base_queryset=None):
+        """
+        Selects a group invitation with a given id from the database.
+
+        :param group_invitation_id: The identifier of the invitation that must be
+            returned.
+        :type group_invitation_id: int
+        :param base_queryset: The base queryset from where to select the invitation.
+            This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
+        :raises GroupInvitationDoesNotExist: If the invitation does not exist.
+        :return: The requested field instance of the provided id.
+        :rtype: GroupInvitation
+        """
+
+        if not base_queryset:
+            base_queryset = GroupInvitation.objects
+
+        try:
+            group_invitation = base_queryset.select_related('group', 'invited_by').get(
+                id=group_invitation_id
+            )
+        except GroupInvitation.DoesNotExist:
+            raise GroupInvitationDoesNotExist(
+                f'The group invitation with id {group_invitation_id} does not exist.'
+            )
+
+        return group_invitation
 
     def create_group_invitation(self, user, group, email, permissions, message,
                                 base_url):

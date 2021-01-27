@@ -10,7 +10,8 @@ from baserow.core.models import (
 from baserow.core.exceptions import (
     UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
     ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
-    BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch
+    BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
+    GroupInvitationDoesNotExist
 )
 from baserow.contrib.database.models import Database, Table
 
@@ -180,6 +181,32 @@ def test_order_groups(data_fixture):
     ug_3.refresh_from_db()
 
     assert [1, 2, 3] == [ug_2.order, ug_1.order, ug_3.order]
+
+
+@pytest.mark.django_db
+def test_get_group_invitation(data_fixture):
+    user = data_fixture.create_user()
+    invitation = data_fixture.create_group_invitation(email=user.email)
+
+    handler = CoreHandler()
+
+    with pytest.raises(GroupInvitationDoesNotExist):
+        handler.get_group_invitation(group_invitation_id=999999)
+
+    invitation2 = handler.get_group_invitation(group_invitation_id=invitation.id)
+
+    assert invitation.id == invitation2.id
+    assert invitation.invited_by_id == invitation2.invited_by_id
+    assert invitation.group_id == invitation2.group_id
+    assert invitation.email == invitation2.email
+    assert invitation.permissions == invitation2.permissions
+    assert isinstance(invitation2, GroupInvitation)
+
+    with pytest.raises(AttributeError):
+        handler.get_field(
+            invitation_id=invitation.id,
+            base_queryset=GroupInvitation.objects.prefetch_related('UNKNOWN')
+        )
 
 
 @pytest.mark.django_db

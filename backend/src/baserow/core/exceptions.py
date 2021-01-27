@@ -63,6 +63,12 @@ class BaseURLHostnameNotAllowed(Exception):
     """
 
 
+class GroupInvitationDoesNotExist(Exception):
+    """
+    Raised when the requested group invitation doesn't exist.
+    """
+
+
 class GroupInvitationEmailMismatch(Exception):
     """
     Raised when the group invitation email is not the expected email address.

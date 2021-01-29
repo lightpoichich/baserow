@@ -259,3 +259,37 @@ def test_change_password(data_fixture, client):
 
     user.refresh_from_db()
     assert user.check_password('new')
+
+
+@pytest.mark.django_db
+def test_dashboard(data_fixture, client):
+    user, token = data_fixture.create_user_and_token(email='test@localhost')
+    group_1 = data_fixture.create_group(name='Test1')
+    group_2 = data_fixture.create_group()
+    invitation_1 = data_fixture.create_group_invitation(
+        group=group_1,
+        email='test@localhost'
+    )
+    data_fixture.create_group_invitation(
+        group=group_1,
+        email='test2@localhost'
+    )
+    data_fixture.create_group_invitation(
+        group=group_2,
+        email='test3@localhost'
+    )
+
+    response = client.get(
+        reverse('api:user:dashboard'),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert len(response_json['group_invitations']) == 1
+    assert response_json['group_invitations'][0]['id'] == invitation_1.id
+    assert response_json['group_invitations'][0]['invited_by'] == (
+           invitation_1.invited_by.first_name
+    )
+    assert response_json['group_invitations'][0]['group'] == 'Test1'
+    assert response_json['group_invitations'][0]['message'] == invitation_1.message
+    assert 'created_on' in response_json['group_invitations'][0]

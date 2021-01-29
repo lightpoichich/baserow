@@ -8,7 +8,7 @@ from .managers import GroupQuerySet
 from .mixins import (
     OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin
 )
-from .exceptions import UserInvalidGroupPermissionsError
+from .exceptions import UserNotInGroupError, UserInvalidGroupPermissionsError
 
 
 __all__ = ['UserFile']
@@ -37,40 +37,45 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
 
     objects = GroupQuerySet.as_manager()
 
-    def has_user(self, user):
-        """Returns true if the user belongs to the group."""
-
-        return self.users.filter(id=user.id).exists()
-
-    def has_user_with_permissions(self, user, permissions):
+    def has_user(self, user, permissions=None, raise_error=False):
         """
-        Returns true if the user belongs to the group with the provided permissions.
+        Checks if the provided user belongs to the group.
 
-        :param user: The user for which we check if it belongs to the group.
+        :param user: The user that must be in the group.
         :type user: User
-        :param permissions: The permissions that the user must have.
-        :type permissions: str or list
-        :return: Indicates if the user belongs to the group with the right permissions.
+        :param permissions: One or multiple permissions can optionally be provided
+            and if so, the user must have one of those permissions.
+        :type permissions: None, str or list
+        :param raise_error: If True an error will be raised when the user does not
+            belong to the group or doesn't have the right permissions.
+        :type raise_error: bool
+        :raises UserNotInGroupError:
+        :raises UserInvalidGroupPermissionsError:
+        :return: Indicates if the user belongs to the group.
         :rtype: bool
         """
 
-        if not isinstance(permissions, list):
+        if permissions and not isinstance(permissions, list):
             permissions = [permissions]
 
-        return GroupUser.objects.filter(
+        queryset = GroupUser.objects.filter(
             user_id=user.id,
-            group_id=self.id,
-            permissions__in=permissions
-        ).exists()
+            group_id=self.id
+        )
 
-    def check_user_permissions(self, user, permissions):
-        """
-        Check is the provided user has the correct permissions and if not the
-        appropriate exception will be raised.
-        """
+        if raise_error:
+            try:
+                group_user = queryset.get()
+            except GroupUser.DoesNotExist:
+                raise UserNotInGroupError(user, self)
 
-        if not self.has_user_with_permissions(user, permissions):
-            raise UserInvalidGroupPermissionsError(user, self, permissions)
+            if permissions is not None and group_user.permissions not in permissions:
+                raise UserInvalidGroupPermissionsError(user, self, permissions)
+        else:
+            if permissions is not None:
+                queryset = queryset.filter(permissions__in=permissions)
+
+            return queryset.exists()
 
     def __str__(self):
         return f'<Group id={self.id}, name={self.name}>'
@@ -95,16 +100,19 @@ class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         return cls.get_highest_order_of_queryset(queryset) + 1
 
 
-class GroupInvitation(models.Model):
+class GroupInvitation(CreatedAndUpdatedOnMixin, models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     invited_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    email = models.EmailField()
+    email = models.EmailField(db_index=True)
     permissions = models.CharField(
         default=GROUP_USER_PERMISSION_MEMBER,
         max_length=32,
         choices=GROUP_USER_PERMISSION_CHOICES
     )
-    message = models.TextField()
+    message = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ('id',)
 
 
 class Application(CreatedAndUpdatedOnMixin, OrderableMixin,

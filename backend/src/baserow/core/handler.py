@@ -10,13 +10,12 @@ from .models import (
     GROUP_USER_PERMISSION_ADMIN
 )
 from .exceptions import (
-    UserNotInGroupError, GroupInvitationEmailMismatch, GroupInvitationDoesNotExist
+    GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
+    UserNotInGroupError, GroupInvitationEmailMismatch, GroupInvitationDoesNotExist,
+    UserInvalidGroupPermissionsError
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
-from .exceptions import (
-    GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed
-)
 from .signals import (
     application_created, application_updated, application_deleted, group_created,
     group_updated, group_deleted
@@ -55,7 +54,7 @@ class CoreHandler:
 
         return group
 
-    def get_group_user(self, user, group_id, base_queryset=None):
+    def get_group_user(self, user, group_id, base_queryset=None, permissions=None):
         """
         Selects a group user object for the given user and group_id from the database.
 
@@ -66,8 +65,13 @@ class CoreHandler:
         :param base_queryset: The base queryset from where to select the group user
             object. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
+        :param permissions: One or multiple permissions can optionally be provided
+            and if so, the group user must have one of those permissions.
+        :type permissions: str or list
         :raises GroupDoesNotExist: When the group with the provided id does not exist.
         :raises UserNotInGroupError: When the user does not belong to the group.
+        :raises UserInvalidGroupPermissionsError: When the user does not have the
+            right permissions in the group.
         :return: The requested group user instance of the provided group_id.
         :rtype: GroupUser
         """
@@ -83,7 +87,14 @@ class CoreHandler:
             if Group.objects.filter(pk=group_id).exists():
                 raise UserNotInGroupError(user)
             else:
-                raise GroupDoesNotExist(f'The group with id {group_id} does not exist.')
+                raise GroupDoesNotExist(f'The group with id {group_id} does not '
+                                        f'exist.')
+
+        if permissions and not isinstance(permissions, list):
+            permissions = [permissions]
+
+        if permissions is not None and group_user.permissions not in permissions:
+            raise UserInvalidGroupPermissionsError(user, self, permissions)
 
         return group_user
 
@@ -236,7 +247,7 @@ class CoreHandler:
         )
         email.send()
 
-    def get_group_invitation(self, group_invitation_id, base_queryset=None):
+    def get_group_invitation(self, user, group_invitation_id, base_queryset=None):
         """
         Selects a group invitation with a given id from the database.
 
@@ -262,6 +273,8 @@ class CoreHandler:
             raise GroupInvitationDoesNotExist(
                 f'The group invitation with id {group_invitation_id} does not exist.'
             )
+
+        group_invitation.group.has_user(user, 'ADMIN', raise_error=True)
 
         return group_invitation
 
@@ -293,7 +306,7 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        group.check_user_permissions(user, 'ADMIN')
+        group.has_user(user, 'ADMIN', raise_error=True)
 
         if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
             raise ValueError('Incorrect permissions provided.')
@@ -331,7 +344,7 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        invitation.group.check_user_permissions(user, 'ADMIN')
+        invitation.group.has_user(user, 'ADMIN', raise_error=True)
 
         if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
             raise ValueError('Incorrect permissions provided.')
@@ -354,7 +367,7 @@ class CoreHandler:
             group or doesn't have right permissions in the group.
         """
 
-        invitation.group.check_user_permissions(user, 'ADMIN')
+        invitation.group.has_user(user, 'ADMIN', raise_error=True)
         invitation.delete()
 
     def reject_group_invitation(self, user, invitation):

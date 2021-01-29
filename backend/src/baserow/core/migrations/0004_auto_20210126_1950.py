@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
                     serialize=False,
                     verbose_name='ID'
                 )),
-                ('email', models.EmailField(max_length=254)),
+                ('email', models.EmailField(db_index=True, max_length=254)),
                 ('permissions', models.CharField(
                     choices=[
                         ('ADMIN', 'Admin'),
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
                     default='MEMBER',
                     max_length=32
                 )),
-                ('message', models.TextField()),
+                ('message', models.TextField(blank=True)),
                 ('group', models.ForeignKey(
                     on_delete=django.db.models.deletion.CASCADE,
                     to='core.Group'
@@ -59,7 +59,10 @@ class Migration(migrations.Migration):
                     on_delete=django.db.models.deletion.CASCADE,
                     to=settings.AUTH_USER_MODEL
                 )),
+                ('created_on', models.DateTimeField(auto_now_add=True)),
+                ('updated_on', models.DateTimeField(auto_now=True))
             ],
+            options={'ordering': ('id',)},
         ),
         migrations.RunPython(forward, migrations.RunPython.noop),
     ]

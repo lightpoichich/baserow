@@ -3,7 +3,7 @@ from django.conf.urls import url
 from .views import GroupsView, GroupView, GroupOrderView
 
 
-app_name = 'baserow.api.group'
+app_name = 'baserow.api.groups'
 
 urlpatterns = [
     url(r'^$', GroupsView.as_view(), name='list'),

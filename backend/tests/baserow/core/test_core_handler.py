@@ -55,8 +55,22 @@ def test_get_group_user(data_fixture):
     with pytest.raises(UserNotInGroupError):
         handler.get_group_user(user=user_2, group_id=group_1.id)
 
-    group_user_1_copy = handler.get_group_user(user=user_1, group_id=group_1.id)
-    assert group_user_1_copy.group_id == group_1.id
+    group_user = handler.get_group_user(user=user_1, group_id=group_1.id)
+    assert group_user.group_id == group_1.id
+
+    group_user.permissions = 'MEMBER'
+    group_user.save()
+
+    handler.get_group_user(user=user_1, group_id=group_1.id)
+    handler.get_group_user(user=user_1, group_id=group_1.id, permissions='MEMBER')
+    handler.get_group_user(
+        user=user_1,
+        group_id=group_1.id,
+        permissions=['MEMBER', 'ADMIN']
+    )
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.get_group_user(user=user_1, group_id=group_1.id, permissions='ADMIN')
 
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
@@ -186,14 +200,34 @@ def test_order_groups(data_fixture):
 @pytest.mark.django_db
 def test_get_group_invitation(data_fixture):
     user = data_fixture.create_user()
-    invitation = data_fixture.create_group_invitation(email=user.email)
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group_user = data_fixture.create_user_group(user=user)
+    data_fixture.create_user_group(
+        user=user_2,
+        group=group_user.group,
+        permissions='MEMBER'
+    )
+    invitation = data_fixture.create_group_invitation(
+        group=group_user.group,
+        email=user.email
+    )
 
     handler = CoreHandler()
 
     with pytest.raises(GroupInvitationDoesNotExist):
-        handler.get_group_invitation(group_invitation_id=999999)
+        handler.get_group_invitation(user=user, group_invitation_id=999999)
 
-    invitation2 = handler.get_group_invitation(group_invitation_id=invitation.id)
+    with pytest.raises(UserNotInGroupError):
+        handler.get_group_invitation(user=user_3, group_invitation_id=invitation.id)
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.get_group_invitation(user=user_2, group_invitation_id=invitation.id)
+
+    invitation2 = handler.get_group_invitation(
+        user=user,
+        group_invitation_id=invitation.id
+    )
 
     assert invitation.id == invitation2.id
     assert invitation.invited_by_id == invitation2.invited_by_id
@@ -253,12 +287,24 @@ def test_create_group_invitation(mock_send_email, data_fixture):
     user = user_group.user
     group = user_group.group
     user_2 = data_fixture.create_user()
+    user_group_3 = data_fixture.create_user_group(group=group, permissions='MEMBER')
+    user_3 = user_group_3.user
 
     handler = CoreHandler()
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
+    with pytest.raises(UserNotInGroupError):
         handler.create_group_invitation(
             user=user_2,
+            group=group,
+            email='test@test.nl',
+            permissions='ADMIN',
+            message='Test',
+            base_url='http://localhost:3000/invite'
+        )
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.create_group_invitation(
+            user=user_3,
             group=group,
             email='test@test.nl',
             permissions='ADMIN',
@@ -335,7 +381,7 @@ def test_update_group_invitation(data_fixture):
     user_2 = data_fixture.create_user()
     handler = CoreHandler()
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
+    with pytest.raises(UserNotInGroupError):
         handler.update_group_invitation(
             user=user_2,
             invitation=group_invitation,
@@ -367,7 +413,7 @@ def test_delete_group_invitation(data_fixture):
     user_2 = data_fixture.create_user()
     handler = CoreHandler()
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
+    with pytest.raises(UserNotInGroupError):
         handler.delete_group_invitation(
             user=user_2,
             invitation=group_invitation,

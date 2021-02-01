@@ -62,7 +62,11 @@ class Migration(migrations.Migration):
                 ('created_on', models.DateTimeField(auto_now_add=True)),
                 ('updated_on', models.DateTimeField(auto_now=True))
             ],
-            options={'ordering': ('id',)},
+            options={'ordering': ('id',)}
+        ),
+        migrations.AlterUniqueTogether(
+            name='groupuser',
+            unique_together={('user', 'group')},
         ),
         migrations.RunPython(forward, migrations.RunPython.noop),
     ]

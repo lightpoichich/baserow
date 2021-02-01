@@ -92,6 +92,7 @@ class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
     )
 
     class Meta:
+        unique_together = [['user', 'group']]
         ordering = ('order',)
 
     @classmethod

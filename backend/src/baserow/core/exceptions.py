@@ -28,6 +28,10 @@ class GroupDoesNotExist(Exception):
     """Raised when trying to get a group that does not exist."""
 
 
+class GroupUserDoesNotExist(Exception):
+    """Raised when trying to get a group user that does not exist."""
+
+
 class ApplicationDoesNotExist(Exception):
     """Raised when trying to get an application that does not exist."""
 

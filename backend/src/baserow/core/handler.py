@@ -12,7 +12,7 @@ from .models import (
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
     UserNotInGroupError, GroupInvitationEmailMismatch, GroupInvitationDoesNotExist,
-    UserInvalidGroupPermissionsError
+    GroupUserDoesNotExist
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -24,12 +24,10 @@ from .emails import GroupInvitationEmail
 
 
 class CoreHandler:
-    def get_group(self, user, group_id, base_queryset=None):
+    def get_group(self, group_id, base_queryset=None):
         """
         Selects a group with a given id from the database.
 
-        :param user: The user on whose behalf the group is requested.
-        :type user: User
         :param group_id: The identifier of the group that must be returned.
         :type group_id: int
         :param base_queryset: The base queryset from where to select the group
@@ -49,54 +47,7 @@ class CoreHandler:
         except Group.DoesNotExist:
             raise GroupDoesNotExist(f'The group with id {group_id} does not exist.')
 
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
-
         return group
-
-    def get_group_user(self, user, group_id, base_queryset=None, permissions=None):
-        """
-        Selects a group user object for the given user and group_id from the database.
-
-        :param user: The user on whose behalf the group is requested.
-        :type user: User
-        :param group_id: The identifier of the group that must be returned.
-        :type group_id: int
-        :param base_queryset: The base queryset from where to select the group user
-            object. This can for example be used to do a `select_related`.
-        :type base_queryset: Queryset
-        :param permissions: One or multiple permissions can optionally be provided
-            and if so, the group user must have one of those permissions.
-        :type permissions: str or list
-        :raises GroupDoesNotExist: When the group with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the group.
-        :raises UserInvalidGroupPermissionsError: When the user does not have the
-            right permissions in the group.
-        :return: The requested group user instance of the provided group_id.
-        :rtype: GroupUser
-        """
-
-        if not base_queryset:
-            base_queryset = GroupUser.objects
-
-        try:
-            group_user = base_queryset.select_related('group').get(
-                user=user, group_id=group_id
-            )
-        except GroupUser.DoesNotExist:
-            if Group.objects.filter(pk=group_id).exists():
-                raise UserNotInGroupError(user)
-            else:
-                raise GroupDoesNotExist(f'The group with id {group_id} does not '
-                                        f'exist.')
-
-        if permissions and not isinstance(permissions, list):
-            permissions = [permissions]
-
-        if permissions is not None and group_user.permissions not in permissions:
-            raise UserInvalidGroupPermissionsError(user, self, permissions)
-
-        return group_user
 
     def create_group(self, user, **kwargs):
         """
@@ -124,14 +75,14 @@ class CoreHandler:
 
     def update_group(self, user, group, **kwargs):
         """
-        Updates the values of a group.
+        Updates the values of a group if the user on whose behalf the request is made
+        has admin permissions to the group.
 
         :param user: The user on whose behalf the change is made.
         :type user: User
         :param group: The group instance that must be updated.
         :type group: Group
         :raises ValueError: If one of the provided parameters is invalid.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated group
         :rtype: Group
         """
@@ -139,9 +90,7 @@ class CoreHandler:
         if not isinstance(group, Group):
             raise ValueError('The group is not an instance of Group.')
 
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
-
+        group.has_user(user, 'ADMIN', raise_error=True)
         group = set_allowed_attrs(kwargs, ['name'], group)
         group.save()
 
@@ -151,21 +100,20 @@ class CoreHandler:
 
     def delete_group(self, user, group):
         """
-        Deletes an existing group and related application the proper way.
+        Deletes an existing group and related applications if the user has admin
+        permissions to the group.
 
         :param user: The user on whose behalf the delete is done.
         :type: user: User
         :param group: The group instance that must be deleted.
         :type: group: Group
         :raises ValueError: If one of the provided parameters is invalid.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(group, Group):
             raise ValueError('The group is not an instance of Group.')
 
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, 'ADMIN', raise_error=True)
 
         # Load the group users before the group is deleted so that we can pass those
         # along with the signal.
@@ -198,6 +146,71 @@ class CoreHandler:
                 user=user,
                 group_id=group_id
             ).update(order=index + 1)
+
+    def get_group_user(self, group_user_id, base_queryset=None):
+        """
+        Selects a group user object for the given user and group_id from the database.
+
+        :param group_user_id: The identifier of the group user that must be returned.
+        :type group_user_id: int
+        :param base_queryset: The base queryset from where to select the group user
+            object. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
+        :raises GroupDoesNotExist: When the group with the provided id does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the group.
+        :raises UserInvalidGroupPermissionsError: When the user does not have the
+            right permissions in the group.
+        :return: The requested group user instance of the provided group_id.
+        :rtype: GroupUser
+        """
+
+        if not base_queryset:
+            base_queryset = GroupUser.objects
+
+        try:
+            group_user = base_queryset.select_related('group').get(id=group_user_id)
+        except GroupUser.DoesNotExist:
+            raise GroupUserDoesNotExist(f'The group user with id {group_user_id} does '
+                                        f'not exist.')
+
+        return group_user
+
+    def update_group_user(self, user, group_user, **kwargs):
+        """
+        Updates the values of an existing group user.
+
+        :param user: The user on whose behalf the group user is deleted.
+        :type user: User
+        :param group_user: The group user that must be updated.
+        :type group_user: GroupUser
+        :return: The updated group user instance.
+        :rtype: GroupUser
+        """
+
+        if not isinstance(group_user, GroupUser):
+            raise ValueError('The group user is not an instance of GroupUser.')
+
+        group_user.group.has_user(user, 'ADMIN', raise_error=True)
+        group_user = set_allowed_attrs(kwargs, ['permissions'], group_user)
+        group_user.save()
+
+        return group_user
+
+    def delete_group_user(self, user, group_user):
+        """
+        Deletes the provided group user.
+
+        :param user: The user on whose behalf the group user is deleted.
+        :type user: User
+        :param group_user: The group user that must be deleted.
+        :type group_user: GroupUser
+        """
+
+        if not isinstance(group_user, GroupUser):
+            raise ValueError('The group user is not an instance of GroupUser.')
+
+        group_user.group.has_user(user, 'ADMIN', raise_error=True)
+        group_user.delete()
 
     def get_group_invitation_signer(self):
         """

@@ -13,7 +13,7 @@ from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST, ERROR_HOSTNAME_IS_NOT_ALLOWED
 )
 from baserow.api.schemas import get_error_schema
-from baserow.api.group_invitations.errors import (
+from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_DOES_NOT_EXIST, ERROR_GROUP_INVITATION_EMAIL_MISMATCH
 )
 from baserow.core.models import GroupInvitation
@@ -67,12 +67,9 @@ class GroupInvitationsView(APIView):
     def get(self, request, group_id):
         """Lists all the invitations of the provided group id."""
 
-        group_user = CoreHandler().get_group_user(
-            request.user,
-            group_id,
-            permissions='ADMIN'
-        )
-        group_invitations = GroupInvitation.objects.filter(group=group_user.group)
+        group = CoreHandler().get_group(group_id)
+        group.has_user(request.user, 'ADMIN', raise_error=True)
+        group_invitations = GroupInvitation.objects.filter(group=group)
         serializer = GroupInvitationSerializer(group_invitations, many=True)
         return Response(serializer.data)
 
@@ -115,7 +112,7 @@ class GroupInvitationsView(APIView):
     def post(self, request, data, group_id):
         """Creates a new group invitation and sends it the provided email."""
 
-        group = CoreHandler().get_group(request.user, group_id)
+        group = CoreHandler().get_group(group_id)
         group_invitation = CoreHandler().create_group_invitation(
             request.user,
             group,
@@ -143,7 +140,6 @@ class GroupInvitationView(APIView):
             'Returns the requested group invitation if the authorized user has admin '
             'right to the related group'
         ),
-        request=CreateGroupInvitationSerializer,
         responses={
             200: GroupInvitationSerializer,
             400: get_error_schema([

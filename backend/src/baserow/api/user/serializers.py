@@ -4,7 +4,7 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 
-from baserow.api.group_invitations.serializers import UserGroupInvitationSerializer
+from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
 
 User = get_user_model()

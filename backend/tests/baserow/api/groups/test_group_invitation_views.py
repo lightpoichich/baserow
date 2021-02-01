@@ -28,21 +28,21 @@ def test_list_group_invitations(api_client, data_fixture):
     )
 
     response = api_client.get(
-        reverse('api:group_invitations:list', kwargs={'group_id': 999999}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': 999999}),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_GROUP_DOES_NOT_EXIST'
 
     response = api_client.get(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_2.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_2.id}),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.get(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_1.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         HTTP_AUTHORIZATION=f'JWT {token_2}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -50,7 +50,7 @@ def test_list_group_invitations(api_client, data_fixture):
     assert response.json()['detail'] == 'You need [\'ADMIN\'] permissions'
 
     response = api_client.get(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_1.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
     assert response.status_code == HTTP_200_OK
@@ -74,7 +74,7 @@ def test_create_group_invitation(api_client, data_fixture):
     data_fixture.create_user_group(group=group_1, user=user_3, permissions='MEMBER')
 
     response = api_client.post(
-        reverse('api:group_invitations:list', kwargs={'group_id': 99999}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': 99999}),
         {
             'email': 'test@test.nl',
             'permissions': 'ADMIN',
@@ -89,7 +89,7 @@ def test_create_group_invitation(api_client, data_fixture):
     assert response_json['error'] == 'ERROR_GROUP_DOES_NOT_EXIST'
 
     response = api_client.post(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_1.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         {
             'email': 'test@test.nl',
             'permissions': 'ADMIN',
@@ -104,7 +104,7 @@ def test_create_group_invitation(api_client, data_fixture):
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.post(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_1.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         {
             'email': 'test@test.nl',
             'permissions': 'ADMIN',
@@ -119,7 +119,7 @@ def test_create_group_invitation(api_client, data_fixture):
     assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
 
     response = api_client.post(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_1.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         {
             'email': 'NO_EMAIL',
             'permissions': 'NOT_EXISTING',
@@ -137,7 +137,7 @@ def test_create_group_invitation(api_client, data_fixture):
     assert 'message' not in response_json['detail']
 
     response = api_client.post(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_1.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         {
             'email': 'test@test.nl',
             'permissions': 'ADMIN',
@@ -152,7 +152,7 @@ def test_create_group_invitation(api_client, data_fixture):
     assert response_json['error'] == 'ERROR_HOSTNAME_IS_NOT_ALLOWED'
 
     response = api_client.post(
-        reverse('api:group_invitations:list', kwargs={'group_id': group_1.id}),
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         {
             'email': 'test0@test.nl',
             'permissions': 'ADMIN',
@@ -190,7 +190,7 @@ def test_get_group_invitation(api_client, data_fixture):
     )
 
     response = api_client.get(
-        reverse('api:group_invitations:item', kwargs={'group_invitation_id': 99999}),
+        reverse('api:groups:invitations:item', kwargs={'group_invitation_id': 99999}),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
     response_json = response.json()
@@ -199,7 +199,7 @@ def test_get_group_invitation(api_client, data_fixture):
 
     response = api_client.get(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_3}'
@@ -210,7 +210,7 @@ def test_get_group_invitation(api_client, data_fixture):
 
     response = api_client.get(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_2}'
@@ -221,7 +221,7 @@ def test_get_group_invitation(api_client, data_fixture):
 
     response = api_client.get(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
@@ -253,7 +253,7 @@ def test_update_group_invitation(api_client, data_fixture):
     )
 
     response = api_client.patch(
-        reverse('api:group_invitations:item', kwargs={'group_invitation_id': 99999}),
+        reverse('api:groups:invitations:item', kwargs={'group_invitation_id': 99999}),
         {'permissions': 'MEMBER'},
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
@@ -263,7 +263,7 @@ def test_update_group_invitation(api_client, data_fixture):
 
     response = api_client.patch(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         {'permissions': 'MEMBER'},
@@ -275,7 +275,7 @@ def test_update_group_invitation(api_client, data_fixture):
 
     response = api_client.patch(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         {'permissions': 'MEMBER'},
@@ -287,7 +287,7 @@ def test_update_group_invitation(api_client, data_fixture):
 
     response = api_client.patch(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         {'permissions': 'NOT_EXISTING'},
@@ -301,7 +301,7 @@ def test_update_group_invitation(api_client, data_fixture):
 
     response = api_client.patch(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         {'permissions': 'MEMBER'},
@@ -318,7 +318,7 @@ def test_update_group_invitation(api_client, data_fixture):
 
     response = api_client.patch(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         {
@@ -355,7 +355,7 @@ def test_delete_group_invitation(api_client, data_fixture):
     )
 
     response = api_client.delete(
-        reverse('api:group_invitations:item', kwargs={'group_invitation_id': 99999}),
+        reverse('api:groups:invitations:item', kwargs={'group_invitation_id': 99999}),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
     response_json = response.json()
@@ -364,7 +364,7 @@ def test_delete_group_invitation(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_3}'
@@ -375,7 +375,7 @@ def test_delete_group_invitation(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_2}'
@@ -386,7 +386,7 @@ def test_delete_group_invitation(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            'api:group_invitations:item',
+            'api:groups:invitations:item',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
@@ -409,7 +409,7 @@ def test_accept_group_invitation(api_client, data_fixture):
     )
 
     response = api_client.post(
-        reverse('api:group_invitations:accept', kwargs={'group_invitation_id': 99999}),
+        reverse('api:groups:invitations:accept', kwargs={'group_invitation_id': 99999}),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
     response_json = response.json()
@@ -418,7 +418,7 @@ def test_accept_group_invitation(api_client, data_fixture):
 
     response = api_client.post(
         reverse(
-            'api:group_invitations:accept',
+            'api:groups:invitations:accept',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_2}'
@@ -429,7 +429,7 @@ def test_accept_group_invitation(api_client, data_fixture):
 
     response = api_client.post(
         reverse(
-            'api:group_invitations:accept',
+            'api:groups:invitations:accept',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
@@ -453,7 +453,7 @@ def test_reject_group_invitation(api_client, data_fixture):
     )
 
     response = api_client.post(
-        reverse('api:group_invitations:reject', kwargs={'group_invitation_id': 99999}),
+        reverse('api:groups:invitations:reject', kwargs={'group_invitation_id': 99999}),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
     response_json = response.json()
@@ -462,7 +462,7 @@ def test_reject_group_invitation(api_client, data_fixture):
 
     response = api_client.post(
         reverse(
-            'api:group_invitations:reject',
+            'api:groups:invitations:reject',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_2}'
@@ -473,7 +473,7 @@ def test_reject_group_invitation(api_client, data_fixture):
 
     response = api_client.post(
         reverse(
-            'api:group_invitations:reject',
+            'api:groups:invitations:reject',
             kwargs={'group_invitation_id': invitation.id}
         ),
         HTTP_AUTHORIZATION=f'JWT {token_1}'

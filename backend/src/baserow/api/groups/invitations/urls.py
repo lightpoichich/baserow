@@ -6,7 +6,7 @@ from .views import (
 )
 
 
-app_name = 'baserow.api.group_invitations'
+app_name = 'baserow.api.groups.invitations'
 
 
 urlpatterns = [

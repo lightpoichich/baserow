@@ -9,7 +9,7 @@ from baserow.core.models import (
 )
 from baserow.core.exceptions import (
     UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
-    ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
+    GroupUserDoesNotExist, ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
     BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist
 )
@@ -19,24 +19,21 @@ from baserow.contrib.database.models import Database, Table
 @pytest.mark.django_db
 def test_get_group(data_fixture):
     user_1 = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
+    data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user_1)
 
     handler = CoreHandler()
 
     with pytest.raises(GroupDoesNotExist):
-        handler.get_group(user=user_1, group_id=0)
+        handler.get_group(group_id=0)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_group(user=user_2, group_id=group_1.id)
-
-    group_1_copy = handler.get_group(user=user_1, group_id=group_1.id)
+    group_1_copy = handler.get_group(group_id=group_1.id)
     assert group_1_copy.id == group_1.id
 
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
         handler.get_group(
-            user=user_1, group_id=group_1.id,
+            group_id=group_1.id,
             base_queryset=Group.objects.prefetch_related('UNKNOWN')
         )
 
@@ -44,40 +41,74 @@ def test_get_group(data_fixture):
 @pytest.mark.django_db
 def test_get_group_user(data_fixture):
     user_1 = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
-    group_1 = data_fixture.create_group(user=user_1)
+    data_fixture.create_user()
+    group_1 = data_fixture.create_group()
+    group_user_1 = data_fixture.create_user_group(user=user_1, group=group_1)
 
     handler = CoreHandler()
 
-    with pytest.raises(GroupDoesNotExist):
-        handler.get_group_user(user=user_1, group_id=0)
+    with pytest.raises(GroupUserDoesNotExist):
+        handler.get_group_user(group_user_id=0)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_group_user(user=user_2, group_id=group_1.id)
-
-    group_user = handler.get_group_user(user=user_1, group_id=group_1.id)
-    assert group_user.group_id == group_1.id
-
-    group_user.permissions = 'MEMBER'
-    group_user.save()
-
-    handler.get_group_user(user=user_1, group_id=group_1.id)
-    handler.get_group_user(user=user_1, group_id=group_1.id, permissions='MEMBER')
-    handler.get_group_user(
-        user=user_1,
-        group_id=group_1.id,
-        permissions=['MEMBER', 'ADMIN']
-    )
-
-    with pytest.raises(UserInvalidGroupPermissionsError):
-        handler.get_group_user(user=user_1, group_id=group_1.id, permissions='ADMIN')
+    group_user = handler.get_group_user(group_user_id=group_user_1.id)
+    assert group_user.id == group_user_1.id
+    assert group_user_1.group_id == group_1.id
 
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
         handler.get_group_user(
-            user=user_1, group_id=group_1.id,
+            group_user_id=group_user_1.id,
             base_queryset=GroupUser.objects.prefetch_related('UNKNOWN')
         )
+
+
+@pytest.mark.django_db
+def test_update_group_user(data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group_1 = data_fixture.create_group()
+    data_fixture.create_user_group(user=user_1, group=group_1, permissions='ADMIN')
+    group_user_2 = data_fixture.create_user_group(user=user_2, group=group_1,
+                                                  permissions='MEMBER')
+
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.update_group_user(user=user_3, group_user=group_user_2)
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.update_group_user(user=user_2, group_user=group_user_2)
+
+    tmp = handler.update_group_user(user=user_1, group_user=group_user_2,
+                                    permissions='ADMIN')
+
+    group_user_2.refresh_from_db()
+    assert tmp.id == group_user_2.id
+    assert tmp.permissions == 'ADMIN'
+    assert group_user_2.permissions == 'ADMIN'
+
+
+@pytest.mark.django_db
+def test_delete_group_user(data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group_1 = data_fixture.create_group()
+    data_fixture.create_user_group(user=user_1, group=group_1, permissions='ADMIN')
+    group_user_2 = data_fixture.create_user_group(user=user_2, group=group_1,
+                                                  permissions='MEMBER')
+
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.delete_group_user(user=user_3, group_user=group_user_2)
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.delete_group_user(user=user_2, group_user=group_user_2)
+
+    handler.delete_group_user(user=user_1, group_user=group_user_2)
+    assert GroupUser.objects.all().count() == 1
 
 
 @pytest.mark.django_db

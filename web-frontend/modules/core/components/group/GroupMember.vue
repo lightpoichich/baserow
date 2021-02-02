@@ -7,8 +7,7 @@
     <div class="group-member__initials">{{ name | nameAbbreviation }}</div>
     <div class="group-member__content">
       <div class="group-member__name">
-        {{ name }} -
-        {{ disabled }}
+        {{ name }}
       </div>
       <div class="group-member__description">
         {{ description }}

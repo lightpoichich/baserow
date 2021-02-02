@@ -3,7 +3,8 @@
     <div class="group-member__initials">{{ name | nameAbbreviation }}</div>
     <div class="group-member__content">
       <div class="group-member__name">
-        {{ name }}
+        {{ name }} -
+        {{ disabled }}
       </div>
       <div class="group-member__description">
         {{ description }}
@@ -11,6 +12,7 @@
     </div>
     <div class="group-member__permissions">
       <Dropdown
+        v-if="!disabled"
         :value="permissions"
         :show-search="false"
         @input="$emit('updated', { permissions: $event })"
@@ -29,6 +31,7 @@
     </div>
     <div class="group-member__actions">
       <a
+        v-if="!disabled"
         class="group-member__action"
         :class="{ 'group-member__action--loading': loading }"
         @click="$emit('removed')"
@@ -60,6 +63,11 @@ export default {
       required: true,
     },
     loading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disabled: {
       type: Boolean,
       required: false,
       default: false,

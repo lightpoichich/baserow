@@ -27,6 +27,7 @@
         :description="getUserDescription(user)"
         :permissions="user.permissions"
         :loading="user._.loading"
+        :disabled="user.email === username"
         @updated="updateUser(user, $event)"
         @removed="removeUser(user)"
       ></GroupMember>
@@ -46,6 +47,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 
 import modal from '@baserow/modules/core/mixins/modal'
@@ -75,6 +77,11 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  computed: {
+    ...mapGetters({
+      username: 'auth/getUsername',
+    }),
   },
   data() {
     return {

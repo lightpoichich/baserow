@@ -132,8 +132,8 @@ export const getters = {
   getName(state) {
     return state.user ? state.user.first_name : ''
   },
-  getEmail(state) {
-    return state.user ? state.user.email : ''
+  getUsername(state) {
+    return state.user ? state.user.username : ''
   },
   /**
    * Returns the amount of seconds it will take before the tokes expires.

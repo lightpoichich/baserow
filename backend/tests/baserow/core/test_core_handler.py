@@ -113,11 +113,12 @@ def test_delete_group_user(send_mock, data_fixture):
     with pytest.raises(UserInvalidGroupPermissionsError):
         handler.delete_group_user(user=user_2, group_user=group_user_2)
 
+    group_user_id = group_user_2.id
     handler.delete_group_user(user=user_1, group_user=group_user_2)
     assert GroupUser.objects.all().count() == 1
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]['group_user_id'].id == group_user_2.id
+    assert send_mock.call_args[1]['group_user_id'] == group_user_id
     assert send_mock.call_args[1]['group_user'].group_id == group_user_2.group_id
     assert send_mock.call_args[1]['user'].id == user_1.id
 

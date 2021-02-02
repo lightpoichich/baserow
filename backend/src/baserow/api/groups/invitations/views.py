@@ -13,6 +13,7 @@ from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST, ERROR_HOSTNAME_IS_NOT_ALLOWED
 )
 from baserow.api.schemas import get_error_schema
+from baserow.api.groups.serializers import GroupUserGroupSerializer
 from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_DOES_NOT_EXIST, ERROR_GROUP_INVITATION_EMAIL_MISMATCH
 )
@@ -276,7 +277,7 @@ class AcceptGroupInvitationView(APIView):
             'user matches that of the invitation.'
         ),
         responses={
-            200: GroupInvitationSerializer,
+            200: GroupUserGroupSerializer,
             400: get_error_schema(['ERROR_GROUP_INVITATION_EMAIL_MISMATCH']),
             404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
         },
@@ -298,8 +299,11 @@ class AcceptGroupInvitationView(APIView):
                 f'The group invitation with id {group_invitation_id} does not exist.'
             )
 
-        CoreHandler().accept_group_invitation(request.user, group_invitation)
-        return Response(status=204)
+        group_user = CoreHandler().accept_group_invitation(
+            request.user,
+            group_invitation
+        )
+        return Response(GroupUserGroupSerializer(group_user).data)
 
 
 class RejectGroupInvitationView(APIView):
@@ -322,7 +326,7 @@ class RejectGroupInvitationView(APIView):
             'user matches that of the invitation.'
         ),
         responses={
-            200: GroupInvitationSerializer,
+            204: None,
             400: get_error_schema(['ERROR_GROUP_INVITATION_EMAIL_MISMATCH']),
             404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
         },

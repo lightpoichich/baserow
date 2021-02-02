@@ -37,5 +37,8 @@ export default (client) => {
         new_password: newPassword,
       })
     },
+    dashboard() {
+      return client.get('/user/dashboard/')
+    },
   }
 }

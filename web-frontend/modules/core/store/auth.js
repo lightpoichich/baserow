@@ -132,9 +132,6 @@ export const getters = {
   getName(state) {
     return state.user ? state.user.first_name : ''
   },
-  getNameAbbreviation(state) {
-    return state.user ? state.user.first_name.split('')[0] : ''
-  },
   getEmail(state) {
     return state.user ? state.user.email : ''
   },

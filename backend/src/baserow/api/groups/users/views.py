@@ -128,7 +128,7 @@ class GroupUserView(APIView):
                             'value.'
             )
         ],
-        tags=['Group users'],
+        tags=['Groups'],
         operation_id='delete_group_user',
         description=(
             'Deletes a group user if the authorized user has admin rights to '

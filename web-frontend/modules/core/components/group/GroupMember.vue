@@ -1,0 +1,69 @@
+<template>
+  <div class="group-member">
+    <div class="group-member__initials">{{ name | nameAbbreviation }}</div>
+    <div class="group-member__content">
+      <div class="group-member__name">
+        {{ name }}
+      </div>
+      <div class="group-member__description">
+        {{ description }}
+      </div>
+    </div>
+    <div class="group-member__permissions">
+      <Dropdown
+        :value="permissions"
+        :show-search="false"
+        @input="$emit('updated', { permissions: $event })"
+      >
+        <DropdownItem
+          name="Admin"
+          value="ADMIN"
+          description="Can fully configure and edit groups and applications."
+        ></DropdownItem>
+        <DropdownItem
+          name="Member"
+          value="MEMBER"
+          description="Can fully configure and edit applications."
+        ></DropdownItem>
+      </Dropdown>
+    </div>
+    <div class="group-member__actions">
+      <a
+        class="group-member__action"
+        :class="{ 'group-member__action--loading': loading }"
+        @click="$emit('removed')"
+      >
+        <i class="fa fa-trash"></i>
+      </a>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'GroupMember',
+  props: {
+    id: {
+      type: Number,
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    permissions: {
+      type: String,
+      required: true,
+    },
+    loading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+}
+</script>

@@ -14,7 +14,7 @@ class GroupUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GroupUser
-        fields = ('name', 'email', 'group', 'permissions', 'created_on')
+        fields = ('id', 'name', 'email', 'group', 'permissions', 'created_on')
 
     def get_name(self, object):
         return object.user.first_name
@@ -24,6 +24,11 @@ class GroupUserSerializer(serializers.ModelSerializer):
 
 
 class GroupUserGroupSerializer(serializers.ModelSerializer):
+    """
+    This serializers returns all the field that the GroupSerializer has, but also
+    some user specific values related to the group user relation.
+    """
+
     class Meta:
         model = GroupUser
         fields = ('order', 'permissions')

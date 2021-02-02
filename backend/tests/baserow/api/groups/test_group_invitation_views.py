@@ -434,7 +434,12 @@ def test_accept_group_invitation(api_client, data_fixture):
         ),
         HTTP_AUTHORIZATION=f'JWT {token_1}'
     )
-    assert response.status_code == HTTP_204_NO_CONTENT
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert 'id' in response_json
+    assert response_json['permissions'] == 'ADMIN'
+    assert response_json['name'] == group_1.name
+    assert response_json['order'] == 1
     assert GroupInvitation.objects.all().count() == 0
     assert GroupUser.objects.all().count() == 1
 

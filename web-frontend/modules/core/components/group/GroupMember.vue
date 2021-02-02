@@ -1,5 +1,9 @@
 <template>
-  <div class="group-member">
+  <div
+    ref="member"
+    class="group-member"
+    :class="{ 'group-member--highlight': highlighted }"
+  >
     <div class="group-member__initials">{{ name | nameAbbreviation }}</div>
     <div class="group-member__content">
       <div class="group-member__name">
@@ -71,6 +75,20 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+  },
+  data() {
+    return {
+      highlighted: false,
+    }
+  },
+  methods: {
+    highlight() {
+      this.$refs.member.scrollIntoView({ behavior: 'smooth' })
+      this.highlighted = true
+      setTimeout(() => {
+        this.highlighted = false
+      }, 2000)
     },
   },
 }

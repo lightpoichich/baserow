@@ -32,6 +32,7 @@
         @removed="removeUser(user)"
       ></GroupMember>
       <GroupMember
+        :ref="'invitation-' + invitation.id"
         v-for="invitation in invitations"
         :id="invitation.id"
         :key="'invitation-' + invitation.id"
@@ -146,6 +147,10 @@ export default {
         } else {
           this.invitations.push(invitation)
         }
+
+        this.$nextTick(() => {
+          this.highlightInvitation(invitation)
+        })
       } catch (error) {
         this.handleError(error, 'group', {
           ERROR_GROUP_USER_ALREADY_EXISTS: new ResponseErrorMessage(
@@ -157,6 +162,15 @@ export default {
       }
 
       this.inviteLoading = false
+    },
+    highlightInvitation(invitation) {
+      const name = 'invitation-' + invitation.id
+
+      if (!Object.prototype.hasOwnProperty.call(this.$refs, name)) {
+        return
+      }
+
+      this.$refs[name][0].highlight()
     },
     getUserDescription(user) {
       return `${user.email} - joined ${moment(user.created_on).fromNow()}`

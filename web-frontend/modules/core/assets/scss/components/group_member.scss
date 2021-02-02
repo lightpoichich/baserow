@@ -1,7 +1,25 @@
 .group-member {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   margin: 12px 0;
+
+  &::before {
+    content: '';
+    z-index: -1;
+    background-color: $color-success-100;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 1s linear;
+
+    @include absolute(-6px);
+  }
+
+  &.group-member--highlight::before {
+    opacity: 1;
+    transition: none;
+  }
 }
 
 .group-member__initials {

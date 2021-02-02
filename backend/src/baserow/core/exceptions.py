@@ -32,6 +32,13 @@ class GroupUserDoesNotExist(Exception):
     """Raised when trying to get a group user that does not exist."""
 
 
+class GroupUserAlreadyExists(Exception):
+    """
+    Raised when trying to create a group user that already exists. This could also be
+    raised when an invitation is created for a user that is already part of the group.
+    """
+
+
 class ApplicationDoesNotExist(Exception):
     """Raised when trying to get an application that does not exist."""
 

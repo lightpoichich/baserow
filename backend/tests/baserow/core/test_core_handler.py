@@ -11,7 +11,7 @@ from baserow.core.exceptions import (
     UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
     GroupUserDoesNotExist, ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
     BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
-    GroupInvitationDoesNotExist
+    GroupInvitationDoesNotExist, GroupUserAlreadyExists
 )
 from baserow.contrib.database.models import Database, Table
 
@@ -338,6 +338,16 @@ def test_create_group_invitation(mock_send_email, data_fixture):
             user=user_3,
             group=group,
             email='test@test.nl',
+            permissions='ADMIN',
+            message='Test',
+            base_url='http://localhost:3000/invite'
+        )
+
+    with pytest.raises(GroupUserAlreadyExists):
+        handler.create_group_invitation(
+            user=user,
+            group=group,
+            email=user_3.email,
             permissions='ADMIN',
             message='Test',
             base_url='http://localhost:3000/invite'

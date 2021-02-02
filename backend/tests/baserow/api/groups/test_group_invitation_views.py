@@ -106,6 +106,21 @@ def test_create_group_invitation(api_client, data_fixture):
     response = api_client.post(
         reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
         {
+            'email': user_3.email,
+            'permissions': 'ADMIN',
+            'message': 'Test',
+            'base_url': 'http://localhost:3000/invite'
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token_1}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_GROUP_USER_ALREADY_EXISTS'
+
+    response = api_client.post(
+        reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
+        {
             'email': 'test@test.nl',
             'permissions': 'ADMIN',
             'message': 'Test',

@@ -14,6 +14,7 @@ from baserow.api.errors import (
 )
 from baserow.api.schemas import get_error_schema
 from baserow.api.groups.serializers import GroupUserGroupSerializer
+from baserow.api.groups.users.errors import ERROR_GROUP_USER_ALREADY_EXISTS
 from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_DOES_NOT_EXIST, ERROR_GROUP_INVITATION_EMAIL_MISMATCH
 )
@@ -22,7 +23,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
     UserNotInGroupError, UserInvalidGroupPermissionsError, GroupDoesNotExist,
     GroupInvitationDoesNotExist, BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch
+    GroupInvitationEmailMismatch, GroupUserAlreadyExists
 )
 
 from .serializers import (
@@ -108,6 +109,7 @@ class GroupInvitationsView(APIView):
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR,
+        GroupUserAlreadyExists: ERROR_GROUP_USER_ALREADY_EXISTS,
         BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED
     })
     def post(self, request, data, group_id):

@@ -1,6 +1,7 @@
 <template>
   <Modal @show="initialize">
     <h2 class="box__title">{{ group.name }} members</h2>
+    <Error :error="error"></Error>
     <GroupInviteForm ref="inviteForm" @submitted="inviteSubmitted">
       <div class="col col-12 align-right">
         <button
@@ -12,10 +13,12 @@
         </button>
       </div>
     </GroupInviteForm>
-    <div class="separator"></div>
     <div v-if="loading" class="loading"></div>
     <div v-else-if="!loading">
-      <Error :error="error"></Error>
+      <div
+        v-if="users.length > 0 || invitations.length > 0"
+        class="separator"
+      ></div>
       <GroupMember
         v-for="user in users"
         :id="user.id"
@@ -48,6 +51,7 @@ import moment from 'moment'
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import GroupService from '@baserow/modules/core/services/group'
 import GroupInviteForm from '@baserow/modules/core/components/group/GroupInviteForm'
 import GroupMember from '@baserow/modules/core/components/group/GroupMember'
@@ -102,7 +106,7 @@ export default {
         this.users = users.data.map(populateUser)
         this.invitations = invitations.data.map(populateInvitation)
       } catch (error) {
-        this.handleError(error, 'token')
+        this.handleError(error, 'group')
       }
 
       this.loading = false
@@ -136,7 +140,13 @@ export default {
           this.invitations.push(invitation)
         }
       } catch (error) {
-        notifyIf(error, 'group')
+        this.handleError(error, 'group', {
+          ERROR_GROUP_USER_ALREADY_EXISTS: new ResponseErrorMessage(
+            'User is already in group.',
+            'It is not possible to send an invitation when the user is ' +
+              'already a member of the group.'
+          ),
+        })
       }
 
       this.inviteLoading = false

@@ -12,7 +12,7 @@ from .models import (
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
     UserNotInGroupError, GroupInvitationEmailMismatch, GroupInvitationDoesNotExist,
-    GroupUserDoesNotExist
+    GroupUserDoesNotExist, GroupUserAlreadyExists
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -324,9 +324,15 @@ class CoreHandler:
         if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
             raise ValueError('Incorrect permissions provided.')
 
+        email = normalize_email_address(email)
+
+        if GroupUser.objects.filter(group=group, user__email=email).exists():
+            raise GroupUserAlreadyExists(f'The user {email} is already part of the '
+                                         f'group.')
+
         invitation, created = GroupInvitation.objects.update_or_create(
             group=group,
-            email=normalize_email_address(email),
+            email=email,
             defaults={
                 'message': message,
                 'permissions': permissions,

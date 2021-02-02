@@ -18,7 +18,7 @@ from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
 from .signals import (
     application_created, application_updated, application_deleted, group_created,
-    group_updated, group_deleted
+    group_updated, group_deleted, group_user_updated, group_user_deleted
 )
 from .emails import GroupInvitationEmail
 
@@ -194,6 +194,8 @@ class CoreHandler:
         group_user = set_allowed_attrs(kwargs, ['permissions'], group_user)
         group_user.save()
 
+        group_user_updated.send(self, group_user=group_user, user=user)
+
         return group_user
 
     def delete_group_user(self, user, group_user):
@@ -210,7 +212,11 @@ class CoreHandler:
             raise ValueError('The group user is not an instance of GroupUser.')
 
         group_user.group.has_user(user, 'ADMIN', raise_error=True)
+        group_user_id = group_user.id
         group_user.delete()
+
+        group_user_deleted.send(self, group_user_id=group_user_id,
+                                group_user=group_user, user=user)
 
     def get_group_invitation_signer(self):
         """

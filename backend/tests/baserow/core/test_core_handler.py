@@ -63,7 +63,8 @@ def test_get_group_user(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_group_user(data_fixture):
+@patch('baserow.core.signals.group_user_updated.send')
+def test_update_group_user(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
@@ -83,6 +84,10 @@ def test_update_group_user(data_fixture):
     tmp = handler.update_group_user(user=user_1, group_user=group_user_2,
                                     permissions='ADMIN')
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['group_user'].id == group_user_2.id
+    assert send_mock.call_args[1]['user'].id == user_1.id
+
     group_user_2.refresh_from_db()
     assert tmp.id == group_user_2.id
     assert tmp.permissions == 'ADMIN'
@@ -90,7 +95,8 @@ def test_update_group_user(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_group_user(data_fixture):
+@patch('baserow.core.signals.group_user_deleted.send')
+def test_delete_group_user(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
@@ -109,6 +115,11 @@ def test_delete_group_user(data_fixture):
 
     handler.delete_group_user(user=user_1, group_user=group_user_2)
     assert GroupUser.objects.all().count() == 1
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['group_user_id'].id == group_user_2.id
+    assert send_mock.call_args[1]['group_user'].group_id == group_user_2.group_id
+    assert send_mock.call_args[1]['user'].id == user_1.id
 
 
 @pytest.mark.django_db

@@ -266,6 +266,38 @@ class CoreHandler:
         )
         email.send()
 
+    def get_group_invitation_by_token(self, token, base_queryset=None):
+        """
+        @TODO
+
+        :param token: @TODO
+        :type token: str
+        :param base_queryset: The base queryset from where to select the invitation.
+            This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
+        :raises BadSignature: When the provided token has a bad signature.
+        :raises GroupInvitationDoesNotExist: If the invitation does not exist.
+        :return: The requested field instance related to the provided token.
+        :rtype: GroupInvitation
+        """
+
+        signer = self.get_group_invitation_signer()
+        group_invitation_id = signer.loads(token)
+
+        if not base_queryset:
+            base_queryset = GroupInvitation.objects
+
+        try:
+            group_invitation = base_queryset.select_related(
+                'group', 'invited_by'
+            ).get(id=group_invitation_id)
+        except GroupInvitation.DoesNotExist:
+            raise GroupInvitationDoesNotExist(
+                f'The group invitation with id {group_invitation_id} does not exist.'
+            )
+
+        return group_invitation
+
     def get_group_invitation(self, user, group_invitation_id, base_queryset=None):
         """
         Selects a group invitation with a given id from the database.

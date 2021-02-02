@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch
 
+from itsdangerous.exc import BadSignature
+
 from django.db import connection
 
 from baserow.core.handler import CoreHandler
@@ -238,6 +240,42 @@ def test_order_groups(data_fixture):
     ug_3.refresh_from_db()
 
     assert [1, 2, 3] == [ug_2.order, ug_1.order, ug_3.order]
+
+
+@pytest.mark.django_db
+def test_get_group_invitation_by_token(data_fixture):
+    user = data_fixture.create_user()
+    group_user = data_fixture.create_user_group(user=user)
+    invitation = data_fixture.create_group_invitation(
+        group=group_user.group,
+        email=user.email
+    )
+
+    handler = CoreHandler()
+    signer = handler.get_group_invitation_signer()
+
+    with pytest.raises(BadSignature):
+        handler.get_group_invitation_by_token(token='INVALID')
+
+    with pytest.raises(GroupInvitationDoesNotExist):
+        handler.get_group_invitation_by_token(token=signer.dumps(999999))
+
+    invitation2 = handler.get_group_invitation_by_token(
+        token=signer.dumps(invitation.id)
+    )
+
+    assert invitation.id == invitation2.id
+    assert invitation.invited_by_id == invitation2.invited_by_id
+    assert invitation.group_id == invitation2.group_id
+    assert invitation.email == invitation2.email
+    assert invitation.permissions == invitation2.permissions
+    assert isinstance(invitation2, GroupInvitation)
+
+    with pytest.raises(AttributeError):
+        handler.get_group_invitation_by_token(
+            token=signer.dumps(invitation.id),
+            base_queryset=GroupInvitation.objects.prefetch_related('UNKNOWN')
+        )
 
 
 @pytest.mark.django_db

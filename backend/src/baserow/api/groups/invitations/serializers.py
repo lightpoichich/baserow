@@ -41,10 +41,12 @@ class UserGroupInvitationSerializer(serializers.ModelSerializer):
 
     invited_by = serializers.SerializerMethodField()
     group = serializers.SerializerMethodField()
+    email_exists = serializers.SerializerMethodField()
 
     class Meta:
         model = GroupInvitation
-        fields = ('id', 'invited_by', 'group', 'message', 'created_on')
+        fields = ('id', 'invited_by', 'group', 'email', 'message', 'created_on',
+                  'email_exists')
         extra_kwargs = {
             'id': {'read_only': True},
             'message': {'read_only': True},
@@ -58,3 +60,7 @@ class UserGroupInvitationSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_group(self, object):
         return object.group.name
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_email_exists(self, object):
+        return object.email_exists if hasattr(object, 'email_exists') else None

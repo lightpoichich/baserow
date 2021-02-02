@@ -19,8 +19,14 @@ from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
     BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE, ERROR_HOSTNAME_IS_NOT_ALLOWED
 )
+from baserow.api.groups.invitations.errors import (
+    ERROR_GROUP_INVITATION_DOES_NOT_EXIST, ERROR_GROUP_INVITATION_EMAIL_MISMATCH
+)
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import BaseURLHostnameNotAllowed
+from baserow.core.exceptions import (
+    BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
+    GroupInvitationDoesNotExist
+)
 from baserow.core.models import GroupInvitation
 from baserow.core.user.handler import UserHandler
 from baserow.core.user.exceptions import (
@@ -128,22 +134,30 @@ class UserView(APIView):
         responses={
             200: create_user_response_schema,
             400: get_error_schema([
-                'ERROR_ALREADY_EXISTS',
+                'ERROR_ALREADY_EXISTS', 'ERROR_GROUP_INVITATION_DOES_NOT_EXIST'
                 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
         },
         auth=[None]
     )
     @transaction.atomic
     @map_exceptions({
-        UserAlreadyExist: ERROR_ALREADY_EXISTS
+        UserAlreadyExist: ERROR_ALREADY_EXISTS,
+        BadSignature: BAD_TOKEN_SIGNATURE,
+        GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
+        GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH
     })
     @validate_body(RegisterSerializer)
     def post(self, request, data):
         """Registers a new user."""
 
-        user = UserHandler().create_user(name=data['name'], email=data['email'],
-                                         password=data['password'])
+        user = UserHandler().create_user(
+            name=data['name'],
+            email=data['email'],
+            password=data['password'],
+            group_invitation_token=data.get('group_invitation_token')
+        )
 
         response = {'user': UserSerializer(user).data}
 

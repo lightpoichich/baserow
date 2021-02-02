@@ -7,6 +7,7 @@ from rest_framework.status import (
 
 from django.shortcuts import reverse
 
+from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser, GroupInvitation
 
 
@@ -501,3 +502,61 @@ def test_reject_group_invitation(api_client, data_fixture):
     assert response.status_code == HTTP_204_NO_CONTENT
     assert GroupInvitation.objects.all().count() == 0
     assert GroupUser.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_get_group_invitation_by_token(api_client, data_fixture):
+    data_fixture.create_user(email='test1@test.nl')
+    invitation = data_fixture.create_group_invitation(
+        email='test0@test.nl',
+        permissions='ADMIN',
+        message='TEst'
+    )
+    invitation_2 = data_fixture.create_group_invitation(
+        email='test1@test.nl',
+        permissions='ADMIN',
+    )
+
+    handler = CoreHandler()
+    signer = handler.get_group_invitation_signer()
+
+    response = api_client.get(
+        reverse('api:groups:invitations:token', kwargs={'token': 'INVALID'}),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'BAD_TOKEN_SIGNATURE'
+
+    response = api_client.get(
+        reverse('api:groups:invitations:token', kwargs={'token': signer.dumps(99999)}),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json['error'] == 'ERROR_GROUP_INVITATION_DOES_NOT_EXIST'
+
+    response = api_client.get(
+        reverse(
+            'api:groups:invitations:token',
+            kwargs={'token': signer.dumps(invitation.id)}
+        ),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['id'] == invitation.id
+    assert response_json['invited_by'] == invitation.invited_by.first_name
+    assert response_json['group'] == invitation.group.name
+    assert response_json['email'] == invitation.email
+    assert response_json['message'] == invitation.message
+    assert response_json['email_exists'] is False
+    assert 'created_on' in response_json
+
+    response = api_client.get(
+        reverse(
+            'api:groups:invitations:token',
+            kwargs={'token': signer.dumps(invitation_2.id)}
+        ),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['id'] == invitation_2.id
+    assert response_json['email_exists'] is True

@@ -66,7 +66,7 @@ class Plugin(APIUrlsInstanceMixin, Instance):
 
         return []
 
-    def user_created(self, user, group):
+    def user_created(self, user, group, group_invitation):
         """
         A hook that is called after a new user has been created. This is the place to
         create some data the user can start with. A group has already been created
@@ -74,6 +74,8 @@ class Plugin(APIUrlsInstanceMixin, Instance):
 
         :param user: The newly created user.
         :param group: The newly created group for the user.
+        :param group_invitation: Is provided if the user created an account in
+            combination with a group invitation.
         """
 
 

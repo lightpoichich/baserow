@@ -82,13 +82,24 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
 
 
 class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    order = models.PositiveIntegerField()
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        help_text='The user that has access to the group.'
+    )
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        help_text='The group that the user has access to.'
+    )
+    order = models.PositiveIntegerField(
+        help_text='Unique order that the group has for the user.'
+    )
     permissions = models.CharField(
         default=GROUP_USER_PERMISSION_MEMBER,
         max_length=32,
-        choices=GROUP_USER_PERMISSION_CHOICES
+        choices=GROUP_USER_PERMISSION_CHOICES,
+        help_text='The permissions that the user has within the group.'
     )
 
     class Meta:
@@ -102,15 +113,34 @@ class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
 
 
 class GroupInvitation(CreatedAndUpdatedOnMixin, models.Model):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    invited_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    email = models.EmailField(db_index=True)
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        help_text='The group that the user will get access to once the invitation is '
+                  'accepted.'
+    )
+    invited_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        help_text='The user that created the invitation.'
+    )
+    email = models.EmailField(
+        db_index=True,
+        help_text='The email address of the user that the invitation is meant for. '
+                  'Only a user with that email address can accept it.'
+    )
     permissions = models.CharField(
         default=GROUP_USER_PERMISSION_MEMBER,
         max_length=32,
-        choices=GROUP_USER_PERMISSION_CHOICES
+        choices=GROUP_USER_PERMISSION_CHOICES,
+        help_text='The permissions that the user is going to get within the group '
+                  'after accepting the invitation.'
     )
-    message = models.TextField(blank=True)
+    message = models.TextField(
+        blank=True,
+        help_text='An optional message that the creator can provide. This will be '
+                  'visible to the receiver of the invitation.'
+    )
 
     class Meta:
         ordering = ('id',)

@@ -1,8 +1,12 @@
 from django.db import transaction
+from django.db.models import Exists, OuterRef
+from django.contrib.auth import get_user_model
+
+from itsdangerous.exc import BadSignature
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -10,7 +14,8 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import (
     ERROR_USER_NOT_IN_GROUP, ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR,
-    ERROR_GROUP_DOES_NOT_EXIST, ERROR_HOSTNAME_IS_NOT_ALLOWED
+    ERROR_GROUP_DOES_NOT_EXIST, ERROR_HOSTNAME_IS_NOT_ALLOWED,
+    BAD_TOKEN_SIGNATURE
 )
 from baserow.api.schemas import get_error_schema
 from baserow.api.groups.serializers import GroupUserGroupSerializer
@@ -28,8 +33,11 @@ from baserow.core.exceptions import (
 
 from .serializers import (
     GroupInvitationSerializer, CreateGroupInvitationSerializer,
-    UpdateGroupInvitationSerializer
+    UpdateGroupInvitationSerializer, UserGroupInvitationSerializer
 )
+
+
+User = get_user_model()
 
 
 class GroupInvitationsView(APIView):
@@ -352,3 +360,48 @@ class RejectGroupInvitationView(APIView):
 
         CoreHandler().reject_group_invitation(request.user, group_invitation)
         return Response(status=204)
+
+
+class GroupInvitationByTokenView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='token',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                description='Returns the group invitation related to the provided '
+                            'token.'
+            )
+        ],
+        tags=['Group invitations'],
+        operation_id='get_group_invitation_by_token',
+        description=(
+            'Responds with the serialized group invitation if an invitation with the '
+            'provided token is found.'
+        ),
+        responses={
+            200: UserGroupInvitationSerializer,
+            400: get_error_schema(['BAD_TOKEN_SIGNATURE']),
+            404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
+        },
+    )
+    @map_exceptions({
+        BadSignature: BAD_TOKEN_SIGNATURE,
+        GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
+    })
+    def get(self, request, token):
+        """
+        Responds with the serialized group invitation if an invitation with the
+        provided token is found.
+        """
+
+        exists_queryset = User.objects.filter(username=OuterRef('email'))
+        group_invitation = CoreHandler().get_group_invitation_by_token(
+            token,
+            base_queryset=GroupInvitation.objects.annotate(
+                email_exists=Exists(exists_queryset)
+            )
+        )
+        return Response(UserGroupInvitationSerializer(group_invitation).data)

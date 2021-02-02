@@ -28,6 +28,9 @@ export default (client) => {
     fetchAllInvitations(groupId) {
       return client.get(`/groups/invitations/group/${groupId}/`)
     },
+    fetchInvitationByToken(token) {
+      return client.get(`/groups/invitations/token/${token}/`)
+    },
     updateInvitation(invitationId, values) {
       return client.patch(`/groups/invitations/${invitationId}/`, values)
     },

@@ -33,6 +33,11 @@ class RegisterSerializer(serializers.Serializer):
         help_text='Indicates whether an authentication token should be generated and '
                   'be included in the response.'
     )
+    group_invitation_token = serializers.CharField(
+        required=False,
+        help_text='If provided and valid, the user accept the group invitation and '
+                  'will have access to the group after signing up.'
+    )
 
 
 class SendResetPasswordEmailBodyValidationSerializer(serializers.Serializer):

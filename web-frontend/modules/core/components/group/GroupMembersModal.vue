@@ -129,7 +129,7 @@ export default {
       try {
         // The public accept url is the page where the user can publicly navigate too,
         // to accept the group invitation.
-        const acceptUrl = `${this.$env.PUBLIC_WEB_FRONTEND_URL}/@TODO`
+        const acceptUrl = `${this.$env.PUBLIC_WEB_FRONTEND_URL}/group-invitation`
         const { data } = await GroupService(this.$client).sendInvitation(
           this.group.id,
           acceptUrl,

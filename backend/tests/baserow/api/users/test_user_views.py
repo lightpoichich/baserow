@@ -6,7 +6,10 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
 
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Group, GroupUser
 from baserow.core.user.handler import UserHandler
+from baserow.contrib.database.models import Database, Table
 
 
 User = get_user_model()
@@ -19,19 +22,21 @@ def test_create_user(client):
         'email': 'test@test.nl',
         'password': 'test12'
     }, format='json')
-
+    response_json = response.json()
     assert response.status_code == HTTP_200_OK
     user = User.objects.get(email='test@test.nl')
     assert user.first_name == 'Test1'
     assert user.email == 'test@test.nl'
     assert user.password != ''
+    assert 'password' not in response_json['user']
+    assert response_json['user']['username'] == 'test@test.nl'
+    assert response_json['user']['first_name'] == 'Test1'
 
     response_failed = client.post(reverse('api:user:index'), {
         'name': 'Test1',
         'email': 'test@test.nl',
         'password': 'test12'
     }, format='json')
-
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
 
@@ -40,14 +45,12 @@ def test_create_user(client):
         'email': ' teSt@teST.nl ',
         'password': 'test12'
     }, format='json')
-
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
 
     response_failed_2 = client.post(reverse('api:user:index'), {
         'email': 'test'
     }, format='json')
-
     assert response_failed_2.status_code == 400
 
     long_password = 'x' * 256
@@ -70,6 +73,55 @@ def test_create_user(client):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail']['password'][0]['code'] == 'max_length'
+
+
+@pytest.mark.django_db
+def test_create_user_with_invitation(data_fixture, client):
+    core_handler = CoreHandler()
+    invitation = data_fixture.create_group_invitation(email='test0@test.nl')
+    signer = core_handler.get_group_invitation_signer()
+
+    response_failed = client.post(reverse('api:user:index'), {
+        'name': 'Test1',
+        'email': 'test@test.nl',
+        'password': 'test12',
+        'group_invitation_token': 'INVALID'
+    }, format='json')
+    assert response_failed.status_code == 400
+    assert response_failed.json()['error'] == 'BAD_TOKEN_SIGNATURE'
+
+    response_failed = client.post(reverse('api:user:index'), {
+        'name': 'Test1',
+        'email': 'test@test.nl',
+        'password': 'test12',
+        'group_invitation_token': signer.dumps(99999)
+    }, format='json')
+    assert response_failed.status_code == 404
+    assert response_failed.json()['error'] == 'ERROR_GROUP_INVITATION_DOES_NOT_EXIST'
+
+    response_failed = client.post(reverse('api:user:index'), {
+        'name': 'Test1',
+        'email': 'test@test.nl',
+        'password': 'test12',
+        'group_invitation_token': signer.dumps(invitation.id)
+    }, format='json')
+    assert response_failed.status_code == 400
+    assert response_failed.json()['error'] == 'ERROR_GROUP_INVITATION_EMAIL_MISMATCH'
+    assert User.objects.all().count() == 1
+
+    response_failed = client.post(reverse('api:user:index'), {
+        'name': 'Test1',
+        'email': 'test0@test.nl',
+        'password': 'test12',
+        'group_invitation_token': signer.dumps(invitation.id)
+    }, format='json')
+    assert response_failed.status_code == 200
+    assert User.objects.all().count() == 2
+    assert Group.objects.all().count() == 1
+    assert Group.objects.all().first().id == invitation.group_id
+    assert GroupUser.objects.all().count() == 2
+    assert Database.objects.all().count() == 0
+    assert Table.objects.all().count() == 0
 
 
 @pytest.mark.django_db
@@ -287,6 +339,7 @@ def test_dashboard(data_fixture, client):
     response_json = response.json()
     assert len(response_json['group_invitations']) == 1
     assert response_json['group_invitations'][0]['id'] == invitation_1.id
+    assert response_json['group_invitations'][0]['email'] == invitation_1.email
     assert response_json['group_invitations'][0]['invited_by'] == (
            invitation_1.invited_by.first_name
     )

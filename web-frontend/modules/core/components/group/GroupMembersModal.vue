@@ -32,9 +32,9 @@
         @removed="removeUser(user)"
       ></GroupMember>
       <GroupMember
-        :ref="'invitation-' + invitation.id"
         v-for="invitation in invitations"
         :id="invitation.id"
+        :ref="'invitation-' + invitation.id"
         :key="'invitation-' + invitation.id"
         :name="invitation.email"
         :description="getInvitationDescription(invitation)"

@@ -82,7 +82,14 @@ class GroupInvitationEmail(BaseEmailMessage):
         self.invitation = invitation
         super().__init__(*args, **kwargs)
 
+    def get_subject(self):
+        return f'{self.invitation.invited_by.first_name} invited you to ' \
+               f'{self.invitation.group.name} - Baserow'
+
     def get_context(self):
         context = super().get_context()
-        context.update(user=self.invitation, public_accept_url=self.public_accept_url)
+        context.update(
+            invitation=self.invitation,
+            public_accept_url=self.public_accept_url
+        )
         return context

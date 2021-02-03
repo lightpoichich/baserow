@@ -18,7 +18,7 @@ class GroupInvitationSerializer(serializers.ModelSerializer):
 class CreateGroupInvitationSerializer(serializers.ModelSerializer):
     base_url = serializers.URLField(
         help_text='The base URL where the user can publicly accept his invitation.'
-                  'The reset token is going to be appended to the base_url (base_url '
+                  'The accept token is going to be appended to the base_url (base_url '
                   '\'/token\').'
     )
 

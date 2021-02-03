@@ -40,8 +40,8 @@ class GroupUsersView(APIView):
         operation_id='list_group_users',
         description=(
             'Lists all the users that are in a group if the authorized user has admin '
-            'permissions to the related group. To add a user to a group a group '
-            'an invitation must be send first.'
+            'permissions to the related group. To add a user to a group an invitation '
+            'must be send first.'
         ),
         responses={
             200: GroupUserSerializer(many=True),

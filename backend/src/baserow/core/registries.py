@@ -73,9 +73,12 @@ class Plugin(APIUrlsInstanceMixin, Instance):
         for the user to that one is passed as a parameter.
 
         :param user: The newly created user.
+        :type user: User
         :param group: The newly created group for the user.
-        :param group_invitation: Is provided if the user created an account in
-            combination with a group invitation.
+        :type group: Group
+        :param group_invitation: Is provided if the user has signed up using a valid
+            group invitation token.
+        :type group_invitation: GroupInvitation
         """
 
 

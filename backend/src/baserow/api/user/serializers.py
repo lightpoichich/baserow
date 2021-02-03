@@ -35,7 +35,7 @@ class RegisterSerializer(serializers.Serializer):
     )
     group_invitation_token = serializers.CharField(
         required=False,
-        help_text='If provided and valid, the user accept the group invitation and '
+        help_text='If provided and valid, the user accepts the group invitation and '
                   'will have access to the group after signing up.'
     )
 

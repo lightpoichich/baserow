@@ -95,7 +95,8 @@ class GroupView(APIView):
         responses={
             200: GroupSerializer,
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
             ]),
             404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST'])
         }
@@ -141,7 +142,8 @@ class GroupView(APIView):
         responses={
             200: group_user_schema,
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
             ]),
             404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST'])
         }

@@ -65,8 +65,8 @@ class UserHandler:
         :type email: str
         :param password: The password of the user.
         :type password: str
-        :param group_invitation_token: If provided and valid, a default group will
-            be created and the invitation will be accepted.
+        :param group_invitation_token: If provided and valid, the invitation will be
+            accepted and and initial group will not be created.
         :type group_invitation_token: str
         :raises: UserAlreadyExist: When a user with the provided username (email)
             already exists.

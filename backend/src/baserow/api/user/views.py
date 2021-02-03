@@ -135,7 +135,7 @@ class UserView(APIView):
             200: create_user_response_schema,
             400: get_error_schema([
                 'ERROR_ALREADY_EXISTS', 'ERROR_GROUP_INVITATION_DOES_NOT_EXIST'
-                'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_REQUEST_BODY_VALIDATION', 'BAD_TOKEN_SIGNATURE'
             ]),
             404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
         },

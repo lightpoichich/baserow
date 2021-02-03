@@ -64,7 +64,7 @@ export default {
     },
     /**
      * Accepts the invitation to join the group and populates the stores with the new
-     * groups.
+     * group and applications.
      */
     async accept(invitation) {
       this.acceptLoading = true

@@ -1,7 +1,7 @@
 import GroupService from '@baserow/modules/core/services/group'
 
 /**
- * Mixin that fetches a group invitation based on the `groupInvitationToken` get
+ * Mixin that fetches a group invitation based on the `groupInvitationToken` query
  * parameter. If the token is not found, null will be added as invitation data value.
  */
 export default {

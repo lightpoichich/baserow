@@ -17,8 +17,8 @@ __all__ = ['UserFile']
 User = get_user_model()
 
 
-# The difference between an admin and member right now is that an admin rights to
-# manage the members of a group.
+# The difference between an admin and member right now is that an admin has
+# permissions to update, delete and manage the members of a group.
 GROUP_USER_PERMISSION_ADMIN = 'ADMIN'
 GROUP_USER_PERMISSION_MEMBER = 'MEMBER'
 GROUP_USER_PERMISSION_CHOICES = (
@@ -49,8 +49,9 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         :param raise_error: If True an error will be raised when the user does not
             belong to the group or doesn't have the right permissions.
         :type raise_error: bool
-        :raises UserNotInGroupError:
-        :raises UserInvalidGroupPermissionsError:
+        :raises UserNotInGroupError: If the user does not belong to the group.
+        :raises UserInvalidGroupPermissionsError: If the user does belong to the group,
+            but doesn't have the right permissions.
         :return: Indicates if the user belongs to the group.
         :rtype: bool
         """
@@ -138,7 +139,7 @@ class GroupInvitation(CreatedAndUpdatedOnMixin, models.Model):
     )
     message = models.TextField(
         blank=True,
-        help_text='An optional message that the creator can provide. This will be '
+        help_text='An optional message that the invitor can provide. This will be '
                   'visible to the receiver of the invitation.'
     )
 

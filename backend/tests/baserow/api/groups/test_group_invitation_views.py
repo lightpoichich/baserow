@@ -48,7 +48,7 @@ def test_list_group_invitations(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
-    assert response.json()['detail'] == 'You need [\'ADMIN\'] permissions'
+    assert response.json()['detail'] == 'You need [\'ADMIN\'] permissions.'
 
     response = api_client.get(
         reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),

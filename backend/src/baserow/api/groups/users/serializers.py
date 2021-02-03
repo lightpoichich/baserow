@@ -25,7 +25,7 @@ class GroupUserSerializer(serializers.ModelSerializer):
 
 class GroupUserGroupSerializer(serializers.ModelSerializer):
     """
-    This serializers returns all the field that the GroupSerializer has, but also
+    This serializers returns all the fields that the GroupSerializer has, but also
     some user specific values related to the group user relation.
     """
 

@@ -58,7 +58,7 @@ class GroupInvitationsView(APIView):
         description=(
             'Lists all the group invitations of the group related to the provided '
             '`group_id` parameter if the authorized user has admin rights to that '
-            'group'
+            'group.'
         ),
         responses={
             200: GroupInvitationSerializer(many=True),
@@ -96,9 +96,9 @@ class GroupInvitationsView(APIView):
         tags=['Group invitations'],
         operation_id='create_group_invitation',
         description=(
-            'Creates a new group invitations for an email address if the user has '
-            'authorized admin rights to the related group. An email containing a sign '
-            'up link will send to the user.'
+            'Creates a new group invitations for an email address if the authorized '
+            'user has admin rights to the related group. An email containing a sign '
+            'up link will be send to the user.'
         ),
         request=CreateGroupInvitationSerializer,
         responses={
@@ -210,7 +210,7 @@ class GroupInvitationView(APIView):
         UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
     })
     def patch(self, request, data, group_invitation_id):
-        """Updates the group_invitation if the user belongs to the group."""
+        """Updates the group invitation if the user belongs to the group."""
 
         group_invitation = CoreHandler().get_group_invitation(
             request.user,

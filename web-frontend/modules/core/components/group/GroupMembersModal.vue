@@ -139,8 +139,8 @@ export default {
 
         const invitation = populateInvitation(data)
 
-        // If could be that the an invitation for the email address already exists, in
-        // case we want to update the invitation instead of adding it to the list.
+        // It could be that the an invitation for the email address already exists, in
+        // that case we want to update the invitation instead of adding it to the list.
         const index = this.invitations.findIndex((i) => i.id === data.id)
         if (index !== -1) {
           this.invitations[index] = invitation
@@ -154,7 +154,7 @@ export default {
       } catch (error) {
         this.handleError(error, 'group', {
           ERROR_GROUP_USER_ALREADY_EXISTS: new ResponseErrorMessage(
-            'User is already in group.',
+            'User is already in the group.',
             'It is not possible to send an invitation when the user is ' +
               'already a member of the group.'
           ),

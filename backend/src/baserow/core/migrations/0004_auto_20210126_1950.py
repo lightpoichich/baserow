@@ -96,7 +96,7 @@ class Migration(migrations.Migration):
                 )),
                 ('message', models.TextField(
                     blank=True,
-                    help_text='An optional message that the creator can provide. This '
+                    help_text='An optional message that the invitor can provide. This '
                               'will be visible to the receiver of the invitation.'
                 )),
                 ('group', models.ForeignKey(

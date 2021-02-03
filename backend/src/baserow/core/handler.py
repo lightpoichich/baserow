@@ -149,7 +149,7 @@ class CoreHandler:
 
     def get_group_user(self, group_user_id, base_queryset=None):
         """
-        Selects a group user object for the given user and group_id from the database.
+        Fetches a group user object related to the provided id from the database.
 
         :param group_user_id: The identifier of the group user that must be returned.
         :type group_user_id: int
@@ -157,9 +157,6 @@ class CoreHandler:
             object. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
         :raises GroupDoesNotExist: When the group with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the group.
-        :raises UserInvalidGroupPermissionsError: When the user does not have the
-            right permissions in the group.
         :return: The requested group user instance of the provided group_id.
         :rtype: GroupUser
         """
@@ -268,16 +265,20 @@ class CoreHandler:
 
     def get_group_invitation_by_token(self, token, base_queryset=None):
         """
-        @TODO
+        Returns the group invitation instance if a valid signed token of the id is
+        provided. It can be signed using the signer returned by the
+        `get_group_invitation_signer` method.
 
-        :param token: @TODO
+        :param token: The signed invitation id of related to the group invitation
+            that must be fetched. Must be signed using the signer returned by the
+            `get_group_invitation_signer`.
         :type token: str
         :param base_queryset: The base queryset from where to select the invitation.
             This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
         :raises BadSignature: When the provided token has a bad signature.
         :raises GroupInvitationDoesNotExist: If the invitation does not exist.
-        :return: The requested field instance related to the provided token.
+        :return: The requested group invitation instance related to the provided token.
         :rtype: GroupInvitation
         """
 
@@ -337,11 +338,12 @@ class CoreHandler:
 
         :param user: The user on whose behalf the invitation is created.
         :type user: User
-        :param group: To group to which the email address is invites to.
+        :param group: The group for which the user is invited.
         :type group: Group
         :param email: The email address of the person that is invited to the group.
+            Can be an existing or not existing user.
         :type email: str
-        :param permissions: The group permissions the user will get once he has
+        :param permissions: The group permissions that the user will get once he has
             accepted the invitation.
         :type permissions: str
         :param message: A custom message that will be included in the invitation email.
@@ -384,15 +386,15 @@ class CoreHandler:
 
     def update_group_invitation(self, user, invitation, permissions):
         """
-        Updates the permissions of an existing invitation of the user has ADMIN
+        Updates the permissions of an existing invitation if the user has ADMIN
         permissions to the related group.
 
-        :param user: The user on whose behalf the application is requested.
+        :param user: The user on whose behalf the invitation is updated.
         :type user: User
         :param invitation: The invitation that must be updated.
         :type invitation: GroupInvitation
         :param permissions: The new permissions of the invitation that the user must
-            get after accepting.
+            has after accepting.
         :type permissions: str
         :raises ValueError: If the provided permissions is not allowed.
         :raises UserInvalidGroupPermissionsError: If the user does not belong to the
@@ -416,7 +418,7 @@ class CoreHandler:
         Deletes an existing group invitation if the user has ADMIN permissions to the
         related group.
 
-        :param user: The user on whose behalf the application is requested.
+        :param user: The user on whose behalf the invitation is deleted.
         :type user: User
         :param invitation: The invitation that must be deleted.
         :type invitation: GroupInvitation

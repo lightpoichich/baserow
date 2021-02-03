@@ -10,7 +10,7 @@ class UserNotInGroupError(Exception):
 
 
 class UserInvalidGroupPermissionsError(Exception):
-    """Raised when a user doesn't have the right permissions for the related group."""
+    """Raised when a user doesn't have the right permissions to the related group."""
 
     def __init__(self, user, group, permissions, *args, **kwargs):
         self.user = user

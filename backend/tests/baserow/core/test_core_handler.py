@@ -344,7 +344,8 @@ def test_send_group_invitation_email(data_fixture, mailoutbox):
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
 
-    assert email.subject == 'Group invitation'
+    assert email.subject == f'{group_invitation.invited_by.first_name} invited you ' \
+                            f'to {group_invitation.group.name} - Baserow'
     assert email.from_email == 'no-reply@localhost'
     assert group_invitation.email in email.to
 

@@ -65,9 +65,7 @@
       <div class="actions">
         <ul class="action__links">
           <li>
-            <nuxt-link :to="{ name: 'signup' }">
-              Sign up
-            </nuxt-link>
+            <nuxt-link :to="{ name: 'signup' }"> Sign up </nuxt-link>
           </li>
           <li>
             <nuxt-link :to="{ name: 'forgot-password' }">
@@ -95,8 +93,8 @@ import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationTo
 import GroupService from '@baserow/modules/core/services/group'
 
 export default {
-  layout: 'login',
   mixins: [error, groupInvitationToken],
+  layout: 'login',
   data() {
     return {
       loading: false,
@@ -104,6 +102,17 @@ export default {
         email: '',
         password: '',
       },
+    }
+  },
+  head() {
+    return {
+      title: 'Login',
+      link: [
+        {
+          rel: 'canonical',
+          href: this.$env.PUBLIC_WEB_FRONTEND_URL + this.$route.path,
+        },
+      ],
     }
   },
   beforeMount() {
@@ -167,17 +176,6 @@ export default {
         }
       }
     },
-  },
-  head() {
-    return {
-      title: 'Login',
-      link: [
-        {
-          rel: 'canonical',
-          href: this.$env.PUBLIC_WEB_FRONTEND_URL + this.$route.path,
-        },
-      ],
-    }
   },
   validations: {
     credentials: {

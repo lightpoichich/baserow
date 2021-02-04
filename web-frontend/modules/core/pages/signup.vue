@@ -134,8 +134,8 @@ import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationTo
 import error from '@baserow/modules/core/mixins/error'
 
 export default {
-  layout: 'login',
   mixins: [error, groupInvitationToken],
+  layout: 'login',
   data() {
     return {
       loading: false,
@@ -145,6 +145,11 @@ export default {
         password: '',
         passwordConfirm: '',
       },
+    }
+  },
+  head() {
+    return {
+      title: 'Create new account',
     }
   },
   beforeMount() {
@@ -192,11 +197,6 @@ export default {
         })
       }
     },
-  },
-  head() {
-    return {
-      title: 'Create new account',
-    }
   },
   validations: {
     account: {

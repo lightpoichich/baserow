@@ -70,15 +70,8 @@ import GroupInvitation from '@baserow/modules/core/components/group/GroupInvitat
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
-  layout: 'app',
   components: { CreateGroupModal, DashboardGroup, GroupInvitation },
-  computed: {
-    ...mapState({
-      user: (state) => state.auth.user,
-      groups: (state) => state.group.items,
-      applications: (state) => state.application.items,
-    }),
-  },
+  layout: 'app',
   /**
    * Fetches the data that must be shown on the dashboard, this could for example be
    * pending group invitations.
@@ -91,6 +84,18 @@ export default {
       return error({ statusCode: 400, message: 'Error loading dashboard.' })
     }
   },
+  head() {
+    return {
+      title: 'Dashboard',
+    }
+  },
+  computed: {
+    ...mapState({
+      user: (state) => state.auth.user,
+      groups: (state) => state.group.items,
+      applications: (state) => state.application.items,
+    }),
+  },
   methods: {
     /**
      * When a group invation has been rejected or accepted, it can be removed from the
@@ -102,11 +107,6 @@ export default {
       )
       this.groupInvitations.splice(index, 1)
     },
-  },
-  head() {
-    return {
-      title: 'Dashboard',
-    }
   },
 }
 </script>

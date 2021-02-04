@@ -1,6 +1,6 @@
 <template>
   <Modal :sidebar="true">
-    <template v-slot:sidebar>
+    <template #sidebar>
       <div class="modal-sidebar__head">
         <div class="modal-sidebar__head-icon">
           {{ name | nameAbbreviation }}
@@ -23,7 +23,7 @@
         </li>
       </ul>
     </template>
-    <template v-slot:content>
+    <template #content>
       <component :is="settingPageComponent"></component>
     </template>
   </Modal>

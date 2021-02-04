@@ -79,11 +79,6 @@ export default {
       required: true,
     },
   },
-  computed: {
-    ...mapGetters({
-      username: 'auth/getUsername',
-    }),
-  },
   data() {
     return {
       users: [],
@@ -91,6 +86,11 @@ export default {
       loading: false,
       inviteLoading: false,
     }
+  },
+  computed: {
+    ...mapGetters({
+      username: 'auth/getUsername',
+    }),
   },
   methods: {
     /**

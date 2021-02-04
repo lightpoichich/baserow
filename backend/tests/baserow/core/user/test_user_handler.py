@@ -146,7 +146,7 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
 
-    assert email.subject == 'Reset password'
+    assert email.subject == 'Reset password - Baserow'
     assert email.from_email == 'no-reply@localhost'
     assert 'test@localhost' in email.to
 

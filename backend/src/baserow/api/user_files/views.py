@@ -33,7 +33,7 @@ class UploadFileView(APIView):
             'Uploads a file to Baserow by uploading the file contents directly. A '
             '`file` multipart is expected containing the file contents.'
         ),
-        request=build_object_type(),
+        request=None,
         responses={
             200: UserFileSerializer,
             400: get_error_schema(['ERROR_INVALID_FILE', 'ERROR_FILE_SIZE_TOO_LARGE'])

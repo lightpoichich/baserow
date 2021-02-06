@@ -3,7 +3,6 @@ from django.db import transaction
 from rest_framework.parsers import MultiPartParser
 
 from drf_spectacular.utils import extend_schema
-from drf_spectacular.plumbing import build_object_type
 
 from rest_framework.views import APIView
 from rest_framework.response import Response

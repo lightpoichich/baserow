@@ -8,6 +8,7 @@
 * Fixed the "Ignored attempt to cancel a touchmove" error.
 * Refactored the has_user everywhere such that the raise_error argument is used when
   possible.
+* Added a Cloudron app.
 
 ## Released (2021-02-04)
 

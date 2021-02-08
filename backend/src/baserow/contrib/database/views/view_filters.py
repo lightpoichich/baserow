@@ -1,3 +1,4 @@
+from datetime import datetime
 from math import floor, ceil
 from pytz import timezone
 from decimal import Decimal
@@ -199,6 +200,46 @@ class DateEqualViewFilterType(ViewFilterType):
             })
         else:
             return Q(**{field_name: datetime})
+
+
+class DateEqualsTodayViewFilterType(ViewFilterType):
+    """
+    The today filter checks if the field value matches with today's date.
+    """
+
+    type = 'date_equals_today'
+    compatible_field_types = [DateFieldType.type]
+    query_for = ['year', 'month', 'day']
+
+    def get_filter(self, field_name, _, model_field):
+        utc = timezone('UTC')
+        now = datetime.now(utc)
+        query_dict = dict()
+        if 'year' in self.query_for:
+            query_dict[f'{field_name}__year'] = now.year
+        if 'month' in self.query_for:
+            query_dict[f'{field_name}__month'] = now.month
+        if 'day' in self.query_for:
+            query_dict[f'{field_name}__day'] = now.day
+        return Q(**query_dict)
+
+
+class DateEqualsCurrentMonthViewFilterType(DateEqualsTodayViewFilterType):
+    """
+    The current month filter works as a subset of today filter and checks if the
+    field value falls into current month.
+    """
+    type = 'date_equals_month'
+    query_for = ['year', 'month']
+
+
+class DateEqualsCurrentYearViewFilterType(DateEqualsTodayViewFilterType):
+    """
+    The current month filter works as a subset of today filter and checks if the
+    field value falls into current year.
+    """
+    type = 'date_equals_year'
+    query_for = ['year']
 
 
 class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType):

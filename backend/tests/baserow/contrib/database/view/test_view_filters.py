@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from datetime import date
 from pytz import timezone
@@ -982,6 +984,71 @@ def test_date_equal_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
+
+@pytest.mark.django_db
+def test_date_day_month_year_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(**{
+        f'field_{date_field.id}': date(2021, 2, 1),
+    })
+    row_2 = model.objects.create(**{
+        f'field_{date_field.id}': date(2021, 1, 1),
+    })
+    row_3 = model.objects.create(**{
+        f'field_{date_field.id}': date(2021, 1, 2),
+    })
+    row_4 = model.objects.create(**{
+        f'field_{date_field.id}': None,
+    })
+    row_5 = model.objects.create(**{
+        f'field_{date_field.id}': date(2010, 1, 1),
+    })
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=date_field,
+        type='date_equals_today',
+        value=''
+    )
+
+    with patch('baserow.contrib.database.views.view_filters.datetime') as mock_datetime:
+        mock_datetime.now.return_value = datetime(2021, 1, 1, 1, 1, 1, 0)
+        ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_2.id in ids
+
+    filter.type='date_equals_month'
+    filter.save()
+
+    with patch('baserow.contrib.database.views.view_filters.datetime') as mock_datetime:
+        mock_datetime.now.return_value = datetime(2021, 1, 1, 1, 1, 1, 0)
+        ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+        assert len(ids) == 2
+        assert row.id not in ids
+        assert row_2.id in ids
+        assert row_3.id in ids
+
+
+    filter.type='date_equals_year'
+    filter.save()
+
+    with patch('baserow.contrib.database.views.view_filters.datetime') as mock_datetime:
+        mock_datetime.now.return_value = datetime(2021, 1, 1, 1, 1, 1, 0)
+        ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+        assert len(ids) == 3
+        assert row.id in ids
+        assert row_2.id in ids
+        assert row_3.id in ids
+        assert row_4.id not in ids
+        assert row_5.id not in ids
 
 
 @pytest.mark.django_db

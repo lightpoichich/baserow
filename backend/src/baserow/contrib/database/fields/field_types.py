@@ -864,3 +864,24 @@ class SingleSelectFieldType(FieldType):
             for index, option in enumerate(options)
         ])
         return order
+
+    def random_value(self, instance, fake, cache):
+        """
+        Selects a random choice out of the possible options
+        """
+
+        # at first verify that the instance passed
+        # is actually of SingleSelectType
+        if not isinstance(instance, SingleSelectField):
+            # here we could also raise an error
+            return None
+
+        select_options = instance.select_options.all()
+
+        # if the select_options are empty return None
+        if not select_options:
+            return None
+
+        random_choice = randint(0, len(select_options) - 1)
+
+        return select_options[random_choice]

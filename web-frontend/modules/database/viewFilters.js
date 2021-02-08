@@ -5,6 +5,7 @@ import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/vi
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import { trueString } from '@baserow/modules/database/utils/constants'
+import moment from 'moment'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -251,6 +252,60 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
     rowValue = rowValue.slice(0, 10)
 
     return filterValue === '' || rowValue !== filterValue
+  }
+}
+
+export class DateEqualsTodayViewFilterType extends ViewFilterType {
+  // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
+  sliceLength = 10
+
+  static getType() {
+    return 'date_equals_today'
+  }
+
+  getName() {
+    return 'is today'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    rowValue = rowValue.toString().toLowerCase().trim()
+    rowValue = rowValue.slice(0, this.sliceLength)
+    const format = 'YYYY-MM-DD'.slice(0, this.sliceLength)
+    const today = moment.utc().format(format)
+
+    return rowValue === today
+  }
+}
+
+export class DateEqualsCurrentMonthViewFilterType extends DateEqualsTodayViewFilterType {
+  sliceLength = 7
+
+  static getType() {
+    return 'date_equals_month'
+  }
+
+  getName() {
+    return 'in this month'
+  }
+}
+
+export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilterType {
+  sliceLength = 4
+
+  static getType() {
+    return 'date_equals_year'
+  }
+
+  getName() {
+    return 'in this year'
   }
 }
 

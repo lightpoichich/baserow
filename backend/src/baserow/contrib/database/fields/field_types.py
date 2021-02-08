@@ -871,7 +871,7 @@ class SingleSelectFieldType(FieldType):
         """
 
         # at first verify that the instance passed
-        # is actually of SingleSelectType
+        # is actually of SingleSelectField
         if not isinstance(instance, SingleSelectField):
             # here we could also raise an error
             return None

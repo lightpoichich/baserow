@@ -1,7 +1,9 @@
 # Cloudron
 
-Baserow is compatible with Cloudron. You can easily install it by following be command
-line steps described below.
+Cloudron is a complete solution for running apps on your server and keeping them
+up-to-date and secure. If you don't have Cloudron installed on a server you can follow
+the [installation instructions here ](https://docs.cloudron.io/installation/). Once
+you have Cloudron running you can follow the steps below to install the Baserow app.
 
 > Basic experience with the Cloudron CLI is required.
 
@@ -33,8 +35,7 @@ $ git clone https://gitlab.com/bramw/baserow.git
 $ cd baserow/deploy/cloudron
 ```
 
-After that you can go install the Baserow Cloudron app by executing the following
-commands.
+After that you can install the Baserow Cloudron app by executing the following commands.
 
 ```
 $ cloudron install -l baserow.{YOUR_DOMAIN} --image registry.gitlab.com/bramw/baserow/cloudron:0.8.0
@@ -51,10 +52,10 @@ from there.
 
 ## Updating
 
-When a new version becomes available you can easily update to that version. First you
-need to figure out what your app id is. You can do so by executing the `cloudron list`
-command. After that you can execute the following command to update to the latest
-version.
+When a new Baserow version becomes available you can easily update to that version.
+First you need to figure out what your app id is. You can do so by executing the
+`cloudron list` command. After that you can execute the following command to update to
+the latest version.
 
 ```
 cloudron update --app {YOUR_APP_ID} --image registry.gitlab.com/bramw/baserow/cloudron:0.8.0

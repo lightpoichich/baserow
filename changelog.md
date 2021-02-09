@@ -12,6 +12,12 @@
 * Added Baserow Cloudron app.
 * Fixed bug where a single select field without options could not be converted to a
   another field.
+* Fixed bug where the Editable component was not working if a prent a user-select:
+  none; property.
+* Fail hard when the web-frontend can't reach the backend because of a network error.
+* Use UTC time in the date picker.
+* Refactored handler get_* methods so that they never check for permissions.
+* Made it possible to configure SMTP settings via environment variables.
 
 ## Released (2021-02-04)
 

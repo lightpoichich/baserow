@@ -54,19 +54,19 @@
       </Context>
       <div class="sidebar__nav">
         <ul class="tree">
-          <nuxt-link
-            v-slot="{ navigate, isActive }"
-            :to="{ name: 'dashboard' }"
+          <li
+            class="tree__item"
+            :class="{
+              active: $route.matched.some(({ name }) => name === 'dashboard'),
+            }"
           >
-            <li class="tree__item" :class="{ active: isActive }">
-              <div class="tree__action sidebar__action">
-                <a class="tree__link" @click="navigate">
-                  <i class="tree__icon fas fa-tachometer-alt"></i>
-                  <span class="sidebar__item-name">Dashboard</span>
-                </a>
-              </div>
-            </li>
-          </nuxt-link>
+            <div class="tree__action sidebar__action">
+              <nuxt-link :to="{ name: 'dashboard' }" class="tree__link">
+                <i class="tree__icon fas fa-tachometer-alt"></i>
+                <span class="sidebar__item-name">Dashboard</span>
+              </nuxt-link>
+            </div>
+          </li>
           <template v-if="hasSelectedGroup && !isCollapsed">
             <li class="tree__item margin-top-2">
               <div class="tree__action">

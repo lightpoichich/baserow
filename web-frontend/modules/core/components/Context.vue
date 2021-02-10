@@ -33,11 +33,15 @@ export default {
      * @param vertical    Bottom positions the context under the target.
      *                    Top positions the context above the target.
      *                    Over-bottom positions the context over and under the target.
-     *                    Over-top positions the context over and above the target
-     * @param horizontal  Left aligns the context with the left side of the target.
-     *                    Right aligns the context with the right side of the target.
-     * @param verticalOffset The distance between the target element and the
-     *                    context.
+     *                    Over-top positions the context over and above the target.
+     * @param horizontal  `left` aligns the context with the left side of the target.
+     *                    `right` aligns the context with the right side of the target.
+     * @param verticalOffset
+     *                    The offset indicates how many pixels the context is moved
+     *                    top from the original calculated position.
+     * @param horizontalOffset
+     *                    The offset indicates how many pixels the context is moved
+     *                    left from the original calculated position.
      * @param value       True if context must be shown, false if not and undefine
      *                    will invert the current state.
      */

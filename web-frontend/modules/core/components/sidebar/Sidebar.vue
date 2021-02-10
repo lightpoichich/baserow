@@ -125,6 +125,9 @@
             ></CreateApplicationContext>
           </template>
           <template v-else-if="!hasSelectedGroup && !isCollapsed">
+            <li v-if="groups.length === 0" class="tree_item margin-top-2">
+              <p>You don’t have any groups.</p>
+            </li>
             <li
               v-for="(group, index) in groups"
               :key="group.id"

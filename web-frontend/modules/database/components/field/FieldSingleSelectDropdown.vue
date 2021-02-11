@@ -6,7 +6,7 @@
   >
     <a
       v-if="showInput"
-      class="field-single-select__dropdown dropdown__selected"
+      class="field-single-select__dropdown-selected dropdown__selected"
       @click="show()"
     >
       <div

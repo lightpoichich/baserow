@@ -126,7 +126,7 @@
 
 <script>
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
-import { mappingToLines } from '@baserow/modules/core/utils/object'
+import { mappingToStringifiedJSONLines } from '@baserow/modules/core/utils/object'
 
 export default {
   name: 'APIDocsExample',
@@ -210,7 +210,7 @@ export default {
 
       return {
         example,
-        lines: mappingToLines(this.mapping, this.request, index),
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
       }
     },
     getHTTPRequestExample() {
@@ -233,7 +233,7 @@ export default {
 
       return {
         example,
-        lines: mappingToLines(this.mapping, this.request, index),
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
       }
     },
     getJavaScriptExample() {
@@ -265,7 +265,7 @@ export default {
       example += '\n})'
       return {
         example,
-        lines: mappingToLines(this.mapping, this.request, index),
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
       }
     },
     getPythonExample() {
@@ -293,13 +293,13 @@ export default {
       example += '\n)'
       return {
         example,
-        lines: mappingToLines(this.mapping, this.request, index),
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
       }
     },
     getFormattedResponse() {
       return {
         example: this.format(this.response),
-        lines: mappingToLines(this.mapping, this.response),
+        lines: mappingToStringifiedJSONLines(this.mapping, this.response),
       }
     },
     copyToClipboard(value) {

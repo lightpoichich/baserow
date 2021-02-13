@@ -16,7 +16,7 @@ export function clone(o) {
  * if a value (recursive) object key matches a key of the mapping.
  *
  * Example:
- * mappingToLines(
+ * mappingToStringifiedJSONLines(
  *  { key_2: 'Value' },
  *  {
  *    key_1: 'A random value',
@@ -26,7 +26,7 @@ export function clone(o) {
  *   3: 'Value'
  * }
  */
-export function mappingToLines(
+export function mappingToStringifiedJSONLines(
   mapping,
   value,
   index = 1,
@@ -36,7 +36,7 @@ export function mappingToLines(
   if (Array.isArray(value)) {
     index += 1
     value.forEach((v, i) => {
-      index = mappingToLines(mapping, v, index, lines, false)
+      index = mappingToStringifiedJSONLines(mapping, v, index, lines, false)
     })
     index += 1
     return first ? lines : index
@@ -46,7 +46,13 @@ export function mappingToLines(
       if (Object.prototype.hasOwnProperty.call(mapping, k)) {
         lines[index] = mapping[k]
       }
-      index = mappingToLines(mapping, value[k], index, lines, false)
+      index = mappingToStringifiedJSONLines(
+        mapping,
+        value[k],
+        index,
+        lines,
+        false
+      )
     })
     index += 1
     return first ? lines : index

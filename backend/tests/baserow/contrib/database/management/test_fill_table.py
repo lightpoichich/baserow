@@ -11,6 +11,7 @@ def test_fill_table_no_table():
     'raises' a system exit when the command gets called
     with a table that does not exist
     """
+
     output = StringIO()
     table_id_that_does_not_exist = 5
 
@@ -26,11 +27,11 @@ def test_fill_table_no_table():
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("test_limit", [10, 500, 1000, 5000])
+@pytest.mark.parametrize("test_limit", [5, 10])
 def test_fill_table_empty_table(data_fixture, test_limit):
     """
-    Verify that the fill_table command correctly
-    populates a given empty table with different 'limit' rows
+    Verify that the fill_table command correctly populates a given empty table with
+    different 'limit' rows
     """
 
     # create a new empty table with a text field
@@ -47,11 +48,11 @@ def test_fill_table_empty_table(data_fixture, test_limit):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("test_limit", [10, 500, 1000, 5000])
+@pytest.mark.parametrize("test_limit", [5, 10])
 def test_fill_table_no_empty_table(data_fixture, test_limit):
     """
-    Verify that the fill_table command correctly
-    appends to a table with data already in it with different 'limit' rows
+    Verify that the fill_table command correctly appends to a table with data already
+    in it with different 'limit' rows
     """
 
     # create a new empty table with a field
@@ -69,7 +70,7 @@ def test_fill_table_no_empty_table(data_fixture, test_limit):
     row_length_before_random_insert = len(results)
     first_row_value_before = getattr(results[0], f"field_{text_field.id}")
 
-    # execture the fill_table command
+    # execute the fill_table command
     call_command('fill_table', table.id, test_limit)
 
     results = model.objects.all()
@@ -77,5 +78,4 @@ def test_fill_table_no_empty_table(data_fixture, test_limit):
 
     # make sure the first row is still the same
     assert first_row_value_before == first_row_value_after
-
     assert len(results) == test_limit + row_length_before_random_insert

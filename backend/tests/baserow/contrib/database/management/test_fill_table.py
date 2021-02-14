@@ -7,9 +7,8 @@ from django.core.management import call_command
 @pytest.mark.django_db
 def test_fill_table_no_table():
     """
-    Check whether calling the fille_table command correctly
-    'raises' a system exit when the command gets called
-    with a table that does not exist
+    Check whether calling the fille_table command correctly 'raises' a system exit
+    when the command gets called with a table that does not exist
     """
 
     output = StringIO()

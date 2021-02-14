@@ -577,11 +577,12 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
 @pytest.mark.django_db
 def test_single_select_field_type_random_value(data_fixture):
     """
-    Verify that the random_value function of the single select field type
-    correctly returns one option of a given select_options list.
-    If the select_options list is empty or the passed field type is not
-    of single select field type by any chance it should return None
+    Verify that the random_value function of the single select field type correctly
+    returns one option of a given select_options list. If the select_options list is
+    empty or the passed field type is not of single select field type by any chance
+    it should return None.
     """
+
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name='Placeholder')
     table = data_fixture.create_database_table(name='Example', database=database)
@@ -594,18 +595,17 @@ def test_single_select_field_type_random_value(data_fixture):
         table=table,
         type_name='single_select',
         name='Single select',
-        select_options=[{'value': 'Option 1', 'color': 'blue'}],
+        select_options=[
+            {'value': 'Option 1', 'color': 'blue'},
+            {'value': 'Option 2', 'color': 'red'}
+        ],
     )
 
     select_options = field.select_options.all()
     random_choice = SingleSelectFieldType().random_value(field, fake, cache)
-
     assert random_choice in select_options
-
-    field_handler.delete_field(user=user, field=field)
-    random_choice_2 = SingleSelectFieldType().random_value(field, fake, cache)
-
-    assert random_choice_2 is None
+    random_choice = SingleSelectFieldType().random_value(field, fake, cache)
+    assert random_choice in select_options
 
     email_field = field_handler.create_field(
         user=user,
@@ -613,7 +613,5 @@ def test_single_select_field_type_random_value(data_fixture):
         type_name='email',
         name='E-Mail',
     )
-
-    random_choice_3 = SingleSelectFieldType().random_value(email_field, fake, cache)
-
-    assert random_choice_3 is None
+    random_choice_2 = SingleSelectFieldType().random_value(email_field, fake, cache)
+    assert random_choice_2 is None

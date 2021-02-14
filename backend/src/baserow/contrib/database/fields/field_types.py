@@ -867,16 +867,15 @@ class SingleSelectFieldType(FieldType):
 
     def random_value(self, instance, fake, cache):
         """
-        Selects a random choice out of the possible options
+        Selects a random choice out of the possible options.
         """
 
-        # at first verify that the instance passed
-        # is actually of SingleSelectField
-        if not isinstance(instance, SingleSelectField):
-            # here we could also raise an error
-            return None
+        cache_entry_name = f'field_{instance.id}_options'
 
-        select_options = instance.select_options.all()
+        if cache_entry_name not in cache:
+            cache[cache_entry_name] = instance.select_options.all()
+
+        select_options = cache[cache_entry_name]
 
         # if the select_options are empty return None
         if not select_options:

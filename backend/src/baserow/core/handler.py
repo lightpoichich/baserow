@@ -6,13 +6,13 @@ from django.conf import settings
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
-    Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_CHOICES,
-    GROUP_USER_PERMISSION_ADMIN
+    Config, Group, GroupUser, GroupInvitation, Application,
+    GROUP_USER_PERMISSION_CHOICES, GROUP_USER_PERMISSION_ADMIN
 )
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch, GroupInvitationDoesNotExist, GroupUserDoesNotExist,
-    GroupUserAlreadyExists
+    GroupUserAlreadyExists, IsNotAdminError
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -24,6 +24,46 @@ from .emails import GroupInvitationEmail
 
 
 class CoreHandler:
+    def get_config(self):
+        """
+        Returns a config model instance containing all the admin configured settings.
+
+        :return: The config instance.
+        :rtype: Config
+        """
+
+        try:
+            return Config.objects.all()[:1].get()
+        except Config.DoesNotExist:
+            return Config.objects.create()
+
+    def update_config(self, user, config_instance=None, **kwargs):
+        """
+        Updates one or more config values if the user has staff permissions.
+
+        :param user: The user on whose behalf the config is updated.
+        :type user: User
+        :param config_instance: If already fetched, the config instance can be provided
+            to avoid fetching the values for a second time.
+        :type config_instance: Config
+        :param kwargs: An object containing the config values that need to be updated.
+        :type kwargs: dict
+        :return: The update config instance.
+        :rtype: Config
+        """
+
+        if not user.is_staff:
+            raise IsNotAdminError(user)
+
+        if not config_instance:
+            config_instance = self.get_config()
+
+        for name, value in kwargs.items():
+            setattr(config_instance, name, value)
+
+        config_instance.save()
+        return config_instance
+
     def get_group(self, group_id, base_queryset=None):
         """
         Selects a group with a given id from the database.

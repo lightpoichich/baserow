@@ -21,6 +21,7 @@
 * Made it possible to configure SMTP settings via environment variables.
 * Added field name to the public REST API docs.
 * Made the public REST API docs compatible with smaller screens.
+* Made it possible for the admin to disable new signups.
 
 ## Released (2021-02-04)
 

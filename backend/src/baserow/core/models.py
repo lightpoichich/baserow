@@ -33,8 +33,8 @@ def get_default_application_content_type():
 
 class Settings(models.Model):
     """
-    The settings model represents the application wide configuration that only admins
-    can change. This table can only contain a single row.
+    The settings model represents the application wide settings that only admins can
+    change. This table can only contain a single row.
     """
 
     allow_new_signups = models.BooleanField(

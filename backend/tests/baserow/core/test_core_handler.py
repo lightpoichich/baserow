@@ -7,7 +7,8 @@ from django.db import connection
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
-    Settings, Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_ADMIN
+    Settings, Group, GroupUser, GroupInvitation, Application,
+    GROUP_USER_PERMISSION_ADMIN
 )
 from baserow.core.exceptions import (
     UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,

@@ -11,4 +11,6 @@ class InvalidPassword(Exception):
 
 
 class DisabledSignupError(Exception):
-    """Raised when a user account is created when the new signup config is disabled."""
+    """
+    Raised when a user account is created when the new signup setting is disabled.
+    """

@@ -80,7 +80,7 @@ class UserHandler:
         """
 
         if not CoreHandler().get_settings().allow_new_signups:
-            raise DisabledSignupError('Signup is disabled.')
+            raise DisabledSignupError('Sign up is disabled.')
 
         email = normalize_email_address(email)
 

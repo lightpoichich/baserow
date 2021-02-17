@@ -1,6 +1,6 @@
 class IsNotAdminError(Exception):
     """
-    Raised when the user tries to perform an action that is not allowed because  he
+    Raised when the user tries to perform an action that is not allowed because he
     does not have admin permissions.
     """
 

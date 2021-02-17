@@ -39,14 +39,14 @@ class CoreHandler:
 
     def update_settings(self, user, settings_instance=None, **kwargs):
         """
-        Updates one or more config values if the user has staff permissions.
+        Updates one or more setting values if the user has staff permissions.
 
         :param user: The user on whose behalf the config is updated.
         :type user: User
-        :param settings_instance: If already fetched, the config instance can be
+        :param settings_instance: If already fetched, the settings instance can be
             provided to avoid fetching the values for a second time.
         :type settings_instance: Settings
-        :param kwargs: An object containing the setting values that need to be updated.
+        :param kwargs: An dict containing the settings that need to be updated.
         :type kwargs: dict
         :return: The update settings instance.
         :rtype: Settings

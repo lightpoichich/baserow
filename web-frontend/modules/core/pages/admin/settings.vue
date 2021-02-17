@@ -16,7 +16,7 @@
             <SwitchInput
               :value="settings.allow_new_signups"
               :large="true"
-              @input="updateConfig({ allow_new_signups: $event })"
+              @input="updateSettings({ allow_new_signups: $event })"
               >enabled</SwitchInput
             >
           </div>
@@ -40,7 +40,7 @@ export default {
     }),
   },
   methods: {
-    async updateConfig(values) {
+    async updateSettings(values) {
       try {
         await this.$store.dispatch('settings/update', values)
       } catch (error) {

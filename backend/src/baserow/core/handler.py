@@ -41,7 +41,7 @@ class CoreHandler:
         """
         Updates one or more setting values if the user has staff permissions.
 
-        :param user: The user on whose behalf the config is updated.
+        :param user: The user on whose behalf the settings are updated.
         :type user: User
         :param settings_instance: If already fetched, the settings instance can be
             provided to avoid fetching the values for a second time.

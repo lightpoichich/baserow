@@ -1,5 +1,5 @@
 /**
- * This middleware makes sure the config is fetched and available in the store.
+ * This middleware makes sure the settings are fetched and available in the store.
  */
 export default async function ({ store, req }) {
   // If nuxt generate, pass this middleware

@@ -29,8 +29,8 @@ class SettingsView(APIView):
         Responds with all the admin configured settings.
         """
 
-        config = CoreHandler().get_settings()
-        return Response(SettingsSerializer(config).data)
+        settings = CoreHandler().get_settings()
+        return Response(SettingsSerializer(settings).data)
 
 
 class UpdateSettingsView(APIView):
@@ -54,5 +54,5 @@ class UpdateSettingsView(APIView):
         Updates the provided config settings if the user has admin permissions.
         """
 
-        config = CoreHandler().update_settings(request.user, **data)
-        return Response(SettingsSerializer(config).data)
+        settings = CoreHandler().update_settings(request.user, **data)
+        return Response(SettingsSerializer(settings).data)

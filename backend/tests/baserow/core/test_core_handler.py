@@ -20,25 +20,25 @@ from baserow.contrib.database.models import Database, Table
 
 
 @pytest.mark.django_db
-def test_get_config():
-    config = CoreHandler().get_settings()
-    assert isinstance(config, Settings)
-    assert config.allow_new_signups is True
+def test_get_settings():
+    settings = CoreHandler().get_settings()
+    assert isinstance(settings, Settings)
+    assert settings.allow_new_signups is True
 
 
 @pytest.mark.django_db
-def test_update_config(data_fixture):
+def test_update_settings(data_fixture):
     user_1 = data_fixture.create_user(is_staff=True)
     user_2 = data_fixture.create_user()
 
     with pytest.raises(IsNotAdminError):
         CoreHandler().update_settings(user_2, allow_new_signups=False)
 
-    config = CoreHandler().update_settings(user_1, allow_new_signups=False)
-    assert config.allow_new_signups is False
+    settings = CoreHandler().update_settings(user_1, allow_new_signups=False)
+    assert settings.allow_new_signups is False
 
-    config = Settings.objects.all().first()
-    assert config.allow_new_signups is False
+    settings = Settings.objects.all().first()
+    assert settings.allow_new_signups is False
 
 
 @pytest.mark.django_db

@@ -28,8 +28,9 @@ from baserow.contrib.database.api.fields.errors import (
 from .handler import FieldHandler
 from .registries import FieldType, field_type_registry
 from .models import (
-    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
-    NumberField, BooleanField, DateField, LinkRowField, EmailField, FileField,
+    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, DATE_FORMAT, DATE_TIME_FORMAT,
+    TextField, LongTextField, URLField, NumberField, BooleanField, DateField,
+    LinkRowField, EmailField, FileField,
     SingleSelectField, SelectOption
 )
 from .exceptions import (
@@ -287,6 +288,45 @@ class DateFieldType(FieldType):
             return make_aware(fake.date_time())
         else:
             return fake.date_object()
+
+    def get_alter_column_prepare_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type and connection.vendor == 'postgresql':
+            sql_type = 'date'
+            sql_format = DATE_FORMAT[from_field.date_format]['sql']
+
+            if from_field.date_include_time:
+                sql_type = 'timestamp'
+                sql_format += ' ' + DATE_TIME_FORMAT[from_field.date_time_format]['sql']
+
+            return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
+
+        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+
+    def get_alter_column_type_function(self, connection, from_field, to_field):
+        """
+        If the field type has changed into a date field then we want to parse the old
+        text value following the format of the new field and convert it to a date or
+        timestamp.
+        """
+
+        from_field_type = field_type_registry.get_by_model(from_field)
+        if from_field_type.type != self.type and connection.vendor == 'postgresql':
+            sql_function = 'TO_DATE'
+            sql_format = DATE_FORMAT[to_field.date_format]['sql']
+
+            if to_field.date_include_time:
+                sql_function = 'TO_TIMESTAMP'
+                sql_format += ' ' + DATE_TIME_FORMAT[to_field.date_time_format]['sql']
+
+            return f"""{sql_function}(p_in::text, 'FM{sql_format}')"""
+
+        return super().get_alter_column_prepare_value(connection, from_field, to_field)
 
 
 class LinkRowFieldType(FieldType):

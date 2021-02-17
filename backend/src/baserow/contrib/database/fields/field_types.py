@@ -356,7 +356,7 @@ class LinkRowFieldType(FieldType):
     def get_response_serializer_field(self, instance, **kwargs):
         """
         If a model has already been generated it will be added as a property to the
-        instance. If that is case then we can extract the primary field from the
+        instance. If that is the case then we can extract the primary field from the
         model and we can pass the name along to the LinkRowValueSerializer. It will
         be used to include the primary field's value in the response as a string.
         """

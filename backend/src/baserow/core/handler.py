@@ -6,7 +6,7 @@ from django.conf import settings
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
-    Config, Group, GroupUser, GroupInvitation, Application,
+    Settings, Group, GroupUser, GroupInvitation, Application,
     GROUP_USER_PERMISSION_CHOICES, GROUP_USER_PERMISSION_ADMIN
 )
 from .exceptions import (
@@ -24,45 +24,45 @@ from .emails import GroupInvitationEmail
 
 
 class CoreHandler:
-    def get_config(self):
+    def get_settings(self):
         """
-        Returns a config model instance containing all the admin configured settings.
+        Returns a settings model instance containing all the admin configured settings.
 
-        :return: The config instance.
-        :rtype: Config
+        :return: The settings instance.
+        :rtype: Settings
         """
 
         try:
-            return Config.objects.all()[:1].get()
-        except Config.DoesNotExist:
-            return Config.objects.create()
+            return Settings.objects.all()[:1].get()
+        except Settings.DoesNotExist:
+            return Settings.objects.create()
 
-    def update_config(self, user, config_instance=None, **kwargs):
+    def update_settings(self, user, settings_instance=None, **kwargs):
         """
         Updates one or more config values if the user has staff permissions.
 
         :param user: The user on whose behalf the config is updated.
         :type user: User
-        :param config_instance: If already fetched, the config instance can be provided
-            to avoid fetching the values for a second time.
-        :type config_instance: Config
-        :param kwargs: An object containing the config values that need to be updated.
+        :param settings_instance: If already fetched, the config instance can be
+            provided to avoid fetching the values for a second time.
+        :type settings_instance: Settings
+        :param kwargs: An object containing the setting values that need to be updated.
         :type kwargs: dict
-        :return: The update config instance.
-        :rtype: Config
+        :return: The update settings instance.
+        :rtype: Settings
         """
 
         if not user.is_staff:
             raise IsNotAdminError(user)
 
-        if not config_instance:
-            config_instance = self.get_config()
+        if not settings_instance:
+            settings_instance = self.get_settings()
 
         for name, value in kwargs.items():
-            setattr(config_instance, name, value)
+            setattr(settings_instance, name, value)
 
-        config_instance.save()
-        return config_instance
+        settings_instance.save()
+        return settings_instance
 
     def get_group(self, group_id, base_queryset=None):
         """

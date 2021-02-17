@@ -49,7 +49,7 @@ def test_create_user(client, data_fixture):
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
 
-    data_fixture.update_config(allow_new_signups=False)
+    data_fixture.update_settings(allow_new_signups=False)
     response_failed = client.post(reverse('api:user:index'), {
         'name': 'Test1',
         'email': 'test10@test.nl',
@@ -57,7 +57,7 @@ def test_create_user(client, data_fixture):
     }, format='json')
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_DISABLED_SIGNUP'
-    data_fixture.update_config(allow_new_signups=True)
+    data_fixture.update_settings(allow_new_signups=True)
 
     response_failed_2 = client.post(reverse('api:user:index'), {
         'email': 'test'

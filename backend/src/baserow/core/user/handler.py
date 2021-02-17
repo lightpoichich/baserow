@@ -79,7 +79,7 @@ class UserHandler:
         :rtype: User
         """
 
-        if not CoreHandler().get_config().allow_new_signups:
+        if not CoreHandler().get_settings().allow_new_signups:
             raise DisabledSignupError('Signup is disabled.')
 
         email = normalize_email_address(email)

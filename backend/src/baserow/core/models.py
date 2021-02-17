@@ -31,9 +31,9 @@ def get_default_application_content_type():
     return ContentType.objects.get_for_model(Application)
 
 
-class Config(models.Model):
+class Settings(models.Model):
     """
-    The config object represents the application wide configuration that only admins
+    The settings model represents the application wide configuration that only admins
     can change. This table can only contain a single row.
     """
 

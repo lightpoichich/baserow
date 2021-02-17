@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from baserow.core.models import Config
+from baserow.core.models import Settings
 
 
-class ConfigSerializer(serializers.ModelSerializer):
+class SettingsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Config
+        model = Settings
         fields = ('allow_new_signups',)
         extra_kwargs = {
             'allow_new_signups': {'required': False},

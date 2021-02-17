@@ -14,7 +14,7 @@
           </div>
           <div class="admin-settings__control">
             <SwitchInput
-              :value="config.allow_new_signups"
+              :value="settings.allow_new_signups"
               :large="true"
               @input="updateConfig({ allow_new_signups: $event })"
               >enabled</SwitchInput
@@ -36,15 +36,15 @@ export default {
   middleware: 'staff',
   computed: {
     ...mapGetters({
-      config: 'config/get',
+      settings: 'settings/get',
     }),
   },
   methods: {
     async updateConfig(values) {
       try {
-        await this.$store.dispatch('config/update', values)
-      } catch (e) {
-        notifyIf(e, 'config')
+        await this.$store.dispatch('settings/update', values)
+      } catch (error) {
+        notifyIf(error, 'settings')
       }
     },
   },

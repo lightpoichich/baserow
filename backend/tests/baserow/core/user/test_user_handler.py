@@ -53,11 +53,11 @@ def test_create_user(data_fixture):
 
     user_handler = UserHandler()
 
-    data_fixture.update_config(allow_new_signups=False)
+    data_fixture.update_settings(allow_new_signups=False)
     with pytest.raises(DisabledSignupError):
         user_handler.create_user('Test1', 'test@test.nl', 'password')
     assert User.objects.all().count() == 0
-    data_fixture.update_config(allow_new_signups=True)
+    data_fixture.update_settings(allow_new_signups=True)
 
     user = user_handler.create_user('Test1', 'test@test.nl', 'password')
     assert user.pk

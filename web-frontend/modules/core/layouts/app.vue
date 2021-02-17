@@ -23,7 +23,7 @@ export default {
     Notifications,
     Sidebar,
   },
-  middleware: ['config', 'authenticated', 'groupsAndApplications'],
+  middleware: ['settings', 'authenticated', 'groupsAndApplications'],
   computed: {
     ...mapGetters({
       isCollapsed: 'sidebar/isCollapsed',

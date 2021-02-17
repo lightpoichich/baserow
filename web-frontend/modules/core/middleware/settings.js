@@ -5,7 +5,7 @@ export default async function ({ store, req }) {
   // If nuxt generate, pass this middleware
   if (process.server && !req) return
 
-  if (!store.getters['config/isLoaded']) {
-    await store.dispatch('config/load')
+  if (!store.getters['settings/isLoaded']) {
+    await store.dispatch('settings/load')
   }
 }

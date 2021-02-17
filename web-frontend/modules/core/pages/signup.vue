@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="box__title">Sign up</h1>
-    <template v-if="!config.allow_new_signups">
+    <template v-if="!settings.allow_new_signups">
       <div class="alert alert--simple alert--error alert--has-icon">
         <div class="alert__icon">
           <i class="fas fa-exclamation"></i>
@@ -177,7 +177,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      config: 'config/get',
+      settings: 'settings/get',
     }),
   },
   beforeMount() {

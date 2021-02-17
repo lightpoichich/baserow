@@ -1,4 +1,4 @@
-import config from '@baserow/modules/core/middleware/config'
+import settings from '@baserow/modules/core/middleware/settings'
 import authentication from '@baserow/modules/core/middleware/authentication'
 import authenticated from '@baserow/modules/core/middleware/authenticated'
 import staff from '@baserow/modules/core/middleware/staff'
@@ -7,7 +7,7 @@ import groupsAndApplications from '@baserow/modules/core/middleware/groupsAndApp
 /* eslint-disable-next-line */
 import Middleware from './middleware'
 
-Middleware.config = config
+Middleware.settings = settings
 Middleware.authentication = authentication
 Middleware.authenticated = authenticated
 Middleware.staff = staff

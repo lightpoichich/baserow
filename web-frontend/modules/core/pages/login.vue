@@ -64,7 +64,7 @@
       </div>
       <div class="actions">
         <ul class="action__links">
-          <li v-if="config.allow_new_signups">
+          <li v-if="settings.allow_new_signups">
             <nuxt-link :to="{ name: 'signup' }"> Sign up </nuxt-link>
           </li>
           <li>
@@ -119,7 +119,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      config: 'config/get',
+      settings: 'settings/get',
     }),
   },
   beforeMount() {

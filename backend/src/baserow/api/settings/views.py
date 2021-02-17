@@ -9,18 +9,18 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from baserow.api.decorators import validate_body
 from baserow.core.handler import CoreHandler
 
-from .serializers import ConfigSerializer
+from .serializers import SettingsSerializer
 
 
-class ConfigView(APIView):
+class SettingsView(APIView):
     permission_classes = (AllowAny,)
 
     @extend_schema(
-        tags=['Config'],
-        operation_id='get_config',
+        tags=['Settings'],
+        operation_id='get_settings',
         description='Responds with all the admin configured settings.',
         responses={
-            200: ConfigSerializer,
+            200: SettingsSerializer,
         },
         auth=[None],
     )
@@ -29,30 +29,30 @@ class ConfigView(APIView):
         Responds with all the admin configured settings.
         """
 
-        config = CoreHandler().get_config()
-        return Response(ConfigSerializer(config).data)
+        config = CoreHandler().get_settings()
+        return Response(SettingsSerializer(config).data)
 
 
-class ConfigUpdateView(APIView):
+class UpdateSettingsView(APIView):
     permission_classes = (IsAdminUser,)
 
     @extend_schema(
-        tags=['Config'],
-        operation_id='update_config',
+        tags=['Settings'],
+        operation_id='update_settings',
         description=(
             'Updates the admin configured settings if the user has admin permissions.'
         ),
-        request=ConfigSerializer,
+        request=SettingsSerializer,
         responses={
-            200: ConfigSerializer,
+            200: SettingsSerializer,
         },
     )
-    @validate_body(ConfigSerializer)
+    @validate_body(SettingsSerializer)
     @transaction.atomic
     def patch(self, request, data):
         """
         Updates the provided config settings if the user has admin permissions.
         """
 
-        config = CoreHandler().update_config(request.user, **data)
-        return Response(ConfigSerializer(config).data)
+        config = CoreHandler().update_settings(request.user, **data)
+        return Response(SettingsSerializer(config).data)

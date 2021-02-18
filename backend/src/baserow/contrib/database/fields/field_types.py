@@ -95,17 +95,18 @@ class URLFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.url()
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return r"""(
+            return r"""p_in = (
             case
                 when p_in::text ~* '(https?|ftps?)://(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)?'
                 then p_in::text
                 else ''
                 end
-            )"""
+            );"""
 
-        return super().get_alter_column_type_function(connection, from_field, to_field)
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)
 
 
 class NumberFieldType(FieldType):
@@ -170,7 +171,7 @@ class NumberFieldType(FieldType):
                 positive=not instance.number_negative
             )
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
             decimal_places = 0
             if to_field.number_type == NUMBER_TYPE_DECIMAL:
@@ -181,9 +182,10 @@ class NumberFieldType(FieldType):
             if not to_field.number_negative:
                 function = f"greatest({function}, 0)"
 
-            return function
+            return f'p_in = {function};'
 
-        return super().get_alter_column_type_function(connection, from_field, to_field)
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)
 
     def after_update(self, from_field, to_field, from_model, to_model, user, connection,
                      altered_column, before):
@@ -289,7 +291,7 @@ class DateFieldType(FieldType):
         else:
             return fake.date_object()
 
-    def get_alter_column_prepare_value(self, connection, from_field, to_field):
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         """
         If the field type has changed then we want to convert the date or timestamp to
         a human readable text following the old date format.
@@ -306,13 +308,15 @@ class DateFieldType(FieldType):
 
             return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
 
-        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         If the field type has changed into a date field then we want to parse the old
         text value following the format of the new field and convert it to a date or
-        timestamp.
+        timestamp. If that fails we want to fallback on the default ::date or
+        ::timestamp conversion that has already been added.
         """
 
         from_field_type = field_type_registry.get_by_model(from_field)
@@ -324,9 +328,14 @@ class DateFieldType(FieldType):
                 sql_function = 'TO_TIMESTAMP'
                 sql_format += ' ' + DATE_TIME_FORMAT[to_field.date_time_format]['sql']
 
-            return f"""{sql_function}(p_in::text, 'FM{sql_format}')"""
+            return f"""
+                begin
+                    p_in = {sql_function}(p_in::text, 'FM{sql_format}');
+                exception when others then end;
+            """
 
-        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
 
 
 class LinkRowFieldType(FieldType):
@@ -662,17 +671,18 @@ class EmailFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.email()
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return r"""(
+            return r"""p_in = (
             case
                 when p_in::text ~* '[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{2,}'
                 then p_in::text
                 else ''
                 end
-            )"""
+            );"""
 
-        return super().get_alter_column_type_function(connection, from_field, to_field)
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)
 
 
 class FileFieldType(FieldType):
@@ -851,7 +861,7 @@ class SingleSelectFieldType(FieldType):
             )
             to_field_values.pop('select_options')
 
-    def get_alter_column_prepare_value(self, connection, from_field, to_field):
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         """
         If the new field type isn't a single select field we can convert the plain
         text value of the option and maybe that can be used by the new field.
@@ -879,9 +889,10 @@ class SingleSelectFieldType(FieldType):
             """
             return sql, variables
 
-        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         If the old field wasn't a single select field we can try to match the old text
         values to the new options.
@@ -903,15 +914,16 @@ class SingleSelectFieldType(FieldType):
             if len(values_mapping) == 0:
                 return None
 
-            return f"""(
+            return f"""p_in = (
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = lower(p_in)
-            )
+            );
             """, variables
 
-        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
 
     def get_order(self, field, field_name, view_sort):
         """

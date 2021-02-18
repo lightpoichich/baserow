@@ -171,10 +171,21 @@ def test_converting_date_field_value(data_fixture):
         f'field_{date_field_iso.id}': '2021-07-22 12:00 PM',
         f'field_{date_field_eu_12.id}': 'INVALID',
         f'field_{date_field_us_12.id}': '2222-2222-2222',
-        f'field_{date_field_iso_12.id}': '7-7--1',
+        f'field_{date_field_iso_12.id}': 'x-7--1',
         f'field_{date_field_eu_24.id}': '22-7-2021 7:45:12',
         f'field_{date_field_us_24.id}': '7-22-2021 7:45:23',
         f'field_{date_field_iso_24.id}': '2021/7/22 7:45:70'
+    })
+    row_handler.create_row(user=user, table=table, model=model, values={
+        f'field_{date_field_eu.id}': '2018-08-20T13:20:10',
+        f'field_{date_field_us.id}': '2017 Mar 03 05:12:41.211',
+        f'field_{date_field_iso.id}': '19/Apr/2017:06:36:15',
+        f'field_{date_field_eu_12.id}': 'Dec 2, 2017 2:39:58 AM',
+        f'field_{date_field_us_12.id}': 'Jun 09 2018 15:28:14',
+        f'field_{date_field_iso_12.id}': 'Apr 20 00:00:35 2010',
+        f'field_{date_field_eu_24.id}': 'Apr 20 00:00:35 2010',
+        f'field_{date_field_us_24.id}': '2018-02-27 15:35:20.311',
+        f'field_{date_field_iso_24.id}': '10-04-19 12:00:17'
     })
 
     date_field_eu = field_handler.update_field(
@@ -274,6 +285,40 @@ def test_converting_date_field_value(data_fixture):
         datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
     )
 
+    """
+    f'field_{date_field_eu.id}': '2018-08-20T13:20:10',
+    f'field_{date_field_us.id}': '2017 Mar 03 05:12:41.211',
+    f'field_{date_field_iso.id}': '19/Apr/2017:06:36:15',
+    f'field_{date_field_eu_12.id}': 'Dec 2, 2017 2:39:58 AM',
+    f'field_{date_field_us_12.id}': 'Jun 09 2018 15:28:14',
+    f'field_{date_field_iso_12.id}': 'Apr 20 00:00:35 2010',
+    f'field_{date_field_eu_24.id}': 'Apr 20 00:00:35 2010',
+    f'field_{date_field_us_24.id}': '2018-02-27 15:35:20.311',
+    f'field_{date_field_iso_24.id}': '10-04-19 12:00:17'
+    """
+
+    assert getattr(rows[3], f'field_{date_field_eu.id}') == date(2018, 8, 20)
+    assert getattr(rows[3], f'field_{date_field_us.id}') == date(2017, 3, 3)
+    assert getattr(rows[3], f'field_{date_field_iso.id}') == date(2017, 4, 19)
+    assert getattr(rows[3], f'field_{date_field_eu_12.id}') == (
+        datetime(2017, 12, 2, 2, 39, 58, tzinfo=utc)
+    )
+    assert getattr(rows[3], f'field_{date_field_us_12.id}') == (
+        datetime(2018, 6, 9, 15, 28, 14, tzinfo=utc)
+    )
+    assert getattr(rows[3], f'field_{date_field_iso_12.id}') == (
+        datetime(2010, 4, 20, 0, 0, 35, tzinfo=utc)
+    )
+    assert getattr(rows[3], f'field_{date_field_eu_24.id}') == (
+        datetime(2010, 4, 20, 0, 0, 35, tzinfo=utc)
+    )
+    assert getattr(rows[3], f'field_{date_field_us_24.id}') == (
+        datetime(2018, 2, 27, 15, 35, 20, 311000, tzinfo=utc)
+    )
+    assert getattr(rows[3], f'field_{date_field_iso_24.id}') == (
+        datetime(10, 4, 19, 12, 0, tzinfo=utc)
+    )
+
     date_field_eu = field_handler.update_field(
         user=user, field=date_field_eu, new_type_name='text'
     )
@@ -314,3 +359,5 @@ def test_converting_date_field_value(data_fixture):
     assert getattr(rows[0], f'field_{date_field_eu_24.id}') == '22/07/2021 12:45'
     assert getattr(rows[0], f'field_{date_field_us_24.id}') == '07/22/2021 12:45'
     assert getattr(rows[0], f'field_{date_field_iso_24.id}') == '2021-07-22 12:45'
+
+    assert getattr(rows[2], f'field_{date_field_eu_12.id}') is None

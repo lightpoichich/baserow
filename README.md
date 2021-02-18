@@ -56,7 +56,7 @@ https://baserow.io/docs/guides/demo-environment.
 ## Development environment
 server architecture
 
-
+![techtribesjs](https://gitlab.com/bramw/baserow/uploads/a7c8be3ae4ccd5dc2eaf96ae55221197/techtribesjs.png)
 
 If you want to contribute to Baserow you need to setup the development environment. 
 

@@ -1,4 +1,5 @@
 from math import floor, ceil
+from django.db.models.expressions import RawSQL
 from pytz import timezone
 from decimal import Decimal
 
@@ -60,6 +61,59 @@ class EqualViewFilterType(ViewFilterType):
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
     type = 'not_equal'
+
+
+class FilenameContainsViewFilterType(ViewFilterType):
+    """
+    The filename contains filter checks if the filename's visible name contains the
+    provided filter value. It is only compatible with fields.JSONField which contain
+    a list of File JSON Objects.
+    """
+
+    type = 'filename_contains'
+    compatible_field_types = [
+        FileFieldType.type
+    ]
+
+    def get_annotation(self, field_name, value):
+        value = value.strip()
+
+        # If an empty value has been provided we do not want to filter at all.
+        if value == '':
+            return None
+
+        # It is not possible to use Django's ORM to query for if one item in a JSONB
+        # list has has a key which contains a specified value.
+        #
+        # The closest thing the Django ORM provides is:
+        #   queryset.filter(your_json_field__contains=[{"key":"value"}])
+        # However this is an exact match, so in the above example [{"key":"value_etc"}]
+        # would not match the filter.
+        #
+        # Instead we have to resort to RawSQL to use various built in
+        # PostgreSQL JSON Array manipulation functions to be able to 'iterate' over
+        # a JSONB list performing ilike on individual keys in said list.
+        num_files_with_name_like_value = f"""
+        ARRAY_LENGTH (
+            ARRAY (
+                SELECT attached_files ->> 'visible_name'
+                FROM
+                JSON_ARRAY_ELEMENTS("{field_name}"::json) as attached_files
+                WHERE attached_files ->> 'visible_name' ilike %s
+            )
+            , 1)"""
+        query = RawSQL(num_files_with_name_like_value, params=[f"%{value}%"])
+        return {f"{field_name}_num_matching_visible_names": query}
+
+    def get_filter(self, field_name, value, model_field):
+        value = value.strip()
+
+        # If an empty value has been provided we do not want to filter at all.
+        if value == '':
+            return Q()
+
+        # Check if the model_field has a file which matches the provided filter value.
+        return Q(**{f'{field_name}_num_matching_visible_names__gt': 0})
 
 
 class ContainsViewFilterType(ViewFilterType):

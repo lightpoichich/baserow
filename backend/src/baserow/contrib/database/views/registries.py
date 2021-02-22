@@ -129,7 +129,11 @@ class ViewFilterType(Instance):
         if you do not wish any annotation to be applied by your filter.
 
         :param field_name: The name of the field that needs to be filtered.
+        :type field_name: str
         :param value: The value that the field must be compared to.
+        :type value: str
+        :return: The dict object that will be unpacked into an annotate call or None if
+            no annotation needs to be done.
         :rtype: None or dict
         """
 

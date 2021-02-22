@@ -158,9 +158,24 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue) {
-    rowValue = rowValue.visible_name.toString().toLowerCase().trim()
     filterValue = filterValue.toString().toLowerCase().trim()
-    return filterValue === '' || rowValue.includes(filterValue)
+
+    if (filterValue === '') {
+      return true
+    }
+
+    for (let i = 0; i < rowValue.length; i++) {
+      const visibleName = rowValue[i].visible_name
+        .toString()
+        .toLowerCase()
+        .trim()
+
+      if (visibleName.includes(filterValue)) {
+        return true
+      }
+    }
+
+    return false
   }
 }
 

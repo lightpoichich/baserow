@@ -1388,3 +1388,8 @@ def test_filename_contains_filter_type(data_fixture):
     assert row.id in ids
     assert row_with_multiple_files.id in ids
     assert row_with_no_files.id in ids
+
+    results = model.objects.all().filter_by_fields_object(filter_object={
+        f'filter__field_{file_field.id}__filename_contains': ['.png'],
+    }, filter_type='AND')
+    assert len(results) == 1

@@ -1,5 +1,4 @@
 from math import floor, ceil
-from django.db.models.expressions import RawSQL
 from pytz import timezone
 from decimal import Decimal
 
@@ -7,6 +6,7 @@ from dateutil import parser
 from dateutil.parser import ParserError
 
 from django.db.models import Q, IntegerField, BooleanField
+from django.db.models.expressions import RawSQL
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.contrib.postgres.fields import JSONField
 
@@ -90,20 +90,19 @@ class FilenameContainsViewFilterType(ViewFilterType):
         # However this is an exact match, so in the above example [{"key":"value_etc"}]
         # would not match the filter.
         #
-        # Instead we have to resort to RawSQL to use various built in
-        # PostgreSQL JSON Array manipulation functions to be able to 'iterate' over
-        # a JSONB list performing ilike on individual keys in said list.
+        # Instead we have to resort to RawSQL to use various built in PostgreSQL JSON
+        # Array manipulation functions to be able to 'iterate' over a JSONB list
+        # performing `like` on individual keys in said list.
         num_files_with_name_like_value = f"""
-        ARRAY_LENGTH (
-            ARRAY (
+            EXISTS(
                 SELECT attached_files ->> 'visible_name'
-                FROM
-                JSON_ARRAY_ELEMENTS("{field_name}"::json) as attached_files
-                WHERE attached_files ->> 'visible_name' ilike %s
+                FROM JSONB_ARRAY_ELEMENTS("{field_name}") as attached_files
+                WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%s)
             )
-            , 1)"""
-        query = RawSQL(num_files_with_name_like_value, params=[f"%{value}%"])
-        return {f"{field_name}_num_matching_visible_names": query}
+        """
+        query = RawSQL(num_files_with_name_like_value, params=[f"%{value}%"],
+                       output_field=BooleanField())
+        return {f"{field_name}_matches_visible_names": query}
 
     def get_filter(self, field_name, value, model_field):
         value = value.strip()
@@ -113,7 +112,7 @@ class FilenameContainsViewFilterType(ViewFilterType):
             return Q()
 
         # Check if the model_field has a file which matches the provided filter value.
-        return Q(**{f'{field_name}_num_matching_visible_names__gt': 0})
+        return Q(**{f'{field_name}_matches_visible_names': True})
 
 
 class ContainsViewFilterType(ViewFilterType):

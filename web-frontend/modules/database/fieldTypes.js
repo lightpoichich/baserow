@@ -21,6 +21,8 @@ import GridViewFieldDate from '@baserow/modules/database/components/view/grid/Gr
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/GridViewFieldFile'
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/GridViewFieldSingleSelect'
 
+import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/FunctionalGridViewFieldText'
+
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
 import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
@@ -76,6 +78,13 @@ export class FieldType extends Registerable {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
+  }
+
+  /**
+   * @TODO docs
+   */
+  getFunctionalGridViewFieldComponent() {
+    return null
   }
 
   /**
@@ -272,6 +281,10 @@ export class TextFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldText
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldText
   }
 
   getRowEditFieldComponent() {

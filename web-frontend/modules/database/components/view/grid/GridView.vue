@@ -10,6 +10,7 @@
     ></Scrollbars>
     <div class="grid-view__left" :style="{ width: widths.left + 'px' }">
       <div class="grid-view__inner" :style="{ width: widths.left + 'px' }">
+        <!--
         <div class="grid-view__head">
           <div
             class="grid-view__column"
@@ -25,6 +26,7 @@
             @refresh="$emit('refresh', $event)"
           ></GridViewFieldType>
         </div>
+        -->
         <div ref="leftBody" class="grid-view__body">
           <div class="grid-view__body-inner">
             <div
@@ -87,7 +89,7 @@
                     </a>
                   </div>
                 </div>
-                <GridViewField
+                <GridViewFieldContainer
                   v-if="primary !== null"
                   :ref="'row-' + row.id + '-field-' + primary.id"
                   :field="primary"
@@ -104,7 +106,7 @@
                   "
                   @update="updateValue"
                   @edit="editValue"
-                ></GridViewField>
+                ></GridViewFieldContainer>
               </div>
             </div>
             <div class="grid-view__row">
@@ -153,6 +155,7 @@
         class="grid-view__inner"
         :style="{ 'min-width': widths.right + 'px' }"
       >
+        <!--
         <div class="grid-view__head">
           <GridViewFieldType
             v-for="field in visibleFields"
@@ -190,6 +193,7 @@
             ></CreateFieldContext>
           </div>
         </div>
+        -->
         <div ref="rightBody" class="grid-view__body">
           <div class="grid-view__body-inner">
             <div
@@ -210,6 +214,17 @@
               class="grid-view__rows"
               :style="{ transform: `translateY(${rowsTop}px)` }"
             >
+              <!--
+              <GridViewRow
+                v-for="row in rows"
+                :key="'right-row-' + view.id + '-' + row.id"
+                :row="row"
+                :visible-fields="visibleFields"
+                :fields="fields"
+                :widths="widths"
+                :primary="primary"
+              ></GridViewRow>
+              -->
               <!-- @TODO figure out a faster way to render the rows on scroll. -->
               <div
                 v-for="row in rows"
@@ -226,7 +241,7 @@
                 @mouseleave="setRowHover(row, false)"
                 @contextmenu.prevent="showRowContext($event, row)"
               >
-                <GridViewField
+                <GridViewFieldContainer
                   v-for="field in visibleFields"
                   :ref="'row-' + row.id + '-field-' + field.id"
                   :key="
@@ -249,7 +264,7 @@
                   "
                   @update="updateValue"
                   @edit="editValue"
-                ></GridViewField>
+                ></GridViewFieldContainer>
               </div>
             </div>
             <div
@@ -274,6 +289,7 @@
         <div class="grid-view__foot"></div>
       </div>
     </div>
+    <!--
     <div
       v-if="view.filters.length > 0 && count === 0"
       class="grid-view__filtered-no-results"
@@ -331,29 +347,34 @@
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
     ></RowEditModal>
+    -->
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-
-import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
-import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
-import GridViewField from '@baserow/modules/database/components/view/grid/GridViewField'
-import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
-import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 import _ from 'lodash'
+
+import { notifyIf } from '@baserow/modules/core/utils/error'
+// import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
+// import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
+import GridViewFieldContainer from '@baserow/modules/database/components/view/grid/GridViewFieldContainer'
+import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+// import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
+import gridViewFieldContainerParent from '@baserow/modules/database/mixins/gridViewFieldContainerParent'
+// import GridViewRow from '@baserow/modules/database/components/view/grid/GridViewRow'
 
 export default {
   name: 'GridView',
   components: {
-    CreateFieldContext,
-    GridViewFieldType,
-    GridViewField,
+    // GridViewRow,
+    // CreateFieldContext,
+    // GridViewFieldType,,
+    GridViewFieldContainer,
     GridViewFieldWidthHandle,
-    RowEditModal,
+    // RowEditModal,
   },
+  mixins: [gridViewFieldContainerParent],
   props: {
     primary: {
       type: Object,
@@ -784,15 +805,7 @@ export default {
         return
       }
 
-      const current = this.$refs['row-' + row.id + '-field-' + field.id]
-      const next = this.$refs['row-' + nextRowId + '-field-' + nextFieldId]
-
-      if (next === undefined || current === undefined) {
-        return
-      }
-
-      current[0].unselect()
-      next[0].select()
+      this.selectGridViewField(nextRowId, nextFieldId)
     },
     setRowHover(row, value) {
       // Sometimes the mouseleave is not triggered, but because you can hover only one

@@ -61,6 +61,7 @@ export default {
             this.edit(null, event)
           }
         } else if (!this.editing && isCharacterKeyPress(event)) {
+          console.log('any key pressed')
           // If another key was pressed while not editing we want to replace the
           // exiting value with something new.
           this.edit('', event)

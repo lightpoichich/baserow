@@ -1,8 +1,7 @@
 <template>
   <div
     ref="cell"
-    class="grid-view__cell grid-field-file__cell"
-    :class="{ active: selected }"
+    class="grid-view__cell grid-field-file__cell active"
     @drop.prevent="uploadFiles($event)"
     @dragover.prevent
     @dragenter.prevent="dragEnter($event)"
@@ -21,7 +20,7 @@
         class="grid-field-file__item"
       >
         <a
-          v-tooltip="selected ? file.visible_name : null"
+          v-tooltip="file.visible_name"
           class="grid-field-file__link"
           @click.prevent="showFileModal(index)"
         >
@@ -44,7 +43,7 @@
       >
         <div class="grid-field-file__loading"></div>
       </li>
-      <li v-if="selected" class="grid-field-file__item">
+      <li class="grid-field-file__item">
         <a class="grid-field-file__item-add" @click.prevent="showUploadModal()">
           <i class="fas fa-plus"></i>
         </a>
@@ -178,10 +177,6 @@ export default {
       this.$refs.uploadModal.show(UploadFileUserFileUploadType.getType())
     },
     showFileModal(index) {
-      if (!this.selected) {
-        return
-      }
-
       this.modalOpen = true
       this.$refs.fileModal.show(index)
     },

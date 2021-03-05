@@ -7,65 +7,88 @@
       'grid-view__row--hover': row._.hover,
       'grid-view__row--warning': !row._.matchFilters || !row._.matchSortings,
     }"
-    @mouseover="$parent.setRowHover(row, true)"
-    @mouseleave="$parent.setRowHover(row, false)"
-    @contextmenu.prevent="$parent.showRowContext($event, row)"
+    @mouseover="$emit('row-hover', { row, value: true })"
+    @mouseleave="$emit('row-hover', { row, value: false })"
+    @contextmenu.prevent="$emit('row-context', { row, event: $event })"
   >
-    <GridViewFieldContainer
-      v-for="field in visibleFields"
-      :key="'grid-view-row-field-' + row.id + '-' + field.id"
+    <template v-if="includeRowDetails">
+      <div
+        v-if="!row._.matchFilters || !row._.matchSortings"
+        class="grid-view__row-warning"
+      >
+        <template v-if="!row._.matchFilters">
+          Row does not match filters
+        </template>
+        <template v-else-if="!row._.matchSortings">Row has moved</template>
+      </div>
+      <div class="grid-view__column" :style="{ width: 60 + 'px' }">
+        <div class="grid-view__row-info">
+          <div class="grid-view__row-count" :title="row.id">
+            {{ row.id }}
+          </div>
+          <a class="grid-view__row-more" @click="$emit('edit-modal', row)">
+            <i class="fas fa-expand"></i>
+          </a>
+        </div>
+      </div>
+    </template>
+    <!--
+    Somehow re-declaring all the events instead of using v-on="$listeners" speeds
+    everything because the rows don't need to be updated everytime a new one is added.
+    -->
+    <GridViewCell
+      v-for="field in fields"
+      :key="'row-field-' + row.id + '-' + field.id"
       :field="field"
       :row="row"
-      :style="{ width: widths.fields[field.id] + 'px' }"
-      @selected="$parent.selectedField(field, $event)"
-      @unselected="$parent.unselectedField(field, $event)"
-      @selectPrevious="
-        $parent.selectNextField(row, field, fields, primary, 'previous')
-      "
-      @selectNext="$parent.selectNextField(row, field, fields, primary)"
-      @selectAbove="
-        $parent.selectNextField(row, field, fields, primary, 'above')
-      "
-      @selectBelow="
-        $parent.selectNextField(row, field, fields, primary, 'below')
-      "
-      @update="$parent.updateValue"
-      @edit="$parent.editValue"
-    ></GridViewFieldContainer>
+      :style="{ width: fieldWidths[field.id] + 'px' }"
+      @update="$emit('update', $event)"
+      @edit="$emit('edit', $event)"
+      @select="$emit('select', $event)"
+      @unselect="$emit('unselect', $event)"
+      @selected="$emit('selected', $event)"
+      @unselected="$emit('unselected', $event)"
+      @select-next="$emit('select-next', $event)"
+    ></GridViewCell>
   </div>
 </template>
 
 <script>
-import GridViewFieldContainer from '@baserow/modules/database/components/view/grid/GridViewFieldContainer'
+import GridViewCell from '@baserow/modules/database/components/view/grid/GridViewCell'
+import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewRow',
-  components: { GridViewFieldContainer },
+  components: { GridViewCell },
+  mixins: [gridViewHelpers],
   props: {
     row: {
       type: Object,
-      required: true,
-    },
-    visibleFields: {
-      type: Array,
       required: true,
     },
     fields: {
       type: Array,
       required: true,
     },
-    primary: {
+    fieldWidths: {
       type: Object,
       required: true,
     },
-    widths: {
-      type: Object,
-      required: true,
+    includeRowDetails: {
+      type: Boolean,
+      required: false,
+      default: () => false,
     },
   },
   methods: {
-    isGridViewFieldSelected(...args) {
-      return this.$parent.isGridViewFieldSelected(...args)
+    isCellSelected(fieldId) {
+      return this.row._.selected && this.row._.selectedFieldId === fieldId
+    },
+    selectCell(fieldId, rowId = this.row.id) {
+      this.$store.dispatch('view/grid/setSelectedCell', {
+        rowId,
+        fieldId,
+      })
     },
   },
 }

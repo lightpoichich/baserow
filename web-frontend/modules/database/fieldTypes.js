@@ -10,18 +10,25 @@ import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDa
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSingleSelectSubForm from '@baserow/modules/database/components/field/FieldSingleSelectSubForm'
 
-import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
-import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
-import GridViewFieldURL from '@baserow/modules/database/components/view/grid/GridViewFieldURL'
-import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/GridViewFieldEmail'
-import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/GridViewFieldLinkRow'
-import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
-import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
-import GridViewFieldDate from '@baserow/modules/database/components/view/grid/GridViewFieldDate'
-import GridViewFieldFile from '@baserow/modules/database/components/view/grid/GridViewFieldFile'
-import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/GridViewFieldSingleSelect'
+import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
+import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
+import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL'
+import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/fields/GridViewFieldEmail'
+import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkRow'
+import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldNumber'
+import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/GridViewFieldBoolean'
+import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDate'
+import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
+import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
 
-import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/FunctionalGridViewFieldText'
+import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
+import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
+import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow'
+import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
+import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean'
+import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
+import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
+import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -81,10 +88,16 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * @TODO docs
+   * This functional component should represent an unselect field cell related to the
+   * value of this type. It will only be used in the grid view and is only for fast
+   * displaying purposes, not for editing the value. This is because functional
+   * components are much faster. When a user clicks on the cell it will be replaced
+   * with the real component.
    */
   getFunctionalGridViewFieldComponent() {
-    return null
+    throw new Error(
+      'Not implement error. This method should return a component.'
+    )
   }
 
   /**
@@ -336,6 +349,10 @@ export class LongTextFieldType extends FieldType {
     return GridViewFieldLongText
   }
 
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLongText
+  }
+
   getRowEditFieldComponent() {
     return RowEditFieldLongText
   }
@@ -387,6 +404,10 @@ export class LinkRowFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldLinkRow
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLinkRow
   }
 
   getRowEditFieldComponent() {
@@ -497,6 +518,10 @@ export class NumberFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldNumber
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldNumber
   }
 
   getRowEditFieldComponent() {
@@ -623,6 +648,10 @@ export class BooleanFieldType extends FieldType {
     return GridViewFieldBoolean
   }
 
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldBoolean
+  }
+
   getRowEditFieldComponent() {
     return RowEditFieldBoolean
   }
@@ -684,6 +713,10 @@ export class DateFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldDate
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDate
   }
 
   getRowEditFieldComponent() {
@@ -786,6 +819,10 @@ export class URLFieldType extends FieldType {
     return GridViewFieldURL
   }
 
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldText
+  }
+
   getRowEditFieldComponent() {
     return RowEditFieldURL
   }
@@ -836,6 +873,10 @@ export class EmailFieldType extends FieldType {
     return GridViewFieldEmail
   }
 
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldText
+  }
+
   getRowEditFieldComponent() {
     return RowEditFieldEmail
   }
@@ -884,6 +925,10 @@ export class FileFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldFile
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldFile
   }
 
   getRowEditFieldComponent() {
@@ -995,6 +1040,10 @@ export class SingleSelectFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldSingleSelect
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldSingleSelect
   }
 
   getRowEditFieldComponent() {

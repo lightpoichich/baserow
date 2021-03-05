@@ -155,11 +155,11 @@ export default {
     this.$emit('selected', { component: this })
   },
   beforeDestroy() {
-    // this.$el.removeEventListener('click', this.$el.clickEvent)
-    // document.body.removeEventListener('click', this.$el.clickOutsideEvent)
-    // document.body.removeEventListener('keydown', this.$el.keyDownEvent)
-    // document.removeEventListener('paste', this.$el.pasteEvent)
-    // this.beforeUnSelect()
+    this.$el.removeEventListener('click', this.$el.clickEvent)
+    document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+    document.body.removeEventListener('keydown', this.$el.keyDownEvent)
+    document.removeEventListener('paste', this.$el.pasteEvent)
+    this.beforeUnSelect()
     this.$emit('unselected', {})
   },
   methods: {

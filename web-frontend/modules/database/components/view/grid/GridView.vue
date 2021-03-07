@@ -464,13 +464,18 @@ export default {
       this.$store.dispatch('view/grid/addRowSelectedBy', { row, field })
     },
     unselectedCell({ row, field }) {
-      this.$store.dispatch('view/grid/removeRowSelectedBy', {
-        grid: this.view,
-        fields: this.fields,
-        primary: this.primary,
-        row,
-        field,
-        getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+      // We want to change selected state of the row on the next tick because if another
+      // cell within a row is selected, we want to wait for that selected state tot
+      // change. This will make sure that the row is stays selected.
+      this.$nextTick(() => {
+        this.$store.dispatch('view/grid/removeRowSelectedBy', {
+          grid: this.view,
+          fields: this.fields,
+          primary: this.primary,
+          row,
+          field,
+          getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+        })
       })
     },
     /**

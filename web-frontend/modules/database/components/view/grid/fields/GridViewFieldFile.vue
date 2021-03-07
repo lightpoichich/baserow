@@ -1,7 +1,8 @@
 <template>
   <div
     ref="cell"
-    class="grid-view__cell grid-field-file__cell active"
+    class="grid-view__cell grid-field-file__cell"
+    :class="{ active: selected }"
     @drop.prevent="uploadFiles($event)"
     @dragover.prevent
     @dragenter.prevent="dragEnter($event)"
@@ -43,7 +44,7 @@
       >
         <div class="grid-field-file__loading"></div>
       </li>
-      <li class="grid-field-file__item">
+      <li v-show="selected" class="grid-field-file__item">
         <a class="grid-field-file__item-add" @click.prevent="showUploadModal()">
           <i class="fas fa-plus"></i>
         </a>
@@ -101,6 +102,10 @@ export default {
     async uploadFiles(event) {
       this.dragging = false
 
+      // Indicates that this component must not be destroyed even though the user might
+      // select another cell.
+      this.$emit('add-keep-alive')
+
       const files = Array.from(event.dataTransfer.files).map((file) => {
         return {
           id: uuid(),
@@ -136,6 +141,9 @@ export default {
 
         const index = this.loadings.findIndex((l) => l.id === id)
         this.loadings.splice(index, 1)
+
+        // Indicates that this component can be destroyed if it is not selected.
+        this.$emit('remove-keep-alive')
       }
     },
     select() {

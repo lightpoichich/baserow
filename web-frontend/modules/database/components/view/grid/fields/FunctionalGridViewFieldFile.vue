@@ -1,5 +1,20 @@
 <template functional>
-  <div class="grid-view__cell grid-field-file__cell">
+  <div
+    class="grid-view__cell grid-field-file__cell"
+    @drop.prevent="$options.methods.drop(parent, props, $event)"
+    @dragover.prevent
+    @dragenter.prevent="$options.methods.dragEnter(parent, props, $event)"
+    @dragleave="$options.methods.dragLeave(parent, props, $event)"
+  >
+    <div
+      v-show="Object.prototype.hasOwnProperty.call(props.state, props.field.id)"
+      class="grid-field-file__dragging"
+    >
+      <div>
+        <i class="grid-field-file__drop-icon fas fa-cloud-upload-alt"></i>
+        Drop here
+      </div>
+    </div>
     <ul v-if="Array.isArray(props.value)" class="grid-field-file__list">
       <li
         v-for="(file, index) in props.value"
@@ -31,6 +46,28 @@ export default {
   methods: {
     getIconClass(mimeType) {
       return mimetype2fa(mimeType)
+    },
+    drop(parent, props, event) {
+      parent.selectCell(props.field.id)
+      parent.setState({})
+      parent.$nextTick(() => {
+        parent.$refs.selectedField.uploadFiles(event)
+      })
+    },
+    dragEnter(parent, props, event) {
+      parent.setState({
+        [props.field.id]: event.target,
+      })
+    },
+    dragLeave(parent, props, event) {
+      if (
+        Object.prototype.hasOwnProperty.call(props.state, props.field.id) &&
+        props.state[props.field.id] === event.target
+      ) {
+        event.stopPropagation()
+        event.preventDefault()
+        parent.setState({})
+      }
     },
   },
 }

@@ -177,7 +177,7 @@
 .grid-view__row {
   @extend .clearfix;
 
-  position: absolute;
+  position: relative;
   display: flex;
   left: 0;
   height: 32px + 1px;

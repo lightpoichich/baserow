@@ -41,6 +41,7 @@
       :key="'row-field-' + row.id + '-' + field.id"
       :field="field"
       :row="row"
+      :state="state"
       :style="{ width: fieldWidths[field.id] + 'px' }"
       @update="$emit('update', $event)"
       @edit="$emit('edit', $event)"
@@ -80,6 +81,12 @@ export default {
       default: () => false,
     },
   },
+  data() {
+    return {
+      state: {},
+      alive: [],
+    }
+  },
   methods: {
     isCellSelected(fieldId) {
       return this.row._.selected && this.row._.selectedFieldId === fieldId
@@ -89,6 +96,20 @@ export default {
         rowId,
         fieldId,
       })
+    },
+    setState(value) {
+      this.state = value
+    },
+    addKeepAlive(fieldId) {
+      if (!this.alive.includes(fieldId)) {
+        this.alive.push(fieldId)
+      }
+    },
+    removeKeepAlive(fieldId) {
+      const index = this.alive.findIndex((id) => id === fieldId)
+      if (index > -1) {
+        this.alive.splice(index, 1)
+      }
     },
   },
 }

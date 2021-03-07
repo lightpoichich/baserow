@@ -7,15 +7,22 @@
   >
     <component
       :is="$options.methods.getFunctionalComponent(parent, props)"
-      v-if="!parent.isCellSelected(props.field.id)"
+      v-if="
+        !parent.isCellSelected(props.field.id) &&
+        !parent.alive.includes(props.field.id)
+      "
+      ref="unselectedField"
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
+      :state="props.state"
     />
     <component
       :is="$options.methods.getComponent(parent, props)"
       v-else
+      ref="selectedField"
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
+      :selected="parent.isCellSelected(props.field.id)"
       @update="(...args) => $options.methods.update(listeners, props, ...args)"
       @edit="(...args) => $options.methods.edit(listeners, props, ...args)"
       @unselect="$options.methods.unselect(parent, props)"
@@ -27,6 +34,8 @@
       @selectNext="$options.methods.selectNext(listeners, props, 'next')"
       @selectAbove="$options.methods.selectNext(listeners, props, 'above')"
       @selectBelow="$options.methods.selectNext(listeners, props, 'below')"
+      @add-keep-alive="parent.addKeepAlive(props.field.id)"
+      @remove-keep-alive="parent.removeKeepAlive(props.field.id)"
     />
   </div>
 </template>

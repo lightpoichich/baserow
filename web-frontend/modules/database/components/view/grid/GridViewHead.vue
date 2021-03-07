@@ -3,7 +3,7 @@
     <div
       v-if="includeRowDetails"
       class="grid-view__column"
-      :style="{ width: 60 + 'px' }"
+      :style="{ width: gridViewRowDetailsWidth + 'px' }"
     ></div>
     <GridViewFieldType
       v-for="field in fields"
@@ -38,6 +38,7 @@
 <script>
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
+import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewHead',
@@ -45,6 +46,7 @@ export default {
     GridViewFieldType,
     CreateFieldContext,
   },
+  mixins: [gridViewHelpers],
   props: {
     fields: {
       type: Array,

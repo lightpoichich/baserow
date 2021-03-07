@@ -57,10 +57,5 @@ export default {
       rowsTop: 'view/grid/getRowsTop',
     }),
   },
-  methods: {
-    selectCell(rowId, fieldId) {
-      this.$store.dispatch('view/grid/setSelectedCell', { rowId, fieldId })
-    },
-  },
 }
 </script>

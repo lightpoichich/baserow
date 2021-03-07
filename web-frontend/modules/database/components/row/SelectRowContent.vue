@@ -189,6 +189,9 @@ export default {
     this.loaded = true
   },
   methods: {
+    /**
+     * Returns the scrollable element for the scrollbar.
+     */
     getHorizontalScrollbarElement() {
       return this.$refs.right
     },

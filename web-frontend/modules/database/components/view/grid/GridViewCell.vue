@@ -9,6 +9,10 @@
       :is="$options.methods.getFunctionalComponent(parent, props)"
       v-if="
         !parent.isCellSelected(props.field.id) &&
+        // It could happen that the selected component needs to be alive in order to
+        // finish a task. This is for example the case when still uploading files. The
+        // alive list contains the field ids that must be kept alive. Once finished it
+        // is removed from that list.
         !parent.alive.includes(props.field.id)
       "
       ref="unselectedField"
@@ -44,8 +48,31 @@
 export default {
   methods: {
     /**
-     * If the grid field component emits an update event this method will be called
-     * which will actually update the value via the store.
+     * Returns the functional component related to the field type. Functional
+     * components are much faster then regular components because they don't have a
+     * state. Unselected cells renders this functional component to improve speed
+     * because that will give the user a better experience. Once the user clicks on the
+     * cell, it is replaced with a the real field component which has the ability to
+     * change the data.
+     */
+    getFunctionalComponent(parent, props) {
+      return parent.$registry
+        .get('field', props.field.type)
+        .getFunctionalGridViewFieldComponent()
+    },
+    /**
+     * Returns the component related to the field type. This component will only be
+     * rendered when the user has selected the cell. It will be used to edit the value.
+     */
+    getComponent(parent, props) {
+      return parent.$registry
+        .get('field', props.field.type)
+        .getGridViewFieldComponent()
+    },
+    /**
+     * If the grid field component emits an update event then this method will be
+     * called which will add forward the event to the parent components which will
+     * eventually update the value.
      */
     update(listeners, props, value, oldValue) {
       if (listeners.update) {
@@ -72,25 +99,25 @@ export default {
         })
       }
     },
-    getFunctionalComponent(parent, props) {
-      return parent.$registry
-        .get('field', props.field.type)
-        .getFunctionalGridViewFieldComponent()
-    },
-    getComponent(parent, props) {
-      return parent.$registry
-        .get('field', props.field.type)
-        .getGridViewFieldComponent()
-    },
+    /**
+     * When the user clicks on the cell it must be selected. We can only change that
+     * state by calling the parent `selectCell` method.
+     */
     select(event, parent, fieldId) {
       event.preventFieldCellUnselect = true
       parent.selectCell(fieldId)
     },
+    /**
+     * Called when the cell field type component needs to cell to be unselected.
+     */
     unselect(parent, props) {
       if (parent.isCellSelected(props.field.id)) {
         parent.selectCell(-1, -1)
       }
     },
+    /**
+     * Called after the field type component is selected.
+     */
     selected(listeners, props, event) {
       if (listeners.selected) {
         event.row = props.row
@@ -98,6 +125,9 @@ export default {
         listeners.selected(event)
       }
     },
+    /**
+     * Called after the field type component is unselected.
+     */
     unselected(listeners, props, event) {
       if (listeners.unselected) {
         event.row = props.row
@@ -105,6 +135,10 @@ export default {
         listeners.unselected(event)
       }
     },
+    /**
+     * Called when the field type component want to select to next cell. This for
+     * example happens when the user presses an arrow key.
+     */
     selectNext(listeners, props, direction) {
       if (listeners['select-next']) {
         listeners['select-next']({

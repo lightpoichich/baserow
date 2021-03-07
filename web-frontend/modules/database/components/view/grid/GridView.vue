@@ -170,7 +170,7 @@ export default {
       )
     },
     leftWidth() {
-      return this.leftFieldsWidth + 60
+      return this.leftFieldsWidth + this.gridViewRowDetailsWidth
     },
     ...mapGetters({
       allRows: 'view/grid/getAllRows',
@@ -181,8 +181,8 @@ export default {
     fieldOptions: {
       deep: true,
       handler() {
-        // When the field options have changed, it could bte that the width of the
-        // fields has changed and in that case we want to update th scrollbars.
+        // When the field options have changed, it could be that the width of the
+        // fields have changed and in that case we want to update the scrollbars.
         this.fieldsUpdated()
       },
     },
@@ -228,7 +228,7 @@ export default {
       }
     },
     /**
-     * Called when a call value has been updated. This can for example happen via the
+     * Called when a cell value has been updated. This can for example happen via the
      * row edit modal or when editing a cell directly in the grid.
      */
     async updateValue({ field, row, value, oldValue }) {
@@ -269,18 +269,21 @@ export default {
     },
     /**
      * This method is called by the Scrollbars component and should return the element
-     * that handles the HTML element that handles the horizontal scrolling.
+     * that handles the the horizontal scrolling.
      */
     getHorizontalScrollbarElement() {
       return this.$refs.right.$el
     },
     /**
      * This method is called by the Scrollbars component and should return the element
-     * that handles the HTML element that handles the vertical scrolling.
+     * that handles the the vertical scrolling.
      */
     getVerticalScrollbarElement() {
       return this.$refs.right.$refs.body
     },
+    /**
+     * Called when a user scrolls without using the scrollbar.
+     */
     scroll(pixelY, pixelX) {
       const $rightBody = this.$refs.right.$refs.body
       const $right = this.$refs.right.$el
@@ -293,6 +296,11 @@ export default {
 
       this.$refs.scrollbars.update()
     },
+    /**
+     * Called when the user scrolls vertically. The scroll offset of both the left and
+     * right section must be updated and we want might need to fetch new rows which
+     * is handled by the grid view store.
+     */
     verticalScroll(top) {
       this.$refs.left.$refs.body.scrollTop = top
       this.$refs.right.$refs.body.scrollTop = top
@@ -303,6 +311,10 @@ export default {
         windowHeight: this.$refs.left.$refs.body.clientHeight,
       })
     },
+    /**
+     * Called when the user scrolls horizontally. If the user scrolls we might want to
+     * show a shadow next to the left section because that one has a fixed position.
+     */
     horizontalScroll(left) {
       const $right = this.$refs.right.$el
       const $divider = this.$refs.divider
@@ -407,7 +419,7 @@ export default {
       })
     },
     /**
-     * When a field is selected we want to make sure it is visible in the viewport, so
+     * When a cell is selected we want to make sure it is visible in the viewport, so
      * we might need to scroll a little bit.
      */
     selectedCell({ component, row, field }) {
@@ -463,6 +475,9 @@ export default {
 
       this.$store.dispatch('view/grid/addRowSelectedBy', { row, field })
     },
+    /**
+     * When a cell is unselected need to change the selected state of the row.
+     */
     unselectedCell({ row, field }) {
       // We want to change selected state of the row on the next tick because if another
       // cell within a row is selected, we want to wait for that selected state tot
@@ -479,9 +494,9 @@ export default {
       })
     },
     /**
-     * This method is called when the next field must be selected. This can for example
-     * happen when the tab key is pressed. It tries to find the next field and will
-     * select that one.
+     * This method is called when the next cell must be selected. This can for example
+     * happen when the tab key is pressed. It tries to find the next field based on the
+     * direction and will select that one.
      */
     selectNextCell({ row, field, direction = 'next' }) {
       const fields = this.fields
@@ -542,7 +557,8 @@ export default {
     },
     /**
      * This method is called from the parent component when the data in the view has
-     * been reset. This can for example happen when a user filters.
+     * been reset. This can for example happen when a user creates or updates a filter
+     * or wants to sort on a field.
      */
     async refresh() {
       await this.$store.dispatch('view/grid/visibleByScrollTop', {

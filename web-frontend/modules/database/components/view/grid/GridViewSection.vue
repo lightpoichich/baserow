@@ -102,9 +102,8 @@ export default {
         0
       )
 
-      // We have reserved 60 pixels for the row details
       if (this.includeRowDetails) {
-        width += 60
+        width += this.gridViewRowDetailsWidth
       }
 
       // The add button has a width of 100 and we reserve 100 at the right side.

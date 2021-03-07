@@ -21,7 +21,10 @@
         </template>
         <template v-else-if="!row._.matchSortings">Row has moved</template>
       </div>
-      <div class="grid-view__column" :style="{ width: 60 + 'px' }">
+      <div
+        class="grid-view__column"
+        :style="{ width: gridViewRowDetailsWidth + 'px' }"
+      >
         <div class="grid-view__row-info">
           <div class="grid-view__row-count" :title="row.id">
             {{ row.id }}
@@ -34,7 +37,8 @@
     </template>
     <!--
     Somehow re-declaring all the events instead of using v-on="$listeners" speeds
-    everything because the rows don't need to be updated everytime a new one is added.
+    everything up because the rows don't need to be updated everytime a new one is
+    rendered, which happens a lot when scrolling.
     -->
     <GridViewCell
       v-for="field in fields"
@@ -83,7 +87,14 @@ export default {
   },
   data() {
     return {
+      // The state can be used by functional components to make changes to the dom.
+      // This is for example used by the functional file field component to enable the
+      // drop effect without having the cell selected.
       state: {},
+      // A list containing field id's of field cells that must not be converted to the
+      // functional component even though the user has selected another cell. This is
+      // for example used by the file field to finish the uploading task if the user
+      // has selected another cell while uploading.
       alive: [],
     }
   },

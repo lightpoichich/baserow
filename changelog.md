@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Refactored the GridView component and improved interface speed.
+
 ## Released (2021-03-01)
 
 * Redesigned the left sidebar.

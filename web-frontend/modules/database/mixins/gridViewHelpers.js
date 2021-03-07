@@ -1,6 +1,11 @@
 import { mapGetters } from 'vuex'
 
 export default {
+  data() {
+    return {
+      gridViewRowDetailsWidth: 60,
+    }
+  },
   computed: {
     ...mapGetters({
       fieldOptions: 'view/grid/getAllFieldOptions',

@@ -48,6 +48,10 @@ export default {
       return mimetype2fa(mimeType)
     },
     drop(parent, props, event) {
+      if (props.readOnly) {
+        return
+      }
+
       parent.selectCell(props.field.id)
       parent.setState({})
       parent.$nextTick(() => {
@@ -55,11 +59,19 @@ export default {
       })
     },
     dragEnter(parent, props, event) {
+      if (props.readOnly) {
+        return
+      }
+
       parent.setState({
         [props.field.id]: event.target,
       })
     },
     dragLeave(parent, props, event) {
+      if (props.readOnly) {
+        return
+      }
+
       if (
         Object.prototype.hasOwnProperty.call(props.state, props.field.id) &&
         props.state[props.field.id] === event.target

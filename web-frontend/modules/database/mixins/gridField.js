@@ -63,20 +63,19 @@ export default {
     }
   },
   beforeDestroy() {
-    // If could be that the cell has already been unselected, in that case we don't
-    // have to do it twice.
+    // It could be that the cell has already been unselected, in that case we don't
+    // have to before unselect twice.
     if (this.selected) {
       this._beforeUnSelect()
     }
   },
   methods: {
     /**
-     * @TODO docs
-     *
-     * This method is not meant to be overwritten.
+     * Adds all the event listeners related to all the field types, for example when a
+     * user presses the one of the arrow keys, tab, backspace, double clicks etc. This
+     * method is not meant to be overwritten.
      */
     _select() {
-      // @TODO docs
       this.$el.clickEvent = (event) => {
         const timestamp = new Date().getTime()
 
@@ -188,6 +187,9 @@ export default {
       // making sure that the element fits in the viewport.
       this.$emit('selected', { component: this })
     },
+    /**
+     * Removes all the listeners related to all field types.
+     */
     _beforeUnSelect() {
       this.$el.removeEventListener('click', this.$el.clickEvent)
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)

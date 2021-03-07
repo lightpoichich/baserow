@@ -39,7 +39,7 @@ export default {
         0
       )
       if (this.includeRowDetails) {
-        width += 60
+        width += this.gridViewRowDetailsWidth
       }
       return width
     },

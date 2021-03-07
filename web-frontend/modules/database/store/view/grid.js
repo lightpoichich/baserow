@@ -18,6 +18,8 @@ export function populateRow(row) {
     selectedBy: [],
     matchFilters: true,
     matchSortings: true,
+    // Keeping the selected state with the row has the best performance when navigating
+    // between cells.
     selected: false,
     selectedFieldId: -1,
   }
@@ -955,9 +957,6 @@ export const actions = {
       }
     }
   },
-  /**
-   * Commits the row hovering state.
-   */
   setAddRowHover({ commit }, value) {
     commit('SET_ADD_ROW_HOVER', value)
   },

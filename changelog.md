@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Prevent websocket reconnect loop when the authentication fails.
 * Refactored the GridView component and improved interface speed.
 
 ## Released (2021-03-01)

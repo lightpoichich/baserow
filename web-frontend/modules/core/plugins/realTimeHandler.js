@@ -110,7 +110,7 @@ export class RealTimeHandler {
         this.connect(true)
       },
       // After the first try, we want to try again every 5 seconds.
-      this.attempts > 0 ? 5000 : 0
+      this.attempts > 1 ? 5000 : 0
     )
   }
 

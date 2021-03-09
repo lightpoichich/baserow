@@ -4,6 +4,8 @@
 
 * Prevent websocket reconnect loop when the authentication fails.
 * Refactored the GridView component and improved interface speed.
+* Prevent websocket reconnect when the connection closes without error.
+* Added gunicorn worker test to the CI pipeline.
 
 ## Released (2021-03-01)
 

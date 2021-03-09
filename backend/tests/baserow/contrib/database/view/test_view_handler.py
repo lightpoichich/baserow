@@ -259,6 +259,54 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+@patch('baserow.contrib.database.views.signals.grid_view_field_options_updated.send')
+def test_update_grid_view_field_orders(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field_1 = data_fixture.create_text_field(table=table)
+    field_2 = data_fixture.create_text_field(table=table)
+    field_3 = data_fixture.create_text_field(table=table)
+    field_4 = data_fixture.create_text_field()
+
+    with pytest.raises(UnrelatedFieldError):
+        ViewHandler().update_grid_view_field_orders(
+            user=user,
+            grid_view=grid_view,
+            order=[field_4.id]
+        )
+
+    ViewHandler().update_grid_view_field_orders(
+        user=user,
+        grid_view=grid_view,
+        order=[field_2.id, field_3.id, field_1.id]
+    )
+    send_mock.assert_called_once()
+    options = grid_view.get_field_options()
+    assert len(options) == 3
+    assert options[0].field_id == field_1.id
+    assert options[0].order == 2
+    assert options[1].field_id == field_2.id
+    assert options[1].order == 0
+    assert options[2].field_id == field_3.id
+    assert options[2].order == 1
+
+    ViewHandler().update_grid_view_field_orders(
+        user=user,
+        grid_view=grid_view,
+        order=[field_1.id]
+    )
+    options = grid_view.get_field_options()
+    assert len(options) == 3
+    assert options[0].field_id == field_1.id
+    assert options[0].order == 0
+    assert options[1].field_id == field_2.id
+    assert options[1].order == 1
+    assert options[2].field_id == field_3.id
+    assert options[2].order == 2
+
+
+@pytest.mark.django_db
 def test_field_type_changed(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

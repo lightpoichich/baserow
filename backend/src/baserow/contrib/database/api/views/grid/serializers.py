@@ -101,7 +101,15 @@ class GridViewSerializer(serializers.ModelSerializer):
 class GridViewFieldOptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = GridViewFieldOptions
-        fields = ('width', 'hidden')
+        fields = ('width', 'hidden', 'order')
+
+
+class UpdateGridViewFieldOrderSerializer(serializers.Serializer):
+    order = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text='An array containing the field ids in the desired order. Not '
+                  'included field ids will automatically get a higher order.'
+    )
 
 
 class GridViewFilterSerializer(serializers.Serializer):

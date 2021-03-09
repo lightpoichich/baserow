@@ -226,8 +226,10 @@ def test_list_rows_include_field_options(api_client, data_fixture):
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 200
     assert response_json['field_options'][str(text_field.id)]['hidden'] is False
+    assert response_json['field_options'][str(text_field.id)]['order'] == 32767
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
     assert response_json['field_options'][str(number_field.id)]['hidden'] is False
+    assert response_json['field_options'][str(number_field.id)]['order'] == 32767
 
 
 @pytest.mark.django_db
@@ -385,16 +387,20 @@ def test_patch_grid_view(api_client, data_fixture):
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 300
     assert response_json['field_options'][str(text_field.id)]['hidden'] is True
+    assert response_json['field_options'][str(text_field.id)]['order'] == 32767
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
     assert response_json['field_options'][str(number_field.id)]['hidden'] is False
+    assert response_json['field_options'][str(number_field.id)]['order'] == 32767
     options = grid.get_field_options()
     assert len(options) == 2
     assert options[0].field_id == text_field.id
     assert options[0].width == 300
     assert options[0].hidden is True
+    assert options[0].order == 32767
     assert options[1].field_id == number_field.id
     assert options[1].width == 200
     assert options[1].hidden is False
+    assert options[1].order == 32767
 
     url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.patch(
@@ -534,3 +540,75 @@ def test_patch_grid_view(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+
+@pytest.mark.django_db
+def test_update_grid_view_field_order(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+    grid_2 = data_fixture.create_grid_view()
+    field_1 = data_fixture.create_text_field(table=table)
+    field_2 = data_fixture.create_text_field(table=table)
+    field_3 = data_fixture.create_text_field()
+
+    url = reverse('api:database:views:grid:field_orders', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'order': 'test'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail']['order'][0]['code'] == 'not_a_list'
+
+    url = reverse('api:database:views:grid:field_orders', kwargs={'view_id': 9999999})
+    response = api_client.patch(
+        url,
+        {'order': [1]},
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_GRID_DOES_NOT_EXIST'
+
+    url = reverse('api:database:views:grid:field_orders', kwargs={'view_id': grid_2.id})
+    response = api_client.patch(
+        url,
+        {'order': [1]},
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    url = reverse('api:database:views:grid:field_orders', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'order': [field_3.id]},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_UNRELATED_FIELD'
+
+    url = reverse('api:database:views:grid:field_orders', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'order': [field_2.id, field_1.id]},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json['field_options']) == 2
+    assert response_json['field_options'][str(field_1.id)]['order'] == 1
+    assert response_json['field_options'][str(field_2.id)]['order'] == 0
+    options = grid.get_field_options()
+    assert len(options) == 2
+    assert options[0].field_id == field_1.id
+    assert options[0].order == 1
+    assert options[1].field_id == field_2.id
+    assert options[1].order == 0

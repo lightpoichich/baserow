@@ -6,10 +6,10 @@ import base from './nuxt.config.base.js'
 export default _.assign(base(), {
   vue: {
     config: {
-      productionTip: true,
+      productionTip: false,
       devtools: true,
       performance: true,
-      silent: true,
+      silent: false,
     },
   },
   dev: true,

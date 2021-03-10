@@ -32,7 +32,7 @@ web-frontend-test:
 
 backend-flake8:
   stage: lint
-  image: python:3.6
+  image: python:3.7
   script:
     - cd backend
     - make install-dependencies
@@ -41,7 +41,7 @@ backend-flake8:
 
 backend-pytest:
   stage: test
-  image: python:3.6
+  image: python:3.7
   services:
     - name: postgres:11.3
       alias: db
@@ -60,7 +60,9 @@ backend-pytest:
 
 backend-setup:
   stage: build
-  image: python:3.6
+  image: python:3.7
   script:
     - pip install -e ./backend
     - python -c 'import baserow'
+    - export DJANGO_SETTINGS_MODULE='baserow.config.settings.demo'
+    - timeout --preserve-status 10s gunicorn --workers=1 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application

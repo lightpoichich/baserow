@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* Prevent websocket reconnect loop when the authentication fails.
+* Refactored the GridView component and improved interface speed.
+* Prevent websocket reconnect when the connection closes without error.
+* Added gunicorn worker test to the CI pipeline.
+* Show the number of filters and sorts active in the header of a grid view.
+
+## Released (2021-03-01)
+
 * Redesigned the left sidebar.
 * Fixed error when a very long user file name is provided when uploading.
 * Upgraded DRF Spectacular dependency to the latest version.
@@ -20,6 +28,11 @@
 * Refactored handler get_* methods so that they never check for permissions.
 * Made it possible to configure SMTP settings via environment variables.
 * Added field name to the public REST API docs.
+* Made the public REST API docs compatible with smaller screens.
+* Made it possible for the admin to disable new signups.
+* Reduced the amount of queries when using the link row field.
+* Respect the date format when converting to a date field.
+* Added a field type filename contains filter.
 
 ## Released (2021-02-04)
 

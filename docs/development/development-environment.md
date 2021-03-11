@@ -128,4 +128,4 @@ to worry about reloading. Go and make some changes yourself. You should see the 
 right away.
 
 ## server architecture
-![component diagram](../assets/screenshot.png "Baserow server architecture")
+![component diagram](../assets/server-architecture.png "Baserow server architecture")

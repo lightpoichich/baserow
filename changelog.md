@@ -7,6 +7,7 @@
 * Prevent websocket reconnect when the connection closes without error.
 * Added gunicorn worker test to the CI pipeline.
 * Made it possible to re-order fields in a grid view.
+* Show the number of filters and sorts active in the header of a grid view.
 
 ## Released (2021-03-01)
 

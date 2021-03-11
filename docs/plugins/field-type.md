@@ -92,7 +92,7 @@ Don't forget to create and apply the migrations because we have created a new mo
 
 ```
 $ baserow makemigrations my_baserow_plugin
-$ baserow migrate 
+$ baserow migrate
 ```
 
 ## Web frontend
@@ -105,35 +105,35 @@ files in the web-frontend part of the plugin.
 plugins/my_baserow_plugin/web-frontend/fieldTypes.js
 
 ```javascript
-import {FieldType} from '@baserow/modules/database/fieldTypes'
+import { FieldType } from "@baserow/modules/database/fieldTypes";
 
-import SubFormIntegerField from '@my-baserow-plugin/components/SubFormIntegerField'
-import GridViewIntegerField from '@my-baserow-plugin/components/GridViewIntegerField'
-import RowEditIntegerField from '@my-baserow-plugin/components/RowEditIntegerField'
+import SubFormIntegerField from "@my-baserow-plugin/components/SubFormIntegerField";
+import GridViewIntegerField from "@my-baserow-plugin/components/GridViewIntegerField";
+import RowEditIntegerField from "@my-baserow-plugin/components/RowEditIntegerField";
 
 export class IntegerFieldType extends FieldType {
     static getType() {
-        return 'integer'
+        return "integer";
     }
 
     getIconClass() {
-        return 'list-ol'
+        return "list-ol";
     }
 
     getName() {
-        return 'Integer'
+        return "Integer";
     }
 
     getFormComponent() {
-        return SubFormIntegerField
+        return SubFormIntegerField;
     }
 
     getGridViewFieldComponent() {
-        return GridViewIntegerField
+        return GridViewIntegerField;
     }
 
     getRowEditFieldComponent() {
-        return RowEditIntegerField
+        return RowEditIntegerField;
     }
 }
 ```
@@ -141,13 +141,13 @@ export class IntegerFieldType extends FieldType {
 plugins/my_baserow_plugin/web-frontend/plugin.js
 
 ```javascript
-import {PluginNamePlugin} from '@my-baserow-plugin/plugins'
-import {IntegerFieldType} from '@my-baserow-plugin/fieldTypes'
+import { PluginNamePlugin } from "@my-baserow-plugin/plugins";
+import { IntegerFieldType } from "@my-baserow-plugin/fieldTypes";
 
-export default ({store, app}) => {
-    app.$registry.register('plugin', new PluginNamePlugin())
-    app.$registry.register('field', new IntegerFieldType())
-}
+export default ({ store, app }) => {
+    app.$registry.register("plugin", new PluginNamePlugin());
+    app.$registry.register("field", new IntegerFieldType());
+};
 ```
 
 The GridViewIntegerField component is returned by the `getGridViewFieldComponent`
@@ -160,7 +160,6 @@ examples in the Baserow repository in the directory
 plugins/my_baserow_plugin/web-frontend/components/GridViewIntegerField.vue
 
 ```vue
-
 <template>
     <div class="grid-view__cell" :class="{ active: selected }">
         <div>Hello World</div>
@@ -168,11 +167,11 @@ plugins/my_baserow_plugin/web-frontend/components/GridViewIntegerField.vue
 </template>
 
 <script>
-import gridField from '@baserow/modules/database/mixins/gridField'
+import gridField from "@baserow/modules/database/mixins/gridField";
 
 export default {
     mixins: [gridField],
-}
+};
 </script>
 ```
 
@@ -186,19 +185,16 @@ directory `web-frontend/modules/database/components/row`.
 plugins/my_baserow_plugin/web-frontend/components/RowEditIntegerField.vue
 
 ```vue
-
 <template>
-    <div class="control__elements">
-        Hello World
-    </div>
+    <div class="control__elements">Hello World</div>
 </template>
 
 <script>
-import rowEditField from '@baserow/modules/database/mixins/rowEditField'
+import rowEditField from "@baserow/modules/database/mixins/rowEditField";
 
 export default {
     mixins: [rowEditField],
-}
+};
 </script>
 ```
 
@@ -209,35 +205,36 @@ backend then they can be added to the form using this component.
 plugins/my_baserow_plugin/web-frontend/components/SubFormIntegerField.vue
 
 ```vue
-
 <template>
     <div>
         <div class="control">
             <div class="control__elements">
-                <Checkbox v-model="values.integer_negative">Allow negative</Checkbox>
+                <Checkbox v-model="values.integer_negative"
+                    >Allow negative</Checkbox
+                >
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
+import form from "@baserow/modules/core/mixins/form";
 
 export default {
-    name: 'SubFormIntegerField',
+    name: "SubFormIntegerField",
     mixins: [form],
     data() {
         return {
-            allowedValues: ['integer_negative'],
-            values: {integer_negative: false},
-        }
+            allowedValues: ["integer_negative"],
+            values: { integer_negative: false },
+        };
     },
     methods: {
         isFormValid() {
-            return true
+            return true;
         },
     },
-}
+};
 </script>
 ```
 

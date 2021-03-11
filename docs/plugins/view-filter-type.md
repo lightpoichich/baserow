@@ -130,38 +130,37 @@ filtered out of view.
 plugins/my_baserow_plugin/web-frontend/viewTypes.js
 
 ```javascript
-import {ViewFilterType} from '@baserow/modules/database/viewFilters'
-import ViewFilterTypeText
-    from '@baserow/modules/database/components/view/ViewFilterTypeText'
+import { ViewFilterType } from "@baserow/modules/database/viewFilters";
+import ViewFilterTypeText from "@baserow/modules/database/components/view/ViewFilterTypeText";
 
 export class EqualViewFilterType extends ViewFilterType {
     static getType() {
-        return 'equal_to'
+        return "equal_to";
     }
 
     getName() {
-        return 'is 2'
+        return "is 2";
     }
 
     getInputComponent() {
         // The component that handles the value input, in this case we use the existing
         // text input, but it is also possible to create a custom component. It should
         // follow v-model principle.
-        return ViewFilterTypeText
+        return ViewFilterTypeText;
     }
 
     getCompatibleFieldTypes() {
-        return ['text']
+        return ["text"];
     }
 
     matches(rowValue, filterValue) {
         if (rowValue === null) {
-            rowValue = ''
+            rowValue = "";
         }
 
-        rowValue = rowValue.toString().toLowerCase().trim()
-        filterValue = filterValue.toString().toLowerCase().trim()
-        return filterValue === '' || rowValue === filterValue
+        rowValue = rowValue.toString().toLowerCase().trim();
+        filterValue = filterValue.toString().toLowerCase().trim();
+        return filterValue === "" || rowValue === filterValue;
     }
 }
 ```
@@ -169,13 +168,13 @@ export class EqualViewFilterType extends ViewFilterType {
 plugins/my_baserow_plugin/web-frontend/plugin.js
 
 ```javascript
-import {PluginNamePlugin} from '@my-baserow-plugin/plugins'
-import {EqualViewFilterType} from '@my-baserow-plugin/viewFilters'
+import { PluginNamePlugin } from "@my-baserow-plugin/plugins";
+import { EqualViewFilterType } from "@my-baserow-plugin/viewFilters";
 
-export default ({store, app}) => {
-    app.$registry.register('plugin', new PluginNamePlugin())
-    app.$registry.register('viewFilter', new EqualViewFilterType())
-}
+export default ({ store, app }) => {
+    app.$registry.register("plugin", new PluginNamePlugin());
+    app.$registry.register("viewFilter", new EqualViewFilterType());
+};
 ```
 
 Once you have added this code, a new filter to a view and have selected a

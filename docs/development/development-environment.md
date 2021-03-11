@@ -127,5 +127,5 @@ developing. They also monitor file changes and update automatically so you don't
 to worry about reloading. Go and make some changes yourself. You should see the result
 right away.
 
-## server architecture
+## Server architecture
 ![component diagram](../assets/server-architecture.png "Baserow server architecture")

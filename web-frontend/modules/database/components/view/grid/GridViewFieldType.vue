@@ -18,9 +18,7 @@
       <div class="grid-view__description-icon">
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
-      <div class="grid-view__description-name">
-        {{ field.name }} - {{ field.id }}
-      </div>
+      <div class="grid-view__description-name">{{ field.name }}</div>
       <a
         ref="contextLink"
         class="grid-view__description-options"

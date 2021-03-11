@@ -16,7 +16,6 @@ Because the field name is provided we can easily do a `Q(**{field_name: value})`
 comparison with the provided value.
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/view_filters.py
-
 ```python
 from django.db.models import Q
 
@@ -47,7 +46,6 @@ class EqualToViewFilterType(ViewFilterType):
 Finally, we need to register the view filter in the registry.
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/config.py
-
 ```python
 from django.apps import AppConfig
 
@@ -82,9 +80,7 @@ Content-Type: application/json
   "value": "Example"
 }
 ```
-
 or
-
 ```
 curl -X POST -H 'Content-Type: application/json' -i https://api.baserow.io/api/database/views/{view_id}/filters/ --data '{
   "field": {field_id},
@@ -102,9 +98,7 @@ GET /api/database/views/grid/{view_id}/
 Host: api.baserow.io
 Content-Type: application/json
 ```
-
 or
-
 ```
 curl -X GET -H 'Content-Type: application/json' -i https://api.baserow.io/api/database/views/grid/{view_id}/'
 ```
@@ -128,53 +122,51 @@ warning will be displayed to the user that if they save their edit, the row will
 filtered out of view.
 
 plugins/my_baserow_plugin/web-frontend/viewTypes.js
-
 ```javascript
-import { ViewFilterType } from "@baserow/modules/database/viewFilters";
-import ViewFilterTypeText from "@baserow/modules/database/components/view/ViewFilterTypeText";
+import { ViewFilterType } from '@baserow/modules/database/viewFilters'
+import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 
 export class EqualViewFilterType extends ViewFilterType {
-    static getType() {
-        return "equal_to";
+  static getType() {
+    return 'equal_to'
+  }
+
+  getName() {
+    return 'is 2'
+  }
+
+  getInputComponent() {
+    // The component that handles the value input, in this case we use the existing
+    // text input, but it is also possible to create a custom component. It should
+    // follow v-model principle.
+    return ViewFilterTypeText
+  }
+
+  getCompatibleFieldTypes() {
+    return ['text']
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
     }
 
-    getName() {
-        return "is 2";
-    }
-
-    getInputComponent() {
-        // The component that handles the value input, in this case we use the existing
-        // text input, but it is also possible to create a custom component. It should
-        // follow v-model principle.
-        return ViewFilterTypeText;
-    }
-
-    getCompatibleFieldTypes() {
-        return ["text"];
-    }
-
-    matches(rowValue, filterValue) {
-        if (rowValue === null) {
-            rowValue = "";
-        }
-
-        rowValue = rowValue.toString().toLowerCase().trim();
-        filterValue = filterValue.toString().toLowerCase().trim();
-        return filterValue === "" || rowValue === filterValue;
-    }
+    rowValue = rowValue.toString().toLowerCase().trim()
+    filterValue = filterValue.toString().toLowerCase().trim()
+    return filterValue === '' || rowValue === filterValue
+  }
 }
 ```
 
 plugins/my_baserow_plugin/web-frontend/plugin.js
-
 ```javascript
-import { PluginNamePlugin } from "@my-baserow-plugin/plugins";
-import { EqualViewFilterType } from "@my-baserow-plugin/viewFilters";
+import { PluginNamePlugin } from '@my-baserow-plugin/plugins'
+import { EqualViewFilterType } from '@my-baserow-plugin/viewFilters'
 
 export default ({ store, app }) => {
-    app.$registry.register("plugin", new PluginNamePlugin());
-    app.$registry.register("viewFilter", new EqualViewFilterType());
-};
+  app.$registry.register('plugin', new PluginNamePlugin())
+  app.$registry.register('viewFilter', new EqualViewFilterType())
+}
 ```
 
 Once you have added this code, a new filter to a view and have selected a

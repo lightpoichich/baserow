@@ -16,7 +16,6 @@ model. It will have a property to indicate if a negative number is allowed which
 set for each field that is created. Add/modify the following files.
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/models.py
-
 ```python
 from django.db import models
 
@@ -37,7 +36,6 @@ type you can check the
 Baserow repository.
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/field_types.py
-
 ```python
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -69,7 +67,6 @@ class IntegerFieldType(FieldType):
 ```
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/config.py
-
 ```python
 from django.apps import AppConfig
 
@@ -103,51 +100,49 @@ of the `integer` field type. We can add this in a similar way. Add/modify the fo
 files in the web-frontend part of the plugin.
 
 plugins/my_baserow_plugin/web-frontend/fieldTypes.js
-
 ```javascript
-import { FieldType } from "@baserow/modules/database/fieldTypes";
+import { FieldType } from '@baserow/modules/database/fieldTypes'
 
-import SubFormIntegerField from "@my-baserow-plugin/components/SubFormIntegerField";
-import GridViewIntegerField from "@my-baserow-plugin/components/GridViewIntegerField";
-import RowEditIntegerField from "@my-baserow-plugin/components/RowEditIntegerField";
+import SubFormIntegerField from '@my-baserow-plugin/components/SubFormIntegerField'
+import GridViewIntegerField from '@my-baserow-plugin/components/GridViewIntegerField'
+import RowEditIntegerField from '@my-baserow-plugin/components/RowEditIntegerField'
 
 export class IntegerFieldType extends FieldType {
-    static getType() {
-        return "integer";
-    }
+  static getType() {
+    return 'integer'
+  }
 
-    getIconClass() {
-        return "list-ol";
-    }
+  getIconClass() {
+    return 'list-ol'
+  }
 
-    getName() {
-        return "Integer";
-    }
+  getName() {
+    return 'Integer'
+  }
 
-    getFormComponent() {
-        return SubFormIntegerField;
-    }
+  getFormComponent() {
+    return SubFormIntegerField
+  }
 
-    getGridViewFieldComponent() {
-        return GridViewIntegerField;
-    }
+  getGridViewFieldComponent() {
+    return GridViewIntegerField
+  }
 
-    getRowEditFieldComponent() {
-        return RowEditIntegerField;
-    }
+  getRowEditFieldComponent() {
+    return RowEditIntegerField
+  }
 }
 ```
 
 plugins/my_baserow_plugin/web-frontend/plugin.js
-
 ```javascript
-import { PluginNamePlugin } from "@my-baserow-plugin/plugins";
-import { IntegerFieldType } from "@my-baserow-plugin/fieldTypes";
+import { PluginNamePlugin } from '@my-baserow-plugin/plugins'
+import { IntegerFieldType } from '@my-baserow-plugin/fieldTypes'
 
 export default ({ store, app }) => {
-    app.$registry.register("plugin", new PluginNamePlugin());
-    app.$registry.register("field", new IntegerFieldType());
-};
+  app.$registry.register('plugin', new PluginNamePlugin())
+  app.$registry.register('field', new IntegerFieldType())
+}
 ```
 
 The GridViewIntegerField component is returned by the `getGridViewFieldComponent`
@@ -158,20 +153,19 @@ examples in the Baserow repository in the directory
 `web-frontend/modules/database/components/view/grid`.
 
 plugins/my_baserow_plugin/web-frontend/components/GridViewIntegerField.vue
-
 ```vue
 <template>
-    <div class="grid-view__cell" :class="{ active: selected }">
-        <div>Hello World</div>
-    </div>
+  <div class="grid-view__cell" :class="{ active: selected }">
+    <div>Hello World</div>
+  </div>
 </template>
 
 <script>
-import gridField from "@baserow/modules/database/mixins/gridField";
+import gridField from '@baserow/modules/database/mixins/gridField'
 
 export default {
-    mixins: [gridField],
-};
+  mixins: [gridField],
+}
 </script>
 ```
 
@@ -183,18 +177,19 @@ are plenty of examples in the Baserow repository in the
 directory `web-frontend/modules/database/components/row`.
 
 plugins/my_baserow_plugin/web-frontend/components/RowEditIntegerField.vue
-
 ```vue
 <template>
-    <div class="control__elements">Hello World</div>
+  <div class="control__elements">
+    Hello World
+  </div>
 </template>
 
 <script>
-import rowEditField from "@baserow/modules/database/mixins/rowEditField";
+import rowEditField from '@baserow/modules/database/mixins/rowEditField'
 
 export default {
-    mixins: [rowEditField],
-};
+  mixins: [rowEditField],
+}
 </script>
 ```
 
@@ -203,38 +198,35 @@ or editing a field. If there are extra properties defined in the related model i
 backend then they can be added to the form using this component.
 
 plugins/my_baserow_plugin/web-frontend/components/SubFormIntegerField.vue
-
 ```vue
 <template>
-    <div>
-        <div class="control">
-            <div class="control__elements">
-                <Checkbox v-model="values.integer_negative"
-                    >Allow negative</Checkbox
-                >
-            </div>
-        </div>
+  <div>
+    <div class="control">
+      <div class="control__elements">
+        <Checkbox v-model="values.integer_negative">Allow negative</Checkbox>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
-import form from "@baserow/modules/core/mixins/form";
+import form from '@baserow/modules/core/mixins/form'
 
 export default {
-    name: "SubFormIntegerField",
-    mixins: [form],
-    data() {
-        return {
-            allowedValues: ["integer_negative"],
-            values: { integer_negative: false },
-        };
+  name: 'SubFormIntegerField',
+  mixins: [form],
+  data() {
+    return {
+      allowedValues: ['integer_negative'],
+      values: { integer_negative: false },
+    }
+  },
+  methods: {
+    isFormValid() {
+      return true
     },
-    methods: {
-        isFormValid() {
-            return true;
-        },
-    },
-};
+  },
+}
 </script>
 ```
 

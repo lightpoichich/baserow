@@ -54,11 +54,44 @@ More detailed instructions and more information about the demo environment can b
 https://baserow.io/docs/guides/demo-environment.
 
 ## Development environment
-server architecture
-
-![techtribesjs](https://gitlab.com/bramw/baserow/uploads/a7c8be3ae4ccd5dc2eaf96ae55221197/techtribesjs.png)
 
 If you want to contribute to Baserow you need to setup the development environment. 
+Execute the following commands to start the backend API server.
+
+> Note that the container might have a different name like `backend_1`.
+
+```
+$ docker network create baserow_default
+$ docker-compose up -d
+$ docker exec -it backend bash
+$ python src/baserow/manage.py migrate
+$ python src/baserow/manage.py runserver 0.0.0.0:8000
+```
+
+Visit http://localhost:8000/api/groups/ in your browser and you should see a JSON 
+response containing "Authentication credentials were not provided.". This means that it
+is working!
+
+In order to start the Celery worker you may execute the following commands. Open a new tab or window and execute the following commands.
+
+```
+$ docker exec -it backend bash
+$ watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A baserow worker -l INFO
+```
+
+> Celery worker is mainly used for the real time collaboration
+
+In order to start the web-frontend environment you may execute the following commands.
+
+```
+$ docker network create baserow_default
+$ docker exec -it web-frontend bash
+$ yarn install
+$ yarn dev
+```
+
+The Baserow development environment is now running. Visit http://localhost:3000 in your
+browser and you should see a working version in development mode.
 
 More detailed instructions and more information about the development environment can 
 be found [here](./docs/development/development-environment.md) or at 

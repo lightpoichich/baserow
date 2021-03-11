@@ -126,3 +126,6 @@ Both the web-frontend and backend containers need to keep running while you are
 developing. They also monitor file changes and update automatically so you don't need
 to worry about reloading. Go and make some changes yourself. You should see the result
 right away.
+
+## server architecture
+![component diagram](../assets/screenshot.png "Baserow server architecture")

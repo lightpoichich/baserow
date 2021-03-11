@@ -18,15 +18,13 @@ connection only receives messages targeted at the groups that the authenticated 
 belongs to. Below is an example of how to connect to the web socket in JavaScript.
 
 ```javascript
-const socket = new WebSocket(
-    "wss://api.baserow.io/ws/core/?jwt_token=YOUR_JWT_TOKEN"
-);
+const socket = new WebSocket('wss://api.baserow.io/ws/core/?jwt_token=YOUR_JWT_TOKEN')
 socket.onopen = () => {
-    console.log("The connection is made");
-};
+    console.log('The connection is made')
+}
 socket.onmessage = (message) => {
-    console.log("Received", message);
-};
+    console.log('Received', message)
+}
 ```
 
 ## Messages
@@ -42,18 +40,18 @@ types, they are described at the bottom of this page.
 
 ```json
 {
-    "type": "application_created",
-    "application": {
-        "id": 123,
-        "name": "Test",
-        "order": 8,
-        "type": "database",
-        "group": {
-            "id": 1,
-            "name": "Bram's group"
-        },
-        "tables": []
-    }
+   "type": "application_created",
+   "application": {
+      "id": 123,
+      "name": "Test",
+      "order": 8,
+      "type": "database",
+      "group": {
+         "id": 1,
+         "name": "Bram's group"
+      },
+      "tables": []
+   }
 }
 ```
 
@@ -69,9 +67,9 @@ and an example HTTP request containing the `WebSocketId` header.
 
 ```json
 {
-    "type": "authentication",
-    "success": true,
-    "web_socket_id": "934254ab-0c87-4dbc-9d71-7eeab029296c"
+  "type": "authentication",
+  "success": true,
+  "web_socket_id": "934254ab-0c87-4dbc-9d71-7eeab029296c"
 }
 ```
 
@@ -101,8 +99,8 @@ At the moment there is only one page, which is the table page and it expects a
 
 ```json
 {
-    "page": "table",
-    "table_id": 1
+  "page": "table",
+  "table_id": 1
 }
 ```
 
@@ -121,34 +119,34 @@ are subscribed to the page.
 
 ## Messages types
 
--   `authentication`
--   `page_add`
--   `page_discard`
--   `group_created`
--   `group_updated`
--   `group_deleted`
--   `application_created`
--   `application_updated`
--   `application_deleted`
+* `authentication`
+* `page_add`
+* `page_discard`
+* `group_created`
+* `group_updated`
+* `group_deleted`
+* `application_created`
+* `application_updated`
+* `application_deleted`
 
 ### Database message types
 
--   `table_created`
--   `table_updated`
--   `table_deleted`
--   `field_created`
--   `field_updated`
--   `field_deleted`
--   `row_created`
--   `row_updated`
--   `row_deleted`
--   `view_created`
--   `view_updated`
--   `view_deleted`
--   `view_filter_created`
--   `view_filter_updated`
--   `view_filter_deleted`
--   `view_sort_created`
--   `view_sort_updated`
--   `view_sort_deleted`
--   `grid_view_field_options_updated`
+* `table_created`
+* `table_updated`
+* `table_deleted`
+* `field_created`
+* `field_updated`
+* `field_deleted`
+* `row_created`
+* `row_updated`
+* `row_deleted`
+* `view_created`
+* `view_updated`
+* `view_deleted`
+* `view_filter_created`
+* `view_filter_updated`
+* `view_filter_deleted`
+* `view_sort_created`
+* `view_sort_updated`
+* `view_sort_deleted`
+* `grid_view_field_options_updated`

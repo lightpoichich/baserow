@@ -17,9 +17,7 @@ from baserow.contrib.database.api.rows.serializers import (
 from baserow.contrib.database.api.rows.serializers import (
     get_example_row_serializer_class, example_pagination_row_serializer_class
 )
-from baserow.contrib.database.api.views.grid.serializers import (
-    GridViewSerializer, UpdateGridViewFieldOrderSerializer
-)
+from baserow.contrib.database.api.views.grid.serializers import GridViewSerializer
 from baserow.contrib.database.views.exceptions import (
     ViewDoesNotExist, UnrelatedFieldError
 )
@@ -260,57 +258,5 @@ class GridViewView(APIView):
             request.user,
             view,
             data['field_options']
-        )
-        return Response(GridViewSerializer(view).data)
-
-
-class GridViewFieldOrdersView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='view_id',
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                required=False,
-                description='Updates the field orders of the view related to the '
-                            'provided `view_id` parameter.'
-            )
-        ],
-        tags=['Database table grid view'],
-        operation_id='update_database_table_grid_view_field_orders',
-        description=(
-            'Updates the field option orders of the grid view related to the provided '
-            '`view_id` parameter. An array of field ids in the desired order can be '
-            'provided as `order` body parameter. Fields that are not included in the '
-            'array are automatically assigned an order.'
-        ),
-        request=UpdateGridViewFieldOrderSerializer,
-        responses={
-            200: GridViewSerializer,
-            400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP',
-                'ERROR_UNRELATED_FIELD',
-                'ERROR_REQUEST_BODY_VALIDATION'
-            ]),
-            404: get_error_schema(['ERROR_GRID_DOES_NOT_EXIST'])
-        }
-    )
-    @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
-        UnrelatedFieldError: ERROR_UNRELATED_FIELD
-    })
-    @validate_body(UpdateGridViewFieldOrderSerializer)
-    def patch(self, request, view_id, data):
-        """Updates the field option orders of the all the fields in the view."""
-
-        handler = ViewHandler()
-        view = handler.get_view(view_id, GridView)
-        handler.update_grid_view_field_orders(
-            request.user,
-            view,
-            data['order']
         )
         return Response(GridViewSerializer(view).data)

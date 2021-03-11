@@ -194,6 +194,7 @@ export class GridViewType extends ViewType {
         values: {
           width: 200,
           hidden: false,
+          order: 32767,
         },
       },
       { root: true }

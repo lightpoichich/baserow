@@ -187,60 +187,6 @@ class ViewHandler:
 
         grid_view_field_options_updated.send(self, grid_view=grid_view, user=user)
 
-    def update_grid_view_field_orders(self, user, grid_view, order, fields=None):
-        """
-        Updates or creates the GridViewFieldOptions with the desired order. It will
-        get the position out of the order list and will update the field options
-        accordingly.
-
-        :param user: The user on whose behalf the request is made.
-        :type user: User
-        :param grid_view: The grid view for which the order field options must be
-            updated.
-        :type grid_view: GridView
-        :param order: A list containing the field ids in the desired order.
-        :type order: list
-        :param fields: Optionally a list of fields can be provided so that they don't
-            have to be fetched again.
-        :type fields: None or list
-        raises UnrelatedFieldError: When the provided field id is not related to the
-            provided view.
-        """
-
-        grid_view.table.database.group.has_user(user, raise_error=True)
-
-        if not isinstance(order, list):
-            raise ValueError('The order must be a list containing the field id in the '
-                             'desired order.')
-
-        if not fields:
-            fields = Field.objects.filter(table=grid_view.table).order_by('pk')
-
-        # First, we want to check if all the provided ids belong to the table of the
-        # provided grid view.
-        field_ids = [field.id for field in fields]
-        for field_id in order:
-            if field_id not in field_ids:
-                raise UnrelatedFieldError(
-                    f'The field id {id} is not related to the grid view.'
-                )
-
-        # Update or create the field options with the order value that corresponds
-        # with the provided order. If the field is not found the order, it will be set
-        # based on position of the field id.
-        i = 0
-        for field in fields:
-            try:
-                field_order = order.index(field.id)
-            except ValueError:
-                field_order = len(order) + i
-                i += 1
-            GridViewFieldOptions.objects.update_or_create(
-                grid_view=grid_view, field_id=field.id, defaults={'order': field_order}
-            )
-
-        grid_view_field_options_updated.send(self, grid_view=grid_view, user=user)
-
     def field_type_changed(self, field):
         """
         This method is called by the FieldHandler when the field type of a field has

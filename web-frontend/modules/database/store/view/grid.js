@@ -4,6 +4,7 @@ import _ from 'lodash'
 import BigNumber from 'bignumber.js'
 
 import { uuid } from '@baserow/modules/core/utils/string'
+import { clone } from '@baserow/modules/core/utils/object'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 import {
@@ -898,6 +899,34 @@ export const actions = {
    */
   forceUpdateAllFieldOptions({ commit }, fieldOptions) {
     commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
+  },
+  /**
+   * @TODO docs
+   */
+  async updateFieldOptionsOrder(
+    { commit, getters, dispatch },
+    { gridId, order }
+  ) {
+    const oldFieldOptions = clone(getters.getAllFieldOptions)
+    const newFieldOptions = clone(getters.getAllFieldOptions)
+
+    let i = 0
+    Object.keys(newFieldOptions).forEach((fieldId) => {
+      if (!order.includes(parseInt(fieldId))) {
+        newFieldOptions[fieldId].order = order.length + i
+        i++
+      }
+    })
+
+    order.forEach((fieldId, index) => {
+      newFieldOptions[fieldId.toString()].order = index
+    })
+
+    await dispatch('updateAllFieldOptions', {
+      gridId,
+      oldFieldOptions,
+      newFieldOptions,
+    })
   },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })

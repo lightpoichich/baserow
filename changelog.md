@@ -6,7 +6,7 @@
 * Refactored the GridView component and improved interface speed.
 * Prevent websocket reconnect when the connection closes without error.
 * Added gunicorn worker test to the CI pipeline.
-* Made it possible to re-order fields in a view.
+* Made it possible to re-order fields in a grid view.
 
 ## Released (2021-03-01)
 

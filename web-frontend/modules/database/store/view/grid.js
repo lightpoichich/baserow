@@ -901,7 +901,8 @@ export const actions = {
     commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
   },
   /**
-   * @TODO docs
+   * Updates the order of all the available field options. The provided order parameter
+   * should be an array containing the field ids in the correct order.
    */
   async updateFieldOptionsOrder(
     { commit, getters, dispatch },
@@ -910,6 +911,8 @@ export const actions = {
     const oldFieldOptions = clone(getters.getAllFieldOptions)
     const newFieldOptions = clone(getters.getAllFieldOptions)
 
+    // Update the order of the field options that have not been provided in the order.
+    // They will get a position that places them after the provided field ids.
     let i = 0
     Object.keys(newFieldOptions).forEach((fieldId) => {
       if (!order.includes(parseInt(fieldId))) {
@@ -918,11 +921,21 @@ export const actions = {
       }
     })
 
+    // Update create the field options and set the correct order value.
     order.forEach((fieldId, index) => {
-      newFieldOptions[fieldId.toString()].order = index
+      const id = fieldId.toString()
+      if (Object.prototype.hasOwnProperty.call(newFieldOptions, id)) {
+        newFieldOptions[fieldId.toString()].order = index
+      } else {
+        newFieldOptions[fieldId.toString()] = {
+          width: 200,
+          hidden: false,
+          order: index,
+        }
+      }
     })
 
-    await dispatch('updateAllFieldOptions', {
+    return await dispatch('updateAllFieldOptions', {
       gridId,
       oldFieldOptions,
       newFieldOptions,

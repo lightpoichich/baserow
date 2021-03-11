@@ -2,7 +2,7 @@
   <div v-show="dragging">
     <div
       class="grid-view__field-dragging"
-      :style="{ width: width + 'px', left: draggingLeft + 'px' }"
+      :style="{ width: draggingWidth + 'px', left: draggingLeft + 'px' }"
     ></div>
     <div
       class="grid-view__field-target"
@@ -12,6 +12,7 @@
 </template>
 
 <script>
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
@@ -33,15 +34,25 @@ export default {
   },
   data() {
     return {
+      // Indicates if the user is dragging a field to another position.
       dragging: false,
+      // The field object that is being dragged.
       field: null,
+      // The id of the field where the dragged field must be placed after.
       targetFieldId: null,
+      // The horizontal starting position of the mouse.
       mouseStart: 0,
+      // The horizontal scrollbar offset starting position.
       scrollStart: 0,
-      width: 0,
+      // The width of the dragging animation, this is equal to the width of the field.
+      draggingWidth: 0,
+      // The position of the dragging animation.
       draggingLeft: 0,
+      // The position of the target indicator where the field is going to be moved to.
       targetLeft: 0,
+      // The mouse move event.
       lastMoveEvent: null,
+      // Indicates if the user is auto scrolling at the moment.
       autoScrolling: false,
     }
   },
@@ -61,7 +72,7 @@ export default {
     },
     /**
      * Called when the field dragging must start. It will register the global mouse
-     * move, mouse up events and keyup events so that the user can drag the item to
+     * move, mouse up events and keyup events so that the user can drag the field to
      * the correct position.
      */
     start(field, event) {
@@ -103,7 +114,7 @@ export default {
       // This is the horizontally scrollable element.
       const element = this.$parent.$el
 
-      this.width = this.getFieldWidth(this.field.id)
+      this.draggingWidth = this.getFieldWidth(this.field.id)
 
       // Calculate the left position of the dragging animation. This is the transparent
       // overlay that has the same width as the field.
@@ -113,12 +124,12 @@ export default {
           this.mouseStart +
           this.$parent.$el.scrollLeft -
           this.scrollStart,
-        this.containerWidth - this.width
+        this.containerWidth - this.draggingWidth
       )
 
       // Calculate which after which field we want to place the field that is currently
-      // being dragged. This is named the target. We also calculate wat which position
-      // the field would up for visualisation purposes.
+      // being dragged. This is named the target. We also calculate what position the
+      // field would have for visualisation purposes.
       const mouseLeft =
         event.clientX -
         element.getBoundingClientRect().left +
@@ -146,8 +157,8 @@ export default {
       }
 
       // If the user is not already auto scrolling, which happens while dragging and
-      // moving the element outside of the view port left at the left or right side,
-      // we might need to initiate that process.
+      // moving the element outside of the view port at the left or right side, we
+      // might need to initiate that process.
       if (!this.autoScrolling || !startAutoScroll) {
         const relativeLeft = this.draggingLeft - element.scrollLeft
         const relativeRight = relativeLeft + this.getFieldWidth(this.field.id)
@@ -198,7 +209,7 @@ export default {
      * calculate the new position of the field in the list and if it has changed
      * position, then the order in the field options is updated accordingly.
      */
-    up(event) {
+    async up(event) {
       event.preventDefault()
       this.cancel()
 
@@ -227,15 +238,19 @@ export default {
       }
 
       // Check if the new order differs from the old order. If that is not the case we
-      // don't need to update the field options because nothing will be changed anyway.
+      // don't need to update the field options because nothing will be changed.
       if (JSON.stringify(oldOrder) === JSON.stringify(newOrder)) {
         return
       }
 
-      this.$store.dispatch('view/grid/updateFieldOptionsOrder', {
-        gridId: this.view.id,
-        order: newOrder,
-      })
+      try {
+        await this.$store.dispatch('view/grid/updateFieldOptionsOrder', {
+          gridId: this.view.id,
+          order: newOrder,
+        })
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
     },
   },
 }

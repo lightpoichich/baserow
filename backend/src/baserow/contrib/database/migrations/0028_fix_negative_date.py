@@ -23,7 +23,7 @@ def forward(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0026_auto_20210125_1454'),
+        ('database', '0027_gridviewfieldoptions_order'),
     ]
 
     operations = [

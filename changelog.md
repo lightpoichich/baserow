@@ -9,6 +9,8 @@
 * Show the number of filters and sorts active in the header of a grid view.
 * The first user to sign-up after installation now gets given staff status.
 * Add missing include query parameter and corresponding response attributes to API docs. 
+* Remove incorrectly included "filters_disabled" field from 
+  list_database_table_grid_view_rows api endpoint. 
 
 ## Released (2021-03-01)
 

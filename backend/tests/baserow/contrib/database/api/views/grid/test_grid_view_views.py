@@ -218,7 +218,7 @@ def test_list_rows_include_field_options(api_client, data_fixture):
     url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.get(
         url,
-        {'includes': 'field_options'},
+        {'include': 'field_options'},
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()

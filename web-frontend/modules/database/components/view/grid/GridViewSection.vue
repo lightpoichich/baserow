@@ -55,6 +55,7 @@ import GridViewRows from '@baserow/modules/database/components/view/grid/GridVie
 import GridViewRowAdd from '@baserow/modules/database/components/view/grid/GridViewRowAdd'
 import GridViewFieldDragging from '@baserow/modules/database/components/view/grid/GridViewFieldDragging'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import { GridViewType } from '@baserow/modules/database/viewTypes'
 
 export default {
   name: 'GridViewSection',
@@ -116,10 +117,10 @@ export default {
         .sort((a, b) => {
           const orderA = this.fieldOptions[a.id]
             ? this.fieldOptions[a.id].order
-            : 32767
+            : GridViewType.getMaxPossibleOrderValue()
           const orderB = this.fieldOptions[b.id]
             ? this.fieldOptions[b.id].order
-            : 32767
+            : GridViewType.getMaxPossibleOrderValue()
 
           // First by order.
           if (orderA > orderB) {

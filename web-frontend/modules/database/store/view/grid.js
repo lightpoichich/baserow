@@ -236,6 +236,11 @@ export const mutations = {
       })
     }
   },
+  DELETE_FIELD_OPTIONS(state, fieldId) {
+    if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
+      delete state.fieldOptions[fieldId]
+    }
+  },
   SET_ROW_HOVER(state, { row, value }) {
     row._.hover = value
   },
@@ -926,12 +931,6 @@ export const actions = {
       const id = fieldId.toString()
       if (Object.prototype.hasOwnProperty.call(newFieldOptions, id)) {
         newFieldOptions[fieldId.toString()].order = index
-      } else {
-        newFieldOptions[fieldId.toString()] = {
-          width: 200,
-          hidden: false,
-          order: index,
-        }
       }
     })
 
@@ -940,6 +939,12 @@ export const actions = {
       oldFieldOptions,
       newFieldOptions,
     })
+  },
+  /**
+   * Deletes the field options of the provided field id if they exist.
+   */
+  forceDeleteFieldOptions({ commit }, fieldId) {
+    commit('DELETE_FIELD_OPTIONS', fieldId)
   },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })

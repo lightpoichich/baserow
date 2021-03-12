@@ -145,7 +145,9 @@ export default {
         const rightHalf = left + width + Math.floor(nextWidth / 2)
         if (i === 0 && mouseLeft < leftHalf) {
           this.targetFieldId = 0
-          this.targetLeft = 0
+          // The value 1 makes sure it is visible instead of falling outside of the
+          // view port.
+          this.targetLeft = 1
           break
         }
         if (mouseLeft > leftHalf && mouseLeft < rightHalf) {

@@ -9,6 +9,8 @@
 * Made it possible to re-order fields in a grid view.
 * Show the number of filters and sorts active in the header of a grid view.
 * The first user to sign-up after installation now gets given staff status.
+* Show an error to the user when the web socket connection could not be made and the
+  reconnect loop stops.
 
 ## Released (2021-03-01)
 

@@ -110,7 +110,7 @@ class GridViewView(APIView):
         else the page number pagination.
 
         Optionally the field options can also be included in the response if the the
-        `field_options` are provided in the includes GET parameter.
+        `field_options` are provided in the include GET parameter.
         """
 
         view_handler = ViewHandler()

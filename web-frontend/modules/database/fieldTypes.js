@@ -20,6 +20,7 @@ import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDate'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
+import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
@@ -29,6 +30,7 @@ import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
+import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -40,6 +42,7 @@ import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEdi
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
+import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
@@ -1127,5 +1130,60 @@ export class SingleSelectFieldType extends FieldType {
       value: 'Option',
       color: 'light-blue',
     }
+  }
+}
+
+export class PhoneNumberFieldType extends FieldType {
+  static getType() {
+    return 'phonenumber'
+  }
+
+  getIconClass() {
+    return 'phone'
+  }
+
+  getName() {
+    return 'Phone Number'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldPhoneNumber
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldPhoneNumber
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldPhoneNumber
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    // TODO Validate
+    return value
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'string'
+  }
+
+  getDocsDescription(field) {
+    return 'Accepts a string that must be a phone number.'
+  }
+
+  getDocsRequestExample(field) {
+    return '+1-541-754-3010'
   }
 }

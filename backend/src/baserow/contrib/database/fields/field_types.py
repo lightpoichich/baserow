@@ -31,7 +31,7 @@ from .models import (
     NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, DATE_FORMAT, DATE_TIME_FORMAT,
     TextField, LongTextField, URLField, NumberField, BooleanField, DateField,
     LinkRowField, EmailField, FileField,
-    SingleSelectField, SelectOption
+    SingleSelectField, SelectOption, PhoneNumberField
 )
 from .exceptions import (
     LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
@@ -965,3 +965,44 @@ class SingleSelectFieldType(FieldType):
         random_choice = randint(0, len(select_options) - 1)
 
         return select_options[random_choice]
+
+
+class PhoneNumberFieldType(FieldType):
+    type = 'phonenumber'
+    model_class = PhoneNumberField
+
+    def prepare_value_for_db(self, instance, value):
+        if value == '' or value is None:
+            return ''
+
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.CharField(
+            required=False,
+            allow_null=True,
+            allow_blank=True,
+            **kwargs
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        # TODO: Should be a charField with max length?
+        # TODO: What about instance.default?
+        return models.TextField(default=None, blank=True,
+                                null=True, **kwargs)
+
+    def random_value(self, instance, fake, cache):
+        return fake.phonenumber()
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        if connection.vendor == 'postgresql':
+            return r"""p_in = (
+            case
+                when p_in::text ~* '[A-Z0-9._+- ]+'
+                then p_in::text
+                else ''
+                end
+            );"""
+
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)

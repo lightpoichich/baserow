@@ -269,3 +269,7 @@ class FileField(Field):
 
 class SingleSelectField(Field):
     pass
+
+
+class PhoneNumberField(Field):
+    pass

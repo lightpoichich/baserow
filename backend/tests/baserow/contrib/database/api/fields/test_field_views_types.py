@@ -853,13 +853,13 @@ def test_phone_number_field_type(api_client, data_fixture):
 
     response = api_client.post(
         reverse('api:database:fields:list', kwargs={'table_id': table.id}),
-        {'name': 'phone', 'type': 'phonenumber'},
+        {'name': 'phone', 'type': 'phone_number'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json['type'] == 'phonenumber'
+    assert response_json['type'] == 'phone_number'
     assert PhoneNumberField.objects.all().count() == 1
     field_id = response_json['id']
 

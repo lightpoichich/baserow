@@ -53,6 +53,11 @@ export const isValidEmail = (str) => {
   return !!pattern.test(str)
 }
 
+export const isSimplePhoneNumber = (str) => {
+  const pattern = /[0-9._+*() #=-]+/i
+  return pattern.test(str)
+}
+
 export const isSecureURL = (str) => {
   return str.toLowerCase().substr(0, 5) === 'https'
 }

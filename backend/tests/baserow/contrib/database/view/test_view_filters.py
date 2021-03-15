@@ -8,6 +8,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.handler import FieldHandler
 
 
+# TODO update tests with new phone number field
 @pytest.mark.django_db
 def test_equal_filter_type(data_fixture):
     user = data_fixture.create_user()

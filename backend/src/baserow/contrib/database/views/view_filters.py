@@ -13,7 +13,7 @@ from django.contrib.postgres.fields import JSONField
 from baserow.contrib.database.fields.field_types import (
     TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
     LinkRowFieldType, BooleanFieldType, EmailFieldType, FileFieldType,
-    SingleSelectFieldType
+    SingleSelectFieldType, PhoneNumberFieldType
 )
 
 from .registries import ViewFilterType
@@ -39,7 +39,8 @@ class EqualViewFilterType(ViewFilterType):
         URLFieldType.type,
         NumberFieldType.type,
         BooleanFieldType.type,
-        EmailFieldType.type
+        EmailFieldType.type,
+        PhoneNumberFieldType.type
     ]
 
     def get_filter(self, field_name, value, model_field):
@@ -126,7 +127,8 @@ class ContainsViewFilterType(ViewFilterType):
         TextFieldType.type,
         LongTextFieldType.type,
         URLFieldType.type,
-        EmailFieldType.type
+        EmailFieldType.type,
+        PhoneNumberFieldType.type
     ]
 
     def get_filter(self, field_name, value, model_field):
@@ -335,7 +337,8 @@ class EmptyViewFilterType(ViewFilterType):
         LinkRowFieldType.type,
         EmailFieldType.type,
         FileFieldType.type,
-        SingleSelectFieldType.type
+        SingleSelectFieldType.type,
+        PhoneNumberFieldType.type
     ]
 
     def get_filter(self, field_name, value, model_field):

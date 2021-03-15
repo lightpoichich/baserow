@@ -8,7 +8,7 @@ from datetime import datetime, date
 from django.db import models
 from django.db.models import Case, When
 from django.contrib.postgres.fields import JSONField
-from django.core.validators import URLValidator, EmailValidator
+from django.core.validators import URLValidator, EmailValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
 
@@ -967,13 +967,21 @@ class SingleSelectFieldType(FieldType):
         return select_options[random_choice]
 
 
+class PhoneNumberFieldTypeCustom(models.TextField):
+    pass
+
+
 class PhoneNumberFieldType(FieldType):
-    type = 'phonenumber'
+    type = 'phone_number'
     model_class = PhoneNumberField
+    SIMPLE_PHONE_NUMBER_REGEX = r"^[0-9._+*() #=-]+$"
+    simple_phone_number_validator = RegexValidator(
+        regex=SIMPLE_PHONE_NUMBER_REGEX)
 
     def prepare_value_for_db(self, instance, value):
         if value == '' or value is None:
             return ''
+        self.simple_phone_number_validator(value)
 
         return value
 
@@ -982,23 +990,26 @@ class PhoneNumberFieldType(FieldType):
             required=False,
             allow_null=True,
             allow_blank=True,
+            validators=[self.simple_phone_number_validator],
             **kwargs
         )
 
     def get_model_field(self, instance, **kwargs):
-        # TODO: Should be a charField with max length?
-        # TODO: What about instance.default?
-        return models.TextField(default=None, blank=True,
-                                null=True, **kwargs)
+        return models.TextField(default=None,
+                                blank=True,
+                                null=True,
+                                validators=[
+                                    self.simple_phone_number_validator],
+                                **kwargs)
 
     def random_value(self, instance, fake, cache):
-        return fake.phonenumber()
+        return fake.phone_number()
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return r"""p_in = (
+            return f"""p_in = (
             case
-                when p_in::text ~* '[A-Z0-9._+- ]+'
+                when p_in::text ~* '{self.SIMPLE_PHONE_NUMBER_REGEX}'
                 then p_in::text
                 else ''
                 end
@@ -1006,3 +1017,19 @@ class PhoneNumberFieldType(FieldType):
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
+
+    def after_update(self, from_field, to_field, from_model, to_model, user, connection,
+                     altered_column, before):
+        """
+        If the type hasn't changed, the column data hasn't been converted to blank out
+        any text which is not a valid phone number, so we must do it afterwards here.
+        """
+
+        if (
+            not altered_column
+        ):
+            to_model.objects.exclude(**{
+                f'field_{to_field.id}__iregex': self.SIMPLE_PHONE_NUMBER_REGEX
+            }).update(**{
+                f'field_{to_field.id}': ''
+            })

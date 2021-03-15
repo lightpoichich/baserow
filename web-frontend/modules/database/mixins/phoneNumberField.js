@@ -3,6 +3,8 @@
  * phone number field. This mixin is used in both the GridViewFieldPhoneNumber and
  * RowEditFieldPhoneNumber components.
  */
+import { isSimplePhoneNumber } from '@baserow/modules/core/utils/string'
+
 export default {
   methods: {
     /**
@@ -12,7 +14,9 @@ export default {
       if (this.copy === null || this.copy === '') {
         return null
       }
-      // TODO Do validation
+      if (!isSimplePhoneNumber(this.copy)) {
+        return 'Invalid Phone Number'
+      }
       return null
     },
     isValid() {

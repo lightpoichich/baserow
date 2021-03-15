@@ -1135,7 +1135,7 @@ export class SingleSelectFieldType extends FieldType {
 
 export class PhoneNumberFieldType extends FieldType {
   static getType() {
-    return 'phonenumber'
+    return 'phone_number'
   }
 
   getIconClass() {

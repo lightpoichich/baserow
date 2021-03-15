@@ -107,7 +107,6 @@ export class RealTimeHandler {
    */
   delayedReconnect() {
     if (!this.reconnect) {
-      this.context.store.dispatch('notification/setFailedConnecting', true)
       return
     }
 

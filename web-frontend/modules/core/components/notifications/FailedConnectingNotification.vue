@@ -10,9 +10,9 @@
       Connection to the server has failed. Please refresh the page.
     </p>
     <a
-      @click="reload()"
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"
+      @click="reload()"
       >Refresh page</a
     >
   </div>

@@ -1,6 +1,7 @@
 import pytest
 import responses
 import string
+from unittest.mock import patch
 
 from freezegun import freeze_time
 from PIL import Image
@@ -13,7 +14,7 @@ from django.core.files.storage import FileSystemStorage
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import (
     InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
-    MaximumUniqueTriesError
+    MaximumUniqueTriesError, InvalidFileURLError
 )
 from baserow.core.user_files.handler import UserFileHandler
 
@@ -255,11 +256,29 @@ def test_upload_user_file(data_fixture, tmpdir):
 
 @pytest.mark.django_db
 @responses.activate
-def test_upload_user_file_by_url(data_fixture, tmpdir):
+@patch('baserow.core.user_files.handler.socket.gethostbyname')
+def test_upload_user_file_by_url(mock_gethostbyname, data_fixture, tmpdir):
     user = data_fixture.create_user()
 
     storage = FileSystemStorage(location=str(tmpdir), base_url='http://localhost')
     handler = UserFileHandler()
+
+    # By mocking this method and returning a private ip address, we expect the invalid
+    # file URL error to be raised because the file needs to be fetched from a private
+    # network which is not allowed.
+    mock_gethostbyname.return_value = '127.0.0.0'
+    with pytest.raises(InvalidFileURLError):
+        handler.upload_user_file_by_url(
+            user,
+            'http://localhost/some-image.jpg',
+            storage=storage
+        )
+
+    # A public ip address on the internet and not a private network. By mocking this
+    # return value, the is_private check will always return False and will therefore
+    # never raise the InvalidFileURLError because the file does not needs to be fetched
+    # from a private network.
+    mock_gethostbyname.return_value = '171.171.171.171'
 
     responses.add(
         responses.GET,
@@ -297,6 +316,13 @@ def test_upload_user_file_by_url(data_fixture, tmpdir):
         handler.upload_user_file_by_url(
             user,
             'http://localhost/not-found.pdf',
+            storage=storage
+        )
+
+    with pytest.raises(InvalidFileURLError):
+        handler.upload_user_file_by_url(
+            user,
+            'ftp://localhost/not-found.pdf',
             storage=storage
         )
 

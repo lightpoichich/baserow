@@ -1,7 +1,11 @@
 import pathlib
 import mimetypes
+import socket
+import ipaddress
+
 from os.path import join
 from io import BytesIO
+from urllib.parse import urlparse
 
 import requests
 from requests.exceptions import RequestException
@@ -16,7 +20,7 @@ from baserow.core.utils import sha256_hash, stream_size, random_string, truncate
 
 from .exceptions import (
     InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
-    MaximumUniqueTriesError
+    MaximumUniqueTriesError, InvalidFileURLError
 )
 from .models import UserFile
 
@@ -242,9 +246,32 @@ class UserFileHandler:
         :type storage: Storage
         :raises FileURLCouldNotBeReached: If the file could not be downloaded from
             the URL.
+        :raises InvalidFileURLError: If the provided file url is invalid or not
+            allowed.
         :return: The newly created user file.
         :rtype: UserFile
         """
+
+        parsed_url = urlparse(url)
+
+        if parsed_url.scheme not in ['http', 'https']:
+            raise InvalidFileURLError('Only http and https are allowed.')
+
+        # Try to resolve the netloc to an ip address so that we can check later if that
+        # address is allowed.
+        try:
+            ip = socket.gethostbyname(parsed_url.netloc)
+        except socket.gaierror:
+            raise FileURLCouldNotBeReached('The host of the URL could not be'
+                                           'resolved.')
+
+        # It is only allowed to fetch resources from the internet and not from the
+        # private network because the backend server might have access to services
+        # that are not publicly accessible. Allowing access to the private network
+        # results in a SSRF vulnerability.
+        if ipaddress.ip_address(ip).is_private:
+            raise InvalidFileURLError('It is not allowed to fetch files from the '
+                                      'private network.')
 
         file_name = url.split('/')[-1]
 

@@ -53,6 +53,8 @@ export const isValidEmail = (str) => {
   return !!pattern.test(str)
 }
 
+// Regex duplicated from src/baserow/contrib/database/fields/field_types.py:983
+// Ensure they are kept in sync.
 export const isSimplePhoneNumber = (str) => {
   const pattern = /[0-9._+*() #=-]+/i
   return pattern.test(str)

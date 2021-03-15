@@ -971,9 +971,17 @@ class PhoneNumberFieldTypeCustom(models.TextField):
     pass
 
 
+# See `docs/decisions/001-phone-number-field-validation.md` for context as to why
+# the phone number validation was implemented using a simple regex.
 class PhoneNumberFieldType(FieldType):
     type = 'phone_number'
     model_class = PhoneNumberField
+
+    # Allow common punctuation used in phone numbers and spaces to allow formatting,
+    # but otherwise don't allow text as the phone number should work as a link on mobile
+    # devices.
+    # Duplicated in the frontend code at, please keep in sync:
+    #   web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
     SIMPLE_PHONE_NUMBER_REGEX = r"^[0-9._+*() #=-]+$"
     simple_phone_number_validator = RegexValidator(
         regex=SIMPLE_PHONE_NUMBER_REGEX)

@@ -11,6 +11,7 @@
 * The first user to sign-up after installation now gets given staff status.
 * Show an error to the user when the web socket connection could not be made and the
   reconnect loop stops.
+* Fixed 100X backend web socket errors when refreshing the page.
 
 ## Released (2021-03-01)
 

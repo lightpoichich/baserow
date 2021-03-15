@@ -1,8 +1,7 @@
 import pytest
 import json
 
-from django.db import connection
-from django.test.utils import CaptureQueriesContext, override_settings
+from django.test.utils import override_settings
 from faker import Faker
 from decimal import Decimal
 

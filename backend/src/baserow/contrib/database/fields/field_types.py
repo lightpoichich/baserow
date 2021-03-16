@@ -344,7 +344,7 @@ class DateFieldType(FieldType):
                     END IF;
                 exception when others then
                     begin
-                        return p_in::{sql_type};
+                        p_in = GREATEST(p_in::{sql_type}, '0001-01-01'::{sql_type});
                     exception when others then
                         p_in = p_default;
                     end;

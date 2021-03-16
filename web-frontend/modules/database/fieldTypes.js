@@ -1,7 +1,11 @@
 import moment from 'moment'
 import BigNumber from 'bignumber.js'
 
-import { isValidURL, isValidEmail } from '@baserow/modules/core/utils/string'
+import {
+  isValidURL,
+  isValidEmail,
+  isSimplePhoneNumber,
+} from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
@@ -1160,8 +1164,7 @@ export class PhoneNumberFieldType extends FieldType {
 
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
-    // TODO Validate
-    return value
+    return isSimplePhoneNumber(value) ? value : ''
   }
 
   getSort(name, order) {
@@ -1180,7 +1183,10 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts a string that must be a phone number.'
+    return (
+      'Accepts a string that must be a phone number. Only allows digits, spaces' +
+      ' and the following punctuation: ._+*()#=-'
+    )
   }
 
   getDocsRequestExample(field) {

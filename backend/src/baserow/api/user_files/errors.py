@@ -21,8 +21,7 @@ ERROR_FILE_URL_COULD_NOT_BE_REACHED = (
 ERROR_INVALID_FILE_URL = (
     'ERROR_INVALID_FILE_URL',
     HTTP_400_BAD_REQUEST,
-    'The provided URL is not valid or points to an internal service which is not '
-    'allowed.'
+    'The provided URL is not valid.'
 )
 ERROR_INVALID_USER_FILE_NAME_ERROR = (
     'ERROR_INVALID_USER_FILE_NAME_ERROR',

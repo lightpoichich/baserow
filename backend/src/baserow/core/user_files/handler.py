@@ -1,13 +1,12 @@
 import pathlib
 import mimetypes
-import socket
-import ipaddress
 
 from os.path import join
 from io import BytesIO
 from urllib.parse import urlparse
 
-import requests
+import advocate
+from advocate.exceptions import UnacceptableAddressException
 from requests.exceptions import RequestException
 
 from PIL import Image, ImageOps
@@ -246,8 +245,7 @@ class UserFileHandler:
         :type storage: Storage
         :raises FileURLCouldNotBeReached: If the file could not be downloaded from
             the URL.
-        :raises InvalidFileURLError: If the provided file url is invalid or not
-            allowed.
+        :raises InvalidFileURLError: If the provided file url is invalid.
         :return: The newly created user file.
         :rtype: UserFile
         """
@@ -257,26 +255,10 @@ class UserFileHandler:
         if parsed_url.scheme not in ['http', 'https']:
             raise InvalidFileURLError('Only http and https are allowed.')
 
-        # Try to resolve the netloc to an ip address so that we can check later if that
-        # address is allowed.
-        try:
-            ip = socket.gethostbyname(parsed_url.netloc)
-        except socket.gaierror:
-            raise FileURLCouldNotBeReached('The host of the URL could not be'
-                                           'resolved.')
-
-        # It is only allowed to fetch resources from the internet and not from the
-        # private network because the backend server might have access to services
-        # that are not publicly accessible. Allowing access to the private network
-        # results in a SSRF vulnerability.
-        if ipaddress.ip_address(ip).is_private:
-            raise InvalidFileURLError('It is not allowed to fetch files from the '
-                                      'private network.')
-
         file_name = url.split('/')[-1]
 
         try:
-            response = requests.get(url, stream=True, timeout=10)
+            response = advocate.get(url, stream=True, timeout=10)
 
             if not response.ok:
                 raise FileURLCouldNotBeReached('The response did not respond with an '
@@ -286,7 +268,7 @@ class UserFileHandler:
                 settings.USER_FILE_SIZE_LIMIT + 1,
                 decode_content=True
             )
-        except RequestException:
+        except (RequestException, UnacceptableAddressException):
             raise FileURLCouldNotBeReached('The provided URL could not be reached.')
 
         file = SimpleUploadedFile(file_name, content)

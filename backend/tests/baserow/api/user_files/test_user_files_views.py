@@ -144,14 +144,7 @@ def test_upload_file(api_client, data_fixture, tmpdir):
 
 @pytest.mark.django_db
 @responses.activate
-@patch('baserow.core.user_files.handler.socket.gethostbyname')
-def test_upload_file_via_url(mock_gethostbyname, api_client, data_fixture, tmpdir):
-    # A public ip address on the internet and not a private network. By mocking this
-    # return value, the is_private check will always return False and will therefore
-    # never raise the InvalidFileURLError because the file does not needs to be fetched
-    # from a private network.
-    mock_gethostbyname.return_value = '171.171.171.171'
-
+def test_upload_file_via_url(api_client, data_fixture, tmpdir):
     user, token = data_fixture.create_user_and_token(
         email='test@test.nl', password='password', first_name='Test1'
     )
@@ -174,15 +167,16 @@ def test_upload_file_via_url(mock_gethostbyname, api_client, data_fixture, tmpdi
 
     response = api_client.post(
         reverse('api:user_files:upload_via_url'),
-        data={'url': 'http://localhost/test2.txt'},
+        data={'url': 'https://baserow.io/test2.txt'},
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_FILE_URL_COULD_NOT_BE_REACHED'
 
+    # Only the http and https protocol are allowed.
     response = api_client.post(
         reverse('api:user_files:upload_via_url'),
-        data={'url': 'ftp://localhost/test2.txt'},
+        data={'url': 'ftp://baserow.io/test2.txt'},
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -230,3 +224,19 @@ def test_upload_file_via_url(mock_gethostbyname, api_client, data_fixture, tmpdi
     user_file = UserFile.objects.all().last()
     file_path = tmpdir.join('user_files', user_file.name)
     assert file_path.isfile()
+
+
+@pytest.mark.django_db
+def test_upload_file_via_url_within_private_network(api_client, data_fixture, tmpdir):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1'
+    )
+
+    # Could not be reached because it is an internal private URL.
+    response = api_client.post(
+        reverse('api:user_files:upload_via_url'),
+        data={'url': 'https://localhost/test2.txt'},
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_FILE_URL_COULD_NOT_BE_REACHED'

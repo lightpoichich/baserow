@@ -1185,7 +1185,7 @@ export class PhoneNumberFieldType extends FieldType {
   getDocsDescription(field) {
     return (
       'Accepts a string that must be a phone number. Only allows digits, spaces' +
-      ' and the following punctuation and letters: N,._+*()#=;/- .'
+      ' and the following punctuation and letters: Nx,._+*()#=;/- .'
     )
   }
 

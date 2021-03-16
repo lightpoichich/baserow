@@ -981,7 +981,18 @@ class PhoneNumberFieldType(FieldType):
     type = 'phone_number'
     model_class = PhoneNumberField
 
-    SIMPLE_PHONE_NUMBER_REGEX = r'^[0-9NnXx,+._*()#=;/ -]+$'
+    MAX_PHONE_NUMBER_LENGTH = 100
+    """
+    According to the E.164 (https://en.wikipedia.org/wiki/E.164) standard for
+    international numbers the max length of an E.164 number without formatting is 15
+    characters. However we allow users to store formatting characters, spaces and
+    expect them to be entering numbers not in the E.164 standard but instead a
+    wide range of local standards which might support longer numbers.
+    This is why we have picked a very generous 100 character length to support heavily
+    formatted local numbers.
+    """
+
+    PHONE_NUMBER_REGEX = rf'^[0-9NnXx,+._*()#=;/ -]{{1,{MAX_PHONE_NUMBER_LENGTH}}}$'
     """
     Allow common punctuation used in phone numbers and spaces to allow formatting,
     but otherwise don't allow text as the phone number should work as a link on mobile
@@ -991,7 +1002,7 @@ class PhoneNumberFieldType(FieldType):
     """
 
     simple_phone_number_validator = RegexValidator(
-        regex=SIMPLE_PHONE_NUMBER_REGEX)
+        regex=PHONE_NUMBER_REGEX)
 
     def prepare_value_for_db(self, instance, value):
         if value == '' or value is None:
@@ -1006,13 +1017,15 @@ class PhoneNumberFieldType(FieldType):
             allow_null=True,
             allow_blank=True,
             validators=[self.simple_phone_number_validator],
+            max_length=self.MAX_PHONE_NUMBER_LENGTH,
             **kwargs
         )
 
     def get_model_field(self, instance, **kwargs):
-        return models.TextField(default=None,
+        return models.CharField(default=None,
                                 blank=True,
                                 null=True,
+                                max_length=self.MAX_PHONE_NUMBER_LENGTH,
                                 validators=[
                                     self.simple_phone_number_validator],
                                 **kwargs)
@@ -1024,7 +1037,7 @@ class PhoneNumberFieldType(FieldType):
         if connection.vendor == 'postgresql':
             return f'''p_in = (
             case
-                when p_in::text ~* '{self.SIMPLE_PHONE_NUMBER_REGEX}'
+                when p_in::text ~* '{self.PHONE_NUMBER_REGEX}'
                 then p_in::text
                 else ''
                 end
@@ -1044,7 +1057,7 @@ class PhoneNumberFieldType(FieldType):
             not altered_column
         ):
             to_model.objects.exclude(**{
-                f'field_{to_field.id}__iregex': self.SIMPLE_PHONE_NUMBER_REGEX
+                f'field_{to_field.id}__iregex': self.PHONE_NUMBER_REGEX
             }).update(**{
                 f'field_{to_field.id}': ''
             })

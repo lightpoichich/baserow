@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
 from baserow.core.user_files.exceptions import (
     InvalidUserFileNameError, UserFileDoesNotExist
 )
@@ -550,10 +551,15 @@ def test_phone_number_field_type(data_fixture):
         row_handler.create_row(user=user, table=table, values={
             'phonenumber': 'Phone: 2312321 2349432 '
         }, model=model)
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'phonenumber': '1' * (PhoneNumberFieldType.MAX_PHONE_NUMBER_LENGTH+1)
+        }, model=model)
 
+    max_length_phone_number = '1' * PhoneNumberFieldType.MAX_PHONE_NUMBER_LENGTH
     row_handler.create_row(user=user, table=table, values={
         'name': '+45(1424) 322314 324234',
-        'phonenumber': '123',
+        'phonenumber': max_length_phone_number,
         'number': 1234534532,
         'email': 'a_valid_email_to_be_blanked_after_conversion@email.com'
     }, model=model)
@@ -563,12 +569,14 @@ def test_phone_number_field_type(data_fixture):
         'number': 0
     }, model=model)
     row_handler.create_row(user=user, table=table, values={
-        'name': 'http://www.baserow.io',
+        'name': max_length_phone_number,
         'phonenumber': '',
         'number': -10230450,
     }, model=model)
     row_handler.create_row(user=user, table=table, values={
         'phonenumber': None,
+        'name': '1' * (PhoneNumberFieldType.MAX_PHONE_NUMBER_LENGTH+1)
+
     }, model=model)
     row_handler.create_row(user=user, table=table, values={}, model=model)
 
@@ -587,7 +595,7 @@ def test_phone_number_field_type(data_fixture):
     rows = model.objects.all()
 
     assert rows[0].name == '+45(1424) 322314 324234'
-    assert rows[0].phonenumber == '123'
+    assert rows[0].phonenumber == max_length_phone_number
     assert rows[0].number == '1234534532'
     assert rows[0].email == ''
 
@@ -595,7 +603,7 @@ def test_phone_number_field_type(data_fixture):
     assert rows[1].phonenumber == '1234567890 NnXx,+._*()#=;/ -'
     assert rows[1].number == '0'
 
-    assert rows[2].name == ''
+    assert rows[2].name == max_length_phone_number
     assert rows[2].phonenumber == ''
     assert rows[2].number == '-10230450'
 

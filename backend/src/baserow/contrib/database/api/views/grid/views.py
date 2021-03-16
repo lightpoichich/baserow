@@ -145,9 +145,8 @@ class GridViewView(APIView):
             # but when added to the context the fields don't have to be fetched from
             # the database again when checking if they exist.
             context = {'fields': [o['field'] for o in model._field_objects.values()]}
-            serialized_view = GridViewSerializer(view,
-                                                 context=context).data
-            response.data["field_options"] = serialized_view["field_options"]
+            serialized_view = GridViewSerializer(view, context=context).data
+            response.data['field_options'] = serialized_view['field_options']
 
         return response
 

@@ -19,6 +19,7 @@ def get_example_pagination_serializer_class(results_serializer_class,
     :return: The generated pagination serializer.
     :rtype: Serializer
     """
+
     fields = {
         'count': serializers.IntegerField(help_text='The total amount of results.'),
         'next': serializers.URLField(
@@ -36,7 +37,7 @@ def get_example_pagination_serializer_class(results_serializer_class,
 
     serializer_name = 'PaginationSerializer'
     if add_field_options:
-        fields["field_options"] = GridViewFieldOptionsField(required=False)
+        fields['field_options'] = GridViewFieldOptionsField(required=False)
         serializer_name = serializer_name + 'WithFieldOptions'
 
     return type(

@@ -230,7 +230,7 @@ def test_list_rows_include_field_options(api_client, data_fixture):
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
     assert response_json['field_options'][str(number_field.id)]['hidden'] is False
     assert response_json['field_options'][str(number_field.id)]['order'] == 32767
-    assert "filters_disabled" not in response_json
+    assert 'filters_disabled' not in response_json
 
 
 @pytest.mark.django_db

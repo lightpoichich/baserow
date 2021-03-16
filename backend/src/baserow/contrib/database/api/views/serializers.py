@@ -96,8 +96,8 @@ class ViewSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         context = kwargs.setdefault("context", {})
-        context["include_filters"] = kwargs.pop('filters', False)
-        context["include_sortings"] = kwargs.pop('sortings', False)
+        context['include_filters'] = kwargs.pop('filters', False)
+        context['include_sortings'] = kwargs.pop('sortings', False)
         super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
@@ -105,10 +105,10 @@ class ViewSerializer(serializers.ModelSerializer):
         # drf-spectacular will not know that filters and sortings exist as optional
         # return fields. This way the fields are still dynamic and also show up in the
         # OpenAPI specification.
-        if not self.context["include_filters"]:
+        if not self.context['include_filters']:
             self.fields.pop('filters', None)
 
-        if not self.context["include_sortings"]:
+        if not self.context['include_sortings']:
             self.fields.pop('sortings', None)
 
         return super().to_representation(instance)

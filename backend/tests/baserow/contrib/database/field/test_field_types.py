@@ -559,7 +559,7 @@ def test_phone_number_field_type(data_fixture):
     }, model=model)
     row_handler.create_row(user=user, table=table, values={
         'name': 'some text which should be blanked out after conversion',
-        'phonenumber': '1234567890 N,+._*()#=;/ -',
+        'phonenumber': '1234567890 NnXx,+._*()#=;/ -',
         'number': 0
     }, model=model)
     row_handler.create_row(user=user, table=table, values={
@@ -592,7 +592,7 @@ def test_phone_number_field_type(data_fixture):
     assert rows[0].email == ''
 
     assert rows[1].name == ''
-    assert rows[1].phonenumber == '1234567890 N,+._*()#=;/ -'
+    assert rows[1].phonenumber == '1234567890 NnXx,+._*()#=;/ -'
     assert rows[1].number == '0'
 
     assert rows[2].name == ''

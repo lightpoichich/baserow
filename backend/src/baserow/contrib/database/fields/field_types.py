@@ -332,7 +332,7 @@ class DateFieldType(FieldType):
 
             return f"""
                 begin
-                    IF char_length(p_in::text) < 8 THEN
+                    IF char_length(p_in::text) < 5 THEN
                         p_in = null;
                     ELSEIF p_in IS NULL THEN
                         p_in = null;
@@ -344,7 +344,7 @@ class DateFieldType(FieldType):
                     END IF;
                 exception when others then
                     begin
-                        p_in = GREATEST(p_in::{sql_type}, '0001-01-01'::{sql_type});
+                        return p_in::{sql_type};
                     exception when others then
                         p_in = p_default;
                     end;

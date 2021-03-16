@@ -392,6 +392,10 @@ def test_negative_date_field_value(data_fixture):
         f'field_{datetime_field.id}': '-0',
     })
     model.objects.create(**{
+        f'field_{date_field.id}': '00000',
+        f'field_{datetime_field.id}': '00000',
+    })
+    model.objects.create(**{
         f'field_{date_field.id}': None,
         f'field_{datetime_field.id}': None,
     })
@@ -424,13 +428,17 @@ def test_negative_date_field_value(data_fixture):
     assert getattr(results[3], f'field_{datetime_field.id}') is None
     assert getattr(results[4], f'field_{date_field.id}') is None
     assert getattr(results[4], f'field_{datetime_field.id}') is None
-    assert getattr(results[5], f'field_{date_field.id}') is None
-    assert getattr(results[5], f'field_{datetime_field.id}') is None
-    assert getattr(results[6], f'field_{date_field.id}') == date(2010, 2, 3)
-    assert getattr(results[6], f'field_{datetime_field.id}') == (
+    assert getattr(results[5], f'field_{date_field.id}') == date(1, 1, 1)
+    assert getattr(results[5], f'field_{datetime_field.id}') == (
+        datetime(1, 1, 1, tzinfo=timezone('utc'))
+    )
+    assert getattr(results[6], f'field_{date_field.id}') is None
+    assert getattr(results[6], f'field_{datetime_field.id}') is None
+    assert getattr(results[7], f'field_{date_field.id}') == date(2010, 2, 3)
+    assert getattr(results[7], f'field_{datetime_field.id}') == (
         datetime(2010, 2, 3, 12, 30, 0, tzinfo=timezone('utc'))
     )
-    assert getattr(results[7], f'field_{date_field.id}') == date(2012, 1, 28)
-    assert getattr(results[7], f'field_{datetime_field.id}') == (
+    assert getattr(results[8], f'field_{date_field.id}') == date(2012, 1, 28)
+    assert getattr(results[8], f'field_{datetime_field.id}') == (
         datetime(2012, 1, 28, 12, 30, 0, tzinfo=timezone('utc'))
     )

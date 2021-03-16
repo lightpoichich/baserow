@@ -3,7 +3,7 @@
     <input
       ref="input"
       v-model="copy"
-      type="text"
+      type="tel"
       class="input input--large"
       :class="{ 'input--error': !isValid() }"
       @keyup.enter="$refs.input.blur()"

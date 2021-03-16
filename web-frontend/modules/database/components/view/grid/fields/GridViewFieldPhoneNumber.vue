@@ -14,7 +14,7 @@
       <input
         ref="input"
         v-model="copy"
-        type="text"
+        type="tel"
         class="grid-field-text__input"
       />
       <div v-show="!isValid()" class="grid-view__cell--error align-right">

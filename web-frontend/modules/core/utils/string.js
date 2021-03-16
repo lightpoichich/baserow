@@ -57,7 +57,7 @@ export const isValidEmail = (str) => {
 // Docs reference what characters are valid in PhoneNumberFieldType.getDocsDescription
 // Ensure they are kept in sync.
 export const isSimplePhoneNumber = (str) => {
-  const pattern = /^[0-9._+*() #=-]+$/i
+  const pattern = /^[0-9N,+._*()#=;/ -]+$/i
   return pattern.test(str)
 }
 

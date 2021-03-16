@@ -981,7 +981,7 @@ class PhoneNumberFieldType(FieldType):
     type = 'phone_number'
     model_class = PhoneNumberField
 
-    SIMPLE_PHONE_NUMBER_REGEX = r'^[0-9._+*() #=-]+$'
+    SIMPLE_PHONE_NUMBER_REGEX = r'^[0-9N,+._*()#=;/ -]+$'
     """
     Allow common punctuation used in phone numbers and spaces to allow formatting,
     but otherwise don't allow text as the phone number should work as a link on mobile

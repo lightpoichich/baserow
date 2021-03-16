@@ -9,7 +9,14 @@
 * Made it possible to re-order fields in a grid view.
 * Show the number of filters and sorts active in the header of a grid view.
 * The first user to sign-up after installation now gets given staff status.
-* Prevented the date field value to be negative.
+* Rename the "includes" get parameter across all API endpoints to "include" to be 
+  consistent.
+* Add missing include query parameter and corresponding response attributes to API docs. 
+* Remove incorrectly included "filters_disabled" field from 
+  list_database_table_grid_view_rows api endpoint.
+* Show an error to the user when the web socket connection could not be made and the
+  reconnect loop stops.
+* Fixed 100X backend web socket errors when refreshing the page.
 * Fixed SSRF bug in the file upload by URL by blocking urls to the private network.
 
 ## Released (2021-03-01)

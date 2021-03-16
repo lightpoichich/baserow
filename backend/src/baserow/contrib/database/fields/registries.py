@@ -221,10 +221,10 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         Please note the SQL will only be run if the underlying database's column type
         for to_field is different from from_field. This happens when converting
-        between two FieldType's which have the same `get_model_type` or the same
-        underlying database type,
+        between two FieldTypes which have the same `get_model_type` or the same
+        underlying database type.
         For example: converting from a `models.EmailField` to a `models.CharField` will
-        not trigger this SQL.
+        not trigger this SQL as they both are actually CharFields.
         Instead you should also implement `FieldType.after_update`,
         where the `altered_column` param will be false when this has happened.
 

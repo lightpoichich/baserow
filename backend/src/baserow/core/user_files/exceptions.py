@@ -17,6 +17,12 @@ class FileURLCouldNotBeReached(Exception):
     """Raised when the provided URL could not be reached."""
 
 
+class InvalidFileURLError(Exception):
+    """
+    Raised when the provided file URL is invalid or points to an internal service.
+    """
+
+
 class InvalidUserFileNameError(Exception):
     """Raised when the provided user file name is invalid."""
 

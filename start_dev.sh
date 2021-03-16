@@ -5,7 +5,7 @@ tabname() {
 }
 
 print_manual_instructions(){
-  COMMAND=$1""
+  COMMAND=$1
   CONTAINER_COMMAND=$2
   echo -e "\nOpen a new tab/terminal and run:"
   echo "    $COMMAND"

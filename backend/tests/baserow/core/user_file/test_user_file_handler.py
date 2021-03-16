@@ -1,7 +1,6 @@
 import pytest
 import responses
 import string
-from unittest.mock import patch
 
 from freezegun import freeze_time
 from PIL import Image

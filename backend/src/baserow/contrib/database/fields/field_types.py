@@ -970,22 +970,26 @@ class SingleSelectFieldType(FieldType):
         return select_options[random_choice]
 
 
-class PhoneNumberFieldTypeCustom(models.TextField):
-    pass
-
-
-# See `docs/decisions/001-phone-number-field-validation.md` for context as to why
-# the phone number validation was implemented using a simple regex.
 class PhoneNumberFieldType(FieldType):
+    """ A simple wrapper around a TextField which ensures any entered data is a
+    simple phone number.
+
+    See `docs/decisions/001-phone-number-field-validation.md` for context
+    as to why the phone number validation was implemented using a simple regex.
+    """
+
     type = 'phone_number'
     model_class = PhoneNumberField
 
-    # Allow common punctuation used in phone numbers and spaces to allow formatting,
-    # but otherwise don't allow text as the phone number should work as a link on mobile
-    # devices.
-    # Duplicated in the frontend code at, please keep in sync:
-    #   web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
-    SIMPLE_PHONE_NUMBER_REGEX = r"^[0-9._+*() #=-]+$"
+    SIMPLE_PHONE_NUMBER_REGEX = r'^[0-9._+*() #=-]+$'
+    """
+    Allow common punctuation used in phone numbers and spaces to allow formatting,
+    but otherwise don't allow text as the phone number should work as a link on mobile
+    devices.
+    Duplicated in the frontend code at, please keep in sync:
+    web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
+    """
+
     simple_phone_number_validator = RegexValidator(
         regex=SIMPLE_PHONE_NUMBER_REGEX)
 
@@ -1018,13 +1022,13 @@ class PhoneNumberFieldType(FieldType):
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return f"""p_in = (
+            return f'''p_in = (
             case
                 when p_in::text ~* '{self.SIMPLE_PHONE_NUMBER_REGEX}'
                 then p_in::text
                 else ''
                 end
-            );"""
+            );'''
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)

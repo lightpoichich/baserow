@@ -244,7 +244,7 @@ class UserFileHandler:
         :param storage: The storage where the file must be saved to.
         :type storage: Storage
         :raises FileURLCouldNotBeReached: If the file could not be downloaded from
-            the URL.
+            the URL or if it points to an internal service.
         :raises InvalidFileURLError: If the provided file url is invalid.
         :return: The newly created user file.
         :rtype: UserFile

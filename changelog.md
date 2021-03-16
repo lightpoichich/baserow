@@ -13,7 +13,11 @@
   consistent.
 * Add missing include query parameter and corresponding response attributes to API docs. 
 * Remove incorrectly included "filters_disabled" field from 
-  list_database_table_grid_view_rows api endpoint. 
+  list_database_table_grid_view_rows api endpoint.
+* Show an error to the user when the web socket connection could not be made and the
+  reconnect loop stops.
+* Fixed 100X backend web socket errors when refreshing the page.
+* Prevented the date field value being negative.
 
 ## Released (2021-03-01)
 

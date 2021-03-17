@@ -1,5 +1,4 @@
 import re
-from decimal import Decimal, DecimalException
 
 from django.db import models
 from django.db.models import Q
@@ -12,7 +11,6 @@ from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.models import FILTER_TYPE_AND, FILTER_TYPE_OR
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
-
 
 deconstruct_filter_key_regex = re.compile(
     r'filter__field_([0-9]+)__([a-zA-Z0-9_]*)$'
@@ -51,39 +49,22 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        search_queries = models.Q()
-        excluded = ('order', 'created_on', 'updated_on')
 
-        for field in self.model._meta.get_fields():
-            if field.name in excluded:
-                continue
+        try:
+            search_queries = models.Q(**{
+                f'id': int(search)
+            })
+        except ValueError:
+            search_queries = models.Q()
 
-            if (
-                isinstance(field, models.CharField) or
-                isinstance(field, models.TextField)
-            ):
-                search_queries = search_queries | models.Q(**{
-                    f'{field.name}__icontains': search
-                })
-            elif (
-                isinstance(field, models.AutoField) or
-                isinstance(field, models.IntegerField)
-            ):
-                try:
-                    search_queries = search_queries | models.Q(**{
-                        f'{field.name}': int(search)
-                    })
-                except ValueError:
-                    pass
-            elif isinstance(field, models.DecimalField):
-                try:
-                    search_queries = search_queries | models.Q(**{
-                        f'{field.name}': Decimal(search)
-                    })
-                except (ValueError, DecimalException):
-                    pass
-
-        return self.filter(search_queries) if len(search_queries) > 0 else self
+        for field_object in self.model._field_objects.values():
+            search_queries = search_queries | field_object['type'].search(
+                search,
+                self,
+                field_object['field'],
+                field_object['name']
+            )
+        return self.filter(search_queries)
 
     def order_by_fields_string(self, order_string):
         """

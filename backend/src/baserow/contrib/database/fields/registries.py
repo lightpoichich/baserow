@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from baserow.core.registry import (
     Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin,
@@ -86,6 +88,23 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
 
         return queryset
+
+    def search(self, search, queryset, field, name):
+        """
+        TODO
+
+        :param queryset:
+        :type: QuerySet
+        :param field: The related field's instance. The queryset can optionally be
+            enhanced based on the properties of the field.
+        :type field: Field
+        :param name: The name of the field.
+        :type name: str
+        :return: The searched queryset.
+        :rtype: QuerySet
+        """
+
+        return Q()
 
     def get_serializer_field(self, instance, **kwargs):
         """

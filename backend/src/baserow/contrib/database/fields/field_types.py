@@ -6,7 +6,7 @@ from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from django.db import models
-from django.db.models import Case, When
+from django.db.models import Case, When, Q
 from django.contrib.postgres.fields import JSONField
 from django.core.validators import URLValidator, EmailValidator
 from django.core.exceptions import ValidationError
@@ -57,6 +57,11 @@ class TextFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.name()
 
+    def search(self, search, queryset, field, name):
+        return Q(**{
+            f'{name}__icontains': search
+        })
+
 
 class LongTextFieldType(FieldType):
     type = 'long_text'
@@ -71,6 +76,11 @@ class LongTextFieldType(FieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.text()
+
+    def search(self, search, queryset, field, name):
+        return Q(**{
+            f'{name}__icontains': search
+        })
 
 
 class URLFieldType(FieldType):
@@ -107,6 +117,11 @@ class URLFieldType(FieldType):
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
+
+    def search(self, search, queryset, field, name):
+        return Q(**{
+            f'{name}__icontains': search
+        })
 
 
 class NumberFieldType(FieldType):
@@ -206,6 +221,15 @@ class NumberFieldType(FieldType):
             }).update(**{
                 f'field_{to_field.id}': 0
             })
+
+    def search(self, search, queryset, field, name):
+        try:
+            query = {
+                f'{name}': int(search)
+            }
+        except ValueError:
+            query = {}
+        return Q(**query)
 
 
 class BooleanFieldType(FieldType):
@@ -700,6 +724,11 @@ class EmailFieldType(FieldType):
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
+
+    def search(self, search, queryset, field, name):
+        return Q(**{
+            f'{name}__icontains': search
+        })
 
 
 class FileFieldType(FieldType):

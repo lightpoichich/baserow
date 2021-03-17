@@ -224,7 +224,7 @@ class NumberFieldType(FieldType):
     def search(self, search, queryset, field, name):
         try:
             query = {
-                f'{name}': int(search)
+                f'{name}__icontains': int(search)
             }
         except ValueError:
             query = {}

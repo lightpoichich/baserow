@@ -182,7 +182,7 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
     row_2 = model.objects.create(
         name='Audi',
         color='Orange',
-        price=20000,
+        price=20500,
         description='This is the most expensive car we have.',
         date='2005-05-05',
         datetime=make_aware(datetime(5, 5, 5, 0, 48, 0), utc),
@@ -222,6 +222,11 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
 
     results = model.objects.all().search_all_fields(row_3.id)
     assert len(results) == 1
+    assert row_3 in results
+
+    results = model.objects.all().search_all_fields(500)
+    assert len(results) ==2
+    assert row_2 in results
     assert row_3 in results
 
     results = model.objects.all().search_all_fields('05/05/9999')

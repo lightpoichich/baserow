@@ -1,9 +1,12 @@
+from datetime import datetime
+
 import pytest
 from decimal import Decimal
 
 from unittest.mock import MagicMock
 
 from django.db import models
+from django.utils.timezone import make_aware, utc
 
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.fields.exceptions import (
@@ -147,7 +150,7 @@ def test_enhance_by_fields_queryset(data_fixture):
 
 
 @pytest.mark.django_db
-def test_search_all_fields_queryset(data_fixture):
+def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
     table = data_fixture.create_database_table(name='Cars')
     data_fixture.create_text_field(table=table, order=0, name='Name')
     data_fixture.create_text_field(table=table, order=1, name='Color')
@@ -157,6 +160,13 @@ def test_search_all_fields_queryset(data_fixture):
     data_fixture.create_date_field(table=table, order=5, name='DateTime',
                                    date_format="US", date_include_time=True,
                                    date_time_format="24")
+    data_fixture.create_file_field(table=table, order=6, name='File')
+    select = data_fixture.create_single_select_field(table=table, order=6,
+                                                     name='select')
+    option_a = data_fixture.create_select_option(field=select, value='Option A',
+                                                 color='blue')
+    option_b = data_fixture.create_select_option(field=select, value='Option B',
+                                                 color='red')
 
     model = table.get_model(attribute_names=True)
     row_1 = model.objects.create(
@@ -165,7 +175,9 @@ def test_search_all_fields_queryset(data_fixture):
         price=10000,
         description='This is the fastest car there is.',
         date='0005-05-05',
-        datetime='4006-07-08 00:00'
+        datetime=make_aware(datetime(4006, 7, 8, 0, 0, 0), utc),
+        file=[{'visible_name': 'test_file.png'}],
+        select=option_a,
     )
     row_2 = model.objects.create(
         name='Audi',
@@ -173,7 +185,9 @@ def test_search_all_fields_queryset(data_fixture):
         price=20000,
         description='This is the most expensive car we have.',
         date='2005-05-05',
-        datetime='0005-05-05 00:48'
+        datetime=make_aware(datetime(5, 5, 5, 0, 48, 0), utc),
+        file=[{'visible_name': 'other_file.png'}],
+        select=option_b,
     )
     row_3 = model.objects.create(
         name='Volkswagen',
@@ -181,7 +195,8 @@ def test_search_all_fields_queryset(data_fixture):
         price=5000,
         description='The oldest car that we have.',
         date='9999-05-05',
-        datetime='0005-05-05 09:59'
+        datetime=make_aware(datetime(5, 5, 5, 9, 59, 0), utc),
+        file=[],
     )
 
     results = model.objects.all().search_all_fields('FASTEST')
@@ -220,6 +235,24 @@ def test_search_all_fields_queryset(data_fixture):
     results = model.objects.all().search_all_fields('00:')
     assert len(results) == 2
     assert row_1 in results
+    assert row_2 in results
+
+    results = model.objects.all().search_all_fields('.png')
+    assert len(results) == 2
+    assert row_1 in results
+    assert row_2 in results
+
+    results = model.objects.all().search_all_fields('test_file')
+    assert len(results) == 1
+    assert row_1 in results
+
+    results = model.objects.all().search_all_fields('Option')
+    assert len(results) == 2
+    assert row_1 in results
+    assert row_2 in results
+
+    results = model.objects.all().search_all_fields('Option B')
+    assert len(results) == 1
     assert row_2 in results
 
     results = model.objects.all().search_all_fields('white car')

@@ -80,9 +80,7 @@ class TableModelQuerySet(models.QuerySet):
             if new_annotations:
                 extra_annotations = {**extra_annotations, **new_annotations}
 
-        query = self.annotate(**extra_annotations).filter(search_queries)
-        return query
-
+        return self.annotate(**extra_annotations).filter(search_queries)
 
     def order_by_fields_string(self, order_string):
         """
@@ -133,7 +131,6 @@ class TableModelQuerySet(models.QuerySet):
         order_by.append('order')
         order_by.append('id')
         return self.order_by(*order_by)
-
 
     def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
         """

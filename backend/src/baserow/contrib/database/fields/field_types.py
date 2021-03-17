@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, EmailValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
+from django.db.models.expressions import RawSQL
 from django.utils.timezone import make_aware
 from pytz import timezone
 from rest_framework import serializers
@@ -829,6 +830,23 @@ class FileFieldType(FieldType):
 
         return values
 
+    def search(self, search, queryset, field, name):
+        num_files_with_name_like_value = f"""
+            EXISTS(
+                SELECT attached_files ->> 'visible_name'
+                FROM JSONB_ARRAY_ELEMENTS("field_{field.id}") as attached_files
+                WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%s)
+            )
+        """
+        query = RawSQL(num_files_with_name_like_value, params=[f"%{search}%"],
+                       output_field=models.BooleanField())
+        annotation = {
+            f"num_files_with_name_like_value_for_{name}": query
+        }
+        return Q(**{
+            f'num_files_with_name_like_value_for_{name}': True
+        }), annotation
+
 
 class SingleSelectFieldType(FieldType):
     type = 'single_select'
@@ -1012,3 +1030,34 @@ class SingleSelectFieldType(FieldType):
         random_choice = randint(0, len(select_options) - 1)
 
         return select_options[random_choice]
+
+    def search(self, search, queryset, field, name):
+        values_mapping = []
+        variables = []
+        for option in field.select_options.all():
+            variables.append(option.value)
+            values_mapping.append(
+                f"(lower(%s), {int(option.id)})"
+            )
+
+        # If there are no values we don't need to convert the value since all
+        # values should be converted to null.
+        if len(values_mapping) == 0:
+            return Q()
+
+        sql = f"""(
+                SELECT key FROM (
+                    VALUES {','.join(values_mapping)}
+                ) AS values (key, value)
+                WHERE value = "field_{field.id}"
+            )
+            """
+
+        query = RawSQL(sql, params=variables,
+                       output_field=models.CharField())
+        annotation = {
+            f"select_option_value_{name}": query
+        }
+        return Q(**{
+            f'select_option_value_{name}__icontains': search
+        }), annotation

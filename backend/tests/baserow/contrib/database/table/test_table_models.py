@@ -153,25 +153,35 @@ def test_search_all_fields_queryset(data_fixture):
     data_fixture.create_text_field(table=table, order=1, name='Color')
     data_fixture.create_number_field(table=table, order=2, name='Price')
     data_fixture.create_long_text_field(table=table, order=3, name='Description')
+    data_fixture.create_date_field(table=table, order=4, name='Date', date_format="EU")
+    data_fixture.create_date_field(table=table, order=5, name='DateTime',
+                                   date_format="US", date_include_time=True,
+                                   date_time_format="24")
 
     model = table.get_model(attribute_names=True)
     row_1 = model.objects.create(
         name='BMW',
         color='Blue',
         price=10000,
-        description='This is the fastest car there is.'
+        description='This is the fastest car there is.',
+        date='0005-05-05',
+        datetime='4006-07-08 00:00'
     )
     row_2 = model.objects.create(
         name='Audi',
         color='Orange',
         price=20000,
-        description='This is the most expensive car we have.'
+        description='This is the most expensive car we have.',
+        date='2005-05-05',
+        datetime='0005-05-05 00:48'
     )
     row_3 = model.objects.create(
         name='Volkswagen',
         color='White',
         price=5000,
-        description='The oldest car that we have.'
+        description='The oldest car that we have.',
+        date='9999-05-05',
+        datetime='0005-05-05 09:59'
     )
 
     results = model.objects.all().search_all_fields('FASTEST')
@@ -198,6 +208,19 @@ def test_search_all_fields_queryset(data_fixture):
     results = model.objects.all().search_all_fields(row_3.id)
     assert len(results) == 1
     assert row_3 in results
+
+    results = model.objects.all().search_all_fields('05/05/9999')
+    assert len(results) == 1
+    assert row_3 in results
+
+    results = model.objects.all().search_all_fields('07/08/4006')
+    assert len(results) == 1
+    assert row_1 in results
+
+    results = model.objects.all().search_all_fields('00:')
+    assert len(results) == 2
+    assert row_1 in results
+    assert row_2 in results
 
     results = model.objects.all().search_all_fields('white car')
     assert len(results) == 0

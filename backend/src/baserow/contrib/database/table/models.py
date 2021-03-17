@@ -56,14 +56,33 @@ class TableModelQuerySet(models.QuerySet):
         except ValueError:
             search_queries = models.Q()
 
+        extra_annotations = {}
+
         for field_object in self.model._field_objects.values():
-            search_queries = search_queries | field_object['type'].search(
+            search_results = field_object['type'].search(
                 search,
                 self,
                 field_object['field'],
                 field_object['name']
             )
-        return self.filter(search_queries)
+
+            # TODO figure out a better way of returning both Q's and annotations
+            # Perhaps this should be shared with the changes made to contains?
+            if isinstance(search_results, tuple):
+                field_search_query = search_results[0]
+                new_annotations = search_results[1]
+            else:
+                field_search_query = search_results
+                new_annotations = {}
+
+            search_queries = search_queries | field_search_query
+
+            if new_annotations:
+                extra_annotations = {**extra_annotations, **new_annotations}
+
+        query = self.annotate(**extra_annotations).filter(search_queries)
+        return query
+
 
     def order_by_fields_string(self, order_string):
         """
@@ -114,6 +133,7 @@ class TableModelQuerySet(models.QuerySet):
         order_by.append('order')
         order_by.append('id')
         return self.order_by(*order_by)
+
 
     def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
         """

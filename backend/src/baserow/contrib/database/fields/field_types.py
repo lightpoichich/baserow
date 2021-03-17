@@ -1,43 +1,41 @@
+from datetime import datetime, date
 from decimal import Decimal
-from pytz import timezone
 from random import randrange, randint
+
 from dateutil import parser
 from dateutil.parser import ParserError
-from datetime import datetime, date
-
-from django.db import models
-from django.db.models import Case, When, Q
 from django.contrib.postgres.fields import JSONField
-from django.core.validators import URLValidator, EmailValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator, EmailValidator
+from django.db import models
+from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.utils.timezone import make_aware
-
+from pytz import timezone
 from rest_framework import serializers
 
-from baserow.core.models import UserFile
-from baserow.core.user_files.exceptions import UserFileDoesNotExist
-from baserow.contrib.database.api.fields.serializers import (
-    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
-    SelectOptionSerializer
-)
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE
 )
-
-from .handler import FieldHandler
-from .registries import FieldType, field_type_registry
-from .models import (
-    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, DATE_FORMAT, DATE_TIME_FORMAT,
-    TextField, LongTextField, URLField, NumberField, BooleanField, DateField,
-    LinkRowField, EmailField, FileField,
-    SingleSelectField, SelectOption
+from baserow.contrib.database.api.fields.serializers import (
+    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
+    SelectOptionSerializer
 )
+from baserow.core.models import UserFile
+from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .exceptions import (
     LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
     IncompatiblePrimaryFieldTypeError
 )
 from .fields import SingleSelectForeignKey
+from .handler import FieldHandler
+from .models import (
+    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
+    NumberField, BooleanField, DateField,
+    LinkRowField, EmailField, FileField,
+    SingleSelectField, SelectOption
+)
+from .registries import FieldType, field_type_registry
 
 
 class TextFieldType(FieldType):
@@ -323,17 +321,25 @@ class DateFieldType(FieldType):
 
         to_field_type = field_type_registry.get_by_model(to_field)
         if to_field_type.type != self.type and connection.vendor == 'postgresql':
-            sql_type = 'date'
-            sql_format = DATE_FORMAT[from_field.date_format]['sql']
-
-            if from_field.date_include_time:
-                sql_type = 'timestamp'
-                sql_format += ' ' + DATE_TIME_FORMAT[from_field.date_time_format]['sql']
-
+            sql_format = from_field.get_psql_format()
+            sql_type = from_field.get_psql_type()
             return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
 
         return super().get_alter_column_prepare_old_value(connection, from_field,
                                                           to_field)
+
+    def search(self, search, queryset, field, name):
+        annotation = {
+            f"formatted_date_{name}": Func(
+                F(name),
+                Value(field.get_psql_format()),
+                function='to_char',
+                output_field=CharField()
+            )
+        }
+        return Q(**{
+            f'formatted_date_{name}__icontains': search
+        }), annotation
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
@@ -345,14 +351,9 @@ class DateFieldType(FieldType):
 
         from_field_type = field_type_registry.get_by_model(from_field)
         if from_field_type.type != self.type and connection.vendor == 'postgresql':
-            sql_function = 'TO_DATE'
-            sql_format = DATE_FORMAT[to_field.date_format]['sql']
-            sql_type = 'date'
-
-            if to_field.date_include_time:
-                sql_function = 'TO_TIMESTAMP'
-                sql_format += ' ' + DATE_TIME_FORMAT[to_field.date_time_format]['sql']
-                sql_type = 'timestamp'
+            sql_function = to_field.get_psql_type_convert_function()
+            sql_format = to_field.get_psql_format()
+            sql_type = to_field.get_psql_type()
 
             return f"""
                 begin

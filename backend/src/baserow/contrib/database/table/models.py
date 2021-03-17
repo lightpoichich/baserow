@@ -49,7 +49,6 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-
         try:
             search_queries = models.Q(**{
                 f'id': int(search)

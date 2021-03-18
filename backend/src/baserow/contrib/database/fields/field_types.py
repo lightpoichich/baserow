@@ -965,7 +965,8 @@ class SingleSelectFieldType(FieldType):
 
 
 class PhoneNumberFieldType(FieldType):
-    """ A simple wrapper around a TextField which ensures any entered data is a
+    """
+    A simple wrapper around a TextField which ensures any entered data is a
     simple phone number.
 
     See `docs/decisions/001-phone-number-field-validation.md` for context
@@ -1016,13 +1017,14 @@ class PhoneNumberFieldType(FieldType):
         )
 
     def get_model_field(self, instance, **kwargs):
-        return models.CharField(default=None,
-                                blank=True,
-                                null=True,
-                                max_length=self.MAX_PHONE_NUMBER_LENGTH,
-                                validators=[
-                                    self.simple_phone_number_validator],
-                                **kwargs)
+        return models.CharField(
+            default='',
+            blank=True,
+            null=True,
+            max_length=self.MAX_PHONE_NUMBER_LENGTH,
+            validators=[
+                self.simple_phone_number_validator],
+            **kwargs)
 
     def random_value(self, instance, fake, cache):
         return fake.phone_number()

@@ -1178,6 +1178,10 @@ export class PhoneNumberFieldType extends FieldType {
     }
   }
 
+  getSortIndicator() {
+    return ['text', '0', '9']
+  }
+
   getDocsDataType(field) {
     return 'string'
   }

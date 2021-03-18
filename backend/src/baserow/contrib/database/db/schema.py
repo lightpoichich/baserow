@@ -10,9 +10,9 @@ class PostgresqlLenientDatabaseSchemaEditor:
     format. If the casting still fails the value will be set to null.
     """
 
-    sql_alter_column_type = "ALTER COLUMN %(column)s TYPE %(type)s " \
-                            "USING pg_temp.try_cast(%(column)s::text)"
-    sql_drop_try_cast = "DROP FUNCTION IF EXISTS pg_temp.try_cast(text, int)"
+    sql_alter_column_type = 'ALTER COLUMN %(column)s TYPE %(type)s ' \
+                            'USING pg_temp.try_cast(%(column)s::text)'
+    sql_drop_try_cast = 'DROP FUNCTION IF EXISTS pg_temp.try_cast(text, int)'
     sql_create_try_cast = """
         create or replace function pg_temp.try_cast(
             p_in text,
@@ -58,10 +58,10 @@ class PostgresqlLenientDatabaseSchemaEditor:
         quoted_column_name = self.quote_name(new_field.column)
         self.execute(self.sql_drop_try_cast)
         self.execute(self.sql_create_try_cast % {
-            "column": quoted_column_name,
-            "type": new_type,
-            "alter_column_prepare_old_value": alter_column_prepare_old_value,
-            "alter_column_prepare_new_value": alter_column_prepare_new_value
+            'column': quoted_column_name,
+            'type': new_type,
+            'alter_column_prepare_old_value': alter_column_prepare_old_value,
+            'alter_column_prepare_new_value': alter_column_prepare_new_value
         }, variables)
 
         if old_type == new_type:
@@ -73,10 +73,10 @@ class PostgresqlLenientDatabaseSchemaEditor:
             table_name = self.quote_name(model._meta.db_table)
             self.execute(
                 self.sql_alter_column % {
-                    "table": table_name,
-                    "changes": self.sql_alter_column_type % {
-                        "column": quoted_column_name,
-                        "type": new_type,
+                    'table': table_name,
+                    'changes': self.sql_alter_column_type % {
+                        'column': quoted_column_name,
+                        'type': new_type,
                     }
                 },
             )

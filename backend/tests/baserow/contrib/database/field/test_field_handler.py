@@ -2,12 +2,15 @@ import pytest
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    Field, TextField, NumberField, BooleanField, SelectOption
+    Field, TextField, NumberField, BooleanField, SelectOption, LongTextField
 )
-from baserow.contrib.database.fields.field_types import TextFieldType
+from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
@@ -267,6 +270,149 @@ def test_update_field_failing(data_fixture):
     handler.update_field(user, field=field, new_type_name='text')
     assert Field.objects.all().count() == 1
     assert TextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
+    class AlwaysLowercaseTextField(TextFieldType):
+        type = 'lowercase_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''(lower(p_in))'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'lowercase_text': AlwaysLowercaseTextField()}
+    ):
+        with CaptureQueriesContext(connection) as ctx:
+            handler.update_field(user=user, field=existing_text_field,
+                                 new_type_name='lowercase_text')
+        # code that runs SQL queries
+        print(ctx.captured_queries)
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == "test"
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixture):
+    class ReversesWhenConvertsAwayTextField(LongTextFieldType):
+        type = 'reserves_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+            return '''concat(reverse(p_in), %(some_variable)s)''', {
+                "some_variable": "_POST_FIX"
+            }
+
+    class AlwaysLowercaseTextField(TextFieldType):
+        type = 'lowercase_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''concat(%(other_variable)s, lower(p_in))''', {
+                "other_variable": "pre_fix_"
+            }
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_field_with_old_value_prep = data_fixture.create_long_text_field(
+        table=table)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_field_with_old_value_prep.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {
+            'lowercase_text': AlwaysLowercaseTextField(),
+            'long_text': ReversesWhenConvertsAwayTextField()
+        }
+    ):
+        with CaptureQueriesContext(connection) as ctx:
+            handler.update_field(user=user, field=existing_field_with_old_value_prep,
+                                 new_type_name='lowercase_text')
+        # code that runs SQL queries
+        print(ctx.captured_queries)
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == "pre_fix_tset_post_fix"
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixture):
+    class ReversesWhenConvertsAwayTextField(LongTextFieldType):
+        type = 'reserves_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+            return '''(reverse(p_in))'''
+
+    class AlwaysLowercaseTextField(TextFieldType):
+        type = 'lowercase_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''(lower(p_in))'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_field_with_old_value_prep = data_fixture.create_long_text_field(
+        table=table)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_field_with_old_value_prep.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {
+            'lowercase_text': AlwaysLowercaseTextField(),
+            'long_text': ReversesWhenConvertsAwayTextField()
+        }
+    ):
+        with CaptureQueriesContext(connection) as ctx:
+            handler.update_field(user=user, field=existing_field_with_old_value_prep,
+                                 new_type_name='lowercase_text')
+        # code that runs SQL queries
+        print(ctx.captured_queries)
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == "tset"
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
 
 
 @pytest.mark.django_db

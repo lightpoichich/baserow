@@ -23,8 +23,8 @@ class PostgresqlLenientDatabaseSchemaEditor:
         $$
         begin
             begin
-                %(alter_column_prepare_old_value)s
-                %(alter_column_prepare_new_value)s
+                p_in = %(alter_column_prepare_old_value)s;
+                p_in = %(alter_column_prepare_new_value)s;
                 return p_in::%(type)s;
             exception when others then
                 return p_default;
@@ -42,28 +42,41 @@ class PostgresqlLenientDatabaseSchemaEditor:
 
     def _alter_field(self, model, old_field, new_field, old_type, new_type,
                      old_db_params, new_db_params, strict=False):
+        variables = {}
+        if isinstance(self.alter_column_prepare_old_value, tuple):
+            alter_column_prepare_old_value, v = self.alter_column_prepare_old_value
+            variables = {**variables, **v}
+        else:
+            alter_column_prepare_old_value = self.alter_column_prepare_old_value
+
+        if isinstance(self.alter_column_prepare_new_value, tuple):
+            alter_column_prepare_new_value, v = self.alter_column_prepare_new_value
+            variables = {**variables, **v}
+        else:
+            alter_column_prepare_new_value = self.alter_column_prepare_new_value
+
+        alter_column_prepare_old_value = alter_column_prepare_old_value or "p_in"
+        alter_column_prepare_new_value = alter_column_prepare_new_value or "p_in"
+
+        column_name = self.quote_name(new_field.column)
         if old_type != new_type:
-            variables = {}
-
-            if isinstance(self.alter_column_prepare_old_value, tuple):
-                alter_column_prepare_old_value, v = self.alter_column_prepare_old_value
-                variables = {**variables, **v}
-            else:
-                alter_column_prepare_old_value = self.alter_column_prepare_old_value
-
-            if isinstance(self.alter_column_prepare_new_value, tuple):
-                alter_column_prepare_new_value, v = self.alter_column_prepare_new_value
-                variables = {**variables, **v}
-            else:
-                alter_column_prepare_new_value = self.alter_column_prepare_new_value
-
             self.execute(self.sql_drop_try_cast)
             self.execute(self.sql_create_try_cast % {
-                "column": self.quote_name(new_field.column),
+                "column": column_name,
                 "type": new_type,
                 "alter_column_prepare_old_value": alter_column_prepare_old_value,
                 "alter_column_prepare_new_value": alter_column_prepare_new_value
             }, variables)
+        else:
+            inner_sql = alter_column_prepare_old_value.replace("p_in", column_name)
+            sql = alter_column_prepare_new_value.replace("p_in", inner_sql)
+
+            if sql:
+                self.execute(
+                    f"""UPDATE {model._meta.db_table}
+                    SET {column_name} = {sql};
+                    """, variables
+                )
 
         return super()._alter_field(model, old_field, new_field, old_type, new_type,
                                     old_db_params, new_db_params, strict)

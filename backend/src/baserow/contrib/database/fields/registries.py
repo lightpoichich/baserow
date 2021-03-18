@@ -7,6 +7,7 @@ from baserow.core.registry import (
 )
 
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
+from .field_filters import FieldFilter
 
 
 class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
@@ -89,19 +90,24 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         return queryset
 
-    def search(self, search, queryset, field, name):
+    def contains_query(self, field_name, value, model_field, field) -> FieldFilter:
         """
-        TODO
+        This method optionally returns a FieldFilter which can be used to filter a
+        queryset of a table with this field to check if the param value occurs in
+        any rows.
 
-        :param queryset:
-        :type: QuerySet
-        :param field: The related field's instance. The queryset can optionally be
-            enhanced based on the properties of the field.
+        :param field_name: The name of the field.
+        :type field_name: str
+        :param value: The value to check if this field contains or not.
+        :type value: str
+        :param model_field: The field's actual django field model instance.
+        :type model_field: models.Field
+        :param field: The related field's instance.
         :type field: Field
-        :param name: The name of the field.
-        :type name: str
-        :return: The searched queryset.
-        :rtype: QuerySet
+        :return: Either just a Q object implementing the contains query or a tuple of
+        the Q object with an additional annotation dictionary which should be
+        unpacked into an annotate call preceding the filter where the Q object is used.
+        :rtype: FieldFilter
         """
 
         return Q()

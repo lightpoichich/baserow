@@ -28,6 +28,7 @@ from .exceptions import (
     LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
     IncompatiblePrimaryFieldTypeError
 )
+from .field_filters import filename_contains_filter, contains_filter
 from .fields import SingleSelectForeignKey
 from .handler import FieldHandler
 from .models import (
@@ -56,10 +57,8 @@ class TextFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.name()
 
-    def search(self, search, queryset, field, name):
-        return Q(**{
-            f'{name}__icontains': search
-        })
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class LongTextFieldType(FieldType):
@@ -76,10 +75,8 @@ class LongTextFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.text()
 
-    def search(self, search, queryset, field, name):
-        return Q(**{
-            f'{name}__icontains': search
-        })
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class URLFieldType(FieldType):
@@ -117,10 +114,8 @@ class URLFieldType(FieldType):
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
 
-    def search(self, search, queryset, field, name):
-        return Q(**{
-            f'{name}__icontains': search
-        })
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class NumberFieldType(FieldType):
@@ -221,14 +216,8 @@ class NumberFieldType(FieldType):
                 f'field_{to_field.id}': 0
             })
 
-    def search(self, search, queryset, field, name):
-        try:
-            query = {
-                f'{name}__icontains': int(search)
-            }
-        except ValueError:
-            query = {}
-        return Q(**query)
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class BooleanFieldType(FieldType):
@@ -329,17 +318,17 @@ class DateFieldType(FieldType):
         return super().get_alter_column_prepare_old_value(connection, from_field,
                                                           to_field)
 
-    def search(self, search, queryset, field, name):
+    def contains_query(self, field_name, value, model_field, field):
         annotation = {
-            f"formatted_date_{name}": Func(
-                F(name),
+            f"formatted_date_{field_name}": Func(
+                F(field_name),
                 Value(field.get_psql_format()),
                 function='to_char',
                 output_field=CharField()
             )
         }
         return Q(**{
-            f'formatted_date_{name}__icontains': search
+            f'formatted_date_{field_name}__icontains': value
         }), annotation
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
@@ -727,10 +716,8 @@ class EmailFieldType(FieldType):
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
 
-    def search(self, search, queryset, field, name):
-        return Q(**{
-            f'{name}__icontains': search
-        })
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class FileFieldType(FieldType):
@@ -830,22 +817,8 @@ class FileFieldType(FieldType):
 
         return values
 
-    def search(self, search, queryset, field, name):
-        num_files_with_name_like_value = f"""
-            EXISTS(
-                SELECT attached_files ->> 'visible_name'
-                FROM JSONB_ARRAY_ELEMENTS("field_{field.id}") as attached_files
-                WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%s)
-            )
-        """
-        query = RawSQL(num_files_with_name_like_value, params=[f"%{search}%"],
-                       output_field=models.BooleanField())
-        annotation = {
-            f"num_files_with_name_like_value_for_{name}": query
-        }
-        return Q(**{
-            f'num_files_with_name_like_value_for_{name}': True
-        }), annotation
+    def contains_query(self, *args):
+        return filename_contains_filter(*args)
 
 
 class SingleSelectFieldType(FieldType):
@@ -1031,33 +1004,38 @@ class SingleSelectFieldType(FieldType):
 
         return select_options[random_choice]
 
-    def search(self, search, queryset, field, name):
-        values_mapping = []
-        variables = []
+    def contains_query(self, field_name, value, model_field, field):
+        option_value_mappings = []
+        option_values = []
+        # We have to query for all option values here as the user table we are
+        # constructing a search query for could be in a different database from the
+        # SingleOption. In such a situation if we just tried to do a cross database
+        # join django would crash, so we must look up the values in a separate query.
+
         for option in field.select_options.all():
-            variables.append(option.value)
-            values_mapping.append(
+            option_values.append(option.value)
+            option_value_mappings.append(
                 f"(lower(%s), {int(option.id)})"
             )
 
-        # If there are no values we don't need to convert the value since all
-        # values should be converted to null.
-        if len(values_mapping) == 0:
+        # If there are no values then there is no way this search could match this
+        # field.
+        if len(option_value_mappings) == 0:
             return Q()
 
-        sql = f"""(
+        convert_rows_select_id_to_value_sql = f"""(
                 SELECT key FROM (
-                    VALUES {','.join(values_mapping)}
+                    VALUES {','.join(option_value_mappings)}
                 ) AS values (key, value)
                 WHERE value = "field_{field.id}"
             )
             """
 
-        query = RawSQL(sql, params=variables,
+        query = RawSQL(convert_rows_select_id_to_value_sql, params=option_values,
                        output_field=models.CharField())
         annotation = {
-            f"select_option_value_{name}": query
+            f"select_option_value_{field_name}": query
         }
         return Q(**{
-            f'select_option_value_{name}__icontains': search
+            f'select_option_value_{field_name}__icontains': value
         }), annotation

@@ -19,6 +19,7 @@ from .signals import (
     view_filter_deleted, view_sort_created, view_sort_updated, view_sort_deleted,
     grid_view_field_options_updated
 )
+from ..fields.field_filters import unpack_field_filter
 
 
 class ViewHandler:
@@ -80,10 +81,10 @@ class ViewHandler:
         view_type = view_type_registry.get(type_name)
         model_class = view_type.model_class
         allowed_fields = [
-            'name',
-            'filter_type',
-            'filters_disabled'
-        ] + view_type.allowed_fields
+                             'name',
+                             'filter_type',
+                             'filters_disabled'
+                         ] + view_type.allowed_fields
         view_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
@@ -118,10 +119,10 @@ class ViewHandler:
 
         view_type = view_type_registry.get_by_model(view)
         allowed_fields = [
-            'name',
-            'filter_type',
-            'filters_disabled'
-        ] + view_type.allowed_fields
+                             'name',
+                             'filter_type',
+                             'filters_disabled'
+                         ] + view_type.allowed_fields
         view = set_allowed_attrs(kwargs, allowed_fields, view)
         view.save()
 
@@ -245,21 +246,20 @@ class ViewHandler:
                 raise ValueError(f'The table model does not contain field '
                                  f'{view_filter.field_id}.')
 
-            field_name = model._field_objects[view_filter.field_id]['name']
+            field_object = model._field_objects[view_filter.field_id]
+            field_name = field_object['name']
             model_field = model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(view_filter.type)
-            q_filter = view_filter_type.get_filter(
-                field_name,
-                view_filter.value,
-                model_field
-            )
+            q_filter, extra_annotation = unpack_field_filter(
+                view_filter_type.get_filter(
+                    field_name,
+                    view_filter.value,
+                    model_field,
+                    field_object['field']
+                ))
 
-            view_filter_annotation = view_filter_type.get_annotation(
-                field_name,
-                view_filter.value
-            )
-            if view_filter_annotation:
-                queryset = queryset.annotate(**view_filter_annotation)
+            if extra_annotation:
+                queryset = queryset.annotate(**extra_annotation)
 
             # Depending on filter type we are going to combine the Q either as AND or
             # as OR.

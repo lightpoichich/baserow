@@ -7,6 +7,7 @@ from .exceptions import (
     ViewTypeAlreadyRegistered, ViewTypeDoesNotExist, ViewFilterTypeAlreadyRegistered,
     ViewFilterTypeDoesNotExist
 )
+from ..fields.field_filters import FieldFilter
 
 
 class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMixin,
@@ -102,42 +103,28 @@ class ViewFilterType(Instance):
     can be used in combination with the field.
     """
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field) -> FieldFilter:
         """
         Should return a Q object containing the requested filtering based on the
-        provided arguments.
+        provided arguments. It can additionally return an annotations dictionary to
+        enhance the queryset for use in the filter for more powerful filtering logic.
 
         :param field_name: The name of the field that needs to be filtered.
         :type field_name: str
         :param value: The value that the field must be compared to.
         :type value: str
-        :param model_field: The field extracted form the model.
+        :param model_field: The field extracted from the model.
         :type model_field: models.Field
+        :param field: The instance of the underlying baserow field.
+        :type field: Field
         :return: The Q object that does the filtering. This will later be added to the
-            queryset in the correct way.
-        :rtype: Q
+            queryset in the correct way. Or a tuple with the first element being the
+            Q object and the second being a dictionary which will be unpacked into an
+            annotate call on the view filters queryset prior to the Q object being
+            applied as a filter.
         """
 
         raise NotImplementedError('Each must have his own get_filter method.')
-
-    def get_annotation(self, field_name, value):
-        """
-        Optional method allowing this ViewFilterType to annotate the queryset prior to
-        the application of any Q filters returned by ViewFilterType.get_filter.
-
-        Should return a dictionary which can be unpacked into an annotate call or None
-        if you do not wish any annotation to be applied by your filter.
-
-        :param field_name: The name of the field that needs to be filtered.
-        :type field_name: str
-        :param value: The value that the field must be compared to.
-        :type value: str
-        :return: The dict object that will be unpacked into an annotate call or None if
-            no annotation needs to be done.
-        :rtype: None or dict
-        """
-
-        return None
 
 
 class ViewFilterTypeRegistry(Registry):

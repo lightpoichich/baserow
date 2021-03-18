@@ -3,6 +3,7 @@ import re
 from django.db import models
 from django.db.models import Q
 
+from baserow.contrib.database.fields.field_filters import unpack_field_filter
 from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
@@ -59,26 +60,18 @@ class TableModelQuerySet(models.QuerySet):
         extra_annotations = {}
 
         for field_object in self.model._field_objects.values():
-            search_results = field_object['type'].search(
-                search,
-                self,
-                field_object['field'],
-                field_object['name']
-            )
+            field_name = field_object['name']
+            model_field = self.model._meta.get_field(field_name)
+            field_contains_q, extra_annotation = unpack_field_filter(
+                field_object['type'].contains_query(field_name,
+                                                    search,
+                                                    model_field,
+                                                    field_object['field']))
 
-            # TODO figure out a better way of returning both Q's and annotations
-            # Perhaps this should be shared with the changes made to contains?
-            if isinstance(search_results, tuple):
-                field_search_query = search_results[0]
-                new_annotations = search_results[1]
-            else:
-                field_search_query = search_results
-                new_annotations = {}
+            search_queries = search_queries | field_contains_q
 
-            search_queries = search_queries | field_search_query
-
-            if new_annotations:
-                extra_annotations = {**extra_annotations, **new_annotations}
+            if extra_annotation:
+                extra_annotations = {**extra_annotations, **extra_annotation}
 
         return self.annotate(**extra_annotations).filter(search_queries)
 
@@ -177,8 +170,9 @@ class TableModelQuerySet(models.QuerySet):
                     field_id, f'Field {field_id} does not exist.'
                 )
 
-            field_name = self.model._field_objects[field_id]['name']
-            field_type = self.model._field_objects[field_id]['type'].type
+            field_object = self.model._field_objects[field_id]
+            field_name = field_object['name']
+            field_type = field_object['type'].type
             model_field = self.model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(matches[2])
 
@@ -192,18 +186,16 @@ class TableModelQuerySet(models.QuerySet):
                 values = [values]
 
             for value in values:
-                q_filter = view_filter_type.get_filter(
-                    field_name,
-                    value,
-                    model_field
-                )
+                q_filter, extra_annotation = unpack_field_filter(
+                    view_filter_type.get_filter(
+                        field_name,
+                        value,
+                        model_field,
+                        field_object['field']
+                    ))
 
-                view_filter_annotation = view_filter_type.get_annotation(
-                    field_name,
-                    value
-                )
-                if view_filter_annotation:
-                    self = self.annotate(**view_filter_annotation)
+                if extra_annotation:
+                    self = self.annotate(**extra_annotation)
 
                 # Depending on filter type we are going to combine the Q either as
                 # AND or as OR.

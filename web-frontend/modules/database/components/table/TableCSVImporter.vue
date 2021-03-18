@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label"> Choose CSV file </label>
+      <label class="control__label">Choose CSV file</label>
       <div class="control__description">
         You can import an existing CSV by uploading the .CSV file with tabular
         data. Most spreadsheet applications will allow you to export your
@@ -33,7 +33,7 @@
     <div v-if="filename !== ''" class="row">
       <div class="col col-4">
         <div class="control">
-          <label class="control__label"> Column separator </label>
+          <label class="control__label">Column separator</label>
           <div class="control__elements">
             <Dropdown v-model="columnSeparator" @input="reload()">
               <DropdownItem name="auto detect" value="auto"></DropdownItem>
@@ -55,7 +55,7 @@
       </div>
       <div class="col col-8">
         <div class="control">
-          <label class="control__label"> Encoding </label>
+          <label class="control__label">Encoding</label>
           <div class="control__elements">
             <Dropdown v-model="encoding" @input="reload()">
               <DropdownItem name="Unicode (UTF-8)" value="utf-8"></DropdownItem>
@@ -192,7 +192,7 @@
     <div v-if="filename !== ''" class="row">
       <div class="col col-6">
         <div class="control">
-          <label class="control__label"> First row is header </label>
+          <label class="control__label">First row is header</label>
           <div class="control__elements">
             <Checkbox v-model="values.firstRowHeader" @input="reload()"
               >yes</Checkbox
@@ -201,7 +201,10 @@
         </div>
       </div>
     </div>
-    <div v-if="error !== ''" class="alert alert--error alert--has-icon">
+    <div
+      v-if="error !== ''"
+      class="alert alert--error alert--has-icon margin-top-1"
+    >
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
       </div>

@@ -14,8 +14,7 @@ from baserow.contrib.database.fields.field_types import (
     SingleSelectFieldType
 )
 from .registries import ViewFilterType
-from ..fields.field_filters import contains_filter, filename_contains_filter, \
-    filter_combinable, no_filter_combinable
+from ..fields.field_filters import contains_filter, filename_contains_filter
 
 
 class NotViewFilterTypeMixin:
@@ -46,16 +45,16 @@ class EqualViewFilterType(ViewFilterType):
 
         # If an empty value has been provided we do not want to filter at all.
         if value == '':
-            return no_filter_combinable()
+            return Q()
 
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return filter_combinable(Q(**{field_name: value}))
+            return Q(**{field_name: value})
         except Exception:
             pass
 
-        return no_filter_combinable()
+        return Q()
 
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
@@ -115,7 +114,7 @@ class HigherThanViewFilterType(ViewFilterType):
 
         # If an empty value has been provided we do not want to filter at all.
         if value == '':
-            return no_filter_combinable()
+            return Q()
 
         if isinstance(model_field, IntegerField) and value.find('.') != -1:
             decimal = Decimal(value)
@@ -124,11 +123,11 @@ class HigherThanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return filter_combinable(Q(**{f'{field_name}__gt': value}))
+            return Q(**{f'{field_name}__gt': value})
         except Exception:
             pass
 
-        return no_filter_combinable()
+        return Q()
 
 
 class LowerThanViewFilterType(ViewFilterType):
@@ -146,7 +145,7 @@ class LowerThanViewFilterType(ViewFilterType):
 
         # If an empty value has been provided we do not want to filter at all.
         if value == '':
-            return no_filter_combinable()
+            return Q()
 
         if isinstance(model_field, IntegerField) and value.find('.') != -1:
             decimal = Decimal(value)
@@ -155,11 +154,11 @@ class LowerThanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return filter_combinable(Q(**{f'{field_name}__lt': value}))
+            return Q(**{f'{field_name}__lt': value})
         except Exception:
             pass
 
-        return no_filter_combinable()
+        return Q()
 
 
 class DateEqualViewFilterType(ViewFilterType):
@@ -181,27 +180,27 @@ class DateEqualViewFilterType(ViewFilterType):
         value = value.strip()
 
         if value == '':
-            return no_filter_combinable()
+            return Q()
 
         utc = timezone('UTC')
 
         try:
             datetime = parser.isoparse(value).astimezone(utc)
         except (ParserError, ValueError):
-            return no_filter_combinable()
+            return Q()
 
         # If the length if string value is lower than 10 characters we know it is only
         # a date so we can match only on year, month and day level. This way if a date
         # is provided, but if it tries to compare with a models.DateTimeField it will
         # still give back accurate results.
         if len(value) <= 10:
-            return filter_combinable(Q(**{
+            return Q(**{
                 f'{field_name}__year': datetime.year,
                 f'{field_name}__month': datetime.month,
                 f'{field_name}__day': datetime.day
-            }))
+            })
         else:
-            return filter_combinable(Q(**{field_name: datetime}))
+            return Q(**{field_name: datetime})
 
 
 class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType):
@@ -221,13 +220,13 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
         value = value.strip()
 
         if value == '':
-            return no_filter_combinable()
+            return Q()
 
         try:
             int(value)
-            return filter_combinable(Q(**{f'{field_name}_id': value}))
+            return Q(Q(**{f'{field_name}_id': value}))
         except Exception:
-            return no_filter_combinable()
+            return Q()
 
 
 class SingleSelectNotEqualViewFilterType(NotViewFilterTypeMixin,
@@ -261,11 +260,11 @@ class BooleanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return filter_combinable(Q(**{field_name: value}))
+            return Q(**{field_name: value})
         except Exception:
             pass
 
-        return no_filter_combinable()
+        return Q()
 
 
 class EmptyViewFilterType(ViewFilterType):
@@ -314,7 +313,7 @@ class EmptyViewFilterType(ViewFilterType):
         except Exception:
             pass
 
-        return filter_combinable(q)
+        return q
 
 
 class NotEmptyViewFilterType(NotViewFilterTypeMixin, EmptyViewFilterType):

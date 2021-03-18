@@ -23,8 +23,8 @@ class PostgresqlLenientDatabaseSchemaEditor:
         $$
         begin
             begin
-                p_in = %(alter_column_prepare_old_value)s;
-                p_in = %(alter_column_prepare_new_value)s;
+                %(alter_column_prepare_old_value)s
+                %(alter_column_prepare_new_value)s
                 return p_in::%(type)s;
             exception when others then
                 return p_default;
@@ -55,28 +55,31 @@ class PostgresqlLenientDatabaseSchemaEditor:
         else:
             alter_column_prepare_new_value = self.alter_column_prepare_new_value
 
-        alter_column_prepare_old_value = alter_column_prepare_old_value or "p_in"
-        alter_column_prepare_new_value = alter_column_prepare_new_value or "p_in"
+        quoted_column_name = self.quote_name(new_field.column)
+        self.execute(self.sql_drop_try_cast)
+        self.execute(self.sql_create_try_cast % {
+            "column": quoted_column_name,
+            "type": new_type,
+            "alter_column_prepare_old_value": alter_column_prepare_old_value,
+            "alter_column_prepare_new_value": alter_column_prepare_new_value
+        }, variables)
 
-        column_name = self.quote_name(new_field.column)
-        if old_type != new_type:
-            self.execute(self.sql_drop_try_cast)
-            self.execute(self.sql_create_try_cast % {
-                "column": column_name,
-                "type": new_type,
-                "alter_column_prepare_old_value": alter_column_prepare_old_value,
-                "alter_column_prepare_new_value": alter_column_prepare_new_value
-            }, variables)
-        else:
-            inner_sql = alter_column_prepare_old_value.replace("p_in", column_name)
-            sql = alter_column_prepare_new_value.replace("p_in", inner_sql)
+        if old_type == new_type:
+            # If the underlying sql column types have not changed we still want to run
+            # the alter_column_type sql as it can perform validation over the new
+            # data. This can occur when two Baserow fields use the same underlying
+            # postgresql column type, but enforce different validations over their data.
 
-            if sql:
-                self.execute(
-                    f"""UPDATE {model._meta.db_table}
-                    SET {column_name} = {sql};
-                    """, variables
-                )
+            table_name = self.quote_name(model._meta.db_table)
+            self.execute(
+                self.sql_alter_column % {
+                    "table": table_name,
+                    "changes": self.sql_alter_column_type % {
+                        "column": quoted_column_name,
+                        "type": new_type,
+                    }
+                },
+            )
 
         return super()._alter_field(model, old_field, new_field, old_type, new_type,
                                     old_db_params, new_db_params, strict)

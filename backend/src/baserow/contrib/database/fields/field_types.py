@@ -97,13 +97,13 @@ class URLFieldType(FieldType):
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return r"""(
+            return r"""p_in = (
             case
                 when p_in::text ~* '(https?|ftps?)://(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)?'
                 then p_in::text
                 else ''
                 end
-            )"""
+            );"""
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
@@ -182,7 +182,7 @@ class NumberFieldType(FieldType):
             if not to_field.number_negative:
                 function = f"greatest({function}, 0)"
 
-            return function
+            return f'p_in = {function};'
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
@@ -286,7 +286,7 @@ class DateFieldType(FieldType):
                 sql_type = 'timestamp'
                 sql_format += ' ' + DATE_TIME_FORMAT[from_field.date_time_format]['sql']
 
-            return f"""TO_CHAR(p_in::{sql_type}, '{sql_format}')"""
+            return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
 
         return super().get_alter_column_prepare_old_value(connection, from_field,
                                                           to_field)
@@ -310,7 +310,7 @@ class DateFieldType(FieldType):
                 sql_format += ' ' + DATE_TIME_FORMAT[to_field.date_time_format]['sql']
                 sql_type = 'timestamp'
 
-            return f""" p_in;
+            return f"""
                 begin
                     IF char_length(p_in::text) < 5 THEN
                         p_in = null;
@@ -328,7 +328,7 @@ class DateFieldType(FieldType):
                     exception when others then
                         p_in = p_default;
                     end;
-                end
+                end;
             """
 
         return super().get_alter_column_prepare_old_value(connection, from_field,
@@ -670,13 +670,13 @@ class EmailFieldType(FieldType):
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return r"""(
+            return r"""p_in = (
             case
                 when p_in::text ~* '[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{2,}'
                 then p_in::text
                 else ''
                 end
-            )"""
+            );"""
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
@@ -879,10 +879,10 @@ class SingleSelectFieldType(FieldType):
                 return None
 
             sql = f"""
-                (SELECT value FROM (
+                p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
-                WHERE key = p_in)
+                WHERE key = p_in);
             """
             return sql, variables
 
@@ -911,12 +911,12 @@ class SingleSelectFieldType(FieldType):
             if len(values_mapping) == 0:
                 return None
 
-            return f"""(
+            return f"""p_in = (
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = lower(p_in)
-            )
+            );
             """, variables
 
         return super().get_alter_column_prepare_old_value(connection, from_field,
@@ -1029,13 +1029,13 @@ class PhoneNumberFieldType(FieldType):
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return f'''(
+            return f'''p_in = (
             case
                 when p_in::text ~* '{self.PHONE_NUMBER_REGEX}'
                 then p_in::text
                 else ''
                 end
-            )'''
+            );'''
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)

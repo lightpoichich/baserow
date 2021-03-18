@@ -219,15 +219,6 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         `REGEXP_REPLACE(p_in, '[^0-9]', '', 'g')` which would remove all non numeric
         characters. The p_in variable is the old value as a string.
 
-        Please note the SQL will only be run if the underlying database's column type
-        for to_field is different from from_field. This happens when converting
-        between two FieldTypes which have the same `get_model_type` or the same
-        underlying database type.
-        For example: converting from a `models.EmailField` to a `models.CharField` will
-        not trigger this SQL as they both are actually CharFields.
-        Instead you should also implement `FieldType.after_update`,
-        where the `altered_column` param will be false when this has happened.
-
         :param connection: The used connection. This can for example be used to check
             the database engine type.
         :type connection: DatabaseWrapper

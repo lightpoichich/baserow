@@ -2,9 +2,6 @@ import pytest
 from decimal import Decimal
 from unittest.mock import patch
 
-from django.db import connection
-from django.test.utils import CaptureQueriesContext
-
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
@@ -279,7 +276,7 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
         model_class = LongTextField
 
         def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return '''(lower(p_in))'''
+            return '''p_in = (lower(p_in));'''
 
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -298,14 +295,47 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
         field_type_registry.registry,
         {'lowercase_text': AlwaysLowercaseTextField()}
     ):
-        with CaptureQueriesContext(connection) as ctx:
-            handler.update_field(user=user, field=existing_text_field,
-                                 new_type_name='lowercase_text')
-        # code that runs SQL queries
-        print(ctx.captured_queries)
+        handler.update_field(user=user, field=existing_text_field,
+                             new_type_name='lowercase_text')
 
         row.refresh_from_db()
         assert getattr(row, field_name) == "test"
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_with_type_error_on_conversion_should_null_field(data_fixture):
+    class AlwaysThrowsSqlExceptionOnConversionField(TextFieldType):
+        type = 'throws_field'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (lower(p_in::numeric::text));'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'throws_field': AlwaysThrowsSqlExceptionOnConversionField()}
+    ):
+        handler.update_field(user=user, field=existing_text_field,
+                             new_type_name='throws_field')
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) is None
         assert Field.objects.all().count() == 1
         assert TextField.objects.all().count() == 0
         assert LongTextField.objects.all().count() == 1
@@ -318,7 +348,7 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
         model_class = LongTextField
 
         def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-            return '''concat(reverse(p_in), %(some_variable)s)''', {
+            return '''p_in = concat(reverse(p_in), %(some_variable)s);''', {
                 "some_variable": "_POST_FIX"
             }
 
@@ -327,7 +357,7 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
         model_class = LongTextField
 
         def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return '''concat(%(other_variable)s, lower(p_in))''', {
+            return '''p_in = concat(%(other_variable)s, lower(p_in));''', {
                 "other_variable": "pre_fix_"
             }
 
@@ -352,11 +382,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
             'long_text': ReversesWhenConvertsAwayTextField()
         }
     ):
-        with CaptureQueriesContext(connection) as ctx:
-            handler.update_field(user=user, field=existing_field_with_old_value_prep,
-                                 new_type_name='lowercase_text')
-        # code that runs SQL queries
-        print(ctx.captured_queries)
+        handler.update_field(user=user, field=existing_field_with_old_value_prep,
+                             new_type_name='lowercase_text')
 
         row.refresh_from_db()
         assert getattr(row, field_name) == "pre_fix_tset_post_fix"
@@ -372,14 +399,14 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
         model_class = LongTextField
 
         def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-            return '''(reverse(p_in))'''
+            return '''p_in = (reverse(p_in));'''
 
     class AlwaysLowercaseTextField(TextFieldType):
         type = 'lowercase_text'
         model_class = LongTextField
 
         def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return '''(lower(p_in))'''
+            return '''p_in = (lower(p_in));'''
 
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -402,11 +429,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
             'long_text': ReversesWhenConvertsAwayTextField()
         }
     ):
-        with CaptureQueriesContext(connection) as ctx:
-            handler.update_field(user=user, field=existing_field_with_old_value_prep,
-                                 new_type_name='lowercase_text')
-        # code that runs SQL queries
-        print(ctx.captured_queries)
+        handler.update_field(user=user, field=existing_field_with_old_value_prep,
+                             new_type_name='lowercase_text')
 
         row.refresh_from_db()
         assert getattr(row, field_name) == "tset"

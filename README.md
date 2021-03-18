@@ -72,6 +72,15 @@ Visit http://localhost:8000/api/groups/ in your browser and you should see a JSO
 response containing "Authentication credentials were not provided.". This means that it
 is working!
 
+In order to start the Celery worker you may execute the following commands. Open a new tab or window and execute the following commands.
+
+```
+$ docker exec -it backend bash
+$ watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A baserow worker -l INFO
+```
+
+> Celery worker is mainly used for the real time collaboration
+
 In order to start the web-frontend environment you may execute the following commands.
 
 ```

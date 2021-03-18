@@ -361,3 +361,84 @@ def test_converting_date_field_value(data_fixture):
     assert getattr(rows[0], f'field_{date_field_iso_24.id}') == '2021-07-22 12:45'
 
     assert getattr(rows[2], f'field_{date_field_eu_12.id}') is None
+
+
+@pytest.mark.django_db
+def test_negative_date_field_value(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    date_field = data_fixture.create_text_field(table=table)
+    datetime_field = data_fixture.create_text_field(table=table)
+
+    model = table.get_model()
+    model.objects.create(**{
+        f'field_{date_field.id}': '',
+        f'field_{datetime_field.id}': '',
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': 'INVALID',
+        f'field_{datetime_field.id}': 'INVALID',
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': ' ',
+        f'field_{datetime_field.id}': ' ',
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': '0',
+        f'field_{datetime_field.id}': '0',
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': '-0',
+        f'field_{datetime_field.id}': '-0',
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': '00000',
+        f'field_{datetime_field.id}': '00000',
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': None,
+        f'field_{datetime_field.id}': None,
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': '2010-02-03',
+        f'field_{datetime_field.id}': '2010-02-03 12:30',
+    })
+    model.objects.create(**{
+        f'field_{date_field.id}': '28/01/2012',
+        f'field_{datetime_field.id}': '28/01/2012 12:30',
+    })
+
+    date_field = FieldHandler().update_field(
+        user, date_field, new_type_name='date'
+    )
+    datetime_field = FieldHandler().update_field(
+        user, datetime_field, new_type_name='date', date_include_time=True
+    )
+
+    model = table.get_model()
+    results = model.objects.all()
+
+    assert getattr(results[0], f'field_{date_field.id}') is None
+    assert getattr(results[0], f'field_{datetime_field.id}') is None
+    assert getattr(results[1], f'field_{date_field.id}') is None
+    assert getattr(results[1], f'field_{datetime_field.id}') is None
+    assert getattr(results[2], f'field_{date_field.id}') is None
+    assert getattr(results[2], f'field_{datetime_field.id}') is None
+    assert getattr(results[3], f'field_{date_field.id}') is None
+    assert getattr(results[3], f'field_{datetime_field.id}') is None
+    assert getattr(results[4], f'field_{date_field.id}') is None
+    assert getattr(results[4], f'field_{datetime_field.id}') is None
+    assert getattr(results[5], f'field_{date_field.id}') == date(1, 1, 1)
+    assert getattr(results[5], f'field_{datetime_field.id}') == (
+        datetime(1, 1, 1, tzinfo=timezone('utc'))
+    )
+    assert getattr(results[6], f'field_{date_field.id}') is None
+    assert getattr(results[6], f'field_{datetime_field.id}') is None
+    assert getattr(results[7], f'field_{date_field.id}') == date(2010, 2, 3)
+    assert getattr(results[7], f'field_{datetime_field.id}') == (
+        datetime(2010, 2, 3, 12, 30, 0, tzinfo=timezone('utc'))
+    )
+    assert getattr(results[8], f'field_{date_field.id}') == date(2012, 1, 28)
+    assert getattr(results[8], f'field_{datetime_field.id}') == (
+        datetime(2012, 1, 28, 12, 30, 0, tzinfo=timezone('utc'))
+    )

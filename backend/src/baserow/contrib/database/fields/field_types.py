@@ -28,7 +28,8 @@ from .exceptions import (
     LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
     IncompatiblePrimaryFieldTypeError
 )
-from .field_filters import filename_contains_filter, contains_filter
+from .field_filters import filename_contains_filter, contains_filter, \
+    annotate_combinable
 from .fields import SingleSelectForeignKey
 from .handler import FieldHandler
 from .models import (
@@ -327,9 +328,11 @@ class DateFieldType(FieldType):
                 output_field=CharField()
             )
         }
-        return Q(**{
-            f'formatted_date_{field_name}__icontains': value
-        }), annotation
+        return annotate_combinable(annotation).filter(
+            Q(**{
+                f'formatted_date_{field_name}__icontains': value
+            })
+        )
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
@@ -1033,9 +1036,8 @@ class SingleSelectFieldType(FieldType):
 
         query = RawSQL(convert_rows_select_id_to_value_sql, params=option_values,
                        output_field=models.CharField())
-        annotation = {
+        return annotate_combinable({
             f"select_option_value_{field_name}": query
-        }
-        return Q(**{
+        }).filter(Q(**{
             f'select_option_value_{field_name}__icontains': value
-        }), annotation
+        }))

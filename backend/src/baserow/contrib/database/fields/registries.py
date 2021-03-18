@@ -1,5 +1,3 @@
-from django.db.models import Q
-
 from baserow.core.registry import (
     Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin,
@@ -7,7 +5,8 @@ from baserow.core.registry import (
 )
 
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
-from .field_filters import FieldFilter
+from .field_filters import CombinableFilter, \
+    no_filter_combinable
 
 
 class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
@@ -90,9 +89,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         return queryset
 
-    def contains_query(self, field_name, value, model_field, field) -> FieldFilter:
+    def contains_query(self, field_name, value, model_field, field) -> CombinableFilter:
         """
-        This method optionally returns a FieldFilter which can be used to filter a
+        This method optionally returns a CombinableFilter which can be used to filter a
         queryset of a table with this field to check if the param value occurs in
         any rows.
 
@@ -104,13 +103,12 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type model_field: models.Field
         :param field: The related field's instance.
         :type field: Field
-        :return: Either just a Q object implementing the contains query or a tuple of
-        the Q object with an additional annotation dictionary which should be
-        unpacked into an annotate call preceding the filter where the Q object is used.
-        :rtype: FieldFilter
+        :return: A CombinableFilter which performs a contains filter over this field
+        given value.
+        :rtype: FilterBuilder
         """
 
-        return Q()
+        return no_filter_combinable()
 
     def get_serializer_field(self, instance, **kwargs):
         """

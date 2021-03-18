@@ -7,7 +7,7 @@ from .exceptions import (
     ViewTypeAlreadyRegistered, ViewTypeDoesNotExist, ViewFilterTypeAlreadyRegistered,
     ViewFilterTypeDoesNotExist
 )
-from ..fields.field_filters import FieldFilter
+from ..fields.field_filters import CombinableFilter
 
 
 class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMixin,
@@ -103,11 +103,10 @@ class ViewFilterType(Instance):
     can be used in combination with the field.
     """
 
-    def get_filter(self, field_name, value, model_field, field) -> FieldFilter:
+    def get_filter(self, field_name, value, model_field, field) -> CombinableFilter:
         """
-        Should return a Q object containing the requested filtering based on the
-        provided arguments. It can additionally return an annotations dictionary to
-        enhance the queryset for use in the filter for more powerful filtering logic.
+        Should return a FilterBuilder object containing the requested filtering
+        and annotations based on the provided arguments.
 
         :param field_name: The name of the field that needs to be filtered.
         :type field_name: str
@@ -117,11 +116,8 @@ class ViewFilterType(Instance):
         :type model_field: models.Field
         :param field: The instance of the underlying baserow field.
         :type field: Field
-        :return: The Q object that does the filtering. This will later be added to the
-            queryset in the correct way. Or a tuple with the first element being the
-            Q object and the second being a dictionary which will be unpacked into an
-            annotate call on the view filters queryset prior to the Q object being
-            applied as a filter.
+        :return: A FilterBuilder for this specific field, which will be then later
+        combined with other filters to generate the final total view filter.
         """
 
         raise NotImplementedError('Each must have his own get_filter method.')

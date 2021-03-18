@@ -1,25 +1,24 @@
-from django.db.models import Q, F
+from django.db.models import F
 
-from baserow.core.utils import extract_allowed, set_allowed_attrs
-from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
-
+from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     ViewDoesNotExist, UnrelatedFieldError, ViewFilterDoesNotExist,
     ViewFilterNotSupported, ViewFilterTypeNotAllowedForField, ViewSortDoesNotExist,
     ViewSortNotSupported, ViewSortFieldAlreadyExist, ViewSortFieldNotSupported
 )
-from .registries import view_type_registry, view_filter_type_registry
 from .models import (
-    View, GridViewFieldOptions, ViewFilter, ViewSort, FILTER_TYPE_AND, FILTER_TYPE_OR
+    View, GridViewFieldOptions, ViewFilter, ViewSort
 )
+from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created, view_updated, view_deleted, view_filter_created, view_filter_updated,
     view_filter_deleted, view_sort_created, view_sort_updated, view_sort_deleted,
     grid_view_field_options_updated
 )
-from ..fields.field_filters import unpack_field_filter
+from ..fields.field_filters import FilterBuilder
 
 
 class ViewHandler:
@@ -237,7 +236,7 @@ class ViewHandler:
         if view.filters_disabled:
             return queryset
 
-        q_filters = Q()
+        filter_builder = FilterBuilder(filter_type=view.filter_type)
 
         for view_filter in view.viewfilter_set.all():
             # If the to be filtered field is not present in the `_field_objects` we
@@ -250,7 +249,8 @@ class ViewHandler:
             field_name = field_object['name']
             model_field = model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(view_filter.type)
-            q_filter, extra_annotation = unpack_field_filter(
+
+            filter_builder.combine(
                 view_filter_type.get_filter(
                     field_name,
                     view_filter.value,
@@ -258,19 +258,7 @@ class ViewHandler:
                     field_object['field']
                 ))
 
-            if extra_annotation:
-                queryset = queryset.annotate(**extra_annotation)
-
-            # Depending on filter type we are going to combine the Q either as AND or
-            # as OR.
-            if view.filter_type == FILTER_TYPE_AND:
-                q_filters &= q_filter
-            elif view.filter_type == FILTER_TYPE_OR:
-                q_filters |= q_filter
-
-        queryset = queryset.filter(q_filters)
-
-        return queryset
+        return filter_builder.apply_to_queryset(queryset)
 
     def get_filter(self, user, view_filter_id, base_queryset=None):
         """

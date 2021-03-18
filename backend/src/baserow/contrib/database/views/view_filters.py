@@ -1,22 +1,21 @@
-from math import floor, ceil
-from pytz import timezone
 from decimal import Decimal
+from math import floor, ceil
 
 from dateutil import parser
 from dateutil.parser import ParserError
-
+from django.contrib.postgres.fields import JSONField
 from django.db.models import Q, IntegerField, BooleanField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
-from django.contrib.postgres.fields import JSONField
+from pytz import timezone
 
 from baserow.contrib.database.fields.field_types import (
     TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
     LinkRowFieldType, BooleanFieldType, EmailFieldType, FileFieldType,
     SingleSelectFieldType
 )
-
 from .registries import ViewFilterType
-from ..fields.field_filters import contains_filter, filename_contains_filter
+from ..fields.field_filters import contains_filter, filename_contains_filter, \
+    filter_combinable, no_filter_combinable
 
 
 class NotViewFilterTypeMixin:
@@ -47,16 +46,16 @@ class EqualViewFilterType(ViewFilterType):
 
         # If an empty value has been provided we do not want to filter at all.
         if value == '':
-            return Q()
+            return no_filter_combinable()
 
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return Q(**{field_name: value})
+            return filter_combinable(Q(**{field_name: value}))
         except Exception:
             pass
 
-        return Q()
+        return no_filter_combinable()
 
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
@@ -116,7 +115,7 @@ class HigherThanViewFilterType(ViewFilterType):
 
         # If an empty value has been provided we do not want to filter at all.
         if value == '':
-            return Q()
+            return no_filter_combinable()
 
         if isinstance(model_field, IntegerField) and value.find('.') != -1:
             decimal = Decimal(value)
@@ -125,11 +124,11 @@ class HigherThanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return Q(**{f'{field_name}__gt': value})
+            return filter_combinable(Q(**{f'{field_name}__gt': value}))
         except Exception:
             pass
 
-        return Q()
+        return no_filter_combinable()
 
 
 class LowerThanViewFilterType(ViewFilterType):
@@ -147,7 +146,7 @@ class LowerThanViewFilterType(ViewFilterType):
 
         # If an empty value has been provided we do not want to filter at all.
         if value == '':
-            return Q()
+            return no_filter_combinable()
 
         if isinstance(model_field, IntegerField) and value.find('.') != -1:
             decimal = Decimal(value)
@@ -156,11 +155,11 @@ class LowerThanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return Q(**{f'{field_name}__lt': value})
+            return filter_combinable(Q(**{f'{field_name}__lt': value}))
         except Exception:
             pass
 
-        return Q()
+        return no_filter_combinable()
 
 
 class DateEqualViewFilterType(ViewFilterType):
@@ -182,27 +181,27 @@ class DateEqualViewFilterType(ViewFilterType):
         value = value.strip()
 
         if value == '':
-            return Q()
+            return no_filter_combinable()
 
         utc = timezone('UTC')
 
         try:
             datetime = parser.isoparse(value).astimezone(utc)
         except (ParserError, ValueError):
-            return Q()
+            return no_filter_combinable()
 
         # If the length if string value is lower than 10 characters we know it is only
         # a date so we can match only on year, month and day level. This way if a date
         # is provided, but if it tries to compare with a models.DateTimeField it will
         # still give back accurate results.
         if len(value) <= 10:
-            return Q(**{
+            return filter_combinable(Q(**{
                 f'{field_name}__year': datetime.year,
                 f'{field_name}__month': datetime.month,
                 f'{field_name}__day': datetime.day
-            })
+            }))
         else:
-            return Q(**{field_name: datetime})
+            return filter_combinable(Q(**{field_name: datetime}))
 
 
 class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType):
@@ -222,13 +221,13 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
         value = value.strip()
 
         if value == '':
-            return Q()
+            return no_filter_combinable()
 
         try:
             int(value)
-            return Q(**{f'{field_name}_id': value})
+            return filter_combinable(Q(**{f'{field_name}_id': value}))
         except Exception:
-            return Q()
+            return no_filter_combinable()
 
 
 class SingleSelectNotEqualViewFilterType(NotViewFilterTypeMixin,
@@ -262,11 +261,11 @@ class BooleanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         try:
             model_field.get_prep_value(value)
-            return Q(**{field_name: value})
+            return filter_combinable(Q(**{field_name: value}))
         except Exception:
             pass
 
-        return Q()
+        return no_filter_combinable()
 
 
 class EmptyViewFilterType(ViewFilterType):
@@ -315,7 +314,7 @@ class EmptyViewFilterType(ViewFilterType):
         except Exception:
             pass
 
-        return q
+        return filter_combinable(q)
 
 
 class NotEmptyViewFilterType(NotViewFilterTypeMixin, EmptyViewFilterType):

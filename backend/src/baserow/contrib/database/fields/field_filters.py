@@ -9,7 +9,9 @@ FILTER_TYPE_OR = 'OR'
 
 class AnnotatedQ:
     """
-    A simple wrapper class combining an annotation attribute with a django Q object.
+    A simple wrapper class combining a params for a Queryset.annotate call with a
+    django Q object to be used in combination with FilterBuilder to dynamically build up
+    filters which also require annotations.
     """
 
     def __init__(self, annotation: Dict[str, Any], q: Union[Q, Dict[str, Any]]):
@@ -17,7 +19,7 @@ class AnnotatedQ:
         :param annotation: A dictionary which can be unpacked into a django
         Queryset.annotate call. This will only happen when using
         FilterBuilder.apply_to_queryset.
-        :param q: a Q object or kwargs which will used to create a Q object as normal.
+        :param q: a Q object or kwargs which will used to create a Q object.
         """
         self.annotation = annotation or {}
         if isinstance(q, Q):
@@ -35,9 +37,9 @@ OptionallyAnnotatedQ = Union[Q, AnnotatedQ]
 class FilterBuilder:
     """
     Combines together multiple Q or AnnotatedQ filters into a single filter which
-    can either AND or OR the provided filters together based on the filter_type
-    parameter. Additionally it will annotate the filtered queryset with any provided
-    annotations from AnnotatedQ filters.
+    will AND or OR the provided filters together based on the filter_type
+    parameter. Additionally it will annotate the queryset prior to filtering with the
+    merged annotations from AnnotatedQ filters.
     """
 
     def __init__(self, filter_type: str):
@@ -59,11 +61,11 @@ class FilterBuilder:
 
     def filter(self, q: OptionallyAnnotatedQ) -> 'FilterBuilder':
         """
-        Adds a Q or AnnotatedQ filter into this builder joined together with existing
-        filters based on provided `filter_type`.
+        Adds a Q or AnnotatedQ filter into this builder to be joined together with
+        existing filters based on the builders `filter_type`.
 
         Annotations on provided AnnotatedQ's are merged together with any previously
-        supplied annotations.
+        supplied annotations via dict unpacking and merging.
         :param q: A Q or Annotated Q
         :return: The updated FilterBuilder with the provided filter applied.
         """

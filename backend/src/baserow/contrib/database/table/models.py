@@ -67,7 +67,7 @@ class TableModelQuerySet(models.QuerySet):
                                                              search,
                                                              model_field,
                                                              field_object['field'])
-            filter_builder.combine(sub_filter)
+            filter_builder.filter(sub_filter)
 
         return filter_builder.apply_to_queryset(self)
 
@@ -182,7 +182,7 @@ class TableModelQuerySet(models.QuerySet):
                 values = [values]
 
             for value in values:
-                filter_builder.combine(
+                filter_builder.filter(
                     view_filter_type.get_filter(
                         field_name,
                         value,

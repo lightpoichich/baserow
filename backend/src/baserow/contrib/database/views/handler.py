@@ -250,7 +250,7 @@ class ViewHandler:
             model_field = model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(view_filter.type)
 
-            filter_builder.combine(
+            filter_builder.filter(
                 view_filter_type.get_filter(
                     field_name,
                     view_filter.value,

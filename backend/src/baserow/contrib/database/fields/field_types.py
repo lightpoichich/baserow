@@ -327,7 +327,7 @@ class DateFieldType(FieldType):
                 output_field=CharField()
             )
         }
-        return AnnotatedQ(annotation=annotation, **{
+        return AnnotatedQ(annotation=annotation, q={
             f'formatted_date_{field_name}__icontains': value
         })
 
@@ -1036,6 +1036,6 @@ class SingleSelectFieldType(FieldType):
         annotation = {
             f"select_option_value_{field_name}": query
         }
-        return AnnotatedQ(annotation=annotation, **{
+        return AnnotatedQ(annotation=annotation, q={
             f'select_option_value_{field_name}__icontains': value
         })

@@ -7,23 +7,26 @@ FILTER_TYPE_AND = 'AND'
 FILTER_TYPE_OR = 'OR'
 
 
-class AnnotatedQ(Q):
+class AnnotatedQ:
     """
-    A simple wrapper class adding a annotation attribute to the django Q class.
-    WARNING: This will not automatically apply the provided annotation when used in a
-    queryset, you must used the FilterBuilder class which will use these extra
-    annotations when building a queryset.
+    A simple wrapper class combining an annotation attribute with a django Q object.
     """
 
-    def __init__(self, annotation: Dict[str, Any], *args, **kwargs):
+    def __init__(self, annotation: Dict[str, Any], q: Union[Q, Dict[str, Any]]):
         """
         :param annotation: A dictionary which can be unpacked into a django
         Queryset.annotate call. This will only happen when using
         FilterBuilder.apply_to_queryset.
-        :param kwargs: kwargs which will be passed to Q as normal.
+        :param q: a Q object or kwargs which will used to create a Q object as normal.
         """
         self.annotation = annotation or {}
-        super().__init__(*args, **kwargs)
+        if isinstance(q, Q):
+            self.q = q
+        else:
+            self.q = Q(**q)
+
+    def __invert__(self):
+        return AnnotatedQ(self.annotation, ~self.q)
 
 
 OptionallyAnnotatedQ = Union[Q, AnnotatedQ]
@@ -37,34 +40,61 @@ class FilterBuilder:
     annotations from AnnotatedQ filters.
     """
 
-    def __init__(self, filter_type):
-        self.annotation = {}
-        self.q_filters = Q()
-        self.filter_type = filter_type
+    def __init__(self, filter_type: str):
+        """
 
-    def annotate(self, annotation_dict: Dict[str, Any]) -> 'FilterBuilder':
-        self.annotation = {**self.annotation, **annotation_dict}
-        return self
+        :param filter_type: Either field_filters.FILTER_TYPE_AND or
+        field_filters.FILTER_TYPE_OR which dictates how provided Q or AnnotatedQ
+        filters will be combined together.
+        For type OR they will be ORed together when applied to a filter set,
+        for type AND they will be ANDed together.
+        """
 
-    def filter(self, q_filter: Q) -> 'FilterBuilder':
-        if self.filter_type == FILTER_TYPE_AND:
-            self.q_filters &= q_filter
-        elif self.filter_type == FILTER_TYPE_OR:
-            self.q_filters |= q_filter
-        else:
-            raise ValueError(f'Unknown filter type {self.filter_type}.')
-        return self
+        if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
+            raise ValueError(f'Unknown filter type {filter_type}.')
 
-    def combine(self, q: OptionallyAnnotatedQ) -> 'FilterBuilder':
+        self._annotation = {}
+        self._q_filters = Q()
+        self._filter_type = filter_type
+
+    def filter(self, q: OptionallyAnnotatedQ) -> 'FilterBuilder':
+        """
+        Adds a Q or AnnotatedQ filter into this builder joined together with existing
+        filters based on provided `filter_type`.
+
+        Annotations on provided AnnotatedQ's are merged together with any previously
+        supplied annotations.
+        :param q: A Q or Annotated Q
+        :return: The updated FilterBuilder with the provided filter applied.
+        """
         if isinstance(q, AnnotatedQ):
-            self.annotate(q.annotation)
-            self.filter(q)
+            self._annotate(q.annotation)
+            self._filter(q.q)
         else:
-            self.filter(q)
+            self._filter(q)
         return self
 
     def apply_to_queryset(self, queryset):
-        return queryset.annotate(**self.annotation).filter(self.q_filters)
+        """
+        Applies all of the Q and AnnotatedQ filters previously given to this
+        FilterBuilder by first applying all annotations from AnnotatedQ's and then
+        filtering with a Q filter resulting from the combination of all filters ANDed or
+        ORed depending on the filter_type attribute.
+        :param queryset: The queryset to annotate and filter.
+        :return: The annotated and filtered queryset.
+        """
+        return queryset.annotate(**self._annotation).filter(self._q_filters)
+
+    def _annotate(self, annotation_dict: Dict[str, Any]) -> 'FilterBuilder':
+        self._annotation = {**self._annotation, **annotation_dict}
+
+    def _filter(self, q_filter: Q) -> 'FilterBuilder':
+        if self._filter_type == FILTER_TYPE_AND:
+            self._q_filters &= q_filter
+        elif self._filter_type == FILTER_TYPE_OR:
+            self._q_filters |= q_filter
+        else:
+            raise ValueError(f'Unknown filter type {self._filter_type}.')
 
 
 def contains_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
@@ -90,7 +120,7 @@ def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotated
     annotation_query = _build_filename_contains_raw_query(field, value)
     annotation = {f'{field_name}_matches_visible_names': annotation_query}
     return AnnotatedQ(annotation=annotation,
-                      **{f'{field_name}_matches_visible_names': True})
+                      q={f'{field_name}_matches_visible_names': True})
 
 
 def _build_filename_contains_raw_query(field, value):

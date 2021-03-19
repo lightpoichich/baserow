@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 from decimal import Decimal
 from unittest.mock import patch
@@ -5,7 +7,8 @@ from unittest.mock import patch
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    Field, TextField, NumberField, BooleanField, SelectOption, LongTextField
+    Field, TextField, NumberField, BooleanField, SelectOption, LongTextField,
+    NUMBER_TYPE_CHOICES
 )
 from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -13,6 +16,83 @@ from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
     FieldDoesNotExist, IncompatiblePrimaryFieldTypeError, CannotChangeFieldType
 )
+
+
+def dict_to_pairs(field_type_kwargs):
+    pairs_dict = {}
+    for name, options in field_type_kwargs.items():
+        pairs_dict[name] = []
+        if not isinstance(options, list):
+            options = [options]
+        for option in options:
+            pairs_dict[name].append((name, option))
+    return pairs_dict
+
+
+def construct_all_possible_kwargs(field_type_kwargs):
+    pairs_dict = dict_to_pairs(field_type_kwargs)
+    args = [dict(pairwise_args) for pairwise_args in itertools.product(
+        *pairs_dict.values())]
+
+    return args
+
+
+# You must add --runslow to pytest to run this test, you can do this in intellij by
+# editing the run config for this test and adding --runslow to additional args.
+@pytest.mark.django_db
+@pytest.mark.slow
+def test_can_convert_between_all_fields(data_fixture):
+    """
+    A nuclear option test turned off by default to help verify changes made to
+    field conversions work in every possible conversion scenario. This test checks
+    is possible to convert from every possible field to every other possible field
+    including converting to themselves. It only checks that the conversion does not
+    raise any exceptions.
+    """
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database, user=user)
+    link_table = data_fixture.create_database_table(database=database, user=user)
+    handler = FieldHandler()
+
+    # Some baserow field types have multiple different "modes" which result in
+    # different conversion behaviour or entirely different database columns being
+    # created. Here the kwargs which control these modes are enumerated so we can then
+    # generate every possible type of conversion.
+    extra_kwargs_for_type = {
+        'date': {
+            'date_include_time': [True, False],
+        },
+        'number': {
+            'number_type': [number_type for number_type, _ in NUMBER_TYPE_CHOICES],
+            'number_negative': [True, False],
+        },
+        'link_row': {
+            'link_row_table': link_table
+        }
+    }
+
+    all_possible_kwargs_per_type = {}
+    for field_type_name in field_type_registry.get_types():
+        extra_kwargs = extra_kwargs_for_type.get(field_type_name, {})
+        all_possible_kwargs = construct_all_possible_kwargs(extra_kwargs)
+        all_possible_kwargs_per_type[field_type_name] = all_possible_kwargs
+
+    i = 0
+    for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
+        for kwargs in all_possible_kwargs:
+            for inner_field_type_name in field_type_registry.get_types():
+                for inner_kwargs in all_possible_kwargs_per_type[inner_field_type_name]:
+                    i = i + 1
+                    from_field = handler.create_field(
+                        user=user, table=table, type_name=field_type_name,
+                        name=f'field_{i}',
+                        **kwargs
+                    )
+                    handler.update_field(user=user, field=from_field,
+                                         new_type_name=inner_field_type_name,
+                                         **inner_kwargs)
 
 
 @pytest.mark.django_db

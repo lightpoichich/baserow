@@ -1,24 +1,24 @@
 import itertools
-
-import pytest
+from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 
+import pytest
 from faker import Faker
 
-from baserow.contrib.database.rows.handler import RowHandler
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.contrib.database.fields.exceptions import (
+    FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
+    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError, CannotChangeFieldType
+)
+from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     Field, TextField, NumberField, BooleanField, SelectOption, LongTextField,
     NUMBER_TYPE_CHOICES
 )
-from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.exceptions import (
-    FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
-    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError, CannotChangeFieldType
-)
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.exceptions import UserNotInGroupError
 
 
 def dict_to_pairs(field_type_kwargs):
@@ -107,6 +107,10 @@ def test_can_convert_between_all_fields(data_fixture):
                         fake,
                         cache
                     )
+                    if isinstance(random_value, date):
+                        # Faker produces subtypes of date / datetime which baserow
+                        # does not want, instead just convert to str.
+                        random_value = str(random_value)
                     row_handler.update_row(user=user, table=table,
                                            row_id=second_row_with_values.id,
                                            values={

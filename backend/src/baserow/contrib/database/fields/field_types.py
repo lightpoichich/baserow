@@ -232,17 +232,17 @@ class DateFieldType(FieldType):
 
         utc = timezone('UTC')
 
-        if isinstance(value, str):
+        if type(value) == str:
             try:
                 value = parser.parse(value)
             except ParserError:
                 raise ValidationError('The provided string could not converted to a'
                                       'date.')
 
-        if isinstance(value, date):
+        if type(value) == date:
             value = make_aware(datetime(value.year, value.month, value.day), utc)
 
-        if isinstance(value, datetime):
+        if type(value) == datetime:
             value = value.astimezone(utc)
             return value if instance.date_include_time else value.date()
 

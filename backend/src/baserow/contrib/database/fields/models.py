@@ -214,6 +214,7 @@ class DateField(Field):
         :return: The sql datetime format based on the field's properties.
         :rtype: str
         """
+
         return self._get_format('sql')
 
     def get_psql_type(self):
@@ -224,6 +225,7 @@ class DateField(Field):
         :return: The postgresql column type either 'timestamp' or 'date'
         :rtype: str
         """
+
         return 'timestamp' if self.date_include_time else 'date'
 
     def get_psql_type_convert_function(self):
@@ -235,6 +237,7 @@ class DateField(Field):
         'TO_DATE'
         :rtype: str
         """
+
         return 'TO_TIMESTAMP' if self.date_include_time else 'TO_DATE'
 
     def _get_format(self, format_type):

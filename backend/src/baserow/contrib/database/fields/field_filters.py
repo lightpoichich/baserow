@@ -38,8 +38,8 @@ class FilterBuilder:
     """
     Combines together multiple Q or AnnotatedQ filters into a single filter which
     will AND or OR the provided filters together based on the filter_type
-    parameter. Additionally it will annotate the queryset prior to filtering with the
-    merged annotations from AnnotatedQ filters.
+    parameter. When applied to a queryset it will also annotate he queryset
+    prior to filtering with the merged annotations from AnnotatedQ filters.
     """
 
     def __init__(self, filter_type: str):
@@ -120,9 +120,11 @@ def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotated
         return Q()
     # Check if the model_field has a file which matches the provided filter value.
     annotation_query = _build_filename_contains_raw_query(field, value)
-    annotation = {f'{field_name}_matches_visible_names': annotation_query}
-    return AnnotatedQ(annotation=annotation,
-                      q={f'{field_name}_matches_visible_names': True})
+    return AnnotatedQ(annotation={
+        f'{field_name}_matches_visible_names': annotation_query
+    }, q={
+        f'{field_name}_matches_visible_names': True
+    })
 
 
 def _build_filename_contains_raw_query(field, value):

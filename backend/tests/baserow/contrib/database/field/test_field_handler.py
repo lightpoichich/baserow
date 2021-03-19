@@ -4,6 +4,9 @@ import pytest
 from decimal import Decimal
 from unittest.mock import patch
 
+from faker import Faker
+
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
@@ -55,6 +58,14 @@ def test_can_convert_between_all_fields(data_fixture):
     table = data_fixture.create_database_table(database=database, user=user)
     link_table = data_fixture.create_database_table(database=database, user=user)
     handler = FieldHandler()
+    row_handler = RowHandler()
+    fake = Faker()
+
+    model = table.get_model()
+    cache = {}
+    # Make a blank row to test empty field conversion also.
+    model.objects.create(**{})
+    second_row_with_values = model.objects.create(**{})
 
     # Some baserow field types have multiple different "modes" which result in
     # different conversion behaviour or entirely different database columns being
@@ -79,20 +90,32 @@ def test_can_convert_between_all_fields(data_fixture):
         all_possible_kwargs = construct_all_possible_kwargs(extra_kwargs)
         all_possible_kwargs_per_type[field_type_name] = all_possible_kwargs
 
-    i = 0
+    i = 1
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
         for kwargs in all_possible_kwargs:
             for inner_field_type_name in field_type_registry.get_types():
                 for inner_kwargs in all_possible_kwargs_per_type[inner_field_type_name]:
-                    i = i + 1
+                    field_type = field_type_registry.get(field_type_name)
+                    field_name = f'field_{i}'
                     from_field = handler.create_field(
                         user=user, table=table, type_name=field_type_name,
-                        name=f'field_{i}',
+                        name=field_name,
                         **kwargs
                     )
+                    random_value = field_type.random_value(
+                        from_field,
+                        fake,
+                        cache
+                    )
+                    row_handler.update_row(user=user, table=table,
+                                           row_id=second_row_with_values.id,
+                                           values={
+                                               f"field_{from_field.id}": random_value
+                                           })
                     handler.update_field(user=user, field=from_field,
                                          new_type_name=inner_field_type_name,
                                          **inner_kwargs)
+                    i = i + 1
 
 
 @pytest.mark.django_db

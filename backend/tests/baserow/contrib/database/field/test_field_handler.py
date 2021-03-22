@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from django.db import models
 from faker import Faker
 
 from baserow.contrib.database.fields.exceptions import (
@@ -402,7 +403,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
         field_type_registry.registry,
         {'lowercase_text': AlwaysLowercaseTextField()}
     ):
-        handler.update_field(user=user, field=existing_text_field,
+        handler.update_field(user=user,
+                             field=existing_text_field,
                              new_type_name='lowercase_text')
 
         row.refresh_from_db()
@@ -410,6 +412,52 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
         assert Field.objects.all().count() == 1
         assert TextField.objects.all().count() == 0
         assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_field_which_changes_its_underlying_type_will_have_alter_sql_run(data_fixture):
+    class ReversingTextFieldUsingBothVarCharAndTextSqlTypes(TextFieldType):
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (reverse(p_in));'''
+
+        def get_model_field(self, instance, **kwargs):
+            kwargs['null'] = True
+            kwargs['blank'] = True
+            if instance.text_default == 'use_other_sql_type':
+                return models.TextField(**kwargs)
+            else:
+                return models.CharField(**kwargs)
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'text': ReversingTextFieldUsingBothVarCharAndTextSqlTypes()}
+    ):
+        # Update to the same baserow type, but due to this fields implementation of
+        # get_model_field this will alter the underlying database column from type
+        # of varchar to text, which should make our reversing alter sql run.
+        handler.update_field(user=user,
+                             field=existing_text_field,
+                             new_type_name='text',
+                             text_default='use_other_sql_type')
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == 'tseT'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 1
 
 
 @pytest.mark.django_db
@@ -507,7 +555,8 @@ def test_update_field_with_type_error_on_conversion_should_null_field(data_fixtu
         field_type_registry.registry,
         {'throws_field': AlwaysThrowsSqlExceptionOnConversionField()}
     ):
-        handler.update_field(user=user, field=existing_text_field,
+        handler.update_field(user=user,
+                             field=existing_text_field,
                              new_type_name='throws_field')
 
         row.refresh_from_db()
@@ -558,7 +607,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
             'long_text': ReversesWhenConvertsAwayTextField()
         }
     ):
-        handler.update_field(user=user, field=existing_field_with_old_value_prep,
+        handler.update_field(user=user,
+                             field=existing_field_with_old_value_prep,
                              new_type_name='lowercase_text')
 
         row.refresh_from_db()
@@ -605,7 +655,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
             'long_text': ReversesWhenConvertsAwayTextField()
         }
     ):
-        handler.update_field(user=user, field=existing_field_with_old_value_prep,
+        handler.update_field(user=user,
+                             field=existing_field_with_old_value_prep,
                              new_type_name='lowercase_text')
 
         row.refresh_from_db()

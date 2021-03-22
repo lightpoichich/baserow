@@ -14,7 +14,8 @@ from baserow.contrib.database.fields.field_types import (
     SingleSelectFieldType
 )
 from .registries import ViewFilterType
-from ..fields.field_filters import contains_filter, filename_contains_filter
+from baserow.contrib.database.fields.field_filters import contains_filter, \
+    filename_contains_filter
 
 
 class NotViewFilterTypeMixin:
@@ -224,7 +225,7 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
 
         try:
             int(value)
-            return Q(Q(**{f'{field_name}_id': value}))
+            return Q(**{f'{field_name}_id': value})
         except Exception:
             return Q()
 

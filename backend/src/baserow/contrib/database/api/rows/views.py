@@ -45,7 +45,8 @@ from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .serializers import (
     RowSerializer, get_example_row_serializer_class, get_row_serializer_class
 )
-from ...fields.field_filters import FILTER_TYPE_AND, FILTER_TYPE_OR
+from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, \
+    FILTER_TYPE_OR
 
 
 class RowsView(APIView):

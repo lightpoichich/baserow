@@ -18,7 +18,7 @@ from .signals import (
     view_filter_deleted, view_sort_created, view_sort_updated, view_sort_deleted,
     grid_view_field_options_updated
 )
-from ..fields.field_filters import FilterBuilder
+from baserow.contrib.database.fields.field_filters import FilterBuilder
 
 
 class ViewHandler:

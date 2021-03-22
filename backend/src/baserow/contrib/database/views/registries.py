@@ -7,7 +7,7 @@ from .exceptions import (
     ViewTypeAlreadyRegistered, ViewTypeDoesNotExist, ViewFilterTypeAlreadyRegistered,
     ViewFilterTypeDoesNotExist
 )
-from ..fields.field_filters import OptionallyAnnotatedQ
+from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 
 
 class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMixin,

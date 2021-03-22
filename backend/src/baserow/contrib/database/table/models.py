@@ -51,7 +51,7 @@ class TableModelQuerySet(models.QuerySet):
 
         try:
             id_field_filter = models.Q(**{
-                f'id': int(search)
+                f'id__contains': int(search)
             })
         except ValueError:
             id_field_filter = models.Q()

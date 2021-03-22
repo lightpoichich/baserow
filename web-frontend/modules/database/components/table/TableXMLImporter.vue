@@ -29,42 +29,6 @@
         </div>
       </div>
     </div>
-    <!--
-    <div v-if="filename !== ''" class="row">
-      <div class="col col-6">
-        <div class="control">
-          <label class="control__label"> First row is header </label>
-          <div class="control__elements">
-            <Checkbox v-model="values.firstRowHeader" @input="reload()"
-              >yes</Checkbox
-            >
-          </div>
-        </div>
-      </div>
-      <div class="col col-6">
-        <div class="control">
-          <label class="control__label"> Column separator </label>
-          <div class="control__elements">
-            <Dropdown v-model="columnSeparator" @input="reload()">
-              <DropdownItem name="auto detect" value="auto"></DropdownItem>
-              <DropdownItem name="," value=","></DropdownItem>
-              <DropdownItem name=";" value=";"></DropdownItem>
-              <DropdownItem name="|" value="|"></DropdownItem>
-              <DropdownItem name="<tab>" value="\t"></DropdownItem>
-              <DropdownItem
-                name="record separator (30)"
-                :value="String.fromCharCode(30)"
-              ></DropdownItem>
-              <DropdownItem
-                name="unit separator (31)"
-                :value="String.fromCharCode(31)"
-              ></DropdownItem>
-            </Dropdown>
-          </div>
-        </div>
-      </div>
-    </div>
-    -->
     <div v-if="error !== ''" class="alert alert--error alert--has-icon">
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
@@ -97,10 +61,8 @@ export default {
     return {
       values: {
         data: '',
-        firstRowHeader: true,
       },
       filename: '',
-      columnSeparator: 'auto',
       error: '',
       rawData: null,
       preview: {},

@@ -76,8 +76,8 @@ export default ({ store, app }) => {
   app.$registry.register('field', new SingleSelectFieldType())
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
-  app.$registry.register('settings', new APITokenSettingsType())
   app.$registry.register('importer', new XMLImporterType())
+  app.$registry.register('settings', new APITokenSettingsType())
 
   registerRealtimeEvents(app.$realtime)
 }

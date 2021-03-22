@@ -25,7 +25,7 @@ def test_lenient_schema_editor():
         assert isinstance(schema_editor, BaseDatabaseSchemaEditor)
         assert schema_editor.alter_column_prepare_old_value == ''
         assert schema_editor.alter_column_prepare_new_value == ''
-        assert not schema_editor.force_alter_column_sql
+        assert not schema_editor.force_alter_column
         assert connection.SchemaEditorClass != PostgresqlDatabaseSchemaEditor
 
     assert connection.SchemaEditorClass == PostgresqlDatabaseSchemaEditor

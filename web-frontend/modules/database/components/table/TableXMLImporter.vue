@@ -3,7 +3,7 @@
     <div class="control">
       <label class="control__label"> Choose XML file </label>
       <div class="control__description">
-        You can import an existing CSV by uploading the .XML file with tabular
+        You can import an existing XML by uploading the .XML file with tabular
         data.
       </div>
       <div class="control__elements">

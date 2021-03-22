@@ -106,12 +106,6 @@ export default {
         reader.readAsBinaryString(event.target.files[0])
       }
     },
-    /**
-     * Parses the raw data with the user configured delimiter. If all looks good the
-     * data is stored as a string because all the entries don't have to be reactive.
-     * Also a small preview will be generated. If something goes wrong, for example
-     * when the CSV doesn't have any entries the appropriate error will be shown.
-     */
     reload() {
       const [header, xmlData] = parseXML(this.rawData)
 

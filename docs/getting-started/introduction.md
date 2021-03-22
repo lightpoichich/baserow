@@ -55,7 +55,6 @@ There is a style guide containing examples of all components on
 https://baserow.io/style-guide. Or if you want to see it on your local environment
 http://localhost:8000/style-guide.
 
-
 ## Concepts
 
 ### Groups

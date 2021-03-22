@@ -67,7 +67,7 @@ def test_can_convert_between_all_fields(data_fixture):
     model.objects.create(**{})
     second_row_with_values = model.objects.create(**{})
 
-    # Some baserow field types have multiple different "modes" which result in
+    # Some baserow field types have multiple different 'modes' which result in
     # different conversion behaviour or entirely different database columns being
     # created. Here the kwargs which control these modes are enumerated so we can then
     # generate every possible type of conversion.
@@ -114,7 +114,7 @@ def test_can_convert_between_all_fields(data_fixture):
                     row_handler.update_row(user=user, table=table,
                                            row_id=second_row_with_values.id,
                                            values={
-                                               f"field_{from_field.id}": random_value
+                                               f'field_{from_field.id}': random_value
                                            })
                     handler.update_field(user=user, field=from_field,
                                          new_type_name=inner_field_type_name,

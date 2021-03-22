@@ -256,7 +256,8 @@ class ViewHandler:
                     view_filter.value,
                     model_field,
                     field_object['field']
-                ))
+                )
+            )
 
         return filter_builder.apply_to_queryset(queryset)
 

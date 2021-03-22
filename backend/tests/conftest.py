@@ -46,6 +46,7 @@ def user_tables_in_separate_db(settings):
     and spend ages setting them up as mirrors. Instead keeping this at the functional
     scope lets us keep it simple and quick.
     """
+
     default_db = settings.DATABASES['default']
     user_table_db_name = f'{default_db["NAME"]}_user_tables'
 

@@ -1,8 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, \
-    FILTER_TYPE_OR
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND, FILTER_TYPE_OR
+)
 from baserow.contrib.database.fields.models import Field
 from baserow.core.mixins import (
     OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin

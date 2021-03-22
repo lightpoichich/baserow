@@ -63,10 +63,12 @@ class TableModelQuerySet(models.QuerySet):
             field_name = field_object['name']
             model_field = self.model._meta.get_field(field_name)
 
-            sub_filter = field_object['type'].contains_query(field_name,
-                                                             search,
-                                                             model_field,
-                                                             field_object['field'])
+            sub_filter = field_object['type'].contains_query(
+                field_name,
+                search,
+                model_field,
+                field_object['field']
+            )
             filter_builder.filter(sub_filter)
 
         return filter_builder.apply_to_queryset(self)
@@ -188,7 +190,8 @@ class TableModelQuerySet(models.QuerySet):
                         value,
                         model_field,
                         field_object['field']
-                    ))
+                    )
+                )
 
         return filter_builder.apply_to_queryset(self)
 

@@ -17,10 +17,11 @@ class AnnotatedQ:
     def __init__(self, annotation: Dict[str, Any], q: Union[Q, Dict[str, Any]]):
         """
         :param annotation: A dictionary which can be unpacked into a django
-        Queryset.annotate call. This will only happen when using
-        FilterBuilder.apply_to_queryset.
+            Queryset.annotate call. This will only happen when using
+            FilterBuilder.apply_to_queryset.
         :param q: a Q object or kwargs which will used to create a Q object.
         """
+
         self.annotation = annotation or {}
         if isinstance(q, Q):
             self.q = q
@@ -46,10 +47,10 @@ class FilterBuilder:
         """
 
         :param filter_type: Either field_filters.FILTER_TYPE_AND or
-        field_filters.FILTER_TYPE_OR which dictates how provided Q or AnnotatedQ
-        filters will be combined together.
-        For type OR they will be ORed together when applied to a filter set,
-        for type AND they will be ANDed together.
+            field_filters.FILTER_TYPE_OR which dictates how provided Q or AnnotatedQ
+            filters will be combined together.
+            For type OR they will be ORed together when applied to a filter set,
+            for type AND they will be ANDed together.
         """
 
         if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
@@ -66,9 +67,11 @@ class FilterBuilder:
 
         Annotations on provided AnnotatedQ's are merged together with any previously
         supplied annotations via dict unpacking and merging.
+
         :param q: A Q or Annotated Q
         :return: The updated FilterBuilder with the provided filter applied.
         """
+
         if isinstance(q, AnnotatedQ):
             self._annotate(q.annotation)
             self._filter(q.q)
@@ -82,9 +85,11 @@ class FilterBuilder:
         FilterBuilder by first applying all annotations from AnnotatedQ's and then
         filtering with a Q filter resulting from the combination of all filters ANDed or
         ORed depending on the filter_type attribute.
+
         :param queryset: The queryset to annotate and filter.
         :return: The annotated and filtered queryset.
         """
+
         return queryset.annotate(**self._annotation).filter(self._q_filters)
 
     def _annotate(self, annotation_dict: Dict[str, Any]) -> 'FilterBuilder':

@@ -103,7 +103,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :param field: The related field's instance.
         :type field: Field
         :return: A Q or AnnotatedQ filter.
-        given value.
+            given value.
         :rtype: OptionallyAnnotatedQ
         """
 

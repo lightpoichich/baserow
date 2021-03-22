@@ -319,16 +319,15 @@ class DateFieldType(FieldType):
                                                           to_field)
 
     def contains_query(self, field_name, value, model_field, field):
-        return AnnotatedQ(annotation={
-            f"formatted_date_{field_name}": Func(
+        return AnnotatedQ(
+            annotation={f"formatted_date_{field_name}": Func(
                 F(field_name),
                 Value(field.get_psql_format()),
                 function='to_char',
                 output_field=CharField()
-            )
-        }, q={
-            f'formatted_date_{field_name}__icontains': value
-        })
+            )},
+            q={f'formatted_date_{field_name}__icontains': value}
+        )
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
@@ -1028,12 +1027,11 @@ class SingleSelectFieldType(FieldType):
                 ) AS values (key, value)
                 WHERE value = "field_{field.id}"
             )
-            """
+        """
 
         query = RawSQL(convert_rows_select_id_to_value_sql, params=option_values,
                        output_field=models.CharField())
-        return AnnotatedQ(annotation={
-            f"select_option_value_{field_name}": query
-        }, q={
-            f'select_option_value_{field_name}__icontains': value
-        })
+        return AnnotatedQ(
+            annotation={f"select_option_value_{field_name}": query},
+            q={f'select_option_value_{field_name}__icontains': value}
+        )

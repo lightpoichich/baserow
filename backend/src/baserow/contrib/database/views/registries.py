@@ -117,7 +117,7 @@ class ViewFilterType(Instance):
         :param field: The instance of the underlying baserow field.
         :type field: Field
         :return: A Q or AnnotatedQ filter for this specific field, which will be then
-        later combined with other filters to generate the final total view filter.
+            later combined with other filters to generate the final total view filter.
         """
 
         raise NotImplementedError('Each must have his own get_filter method.')

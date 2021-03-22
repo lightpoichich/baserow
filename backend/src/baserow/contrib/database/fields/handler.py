@@ -220,9 +220,9 @@ class FieldHandler:
                 # If the baserow type has changed we always want to force run any alter
                 # column SQL as otherwise it might not run if the two baserow fields
                 # share the same underlying database column type.
-                force_alter_column_sql = True
+                force_alter_column = True
             else:
-                force_alter_column_sql = field_type.force_same_type_alter_column(
+                force_alter_column = field_type.force_same_type_alter_column(
                     old_field,
                     field)
 
@@ -235,7 +235,7 @@ class FieldHandler:
                 field_type.get_alter_column_prepare_new_value(
                     connection, old_field, field
                 ),
-                force_alter_column_sql
+                force_alter_column
             ) as schema_editor:
                 try:
                     schema_editor.alter_field(from_model, from_model_field,

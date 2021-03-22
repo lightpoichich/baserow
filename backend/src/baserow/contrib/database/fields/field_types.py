@@ -1,43 +1,41 @@
+from datetime import datetime, date
 from decimal import Decimal
-from pytz import timezone
 from random import randrange, randint
+
 from dateutil import parser
 from dateutil.parser import ParserError
-from datetime import datetime, date
-
+from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator, EmailValidator, RegexValidator
 from django.db import models
 from django.db.models import Case, When
-from django.contrib.postgres.fields import JSONField
-from django.core.validators import URLValidator, EmailValidator, RegexValidator
-from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
-
+from pytz import timezone
 from rest_framework import serializers
 
-from baserow.core.models import UserFile
-from baserow.core.user_files.exceptions import UserFileDoesNotExist
-from baserow.contrib.database.api.fields.serializers import (
-    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
-    SelectOptionSerializer
-)
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE
 )
-
+from baserow.contrib.database.api.fields.serializers import (
+    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
+    SelectOptionSerializer
+)
+from baserow.core.models import UserFile
+from baserow.core.user_files.exceptions import UserFileDoesNotExist
+from .exceptions import (
+    LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
+    IncompatiblePrimaryFieldTypeError
+)
+from .fields import SingleSelectForeignKey
 from .handler import FieldHandler
-from .registries import FieldType, field_type_registry
 from .models import (
     NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, DATE_FORMAT, DATE_TIME_FORMAT,
     TextField, LongTextField, URLField, NumberField, BooleanField, DateField,
     LinkRowField, EmailField, FileField,
     SingleSelectField, SelectOption, PhoneNumberField
 )
-from .exceptions import (
-    LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
-    IncompatiblePrimaryFieldTypeError
-)
-from .fields import SingleSelectForeignKey
+from .registries import FieldType, field_type_registry
 
 
 class TextFieldType(FieldType):
@@ -186,6 +184,9 @@ class NumberFieldType(FieldType):
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        return not to_field.number_negative and from_field.number_negative
 
 
 class BooleanFieldType(FieldType):

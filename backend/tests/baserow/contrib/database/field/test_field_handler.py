@@ -406,10 +406,79 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
                              new_type_name='lowercase_text')
 
         row.refresh_from_db()
-        assert getattr(row, field_name) == "test"
+        assert getattr(row, field_name) == 'test'
         assert Field.objects.all().count() == 1
         assert TextField.objects.all().count() == 0
         assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_just_changing_a_fields_name_will_not_run_alter_sql(data_fixture):
+    class AlwaysReverseOnUpdateField(TextFieldType):
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (reverse(p_in));'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'text': AlwaysReverseOnUpdateField()}
+    ):
+        handler.update_field(user=user, field=existing_text_field,
+                             new_type_name='text', name='new_name')
+
+        row.refresh_from_db()
+        # The field has not been reversed as just the name changed!
+        assert getattr(row, field_name) == 'Test'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fixture):
+    class SameTypeAlwaysReverseOnUpdateField(TextFieldType):
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (reverse(p_in));'''
+
+        def force_same_type_alter_column(self, from_field, to_field):
+            return True
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'text': SameTypeAlwaysReverseOnUpdateField()}
+    ):
+        handler.update_field(user=user, field=existing_text_field,
+                             new_type_name='text', name='new_name')
+
+        row.refresh_from_db()
+        # The alter sql has been run due to the force override
+        assert getattr(row, field_name) == 'tseT'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 1
 
 
 @pytest.mark.django_db
@@ -493,7 +562,7 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
                              new_type_name='lowercase_text')
 
         row.refresh_from_db()
-        assert getattr(row, field_name) == "pre_fix_tset_post_fix"
+        assert getattr(row, field_name) == 'pre_fix_tset_post_fix'
         assert Field.objects.all().count() == 1
         assert TextField.objects.all().count() == 0
         assert LongTextField.objects.all().count() == 1
@@ -540,7 +609,7 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
                              new_type_name='lowercase_text')
 
         row.refresh_from_db()
-        assert getattr(row, field_name) == "tset"
+        assert getattr(row, field_name) == 'tset'
         assert Field.objects.all().count() == 1
         assert TextField.objects.all().count() == 0
         assert LongTextField.objects.all().count() == 1

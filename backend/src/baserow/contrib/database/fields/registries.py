@@ -193,6 +193,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
         Can return an SQL statement to convert the `p_in` variable to a readable text
         format for the new field.
+        This SQL will not be run when converting between two fields of the same
+        baserow type, if you need it to be run then implement
+        force_same_type_alter_column.
 
         Example: return "p_in = lower(p_in);"
 
@@ -214,6 +217,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
         Can return a SQL statement to convert the `p_in` variable from text to a
         desired format for the new field.
+        This SQL will not be run when converting between two fields of the same
+        baserow type, if you need it to be run then implement
+        force_same_type_alter_column.
 
         Example: when a string is converted to a number, to statement could be:
         `REGEXP_REPLACE(p_in, '[^0-9]', '', 'g')` which would remove all non numeric
@@ -387,6 +393,25 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
 
         return None
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        """
+        Defines whether the sql provided by the get_alter_column_prepare_{old,new}_value
+        hooks should be run when converting between two fields of this field type.
+        You only need to implement this when when you have validation and/or data
+        manipulation running as part of your alter_column_prepare SQL which must be
+        run even when from_field and to_field are the same Baserow field type.
+
+        :param from_field: The old field instance. It is not recommended to call the
+            save function as this will undo part of the changes that have been made.
+            This is just for comparing values.
+        :type from_field: Field
+        :param to_field: The updated field instance.
+        :type: to_field: Field
+        :return: Whether the alter column sql should be forced to run.
+        :rtype: bool
+        """
+        return False
 
 
 class FieldTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,

@@ -35,51 +35,40 @@ class PostgresqlLenientDatabaseSchemaEditor:
     """
 
     def __init__(self, *args, alter_column_prepare_old_value='',
-                 alter_column_prepare_new_value=''):
+                 alter_column_prepare_new_value='',
+                 force_alter_column_sql=False):
         self.alter_column_prepare_old_value = alter_column_prepare_old_value
         self.alter_column_prepare_new_value = alter_column_prepare_new_value
+        self.force_alter_column_sql = force_alter_column_sql
         super().__init__(*args)
 
     def _alter_field(self, model, old_field, new_field, old_type, new_type,
                      old_db_params, new_db_params, strict=False):
-        variables = {}
-        if isinstance(self.alter_column_prepare_old_value, tuple):
-            alter_column_prepare_old_value, v = self.alter_column_prepare_old_value
-            variables = {**variables, **v}
-        else:
-            alter_column_prepare_old_value = self.alter_column_prepare_old_value
+        if self.force_alter_column_sql:
+            old_type = f'{old_type}_forced'
 
-        if isinstance(self.alter_column_prepare_new_value, tuple):
-            alter_column_prepare_new_value, v = self.alter_column_prepare_new_value
-            variables = {**variables, **v}
-        else:
-            alter_column_prepare_new_value = self.alter_column_prepare_new_value
+        if old_type != new_type:
+            variables = {}
+            if isinstance(self.alter_column_prepare_old_value, tuple):
+                alter_column_prepare_old_value, v = self.alter_column_prepare_old_value
+                variables = {**variables, **v}
+            else:
+                alter_column_prepare_old_value = self.alter_column_prepare_old_value
 
-        quoted_column_name = self.quote_name(new_field.column)
-        self.execute(self.sql_drop_try_cast)
-        self.execute(self.sql_create_try_cast % {
-            'column': quoted_column_name,
-            'type': new_type,
-            'alter_column_prepare_old_value': alter_column_prepare_old_value,
-            'alter_column_prepare_new_value': alter_column_prepare_new_value
-        }, variables)
+            if isinstance(self.alter_column_prepare_new_value, tuple):
+                alter_column_prepare_new_value, v = self.alter_column_prepare_new_value
+                variables = {**variables, **v}
+            else:
+                alter_column_prepare_new_value = self.alter_column_prepare_new_value
 
-        if old_type == new_type:
-            # If the underlying sql column types have not changed we still want to run
-            # the alter_column_type sql as it can perform validation over the new
-            # data. This can occur when two Baserow fields use the same underlying
-            # postgresql column type, but enforce different validations over their data.
-
-            table_name = self.quote_name(model._meta.db_table)
-            self.execute(
-                self.sql_alter_column % {
-                    'table': table_name,
-                    'changes': self.sql_alter_column_type % {
-                        'column': quoted_column_name,
-                        'type': new_type,
-                    }
-                },
-            )
+            quoted_column_name = self.quote_name(new_field.column)
+            self.execute(self.sql_drop_try_cast)
+            self.execute(self.sql_create_try_cast % {
+                'column': quoted_column_name,
+                'type': new_type,
+                'alter_column_prepare_old_value': alter_column_prepare_old_value,
+                'alter_column_prepare_new_value': alter_column_prepare_new_value
+            }, variables)
 
         return super()._alter_field(model, old_field, new_field, old_type, new_type,
                                     old_db_params, new_db_params, strict)
@@ -87,7 +76,8 @@ class PostgresqlLenientDatabaseSchemaEditor:
 
 @contextlib.contextmanager
 def lenient_schema_editor(connection, alter_column_prepare_old_value=None,
-                          alter_column_prepare_new_value=None):
+                          alter_column_prepare_new_value=None,
+                          force_alter_column_sql=False):
     """
     A contextual function that yields a modified version of the connection's schema
     editor. This temporary version is more lenient then the regular editor. Normally
@@ -105,6 +95,9 @@ def lenient_schema_editor(connection, alter_column_prepare_old_value=None,
     :param alter_column_prepare_new_value: Optionally a query statement converting the
         `p_in` text value to the new type.
     :type alter_column_prepare_new_value: None or str
+    :param force_alter_column_sql: When true forces the schema editor to run an alter
+        column statement using the previous two alter_column_prepare parameters.
+    :type force_alter_column_sql: bool
     :raises ValueError: When the provided connection is not supported. For now only
         `postgresql` is supported.
     """
@@ -125,7 +118,9 @@ def lenient_schema_editor(connection, alter_column_prepare_old_value=None,
 
     connection.SchemaEditorClass = schema_editor_class
 
-    kwargs = {}
+    kwargs = {
+        'force_alter_column_sql': force_alter_column_sql
+    }
 
     if alter_column_prepare_old_value:
         kwargs['alter_column_prepare_old_value'] = alter_column_prepare_old_value

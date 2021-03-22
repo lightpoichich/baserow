@@ -107,9 +107,12 @@ export default {
       }
     },
     reload() {
-      const [header, xmlData] = parseXML(this.rawData)
-
-      if (xmlData && xmlData.length > 0) {
+      const [header, xmlData, errors] = parseXML(this.rawData)
+      if (errors.length > 0) {
+        this.values.data = ''
+        this.error = `Error occured while processing XML: ${errors.join('\n')}`
+        this.preview = {}
+      } else if (xmlData && xmlData.length > 0) {
         let hasHeader = false
         if (header.length > 0) {
           xmlData.unshift(header)
@@ -123,7 +126,6 @@ export default {
         this.error = 'This XML file is empty.'
         this.preview = {}
       }
-
       this.$emit('input', this.value)
     },
   },

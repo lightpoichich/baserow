@@ -39,12 +39,12 @@ class PostgresqlLenientDatabaseSchemaEditor:
                  force_alter_column=False):
         self.alter_column_prepare_old_value = alter_column_prepare_old_value
         self.alter_column_prepare_new_value = alter_column_prepare_new_value
-        self.force_alter_column_sql = force_alter_column
+        self.force_alter_column = force_alter_column
         super().__init__(*args)
 
     def _alter_field(self, model, old_field, new_field, old_type, new_type,
                      old_db_params, new_db_params, strict=False):
-        if self.force_alter_column_sql:
+        if self.force_alter_column:
             old_type = f'{old_type}_forced'
 
         if old_type != new_type:

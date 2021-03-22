@@ -42,4 +42,4 @@ def test_lenient_schema_editor():
         assert schema_editor.alter_column_prepare_new_value == (
             "p_in = REGEXP_REPLACE(p_in, 'test', '', 'g');"
         )
-        assert schema_editor.force_alter_column_sql
+        assert schema_editor.force_alter_column

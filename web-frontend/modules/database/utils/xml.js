@@ -10,8 +10,7 @@ export const parseXML = (rawXML) => {
     )
   }
   if (xmlDoc && xmlDoc.documentElement && xmlDoc.documentElement.children) {
-    const xmlRows = xmlDoc.documentElement.children
-    xmlData = Array.from(xmlRows).map((row) => {
+    xmlData = Array.from(xmlDoc.documentElement.children).map((row) => {
       const vals = Array.from(row.children).map((rowChild) => {
         const rowTag = rowChild.tagName
         if (!header.includes(rowTag)) {
@@ -24,8 +23,8 @@ export const parseXML = (rawXML) => {
   }
   xmlData = xmlData.map((line) => {
     return header.map((h) => {
-      const lv = line.filter((lv) => lv.tag === h)
-      return lv.length > 0 ? lv[0].value : ''
+      const lineValue = line.filter((lv) => lv.tag === h)
+      return lineValue.length > 0 ? lineValue[0].value : ''
     })
   })
   return [header, xmlData, errors]

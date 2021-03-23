@@ -415,6 +415,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :return: Whether the alter column sql should be forced to run.
         :rtype: bool
         """
+
         return False
 
 

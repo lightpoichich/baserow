@@ -224,7 +224,8 @@ class FieldHandler:
             else:
                 force_alter_column = field_type.force_same_type_alter_column(
                     old_field,
-                    field)
+                    field
+                )
 
             # If no field converter is found we are going to alter the field using the
             # the lenient schema editor.

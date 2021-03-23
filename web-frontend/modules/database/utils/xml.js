@@ -1,3 +1,6 @@
+/**
+ * Parses a rawXML string and extracts tabular data from it.
+ */
 export const parseXML = (rawXML) => {
   let xmlData = []
   const header = []

@@ -4,7 +4,24 @@
       <label class="control__label"> Choose XML file </label>
       <div class="control__description">
         You can import an existing XML by uploading the .XML file with tabular
-        data.
+        data, i.e.:
+        <pre>
+          &lt;notes&gt;
+            &lt;note&gt;
+              &lt;to&gt;Tove&lt;/to&gt;
+              &lt;from&gt;Jani&lt;/from&gt;
+              &lt;heading&gt;Reminder&lt;/heading&gt;
+              &lt;body&gt;Don't forget me this weekend!&lt;/body&gt;
+            &lt;/note&gt;
+            &lt;note&gt;
+              &lt;heading&gt;Reminder&lt;/heading&gt;
+              &lt;heading2&gt;Reminder2&lt;/heading2&gt;
+              &lt;to&gt;Tove&lt;/to&gt;
+              &lt;from&gt;Jani&lt;/from&gt;
+              &lt;body&gt;Don't forget me this weekend!&lt;/body&gt;
+            &lt;/note&gt;
+          &lt;/notes&gt;
+        </pre>
       </div>
       <div class="control__elements">
         <div class="file-upload">

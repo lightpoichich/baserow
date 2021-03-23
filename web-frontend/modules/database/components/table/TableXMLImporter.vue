@@ -112,7 +112,7 @@ export default {
         this.values.data = ''
         this.error = `Error occured while processing XML: ${errors.join('\n')}`
         this.preview = {}
-      } else if (xmlData && xmlData.length > 0) {
+      } else if (xmlData.length > 0) {
         let hasHeader = false
         if (header.length > 0) {
           xmlData.unshift(header)

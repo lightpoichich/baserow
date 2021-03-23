@@ -1,5 +1,5 @@
 export const parseXML = (rawXML) => {
-  let xmlData = null
+  let xmlData = []
   const header = []
   const xmlDoc = new DOMParser().parseFromString(rawXML, 'text/xml')
   const parseErrors = xmlDoc.getElementsByTagName('parsererror')

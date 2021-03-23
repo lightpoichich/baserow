@@ -3,7 +3,7 @@ from django.db import connections
 
 from baserow.contrib.database.fields.models import (
     TextField, LongTextField, NumberField, BooleanField, DateField, LinkRowField,
-    FileField, SingleSelectField, SelectOption, URLField, EmailField
+    FileField, SingleSelectField, SelectOption, URLField, EmailField, PhoneNumberField
 )
 
 
@@ -196,6 +196,23 @@ class FieldFixtures:
             kwargs['order'] = 0
 
         field = EmailField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs['table'], field)
+
+        return field
+
+    def create_phone_number_field(self, user=None, create_field=True, **kwargs):
+        if 'table' not in kwargs:
+            kwargs['table'] = self.create_database_table(user=user)
+
+        if 'name' not in kwargs:
+            kwargs['name'] = self.fake.phone_number()
+
+        if 'order' not in kwargs:
+            kwargs['order'] = 0
+
+        field = PhoneNumberField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs['table'], field)

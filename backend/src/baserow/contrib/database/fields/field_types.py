@@ -1097,3 +1097,6 @@ class PhoneNumberFieldType(FieldType):
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
+
+    def contains_query(self, *args):
+        return contains_filter(*args)

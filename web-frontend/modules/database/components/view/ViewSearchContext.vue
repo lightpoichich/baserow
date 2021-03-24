@@ -5,13 +5,13 @@
     <form class="context__form" @submit.prevent="doSearch">
       <div class="control">
         <div class="control__elements">
-          <div class="header-search-context__search">
-            <i class="fas fa-search header-search-context__search-icon"></i>
+          <div class="search__context">
+            <i class="fas fa-search search__context-icon"></i>
             <input
               v-model="search"
               type="text"
               placeholder="Search in all fields"
-              class="input header-search-context__search-input"
+              class="input search__context-input"
               @keypress.enter="doSearch"
             />
           </div>

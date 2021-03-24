@@ -114,23 +114,3 @@
     color: $color-neutral-200;
   }
 }
-
-.header__info {
-  @extend .clearfix;
-
-  list-style: none;
-  padding: 0;
-  margin: auto 0 auto auto;
-
-  li {
-    float: left;
-    padding: 2px 12px;
-    border-right: 1px solid $color-neutral-200;
-    font-size: 14px;
-    font-weight: 600;
-
-    &:last-child {
-      margin-right: 0;
-    }
-  }
-}

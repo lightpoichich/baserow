@@ -6,6 +6,7 @@ export default (client) => {
       offset = null,
       cancelToken = null,
       includeFieldOptions = false,
+      search = false,
     }) {
       const config = {
         params: {
@@ -28,6 +29,10 @@ export default (client) => {
 
       if (include.length > 0) {
         config.params.include = include.join(',')
+      }
+
+      if (search) {
+        config.params.search = search
       }
 
       return client.get(`/database/views/grid/${gridId}/`, config)

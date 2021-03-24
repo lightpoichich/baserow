@@ -113,6 +113,9 @@ class GridViewView(APIView):
         `field_options` are provided in the include GET parameter.
         """
 
+        # TODO update the API
+        search = request.GET.get('search')
+
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
         view.table.database.group.has_user(request.user, raise_error=True)
@@ -123,6 +126,10 @@ class GridViewView(APIView):
         # Applies the view filters and sortings to the queryset if there are any.
         queryset = view_handler.apply_filters(view, queryset)
         queryset = view_handler.apply_sorting(view, queryset)
+        # TODO Support not filtering but instead marking rows as matching the search
+        # term. Could literally run two queries, could expose a new endpoint?
+        if search:
+            queryset = queryset.search_all_fields(search)
 
         if 'count' in request.GET:
             return Response({'count': queryset.count()})

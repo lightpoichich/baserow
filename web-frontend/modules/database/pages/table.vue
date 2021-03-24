@@ -64,10 +64,11 @@
         :fields="fields"
         :primary="primary"
       />
-      <ul v-if="!tableLoading" class="header__info">
-        <li>{{ database.name }}</li>
-        <li>{{ table.name }}</li>
-      </ul>
+      <ViewSearch
+        v-if="!tableLoading && hasSelectedView && view._.type.canSearch"
+        :view="view"
+        @changed="refresh"
+      ></ViewSearch>
     </header>
     <div class="layout__col-2-2 content">
       <component
@@ -93,6 +94,7 @@ import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
+import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -103,6 +105,7 @@ export default {
     ViewsContext,
     ViewFilter,
     ViewSort,
+    ViewSearch,
   },
   /**
    * When the user leaves to another page we want to unselect the selected table. This

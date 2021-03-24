@@ -63,6 +63,7 @@ export const state = () => ({
   windowHeight: 0,
   // Indicates if the user is hovering over the add row button.
   addRowHover: false,
+  search: false,
 })
 
 export const mutations = {
@@ -71,6 +72,9 @@ export const mutations = {
   },
   SET_LOADED(state, value) {
     state.loaded = value
+  },
+  SET_SEARCH(state, value) {
+    state.search = value
   },
   SET_LAST_GRID_ID(state, gridId) {
     state.lastGridId = gridId
@@ -402,6 +406,7 @@ export const actions = {
           offset: requestOffset,
           limit: requestLimit,
           cancelToken: lastSource.token,
+          search: getters.getSearch,
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -539,6 +544,7 @@ export const actions = {
       offset: 0,
       limit,
       includeFieldOptions: true,
+      search: getters.getSearch,
     })
     data.results.forEach((part, index) => {
       populateRow(data.results[index])
@@ -580,6 +586,7 @@ export const actions = {
       gridId,
       offset,
       limit,
+      search: getters.getSearch,
     })
 
     // If there are results we can replace the existing rows so that the user stays
@@ -616,6 +623,9 @@ export const actions = {
           values
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
+  },
+  updateSearch({ commit }, { search }) {
+    commit('SET_SEARCH', search)
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is
@@ -1086,6 +1096,9 @@ export const getters = {
   },
   getAddRowHover(state) {
     return state.addRowHover
+  },
+  getSearch(state) {
+    return state.search
   },
 }
 

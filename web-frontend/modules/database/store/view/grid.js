@@ -625,6 +625,7 @@ export const actions = {
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
   updateSearch({ commit }, { search }) {
+    // TODO Figure out when to reset
     commit('SET_SEARCH', search)
   },
   /**

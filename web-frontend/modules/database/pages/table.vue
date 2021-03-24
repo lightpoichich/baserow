@@ -63,12 +63,8 @@
         :view="view"
         :fields="fields"
         :primary="primary"
+        @refresh="refresh"
       />
-      <ViewSearch
-        v-if="!tableLoading && hasSelectedView && view._.type.canSearch"
-        :view="view"
-        @changed="refresh"
-      ></ViewSearch>
     </header>
     <div class="layout__col-2-2 content">
       <component

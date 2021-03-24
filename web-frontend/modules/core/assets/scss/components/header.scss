@@ -60,18 +60,26 @@
 }
 
 .header__filter {
-  @extend .clearfix;
-
+  flex: 1 1;
+  display: flex;
   list-style: none;
   padding: 0;
   margin: auto 0;
+
+  &.header__filter--full-width {
+    // flex: 0 1 auto;
+    width: 100%;
+  }
 }
 
 .header__filter-item {
   @extend %first-last-no-margin;
 
-  float: left;
   margin-left: 12px;
+
+  &.header__filter-item--right {
+    margin-left: auto;
+  }
 }
 
 .header__filter-link {
@@ -127,4 +135,24 @@
 .header__search-icon {
   color: $color-primary-900;
   margin-right: 4px;
+}
+
+.header__info {
+  @extend .clearfix;
+
+  list-style: none;
+  padding: 0;
+  margin: auto 0 auto auto;
+
+  li {
+    float: left;
+    padding: 2px 12px;
+    border-right: 1px solid $color-neutral-200;
+    font-size: 14px;
+    font-weight: 600;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
 }

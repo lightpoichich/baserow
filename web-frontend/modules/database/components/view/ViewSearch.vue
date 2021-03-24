@@ -1,7 +1,7 @@
 <template>
-  <div class="header__search">
+  <div>
     <a
-      class="header__search-link"
+      class="header__filter-link"
       ref="contextLink"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
@@ -11,7 +11,7 @@
     <ViewSearchContext
       ref="context"
       :view="view"
-      @changed="$emit('changed')"
+      @refresh="$emit('refresh')"
     ></ViewSearchContext>
   </div>
 </template>

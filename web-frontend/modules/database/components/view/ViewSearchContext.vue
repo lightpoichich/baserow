@@ -45,7 +45,7 @@ export default {
       await this.$store.dispatch('view/grid/updateSearch', {
         search: this.search,
       })
-      this.$emit('changed')
+      this.$emit('refresh')
     },
   },
 }

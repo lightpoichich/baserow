@@ -19,6 +19,7 @@ export function populateRow(row) {
     selectedBy: [],
     matchFilters: true,
     matchSortings: true,
+    matchSearch: true,
     // Keeping the selected state with the row has the best performance when navigating
     // between cells.
     selected: false,
@@ -63,7 +64,8 @@ export const state = () => ({
   windowHeight: 0,
   // Indicates if the user is hovering over the add row button.
   addRowHover: false,
-  search: false,
+  search: '',
+  hideSearchResults: true,
 })
 
 export const mutations = {
@@ -73,8 +75,9 @@ export const mutations = {
   SET_LOADED(state, value) {
     state.loaded = value
   },
-  SET_SEARCH(state, value) {
-    state.search = value
+  SET_SEARCH(state, { search, hide }) {
+    state.search = search
+    state.hideSearchResults = hide
   },
   SET_LAST_GRID_ID(state, gridId) {
     state.lastGridId = gridId
@@ -624,9 +627,9 @@ export const actions = {
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
-  updateSearch({ commit }, { search }) {
+  updateSearch({ commit }, { search, hide }) {
     // TODO Figure out when to reset
-    commit('SET_SEARCH', search)
+    commit('SET_SEARCH', { search, hide })
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is
@@ -1099,7 +1102,7 @@ export const getters = {
     return state.addRowHover
   },
   getSearch(state) {
-    return state.search
+    return state.hideSearchResults ? state.search : false
   },
 }
 

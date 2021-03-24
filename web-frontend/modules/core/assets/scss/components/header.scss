@@ -60,14 +60,14 @@
 }
 
 .header__filter {
-  flex: 1 1;
+  flex: 0 0;
   display: flex;
   list-style: none;
   padding: 0;
   margin: auto 0;
 
   &.header__filter--full-width {
-    // flex: 0 1 auto;
+    flex: 1 1;
     width: 100%;
   }
 }
@@ -88,6 +88,7 @@
   color: $color-primary-900;
   padding: 0 10px;
   border-radius: 3px;
+  white-space: nowrap;
 
   @include fixed-height(32px, 13px);
 

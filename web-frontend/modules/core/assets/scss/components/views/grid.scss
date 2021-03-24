@@ -322,6 +322,10 @@
     }
   }
 
+  .grid-view__cell--searched & {
+    background-color: $color-success-100;
+  }
+
   .grid-view__cell--error {
     @extend %ellipsis;
 

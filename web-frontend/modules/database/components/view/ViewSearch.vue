@@ -1,17 +1,22 @@
 <template>
   <div>
     <a
-      class="header__filter-link"
       ref="contextLink"
+      class="header__filter-link"
+      :class="{
+        active: search.length > 0,
+      }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__search-icon fas fa-search"></i>
+      {{ search }}
     </a>
     <!-- TODO Is using the same "refresh" functionality what we want? -->
     <ViewSearchContext
       ref="context"
       :view="view"
       @refresh="$emit('refresh')"
+      @searched="onSearched"
     ></ViewSearchContext>
   </div>
 </template>
@@ -29,13 +34,19 @@ export default {
     },
   },
   data: () => {
-    return {}
+    return {
+      search: '',
+    }
   },
   computed: {
     sortTitle() {
       return 'Search'
     },
   },
-  methods: {},
+  methods: {
+    onSearched(newSearch) {
+      this.search = newSearch
+    },
+  },
 }
 </script>

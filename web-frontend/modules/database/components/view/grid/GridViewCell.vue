@@ -2,6 +2,7 @@
   <div
     ref="wrapper"
     class="grid-view__column"
+    :class="[data.staticClass, data.class]"
     :style="data.style"
     @click="$options.methods.select($event, parent, props.field.id)"
   >

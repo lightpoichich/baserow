@@ -46,6 +46,9 @@
       :field="field"
       :row="row"
       :state="state"
+      :class="{
+        'grid-view__cell--searched': row._.matchSearch.includes(field.id),
+      }"
       :style="{ width: fieldWidths[field.id] + 'px' }"
       @update="$emit('update', $event)"
       @edit="$emit('edit', $event)"

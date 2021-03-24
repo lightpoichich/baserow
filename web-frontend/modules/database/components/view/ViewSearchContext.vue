@@ -19,7 +19,7 @@
       </div>
       <div class="control">
         <div class="control__elements">
-          <SwitchInput v-model="hide" @input="doSearch()">
+          <SwitchInput v-model="hiddenSearch" @input="doSearch()">
             hide not matching rows</SwitchInput
           >
         </div>
@@ -46,7 +46,7 @@ export default {
     return {
       search: '',
       lastSearch: '',
-      hide: true,
+      hiddenSearch: true,
       lastHide: true,
     }
   },
@@ -55,20 +55,26 @@ export default {
       this.doSearch()
     }, 400),
     async doSearch() {
-      if (this.lastSearch === this.search && this.lastHide === this.hide) {
+      if (
+        this.lastSearch === this.search &&
+        this.lastHide === this.hiddenSearch
+      ) {
         return
       }
-
-      this.lastSearch = this.search
-      this.lastHide = this.hide
 
       // TODO is it ok that we are tied to grid here? instead perhaps
       // the state should be moved onto view store and then grid gets it from the view?
       await this.$store.dispatch('view/grid/updateSearch', {
         search: this.search,
-        hide: this.hide,
+        hiddenSearch: this.hiddenSearch,
       })
-      this.$emit('refresh')
+      if (this.hiddenSearch || (this.lastHide && !this.hiddenSearch)) {
+        this.$emit('refresh')
+      }
+      this.$emit('searched', this.search)
+
+      this.lastSearch = this.search
+      this.lastHide = this.hiddenSearch
     },
   },
 }

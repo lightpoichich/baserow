@@ -19,7 +19,7 @@ export function populateRow(row) {
     selectedBy: [],
     matchFilters: true,
     matchSortings: true,
-    matchSearch: true,
+    matchSearch: [],
     // Keeping the selected state with the row has the best performance when navigating
     // between cells.
     selected: false,
@@ -251,6 +251,11 @@ export const mutations = {
   SET_ROW_HOVER(state, { row, value }) {
     row._.hover = value
   },
+  SET_ALL_ROW_MATCH_SEARCH(state, { values }) {
+    for (const { row, matches } of values) {
+      row._.matchSearch = matches
+    }
+  },
   SET_ROW_MATCH_FILTERS(state, { row, value }) {
     row._.matchFilters = value
   },
@@ -409,7 +414,7 @@ export const actions = {
           offset: requestOffset,
           limit: requestLimit,
           cancelToken: lastSource.token,
-          search: getters.getSearch,
+          search: getters.getServerSearch,
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -547,7 +552,7 @@ export const actions = {
       offset: 0,
       limit,
       includeFieldOptions: true,
-      search: getters.getSearch,
+      search: getters.getServerSearch,
     })
     data.results.forEach((part, index) => {
       populateRow(data.results[index])
@@ -589,7 +594,7 @@ export const actions = {
       gridId,
       offset,
       limit,
-      search: getters.getSearch,
+      search: getters.getServerSearch,
     })
 
     // If there are results we can replace the existing rows so that the user stays
@@ -605,6 +610,7 @@ export const actions = {
       bufferStartIndex: offset,
       bufferLimit: data.results.length,
     })
+    dispatch('refreshSearch')
   },
   /**
    * Checks if the given row still matches the given view filters. The row's
@@ -627,9 +633,53 @@ export const actions = {
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
-  updateSearch({ commit }, { search, hide }) {
+  updateSearch({ commit, getters, dispatch }, { search, hiddenSearch }) {
     // TODO Figure out when to reset
-    commit('SET_SEARCH', { search, hide })
+    commit('SET_SEARCH', { search, hide: hiddenSearch })
+    dispatch('refreshSearch')
+  },
+  refreshSearch({ commit, getters, rootGetters }) {
+    const search = getters.getSearch
+
+    const fieldTypeToFilter = {
+      text: 'contains',
+      long_text: 'contains',
+      url: 'contains',
+      email: 'contains',
+      number: 'contains',
+      date: 'contains',
+      file: 'filename_contains',
+      single_select: 'contains',
+      phone_number: 'contains',
+    }
+    const values = []
+    const allRows = getters.getAllRows
+    const fields = [
+      ...rootGetters['field/getAll'],
+      rootGetters['field/getPrimary'],
+    ]
+    for (const row of allRows) {
+      const matches = []
+      if (search) {
+        for (const field of fields) {
+          const fieldName = `field_${field.id}`
+          if (fieldTypeToFilter[field.type]) {
+            const rowValue = row[fieldName]
+            if (rowValue) {
+              const doesMatch = this.$registry
+                .get('viewFilter', fieldTypeToFilter[field.type])
+                .matches(rowValue, search)
+              if (doesMatch) {
+                matches.push(field.id)
+              }
+            }
+          }
+        }
+      }
+      values.push({ row, matches })
+    }
+
+    commit('SET_ALL_ROW_MATCH_SEARCH', { values })
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is
@@ -1102,6 +1152,12 @@ export const getters = {
     return state.addRowHover
   },
   getSearch(state) {
+    return state.search
+  },
+  getHide(state) {
+    return state.hideSearchResults
+  },
+  getServerSearch(state) {
     return state.hideSearchResults ? state.search : false
   },
 }

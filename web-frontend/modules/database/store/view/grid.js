@@ -19,7 +19,8 @@ export function populateRow(row) {
     selectedBy: [],
     matchFilters: true,
     matchSortings: true,
-    matchSearch: [],
+    matchSearch: true,
+    searchMatches: [],
     // Keeping the selected state with the row has the best performance when navigating
     // between cells.
     selected: false,
@@ -252,8 +253,9 @@ export const mutations = {
     row._.hover = value
   },
   SET_ALL_ROW_MATCH_SEARCH(state, { values }) {
-    for (const { row, matches } of values) {
-      row._.matchSearch = matches
+    for (const { row, matches, matchSearch } of values) {
+      row._.searchMatches = matches
+      row._.matchSearch = matchSearch
     }
   },
   SET_ROW_MATCH_FILTERS(state, { row, value }) {
@@ -433,6 +435,7 @@ export const actions = {
             scrollTop: null,
             windowHeight: null,
           })
+          dispatch('refreshSearch', {})
           lastRequest = null
         })
         .catch((error) => {
@@ -574,13 +577,17 @@ export const actions = {
       top: 0,
     })
     commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
+    dispatch('refreshSearch', {})
   },
   /**
    * Refreshes the current state with fresh data. It keeps the scroll offset the same
    * if possible. This can be used when a new filter or sort is created.
    */
   async refresh({ dispatch, commit, getters }, { gridId }) {
-    const response = await GridService(this.$client).fetchCount(gridId)
+    const response = await GridService(this.$client).fetchCount(
+      gridId,
+      getters.getServerSearch
+    )
     const count = response.data.count
 
     const limit = getters.getBufferRequestSize * 3
@@ -610,7 +617,15 @@ export const actions = {
       bufferStartIndex: offset,
       bufferLimit: data.results.length,
     })
-    dispatch('refreshSearch')
+    dispatch('refreshSearch', {})
+  },
+  onRowChange(
+    { dispatch },
+    { view, row, fields, primary = null, overrides = {} }
+  ) {
+    dispatch('updateMatchFilters', { view, row, overrides })
+    dispatch('updateMatchSortings', { view, fields, primary, row, overrides })
+    dispatch('refreshSearch', { row, overrides })
   },
   /**
    * Checks if the given row still matches the given view filters. The row's
@@ -636,10 +651,16 @@ export const actions = {
   updateSearch({ commit, getters, dispatch }, { search, hiddenSearch }) {
     // TODO Figure out when to reset
     commit('SET_SEARCH', { search, hide: hiddenSearch })
-    dispatch('refreshSearch')
+    if (!hiddenSearch) {
+      dispatch('refreshSearch', {})
+    }
   },
-  refreshSearch({ commit, getters, rootGetters }) {
+  refreshSearch(
+    { commit, getters, rootGetters },
+    { row = false, overrides = {} }
+  ) {
     const search = getters.getSearch
+    const hide = getters.getHide
 
     const fieldTypeToFilter = {
       text: 'contains',
@@ -653,30 +674,39 @@ export const actions = {
       phone_number: 'contains',
     }
     const values = []
-    const allRows = getters.getAllRows
+    const allRows = row ? [row] : getters.getAllRows
     const fields = [
       ...rootGetters['field/getAll'],
       rootGetters['field/getPrimary'],
     ]
     for (const row of allRows) {
       const matches = []
+      let matchSearch = !hide
       if (search) {
+        if (row.id.toString().includes(search)) {
+          matchSearch = true
+          matches.push('row_id')
+        }
         for (const field of fields) {
           const fieldName = `field_${field.id}`
           if (fieldTypeToFilter[field.type]) {
-            const rowValue = row[fieldName]
+            const rowValue =
+              fieldName in overrides ? overrides[fieldName] : row[fieldName]
             if (rowValue) {
               const doesMatch = this.$registry
                 .get('viewFilter', fieldTypeToFilter[field.type])
                 .matches(rowValue, search)
               if (doesMatch) {
+                matchSearch = true
                 matches.push(field.id)
               }
             }
           }
         }
+      } else {
+        matchSearch = true
       }
-      values.push({ row, matches })
+      values.push({ row, matches, matchSearch })
     }
 
     commit('SET_ALL_ROW_MATCH_SEARCH', { values })
@@ -716,8 +746,7 @@ export const actions = {
     { table, view, row, field, fields, primary, value, oldValue }
   ) {
     commit('SET_VALUE', { row, field, value })
-    dispatch('updateMatchFilters', { view, row })
-    dispatch('updateMatchSortings', { view, fields, primary, row })
+    dispatch('onRowChange', { view, row, fields, primary })
 
     const fieldType = this.$registry.get('field', field._.type.type)
     const newValue = fieldType.prepareValueForUpdate(field, value)
@@ -728,7 +757,7 @@ export const actions = {
       await RowService(this.$client).update(table.id, row.id, values)
     } catch (error) {
       commit('SET_VALUE', { row, field, value: oldValue })
-      dispatch('updateMatchFilters', { view, row })
+      dispatch('onRowChange', { view, row, fields, primary })
       throw error
     }
   },
@@ -783,11 +812,7 @@ export const actions = {
       windowHeight: null,
     })
 
-    // Check if the newly created row matches the filters.
-    dispatch('updateMatchFilters', { view, row })
-
-    // Check if the newly created row matches the sortings.
-    dispatch('updateMatchSortings', { view, fields, row })
+    dispatch('onRowChange', { view, row, fields })
 
     try {
       const { data } = await RowService(this.$client).create(
@@ -824,8 +849,7 @@ export const actions = {
       scrollTop: null,
       windowHeight: null,
     })
-    dispatch('updateMatchFilters', { view, row })
-    dispatch('updateMatchSortings', { view, fields, primary, row })
+    dispatch('onRowChange', { view, row, fields, primary })
     dispatch('refreshRow', { grid: view, row, fields, primary, getScrollTop })
   },
   /**
@@ -851,8 +875,7 @@ export const actions = {
       commit('UPDATE_ROW', { row, values })
     }
 
-    dispatch('updateMatchFilters', { view, row })
-    dispatch('updateMatchSortings', { view, fields, primary, row })
+    dispatch('onRowChange', { view, row, fields, primary })
     dispatch('refreshRow', { grid: view, row, fields, primary, getScrollTop })
   },
   /**
@@ -1040,7 +1063,10 @@ export const actions = {
     { dispatch, commit, getters },
     { grid, row, fields, primary, getScrollTop }
   ) {
-    if (row._.selectedBy.length === 0 && !row._.matchFilters) {
+    const rowShouldBeHidden =
+      !row._.matchFilters ||
+      (getters.getSearch && getters.getHide && row._.searchMatches.length === 0)
+    if (row._.selectedBy.length === 0 && rowShouldBeHidden) {
       dispatch('forceDelete', { grid, row, getScrollTop })
       return
     }

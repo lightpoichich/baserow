@@ -249,6 +249,10 @@
   .grid-view__row--selected & {
     background-color: $color-neutral-50;
   }
+
+  &.grid-view__row-info--searched {
+    background-color: $color-success-100;
+  }
 }
 
 .grid-view__row-count {
@@ -324,6 +328,10 @@
 
   .grid-view__cell--searched & {
     background-color: $color-success-100;
+
+    &.active {
+      background-color: $color-success-100;
+    }
   }
 
   .grid-view__cell--error {

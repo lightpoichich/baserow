@@ -13,19 +13,29 @@
   >
     <template v-if="includeRowDetails">
       <div
-        v-if="!row._.matchFilters || !row._.matchSortings"
+        v-if="!row._.matchFilters || !row._.matchSortings || !row._.matchSearch"
         class="grid-view__row-warning"
       >
         <template v-if="!row._.matchFilters">
           Row does not match filters
         </template>
-        <template v-else-if="!row._.matchSortings">Row has moved</template>
+        <template v-else-if="!row._.matchSortings"> Row has moved</template>
+        <template v-else-if="!row._.matchSearch">
+          Row does not match search
+        </template>
       </div>
       <div
         class="grid-view__column"
         :style="{ width: gridViewRowDetailsWidth + 'px' }"
       >
-        <div class="grid-view__row-info">
+        <div
+          class="grid-view__row-info"
+          :class="{
+            'grid-view__row-info--searched': row._.searchMatches.includes(
+              'row_id'
+            ),
+          }"
+        >
           <div class="grid-view__row-count" :title="row.id">
             {{ row.id }}
           </div>
@@ -47,7 +57,7 @@
       :row="row"
       :state="state"
       :class="{
-        'grid-view__cell--searched': row._.matchSearch.includes(field.id),
+        'grid-view__cell--searched': row._.searchMatches.includes(field.id),
       }"
       :style="{ width: fieldWidths[field.id] + 'px' }"
       @update="$emit('update', $event)"

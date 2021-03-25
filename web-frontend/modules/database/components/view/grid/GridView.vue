@@ -259,16 +259,11 @@ export default {
     editValue({ field, row, value, oldValue }) {
       const overrides = {}
       overrides[`field_${field.id}`] = value
-      this.$store.dispatch('view/grid/updateMatchFilters', {
+      this.$store.dispatch('view/grid/onRowChange', {
         view: this.view,
         row,
-        overrides,
-      })
-      this.$store.dispatch('view/grid/updateMatchSortings', {
-        view: this.view,
         fields: this.fields,
         primary: this.primary,
-        row,
         overrides,
       })
     },

@@ -3,7 +3,6 @@ import axios from 'axios'
 import setupDatabasePlugin from '@baserow/modules/database/plugin'
 import { bootstrapVueContext } from '@baserow/test/helpers/components'
 import MockAdapter from 'axios-mock-adapter'
-import { MockServer } from '@baserow/test/fixtures/mockServer'
 import _ from 'lodash'
 
 function createBaserowStore(app, vueContext) {

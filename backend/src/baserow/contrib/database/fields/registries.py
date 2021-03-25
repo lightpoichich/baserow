@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from baserow.core.registry import (
     Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin,
@@ -86,6 +88,26 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
 
         return queryset
+
+    def contains_query(self, field_name, value, model_field, field):
+        """
+        Returns a Q or AnnotatedQ filter which performs a contains filter over the
+        provided field for this specific type of field.
+
+        :param field_name: The name of the field.
+        :type field_name: str
+        :param value: The value to check if this field contains or not.
+        :type value: str
+        :param model_field: The field's actual django field model instance.
+        :type model_field: models.Field
+        :param field: The related field's instance.
+        :type field: Field
+        :return: A Q or AnnotatedQ filter.
+            given value.
+        :rtype: OptionallyAnnotatedQ
+        """
+
+        return Q()
 
     def get_serializer_field(self, instance, **kwargs):
         """
@@ -193,6 +215,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
         Can return an SQL statement to convert the `p_in` variable to a readable text
         format for the new field.
+        This SQL will not be run when converting between two fields of the same
+        baserow type which share the same underlying database column type.
+        If you require this then implement force_same_type_alter_column.
 
         Example: return "p_in = lower(p_in);"
 
@@ -214,8 +239,11 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
         Can return a SQL statement to convert the `p_in` variable from text to a
         desired format for the new field.
+        This SQL will not be run when converting between two fields of the same
+        baserow type which share the same underlying database column type.
+        If you require this then implement force_same_type_alter_column.
 
-        Example when a string is converted to a number, to statement could be:
+        Example: when a string is converted to a number, to statement could be:
         `REGEXP_REPLACE(p_in, '[^0-9]', '', 'g')` which would remove all non numeric
         characters. The p_in variable is the old value as a string.
 
@@ -387,6 +415,30 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
 
         return None
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        """
+        Defines whether the sql provided by the get_alter_column_prepare_{old,new}_value
+        hooks should be forced to run when converting between two fields of this field
+        type which have the same database column type.
+        You only need to implement this when when you have validation and/or data
+        manipulation running as part of your alter_column_prepare SQL which must be
+        run even when from_field and to_field are the same Baserow field type and sql
+        column type. If your field has the same baserow type but will convert into
+        different sql column types then the alter sql will be run automatically and you
+        do not need to use this override.
+
+        :param from_field: The old field instance. It is not recommended to call the
+            save function as this will undo part of the changes that have been made.
+            This is just for comparing values.
+        :type from_field: Field
+        :param to_field: The updated field instance.
+        :type: to_field: Field
+        :return: Whether the alter column sql should be forced to run.
+        :rtype: bool
+        """
+
+        return False
 
 
 class FieldTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,

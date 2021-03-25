@@ -11,6 +11,7 @@ import {
   DateFieldType,
   FileFieldType,
   SingleSelectFieldType,
+  PhoneNumberFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -74,6 +75,7 @@ export default ({ store, app }) => {
   app.$registry.register('field', new EmailFieldType())
   app.$registry.register('field', new FileFieldType())
   app.$registry.register('field', new SingleSelectFieldType())
+  app.$registry.register('field', new PhoneNumberFieldType())
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
   app.$registry.register('importer', new XMLImporterType())

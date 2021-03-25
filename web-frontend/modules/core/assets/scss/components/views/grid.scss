@@ -251,7 +251,7 @@
   }
 
   &.grid-view__row-info--searched {
-    background-color: $color-success-100;
+    background-color: $color-primary-100;
   }
 }
 
@@ -327,10 +327,10 @@
   }
 
   .grid-view__cell--searched & {
-    background-color: $color-success-100;
+    background-color: $color-primary-100;
 
     &.active {
-      background-color: $color-success-100;
+      background-color: $color-primary-100;
     }
   }
 

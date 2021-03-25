@@ -4,7 +4,7 @@
       ref="contextLink"
       class="header__filter-link"
       :class="{
-        active: search.length > 0,
+        'active--searched': search.length > 0,
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >

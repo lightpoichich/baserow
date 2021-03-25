@@ -98,15 +98,19 @@
   }
 
   &.active {
-    background-color: $color-success-200;
+    background-color: $color-success-100;
+  }
+
+  &.active--searched {
+    background-color: $color-primary-100;
   }
 
   &.active--warning {
-    background-color: $color-warning-200;
+    background-color: $color-warning-100;
   }
 
   &.active--primary {
-    background-color: $color-primary-100;
+    background-color: $color-error-100;
   }
 }
 

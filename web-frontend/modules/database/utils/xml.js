@@ -4,7 +4,7 @@
 export const parseXML = (rawXML) => {
   let xmlData = []
   const header = []
-  const xmlDoc = new DOMParser().parseFromString(rawXML, 'text/xml')
+  const xmlDoc = new window.DOMParser().parseFromString(rawXML, 'text/xml')
   const parseErrors = xmlDoc.getElementsByTagName('parsererror')
   const errors = []
   if (parseErrors.length > 0) {

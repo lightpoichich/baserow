@@ -4,7 +4,7 @@
       <GridViewHide :view="view" :fields="fields"></GridViewHide>
     </li>
     <li class="header__filter-item header__filter-item--right">
-      <ViewSearch :view="view" @refresh="$emit('refresh')"></ViewSearch>
+      <ViewSearch :view="view" @refresh="$emit('refresh', $event)"></ViewSearch>
     </li>
   </ul>
 </template>

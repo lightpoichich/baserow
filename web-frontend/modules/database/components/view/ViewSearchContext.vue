@@ -1,16 +1,15 @@
 <template>
-  <!--  TODO add the various loading etc display states -->
-  <!--  TODO do we want to search on every keypress instead? -->
   <Context :class="{ 'context--loading-overlay': view._.loading }">
     <form class="context__form" @submit.prevent="doSearch">
       <div class="control">
         <div class="control__elements">
-          <div class="input__with-icon">
+          <div class="input__with-icon" :class="searchInputIconClasses">
             <input
               v-model="search"
               type="text"
-              placeholder="Search in all fields"
+              placeholder="Search in all rows"
               class="input"
+              :disabled="searchLoading"
               @keyup="delayedSearch"
             />
             <i class="fas fa-search"></i>
@@ -18,10 +17,14 @@
         </div>
       </div>
       <div class="control">
-        <div class="control__elements">
-          <SwitchInput v-model="hiddenSearch" @input="doSearch()">
-            hide not matching rows</SwitchInput
+        <div class="control__right">
+          <SwitchInput
+            v-model="hiddenSearch"
+            :disabled="searchLoading"
+            @input="doSearch()"
           >
+            hide not matching rows
+          </SwitchInput>
         </div>
       </div>
     </form>
@@ -48,7 +51,15 @@ export default {
       lastSearch: '',
       hiddenSearch: true,
       lastHide: true,
+      searchLoading: false,
     }
+  },
+  computed: {
+    searchInputIconClasses() {
+      return {
+        'input__with-icon--loading': this.searchLoading,
+      }
+    },
   },
   methods: {
     delayedSearch: _.debounce(function () {
@@ -62,14 +73,23 @@ export default {
         return
       }
 
-      // TODO is it ok that we are tied to grid here? instead perhaps
-      // the state should be moved onto view store and then grid gets it from the view?
+      this.searchLoading = true
       await this.$store.dispatch('view/grid/updateSearch', {
         search: this.search,
         hiddenSearch: this.hiddenSearch,
       })
+      if (!this.hiddenSearch) {
+        await this.$store.dispatch('view/grid/refreshSearch', {})
+      }
       if (this.hiddenSearch || (this.lastHide && !this.hiddenSearch)) {
-        this.$emit('refresh')
+        const callback = function () {
+          this.searchLoading = false
+        }
+        this.$emit('refresh', {
+          callback: callback.bind(this),
+        })
+      } else {
+        this.searchLoading = false
       }
       this.$emit('searched', this.search)
 

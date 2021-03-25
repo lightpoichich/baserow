@@ -32,8 +32,6 @@ export const bootstrapVueContext = (configureContext) => {
 
   const context = {}
   const teardownVueContext = () => {
-    // jest.unmock('vue')
-    // Object.keys(context).forEach((key) => delete context[key])
     jest.resetModules()
   }
 

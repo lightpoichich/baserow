@@ -99,12 +99,20 @@
 .grid-field-file__item-add {
   border-radius: 3px;
   color: $color-primary-900;
-  background-color: $color-primary-200;
+  background-color: $color-primary-100;
+
+  .grid-view__cell--searched & {
+    background-color: $color-primary-200;
+  }
 
   @include center-text(22px, 11px);
 
   &:hover {
-    background-color: $color-primary-300;
+    background-color: $color-primary-200;
+
+    .grid-view__cell--searched & {
+      background-color: $color-primary-300;
+    }
   }
 }
 

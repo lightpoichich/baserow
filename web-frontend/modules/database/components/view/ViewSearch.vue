@@ -11,11 +11,10 @@
       <i class="header__search-icon fas fa-search"></i>
       {{ search }}
     </a>
-    <!-- TODO Is using the same "refresh" functionality what we want? -->
     <ViewSearchContext
       ref="context"
       :view="view"
-      @refresh="$emit('refresh')"
+      @refresh="$emit('refresh', $event)"
       @searched="onSearched"
     ></ViewSearchContext>
   </div>

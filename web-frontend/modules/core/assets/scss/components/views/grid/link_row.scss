@@ -31,7 +31,11 @@
   @include fixed-height(22px, 13px);
 
   .grid-field-link-row__cell.active & {
-    background-color: $color-primary-200;
+    background-color: $color-primary-100;
+
+    .grid-view__cell--searched & {
+      background-color: $color-primary-200;
+    }
   }
 
   &.grid-field-link-row__item--link {
@@ -40,7 +44,11 @@
     color: $color-primary-900;
 
     &:hover {
-      background-color: $color-primary-300;
+      background-color: $color-primary-200;
+
+      .grid-view__cell--searched & {
+        background-color: $color-primary-300;
+      }
     }
 
     .grid-field-link-row__cell.active & {

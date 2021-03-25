@@ -96,6 +96,8 @@ export const mutations = {
     state.rowsStartIndex = 0
     state.rowsEndIndex = 0
     state.scrollTop = 0
+    state.search = ''
+    state.hideSearchResults = true
   },
   /**
    * It will add and remove rows to the state based on the provided values. For example
@@ -649,11 +651,7 @@ export const actions = {
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
   updateSearch({ commit, getters, dispatch }, { search, hiddenSearch }) {
-    // TODO Figure out when to reset
     commit('SET_SEARCH', { search, hide: hiddenSearch })
-    if (!hiddenSearch) {
-      dispatch('refreshSearch', {})
-    }
   },
   refreshSearch(
     { commit, getters, rootGetters },

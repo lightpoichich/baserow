@@ -368,6 +368,12 @@ def test_contains_filter_type(data_fixture):
     assert row.id in ids
 
     filter.field = number_field
+    filter.value = '0' + str(row.id)
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    filter.field = number_field
     filter.value = ''
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]

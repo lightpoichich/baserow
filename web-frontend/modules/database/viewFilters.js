@@ -206,15 +206,14 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue) {
-    if (rowValue) {
-      if ('value' in rowValue) {
-        rowValue = rowValue.value
-      }
-      rowValue = rowValue.toString().toLowerCase().trim()
-      filterValue = filterValue.toString().toLowerCase().trim()
-      return filterValue === '' || rowValue.includes(filterValue)
+    if (rowValue === null) {
+      rowValue = ''
+    } else if (typeof rowValue === 'object' && 'value' in rowValue) {
+      rowValue = rowValue.value
     }
-    return filterValue === ''
+    rowValue = rowValue.toString().toLowerCase().trim()
+    filterValue = filterValue.toString().toLowerCase().trim()
+    return filterValue === '' || rowValue.includes(filterValue)
   }
 }
 
@@ -245,15 +244,14 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue) {
-    if (rowValue) {
-      if ('value' in rowValue) {
-        rowValue = rowValue.value
-      }
-      rowValue = rowValue.toString().toLowerCase().trim()
-      filterValue = filterValue.toString().toLowerCase().trim()
-      return filterValue === '' || !rowValue.includes(filterValue)
+    if (rowValue === null) {
+      rowValue = ''
+    } else if (typeof rowValue === 'object' && 'value' in rowValue) {
+      rowValue = rowValue.value
     }
-    return filterValue === ''
+    rowValue = rowValue.toString().toLowerCase().trim()
+    filterValue = filterValue.toString().toLowerCase().trim()
+    return filterValue === '' || !rowValue.includes(filterValue)
   }
 }
 

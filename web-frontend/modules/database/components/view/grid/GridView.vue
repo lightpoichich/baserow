@@ -566,7 +566,7 @@ export default {
         windowHeight: this.$refs.right.$refs.body.clientHeight,
       })
       this.$nextTick(() => {
-        this.$refs.scrollbars.update()
+        this.fieldsUpdated()
       })
     },
   },

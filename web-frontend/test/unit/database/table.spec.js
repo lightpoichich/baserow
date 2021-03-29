@@ -1,4 +1,4 @@
-import { TestApp } from '@baserow/test/helpers/testApp'
+import { TestApp, UIHelpers } from '@baserow/test/helpers/testApp'
 import Table from '@baserow/modules/database/pages/table'
 import flushPromises from 'flush-promises'
 
@@ -108,7 +108,7 @@ describe('Table Component Tests', () => {
     })
 
     mockServer.resetMockEndpoints()
-    mockServer.nextSearchWillReturn('last_name', gridView, [
+    mockServer.nextSearchForTermWillReturn('last_name', gridView, [
       {
         id: 1,
         order: 0,
@@ -119,7 +119,7 @@ describe('Table Component Tests', () => {
       },
     ])
 
-    await testApp.performSearch(tableComponent, 'last_name')
+    await UIHelpers.performSearch(tableComponent, 'last_name')
 
     expect(
       tableComponent
@@ -144,7 +144,7 @@ describe('Table Component Tests', () => {
     })
 
     mockServer.resetMockEndpoints()
-    mockServer.nextSearchWillReturn('last_name', gridView, [
+    mockServer.nextSearchForTermWillReturn('last_name', gridView, [
       {
         id: 1,
         order: 0,
@@ -155,9 +155,9 @@ describe('Table Component Tests', () => {
       },
     ])
 
-    await testApp.performSearch(tableComponent, 'last_name')
+    await UIHelpers.performSearch(tableComponent, 'last_name')
 
-    const input = await testApp.startEditForCellContaining(
+    const input = await UIHelpers.startEditForCellContaining(
       tableComponent,
       'last_name'
     )

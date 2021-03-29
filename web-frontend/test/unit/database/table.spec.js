@@ -1,21 +1,15 @@
-import { createMockRowsInGridView } from '@baserow/test/fixtures/grid'
-import { createMockGridView } from '@baserow/test/fixtures/view'
-import { createMockGroup } from '@baserow/test/fixtures/groups'
-import { createMockApplication } from '@baserow/test/fixtures/applications'
-import { createMockFields } from '@baserow/test/fixtures/fields'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import Table from '@baserow/modules/database/pages/table'
 
-let mock
-let store
-
 describe('Table Component Tests', () => {
   let testApp = null
+  let mock = null
+  let mockServer = null
 
   beforeAll(() => {
     testApp = new TestApp()
     mock = testApp.mock
-    store = testApp.store
+    mockServer = testApp.mockServer
   })
 
   afterEach(() => {
@@ -23,24 +17,40 @@ describe('Table Component Tests', () => {
   })
 
   async function givenASingleSimpleTableInTheServer() {
-    createMockApplication(mock, {})
-    createMockGridView(mock, {})
-    createMockGroup(mock, {})
-    createMockFields(mock, {})
-    createMockRowsInGridView(mock, {
-      rows: [
-        {
-          id: 1,
-          order: 0,
-          field_1: 'name',
-          field_2: 'last_name',
-          field_3: 'notes',
-          field_4: false,
-        },
-      ],
-    })
-    await store.dispatch('group/fetchAll')
-    await store.dispatch('application/fetchAll')
+    const table = mockServer.createTable()
+    const { application } = await mockServer.createAppAndGroup(table)
+    const gridView = mockServer.createGridView(application, table)
+    const fields = mockServer.createFields(application, table, [
+      {
+        name: 'Name',
+        type: 'text',
+        primary: true,
+      },
+      {
+        name: 'Last name',
+        type: 'text',
+      },
+      {
+        name: 'Notes',
+        type: 'long_text',
+      },
+      {
+        name: 'Active',
+        type: 'boolean',
+      },
+    ])
+
+    mockServer.createRows(gridView, fields, [
+      {
+        id: 1,
+        order: 0,
+        field_1: 'name',
+        field_2: 'last_name',
+        field_3: 'notes',
+        field_4: false,
+      },
+    ])
+    return { application, table, gridView }
   }
 
   function expectServerCalledToCreateRow(tableId) {
@@ -55,24 +65,28 @@ describe('Table Component Tests', () => {
   }
 
   test('Add a row to a simple table increases the row count', async () => {
-    await givenASingleSimpleTableInTheServer()
+    const {
+      application,
+      table,
+      gridView,
+    } = await givenASingleSimpleTableInTheServer()
 
-    const table = await testApp.mount(Table, {
+    const tableComponent = await testApp.mount(Table, {
       asyncDataParams: {
-        databaseId: '1',
-        tableId: '1',
-        viewId: '1',
+        databaseId: application.id,
+        tableId: table.id,
+        viewId: gridView.id,
       },
     })
 
-    expect(table.html()).toContain('1 rows')
+    expect(tableComponent.html()).toContain('1 rows')
 
-    expectServerCalledToCreateRow(1)
+    expectServerCalledToCreateRow(table.id)
 
-    const button = table.find('.grid-view__add-row')
+    const button = tableComponent.find('.grid-view__add-row')
     await button.trigger('click')
 
-    expect(table.html()).toContain('2 rows')
+    expect(tableComponent.html()).toContain('2 rows')
     expect(true).toBeTruthy()
   })
 })

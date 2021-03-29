@@ -4,6 +4,7 @@ import setupDatabasePlugin from '@baserow/modules/database/plugin'
 import { bootstrapVueContext } from '@baserow/test/helpers/components'
 import MockAdapter from 'axios-mock-adapter'
 import _ from 'lodash'
+import { MockServer } from '@baserow/test/fixtures/mockServer'
 
 function createBaserowStore(app, vueContext) {
   const store = new vueContext.vuex.Store({})
@@ -40,6 +41,7 @@ export class TestApp {
     this.vueContext = bootstrapVueContext()
     this.store = createBaserowStore(this.app, this.vueContext)
     this.initialCleanStoreState = _.cloneDeep(this.store.state)
+    this.mockServer = new MockServer(this.mock, this.store)
   }
 
   afterEach() {

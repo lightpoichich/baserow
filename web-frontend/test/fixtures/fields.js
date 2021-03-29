@@ -13,41 +13,13 @@ export function createFile(visibleName) {
   }
 }
 
-export function createMockFields(mock, { applicationId = 1 }) {
-  mock.onGet('/database/fields/table/1/').reply(200, [
-    {
-      id: 1,
-      table_id: 1,
-      name: 'Name',
-      order: 0,
-      type: 'text',
-      primary: true,
-      text_default: '',
-    },
-    {
-      id: 2,
-      table_id: 1,
-      name: 'Last name',
-      order: 1,
-      type: 'text',
-      primary: false,
-      text_default: '',
-    },
-    {
-      id: 3,
-      table_id: 1,
-      name: 'Notes',
-      order: 2,
-      type: 'long_text',
-      primary: false,
-    },
-    {
-      id: 4,
-      table_id: 1,
-      name: 'Active',
-      order: 3,
-      type: 'boolean',
-      primary: false,
-    },
-  ])
+export function createFields(mock, application, table, fields) {
+  let nextId = 1
+  const fieldsWithIds = fields.map((f) => ({
+    id: nextId++,
+    table_id: table.id,
+    ...f,
+  }))
+  mock.onGet(`/database/fields/table/${table.id}/`).reply(200, fieldsWithIds)
+  return fieldsWithIds
 }

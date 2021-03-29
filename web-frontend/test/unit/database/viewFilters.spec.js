@@ -1,65 +1,41 @@
-import setupDatabasePlugin from '@baserow/modules/database/plugin'
-import { createMockGridView } from '@baserow/test/fixtures/view'
-import { createLocalVue } from '@vue/test-utils'
-import Vuex from 'vuex'
-import { cloneDeep } from 'lodash'
-import axios from 'axios'
-import MockAdapter from 'axios-mock-adapter'
+import { TestApp } from '@baserow/test/helpers/testApp'
+import { createFile } from '@baserow/test/fixtures/fields'
 import {
   EqualViewFilterType,
   FilenameContainsViewFilterType,
 } from '@baserow/modules/database/viewFilters'
-import { Registry } from '@baserow/modules/core/registry'
-import { createFile } from '@baserow/test/fixtures/fields'
-import { createMockRowsInGridView } from '@baserow/test/fixtures/grid'
 
-let mock
-let store
-let initialCleanState
+describe('View Filter Tests', () => {
+  let testApp = null
+  let mockServer = null
+  let store = null
 
-function createBaserowStore() {
-  const registry = new Registry()
-  const store = new Vuex.Store({})
-  store.$registry = registry
-  store.$client = axios
-  setupDatabasePlugin({
-    app: {
-      $registry: registry,
-      $realtime: {
-        registerEvent(e, f) {},
-      },
-    },
-    store,
-  })
-  return store
-}
-
-describe('view filters tests', () => {
   beforeAll(() => {
-    mock = new MockAdapter(axios)
-    const localVue = createLocalVue()
-    localVue.use(Vuex)
-    store = createBaserowStore()
-    initialCleanState = store.state
+    testApp = new TestApp()
+    mockServer = testApp.mockServer
+    store = testApp.store
   })
 
-  beforeEach(() => {
-    store.replaceState(cloneDeep(initialCleanState))
+  afterEach(() => {
+    testApp.afterEach()
   })
 
   test('When An Equals Filter is applied a string field correctly indicates if the row will continue to match after an edit', async () => {
-    await thereIsATableWithRow({
-      id: 1,
-      order: 0,
-      field_1: 'exactly_matching_string',
-    })
-    await thereIsAViewWithFilter({
-      id: 1,
-      view: 1,
-      field: 1,
-      type: EqualViewFilterType.getType(),
-      value: 'exactly_matching_string',
-    })
+    await thereIsATableWithRowAndFilter(
+      {
+        name: 'Text Field Field',
+        type: 'text',
+        primary: true,
+      },
+      { id: 1, order: 0, field_1: 'exactly_matching_string' },
+      {
+        id: 1,
+        view: 1,
+        field: 1,
+        type: EqualViewFilterType.getType(),
+        value: 'exactly_matching_string',
+      }
+    )
 
     const row = store.getters['view/grid/getRow'](1)
 
@@ -70,19 +46,33 @@ describe('view filters tests', () => {
     expect(row._.matchFilters).toBe(false)
   })
 
+  async function thereIsATableWithRowAndFilter(field, row, filter) {
+    const table = mockServer.createTable()
+    const { application } = await mockServer.createAppAndGroup(table)
+    const gridView = mockServer.createGridView(application, table, [filter])
+    const fields = mockServer.createFields(application, table, [field])
+
+    mockServer.createRows(gridView, fields, [row])
+    await store.dispatch('view/grid/fetchInitial', { gridId: 1 })
+    await store.dispatch('view/fetchAll', { id: 1 })
+  }
+
   test('When An Filename Contains Filter is applied a file field correctly indicates if the row will continue to match after an edit', async () => {
-    await thereIsATableWithRow({
-      id: 1,
-      order: 0,
-      field_1: [createFile('test_file_name')],
-    })
-    await thereIsAViewWithFilter({
-      id: 1,
-      view: 1,
-      field: 1,
-      type: FilenameContainsViewFilterType.getType(),
-      value: 'test_file_name',
-    })
+    await thereIsATableWithRowAndFilter(
+      {
+        name: 'File Field',
+        type: 'file',
+        primary: true,
+      },
+      { id: 1, order: 0, field_1: [createFile('test_file_name')] },
+      {
+        id: 1,
+        view: 1,
+        field: 1,
+        type: FilenameContainsViewFilterType.getType(),
+        value: 'test_file_name',
+      }
+    )
 
     const row = store.getters['view/grid/getRow'](1)
 
@@ -100,24 +90,14 @@ describe('view filters tests', () => {
     ])
     expect(row._.matchFilters).toBe(true)
   })
+
+  async function editFieldWithoutSavingNewValue(row, newValue) {
+    await store.dispatch('view/grid/updateMatchFilters', {
+      view: store.getters['view/first'],
+      row,
+      overrides: {
+        field_1: newValue,
+      },
+    })
+  }
 })
-
-async function thereIsATableWithRow(row) {
-  createMockRowsInGridView(mock, { rows: [row] })
-  await store.dispatch('view/grid/fetchInitial', { gridId: 1 })
-}
-
-async function thereIsAViewWithFilter(filter) {
-  createMockGridView(mock, { filters: [filter] })
-  await store.dispatch('view/fetchAll', { id: 1 })
-}
-
-async function editFieldWithoutSavingNewValue(row, newValue) {
-  await store.dispatch('view/grid/updateMatchFilters', {
-    view: store.getters['view/first'],
-    row,
-    overrides: {
-      field_1: newValue,
-    },
-  })
-}

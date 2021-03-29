@@ -5,7 +5,13 @@
     class="modal__wrapper"
     @click="outside($event)"
   >
-    <div class="modal__box" :class="{ 'modal__box--with-sidebar': sidebar }">
+    <div
+      class="modal__box"
+      :class="{
+        'modal__box--with-sidebar': sidebar,
+        'modal__box--full-screen': fullScreen,
+      }"
+    >
       <a class="modal__close" @click="hide()">
         <i class="fas fa-times"></i>
       </a>
@@ -32,6 +38,11 @@ export default {
   mixins: [baseModal],
   props: {
     sidebar: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    fullScreen: {
       type: Boolean,
       default: false,
       required: false,

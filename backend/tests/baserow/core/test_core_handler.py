@@ -716,3 +716,27 @@ def test_delete_database_application(send_mock, data_fixture):
     assert send_mock.call_args[1]['application_id'] == database.id
     assert send_mock.call_args[1]['application'].id == database.id
     assert send_mock.call_args[1]['user'].id == user.id
+
+
+@pytest.mark.django_db
+def test_export_import_group_application(data_fixture):
+    group = data_fixture.create_group()
+    imported_group = data_fixture.create_group()
+    database = data_fixture.create_database_application(group=group)
+    data_fixture.create_database_table(database=database)
+
+    handler = CoreHandler()
+    exported_applications = handler.export_group_applications(group)
+    imported_applications, id_mapping = handler.import_application_to_group(
+        imported_group,
+        exported_applications
+    )
+
+    assert len(imported_applications) == 1
+    imported_database = imported_applications[0]
+    assert imported_database.id != database.id
+    assert imported_database.name == database.name
+    assert imported_database.order == database.order
+    assert imported_database.table_set.all().count() == 1
+    assert database.id in id_mapping['applications']
+    assert id_mapping['applications'][database.id] == imported_database.id

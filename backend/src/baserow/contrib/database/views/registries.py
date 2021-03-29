@@ -1,7 +1,7 @@
 from baserow.core.registry import (
     Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin
+    APIUrlsInstanceMixin, ImportExportMixin
 )
 from .exceptions import (
     ViewTypeAlreadyRegistered, ViewTypeDoesNotExist, ViewFilterTypeAlreadyRegistered,
@@ -11,7 +11,7 @@ from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 
 
 class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMixin,
-               Instance):
+               ImportExportMixin, Instance):
     """
     This abstract class represents a custom view type that can be added to the
     view type registry. It must be extended so customisation can be done. Each view type
@@ -57,6 +57,111 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
     Indicates if the view support sortings. If not, it will not be possible to add a
     sort to the view.
     """
+
+    def export_serialized(self, view):
+        """
+        Exports the view to a serialized dict that can be imported by the
+        `import_serialized` method. This dict is also JSON serializable.
+
+        :param view: The view instance that must be exported.
+        :type view: View
+        :return: The exported view as a serialized dict.
+        :rtype: dict
+        """
+
+        serialized = {
+            'id': view.id,
+            'type': self.type,
+            'name': view.name,
+            'order': view.order
+        }
+
+        if self.can_filter:
+            serialized['filter_type'] = view.filter_type
+            serialized['filters_disabled'] = view.filters_disabled
+            serialized['filters'] = [
+                {
+                    'id': filter.id,
+                    'field_id': filter.field_id,
+                    'type': filter.type,
+                    'value': filter.value
+                }
+                for filter in view.viewfilter_set.all()
+            ]
+
+        if self.can_sort:
+            serialized['sortings'] = [
+                {
+                    'id': sort.id,
+                    'field_id': sort.field_id,
+                    'order': sort.order
+                }
+                for sort in view.viewsort_set.all()
+            ]
+
+        return serialized
+
+    def import_serialized(self, table, serialized_values, id_mapping):
+        """
+        Imported an exported serialized view dict that was exported via the
+        `export_serialized` method. Note that the fields must be imported first because
+        we depend on the new field id to be in the mapping.
+
+        :param table: The table where the view should be added to.
+        :type table: Table
+        :param serialized_values: The exported serialized view values that need to
+            be imported.
+        :type serialized_values: dict
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        :return: The newly created view instance.
+        :rtype: View
+        """
+
+        from .models import ViewFilter, ViewSort
+
+        if 'database_views' not in id_mapping:
+            id_mapping['database_views'] = {}
+            id_mapping['database_view_filters'] = {}
+            id_mapping['database_view_sortings'] = {}
+
+        serialized_copy = serialized_values.copy()
+        view_id = serialized_copy.pop('id')
+        serialized_copy.pop('type')
+        filters = serialized_copy.pop('filters') if self.can_filter else []
+        sortings = serialized_copy.pop('sortings') if self.can_sort else []
+        view = self.model_class.objects.create(table=table, **serialized_copy)
+        id_mapping['database_views'][view_id] = view.id
+
+        if self.can_filter:
+            for view_filter in filters:
+                view_filter_copy = view_filter.copy()
+                view_filter_id = view_filter_copy.pop('id')
+                view_filter_copy['field_id'] = (
+                    id_mapping['database_fields'][view_filter_copy['field_id']]
+                )
+                view_filter_object = ViewFilter.objects.create(
+                    view=view,
+                    **view_filter_copy
+                )
+                id_mapping['database_view_filters'][view_filter_id] = (
+                    view_filter_object.id
+                )
+
+        if self.can_sort:
+            for view_sort in sortings:
+                view_sort_copy = view_sort.copy()
+                view_sort_id = view_sort_copy.pop('id')
+                view_sort_copy['field_id'] = (
+                    id_mapping['database_fields'][view_sort_copy['field_id']]
+                )
+                view_sort_object = ViewSort.objects.create(view=view, **view_sort_copy)
+                id_mapping['database_view_sortings'][view_sort_id] = (
+                    view_sort_object.id
+                )
+
+        return view
 
 
 class ViewTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,

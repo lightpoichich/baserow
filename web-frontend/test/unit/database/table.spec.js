@@ -1,5 +1,6 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import Table from '@baserow/modules/database/pages/table'
+import flushPromises from 'flush-promises'
 
 describe('Table Component Tests', () => {
   let testApp = null
@@ -88,5 +89,53 @@ describe('Table Component Tests', () => {
 
     expect(tableComponent.html()).toContain('2 rows')
     expect(true).toBeTruthy()
+  })
+
+  test('Searching for a cells value highlights it', async () => {
+    const {
+      application,
+      table,
+      gridView,
+    } = await givenASingleSimpleTableInTheServer()
+
+    const tableComponent = await testApp.mount(Table, {
+      asyncDataParams: {
+        databaseId: application.id,
+        tableId: table.id,
+        viewId: gridView.id,
+      },
+    })
+
+    mock
+      .onGet(`/database/views/grid/1/`, {
+        params: { limit: 120, offset: 0, search: 'last_name' },
+      })
+      .reply(200, {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: 1,
+            order: 0,
+            field_1: 'name',
+            field_2: 'last_name',
+            field_3: 'notes',
+            field_4: false,
+          },
+        ],
+      })
+
+    const searchBox = tableComponent.get(
+      'input[placeholder*="Search in all rows"]'
+    )
+    await searchBox.setValue('last_name')
+    await searchBox.trigger('submit')
+    await flushPromises()
+    expect(
+      tableComponent
+        .findAll('.grid-view__cell--searched')
+        .filter((w) => w.html().includes('last_name')).length
+    ).toBe(1)
   })
 })

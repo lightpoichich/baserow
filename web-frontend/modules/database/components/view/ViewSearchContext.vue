@@ -1,15 +1,15 @@
 <template>
   <Context :class="{ 'context--loading-overlay': view._.loading }">
-    <form class="context__form" @submit.prevent="doSearch">
+    <form class="context__form" @submit.prevent="searchIfChanged">
       <div class="control">
         <div class="control__elements">
           <div class="input__with-icon" :class="searchInputIconClasses">
             <input
-              v-model="search"
+              v-model="activeSearchTerm"
               type="text"
               placeholder="Search in all rows"
               class="input"
-              :disabled="searchLoading"
+              :disabled="loading"
               @keyup="delayedSearch"
             />
             <i class="fas fa-search"></i>
@@ -19,9 +19,9 @@
       <div class="control">
         <div class="control__right">
           <SwitchInput
-            v-model="hiddenSearch"
-            :disabled="searchLoading"
-            @input="doSearch()"
+            v-model="hideRowsNotMatchingSearch"
+            :disabled="loading"
+            @input="searchIfChanged()"
           >
             hide not matching rows
           </SwitchInput>
@@ -47,54 +47,59 @@ export default {
   },
   data() {
     return {
-      search: '',
+      activeSearchTerm: '',
       lastSearch: '',
-      hiddenSearch: true,
+      hideRowsNotMatchingSearch: true,
       lastHide: true,
-      searchLoading: false,
+      loading: false,
     }
   },
   computed: {
     searchInputIconClasses() {
       return {
-        'input__with-icon--loading': this.searchLoading,
+        'input__with-icon--loading': this.loading,
       }
     },
   },
   methods: {
     delayedSearch: _.debounce(function () {
-      this.doSearch()
+      this.searchIfChanged()
     }, 400),
-    async doSearch() {
+    async searchIfChanged() {
       if (
-        this.lastSearch === this.search &&
-        this.lastHide === this.hiddenSearch
+        this.lastSearch === this.activeSearchTerm &&
+        this.lastHide === this.hideRowsNotMatchingSearch
       ) {
         return
       }
+      await this.performSearch()
 
-      this.searchLoading = true
-      await this.$store.dispatch('view/grid/updateSearch', {
-        search: this.search,
-        hiddenSearch: this.hiddenSearch,
+      this.$emit('searchChanged', this.activeSearchTerm)
+
+      this.lastSearch = this.activeSearchTerm
+      this.lastHide = this.hideRowsNotMatchingSearch
+    },
+    async performSearch() {
+      this.loading = true
+      this.$store.commit('view/grid/SET_SEARCH', {
+        activeSearchTerm: this.activeSearchTerm,
+        hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
       })
-      if (!this.hiddenSearch) {
-        await this.$store.dispatch('view/grid/refreshSearch', {})
-      }
-      if (this.hiddenSearch || (this.lastHide && !this.hiddenSearch)) {
+
+      const needToTriggerServerSideRefresh =
+        this.hideRowsNotMatchingSearch || this.lastHide
+
+      if (needToTriggerServerSideRefresh) {
         const callback = function () {
-          this.searchLoading = false
+          this.loading = false
         }
         this.$emit('refresh', {
           callback: callback.bind(this),
         })
       } else {
-        this.searchLoading = false
+        await this.$store.dispatch('view/grid/updateSearchMatches', {})
+        this.loading = false
       }
-      this.$emit('searched', this.search)
-
-      this.lastSearch = this.search
-      this.lastHide = this.hiddenSearch
     },
   },
 }

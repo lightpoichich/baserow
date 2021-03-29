@@ -13,8 +13,9 @@ describe('Table Component Tests', () => {
     mockServer = testApp.mockServer
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     testApp.afterEach()
+    await flushPromises()
   })
 
   async function givenASingleSimpleTableInTheServer() {
@@ -106,36 +107,66 @@ describe('Table Component Tests', () => {
       },
     })
 
-    mock
-      .onGet(`/database/views/grid/1/`, {
-        params: { limit: 120, offset: 0, search: 'last_name' },
-      })
-      .reply(200, {
-        count: 1,
-        next: null,
-        previous: null,
-        results: [
-          {
-            id: 1,
-            order: 0,
-            field_1: 'name',
-            field_2: 'last_name',
-            field_3: 'notes',
-            field_4: false,
-          },
-        ],
-      })
+    mockServer.resetMockEndpoints()
+    mockServer.nextSearchWillReturn('last_name', gridView, [
+      {
+        id: 1,
+        order: 0,
+        field_1: 'name',
+        field_2: 'last_name',
+        field_3: 'notes',
+        field_4: false,
+      },
+    ])
 
-    const searchBox = tableComponent.get(
-      'input[placeholder*="Search in all rows"]'
-    )
-    await searchBox.setValue('last_name')
-    await searchBox.trigger('submit')
-    await flushPromises()
+    await testApp.performSearch(tableComponent, 'last_name')
+
     expect(
       tableComponent
         .findAll('.grid-view__cell--searched')
         .filter((w) => w.html().includes('last_name')).length
     ).toBe(1)
+  })
+
+  test('Editing a search highlighted cells value so it will no longer match warns', async () => {
+    const {
+      application,
+      table,
+      gridView,
+    } = await givenASingleSimpleTableInTheServer()
+
+    const tableComponent = await testApp.mount(Table, {
+      asyncDataParams: {
+        databaseId: application.id,
+        tableId: table.id,
+        viewId: gridView.id,
+      },
+    })
+
+    mockServer.resetMockEndpoints()
+    mockServer.nextSearchWillReturn('last_name', gridView, [
+      {
+        id: 1,
+        order: 0,
+        field_1: 'name',
+        field_2: 'last_name',
+        field_3: 'notes',
+        field_4: false,
+      },
+    ])
+
+    await testApp.performSearch(tableComponent, 'last_name')
+
+    const input = await testApp.startEditForCellContaining(
+      tableComponent,
+      'last_name'
+    )
+
+    await input.setValue('Doesnt Match Search Term')
+    expect(tableComponent.html()).toContain('Row does not match search')
+
+    await input.setValue('last_name')
+    expect(tableComponent.html()).not.toContain('Row does not match search')
+    await flushPromises()
   })
 })

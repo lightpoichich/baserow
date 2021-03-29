@@ -4,18 +4,18 @@
       ref="contextLink"
       class="header__filter-link"
       :class="{
-        'active--searched': search.length > 0,
+        'active--searched': headerSearchTerm.length > 0,
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__search-icon fas fa-search"></i>
-      {{ search }}
+      {{ headerSearchTerm }}
     </a>
     <ViewSearchContext
       ref="context"
       :view="view"
       @refresh="$emit('refresh', $event)"
-      @searched="onSearched"
+      @searchChanged="searchChanged"
     ></ViewSearchContext>
   </div>
 </template>
@@ -34,7 +34,7 @@ export default {
   },
   data: () => {
     return {
-      search: '',
+      headerSearchTerm: '',
     }
   },
   computed: {
@@ -43,8 +43,8 @@ export default {
     },
   },
   methods: {
-    onSearched(newSearch) {
-      this.search = newSearch
+    searchChanged(newSearch) {
+      this.headerSearchTerm = newSearch
     },
   },
 }

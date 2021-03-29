@@ -5,6 +5,7 @@ import { bootstrapVueContext } from '@baserow/test/helpers/components'
 import MockAdapter from 'axios-mock-adapter'
 import _ from 'lodash'
 import { MockServer } from '@baserow/test/fixtures/mockServer'
+import flushPromises from 'flush-promises'
 
 function createBaserowStore(app, vueContext) {
   const store = new vueContext.vuex.Store({})
@@ -66,5 +67,30 @@ export class TestApp {
       localVue: this.vueContext.vue,
       mocks: this.app,
     })
+  }
+
+  async performSearch(tableComponent, searchTerm) {
+    const searchBox = tableComponent.get(
+      'input[placeholder*="Search in all rows"]'
+    )
+    await searchBox.setValue(searchTerm)
+    await searchBox.trigger('submit')
+    await flushPromises()
+  }
+
+  async startEditForCellContaining(tableComponent, htmlInsideCellToSearchFor) {
+    const targetCell = tableComponent
+      .findAll('.grid-view__cell')
+      .filter((w) => w.html().includes(htmlInsideCellToSearchFor))
+      .at(0)
+
+    await targetCell.trigger('click')
+
+    const activeCell = tableComponent.get('.grid-view__cell.active')
+    // Double click to start editing cell
+    await activeCell.trigger('click')
+    await activeCell.trigger('click')
+
+    return activeCell.find('input')
   }
 }

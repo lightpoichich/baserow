@@ -9,7 +9,8 @@ import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 import {
   getRowSortFunction,
-  rowMatchesFilters,
+  matchSearchFilters,
+  calculateRowSearchMatches,
 } from '@baserow/modules/database/utils/view'
 
 export function populateRow(row) {
@@ -19,8 +20,12 @@ export function populateRow(row) {
     selectedBy: [],
     matchFilters: true,
     matchSortings: true,
+    // Whether the row should be displayed based on the current activeSearchTerm term.
     matchSearch: true,
-    searchMatches: [],
+    // Contains the specific field ids which match the activeSearchTerm term.
+    // Could be empty even when matchSearch is true when there is no
+    // activeSearchTerm term applied.
+    fieldSearchMatches: [],
     // Keeping the selected state with the row has the best performance when navigating
     // between cells.
     selected: false,
@@ -65,8 +70,12 @@ export const state = () => ({
   windowHeight: 0,
   // Indicates if the user is hovering over the add row button.
   addRowHover: false,
-  search: '',
-  hideSearchResults: true,
+  // A user provided optional search term which can be used to filter down rows.
+  activeSearchTerm: '',
+  // If true then the activeSearchTerm will be sent to the server to filter rows
+  // entirely out. When false no server filter will be applied and rows which do not
+  // have any matching cells will still be displayed.
+  hideRowsNotMatchingSearch: true,
 })
 
 export const mutations = {
@@ -76,9 +85,9 @@ export const mutations = {
   SET_LOADED(state, value) {
     state.loaded = value
   },
-  SET_SEARCH(state, { search, hide }) {
-    state.search = search
-    state.hideSearchResults = hide
+  SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
+    state.activeSearchTerm = activeSearchTerm
+    state.hideRowsNotMatchingSearch = hideRowsNotMatchingSearch
   },
   SET_LAST_GRID_ID(state, gridId) {
     state.lastGridId = gridId
@@ -96,8 +105,8 @@ export const mutations = {
     state.rowsStartIndex = 0
     state.rowsEndIndex = 0
     state.scrollTop = 0
-    state.search = ''
-    state.hideSearchResults = true
+    state.activeSearchTerm = ''
+    state.hideRowsNotMatchingSearch = true
   },
   /**
    * It will add and remove rows to the state based on the provided values. For example
@@ -254,9 +263,9 @@ export const mutations = {
   SET_ROW_HOVER(state, { row, value }) {
     row._.hover = value
   },
-  SET_ALL_ROW_MATCH_SEARCH(state, { values }) {
-    for (const { row, matches, matchSearch } of values) {
-      row._.searchMatches = matches
+  SET_ALL_ROW_SEARCH_MATCHES(state, rowSearchMatches) {
+    for (const { row, matchSearch, fieldSearchMatches } of rowSearchMatches) {
+      row._.fieldSearchMatches = fieldSearchMatches
       row._.matchSearch = matchSearch
     }
   },
@@ -437,7 +446,7 @@ export const actions = {
             scrollTop: null,
             windowHeight: null,
           })
-          dispatch('refreshSearch', {})
+          dispatch('updateSearchMatches', {})
           lastRequest = null
         })
         .catch((error) => {
@@ -579,7 +588,7 @@ export const actions = {
       top: 0,
     })
     commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
-    dispatch('refreshSearch', {})
+    dispatch('updateSearchMatches', {})
   },
   /**
    * Refreshes the current state with fresh data. It keeps the scroll offset the same
@@ -619,15 +628,19 @@ export const actions = {
       bufferStartIndex: offset,
       bufferLimit: data.results.length,
     })
-    dispatch('refreshSearch', {})
+    dispatch('updateSearchMatches', {})
   },
+  /**
+   * Triggered when a row has been changed, or has a pending change in the provided
+   * overrides.
+   */
   onRowChange(
     { dispatch },
     { view, row, fields, primary = null, overrides = {} }
   ) {
     dispatch('updateMatchFilters', { view, row, overrides })
     dispatch('updateMatchSortings', { view, fields, primary, row, overrides })
-    dispatch('refreshSearch', { row, overrides })
+    dispatch('updateSearchMatches', { row, overrides })
   },
   /**
    * Checks if the given row still matches the given view filters. The row's
@@ -642,7 +655,7 @@ export const actions = {
     // The value is always valid if the filters are disabled.
     const matches = view.filters_disabled
       ? true
-      : rowMatchesFilters(
+      : matchSearchFilters(
           this.$registry,
           view.filter_type,
           view.filters,
@@ -650,64 +663,20 @@ export const actions = {
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
-  updateSearch({ commit, getters, dispatch }, { search, hiddenSearch }) {
-    commit('SET_SEARCH', { search, hide: hiddenSearch })
-  },
-  refreshSearch(
+  updateSearchMatches(
     { commit, getters, rootGetters },
     { row = false, overrides = {} }
   ) {
-    const search = getters.getSearch
-    const hide = getters.getHide
+    const rowSearchMatches = calculateRowSearchMatches(
+      [...rootGetters['field/getAll'], rootGetters['field/getPrimary']],
+      row ? [row] : getters.getAllRows,
+      getters.getSearch,
+      getters.getHide,
+      overrides,
+      this.$registry
+    )
 
-    const fieldTypeToFilter = {
-      text: 'contains',
-      long_text: 'contains',
-      url: 'contains',
-      email: 'contains',
-      number: 'contains',
-      date: 'contains',
-      file: 'filename_contains',
-      single_select: 'contains',
-      phone_number: 'contains',
-    }
-    const values = []
-    const allRows = row ? [row] : getters.getAllRows
-    const fields = [
-      ...rootGetters['field/getAll'],
-      rootGetters['field/getPrimary'],
-    ]
-    for (const row of allRows) {
-      const matches = []
-      let matchSearch = !hide
-      if (search) {
-        if (row.id.toString().includes(search)) {
-          matchSearch = true
-          matches.push('row_id')
-        }
-        for (const field of fields) {
-          const fieldName = `field_${field.id}`
-          if (fieldTypeToFilter[field.type]) {
-            const rowValue =
-              fieldName in overrides ? overrides[fieldName] : row[fieldName]
-            if (rowValue) {
-              const doesMatch = this.$registry
-                .get('viewFilter', fieldTypeToFilter[field.type])
-                .matches(rowValue, search)
-              if (doesMatch) {
-                matchSearch = true
-                matches.push(field.id)
-              }
-            }
-          }
-        }
-      } else {
-        matchSearch = true
-      }
-      values.push({ row, matches, matchSearch })
-    }
-
-    commit('SET_ALL_ROW_MATCH_SEARCH', { values })
+    commit('SET_ALL_ROW_SEARCH_MATCHES', rowSearchMatches)
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is
@@ -1063,7 +1032,9 @@ export const actions = {
   ) {
     const rowShouldBeHidden =
       !row._.matchFilters ||
-      (getters.getSearch && getters.getHide && row._.searchMatches.length === 0)
+      (getters.getSearch &&
+        getters.getHide &&
+        row._.fieldSearchMatches.length === 0)
     if (row._.selectedBy.length === 0 && rowShouldBeHidden) {
       dispatch('forceDelete', { grid, row, getScrollTop })
       return
@@ -1176,13 +1147,13 @@ export const getters = {
     return state.addRowHover
   },
   getSearch(state) {
-    return state.search
+    return state.activeSearchTerm
   },
   getHide(state) {
-    return state.hideSearchResults
+    return state.hideRowsNotMatchingSearch
   },
   getServerSearch(state) {
-    return state.hideSearchResults ? state.search : false
+    return state.hideRowsNotMatchingSearch ? state.activeSearchTerm : false
   },
 }
 

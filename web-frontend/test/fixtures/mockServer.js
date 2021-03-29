@@ -38,4 +38,29 @@ export class MockServer {
   createRows(gridView, fields, rows) {
     return createRows(this.mock, gridView, fields, rows)
   }
+
+  nextSearchWillReturn(searchTerm, gridView, results) {
+    this.mock
+      .onGet(`/database/views/grid/${gridView.id}/`, {
+        params: { count: true, search: searchTerm },
+      })
+      .reply(200, {
+        count: results.length,
+      })
+
+    this.mock
+      .onGet(`/database/views/grid/${gridView.id}/`, {
+        params: { limit: 120, offset: 0, search: searchTerm },
+      })
+      .reply(200, {
+        count: results.length,
+        next: null,
+        previous: null,
+        results,
+      })
+  }
+
+  resetMockEndpoints() {
+    this.mock.reset()
+  }
 }

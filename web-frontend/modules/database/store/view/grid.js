@@ -25,7 +25,7 @@ export function populateRow(row) {
     // Contains the specific field ids which match the activeSearchTerm term.
     // Could be empty even when matchSearch is true when there is no
     // activeSearchTerm term applied.
-    fieldSearchMatches: [],
+    fieldSearchMatches: {},
     // Keeping the selected state with the row has the best performance when navigating
     // between cells.
     selected: false,
@@ -1047,7 +1047,7 @@ export const actions = {
       !row._.matchFilters ||
       (getters.getActiveSearchTerm &&
         getters.isHidingRowsNotMatchingSearch &&
-        row._.fieldSearchMatches.length === 0)
+        Object.keys(row._.fieldSearchMatches).length === 0)
     if (row._.selectedBy.length === 0 && rowShouldBeHidden) {
       dispatch('forceDelete', { grid, row, getScrollTop })
       return

@@ -81,9 +81,9 @@ function _findFieldsInRowMatchingSearch(
   registry,
   overrides
 ) {
-  const fieldSearchMatches = []
+  const fieldSearchMatches = {}
   if (row.id.toString().includes(activeSearchTerm)) {
-    fieldSearchMatches.push('row_id')
+    fieldSearchMatches.row_id = true
   }
   for (const field of fields) {
     const fieldName = `field_${field.id}`
@@ -94,7 +94,7 @@ function _findFieldsInRowMatchingSearch(
         .get('field', field.type)
         .containsFilter(rowValue, activeSearchTerm)
       if (doesMatch) {
-        fieldSearchMatches.push(field.id)
+        fieldSearchMatches[field.id] = true
       }
     }
   }
@@ -129,6 +129,8 @@ export function calculateSingleRowSearchMatches(
       )
 
   const matchSearch =
-    !hideRowsNotMatchingSearch || searchIsBlank || fieldSearchMatches.length > 0
+    !hideRowsNotMatchingSearch ||
+    searchIsBlank ||
+    Object.keys(fieldSearchMatches).length > 0
   return { row, matchSearch, fieldSearchMatches }
 }

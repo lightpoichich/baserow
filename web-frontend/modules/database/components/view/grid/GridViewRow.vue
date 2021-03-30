@@ -31,9 +31,7 @@
         <div
           class="grid-view__row-info"
           :class="{
-            'grid-view__row-info--searched': row._.fieldSearchMatches.includes(
-              'row_id'
-            ),
+            'grid-view__row-info--searched': row._.fieldSearchMatches.row_id,
           }"
         >
           <div class="grid-view__row-count" :title="row.id">
@@ -57,9 +55,7 @@
       :row="row"
       :state="state"
       :class="{
-        'grid-view__cell--searched': row._.fieldSearchMatches.includes(
-          field.id
-        ),
+        'grid-view__cell--searched': row._.fieldSearchMatches[field.id],
       }"
       :style="{ width: fieldWidths[field.id] + 'px' }"
       @update="$emit('update', $event)"

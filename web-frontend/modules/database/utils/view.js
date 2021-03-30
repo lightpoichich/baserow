@@ -81,36 +81,24 @@ function _findFieldsInRowMatchingSearch(
   overrides,
   registry
 ) {
-  const fieldTypeToFilter = {
-    text: 'contains',
-    long_text: 'contains',
-    url: 'contains',
-    email: 'contains',
-    number: 'contains',
-    date: 'contains',
-    file: 'filename_contains',
-    single_select: 'contains',
-    phone_number: 'contains',
-  }
   const fieldSearchMatches = []
   if (row.id.toString().includes(activeSearchTerm)) {
     fieldSearchMatches.push('row_id')
   }
   for (const field of fields) {
     const fieldName = `field_${field.id}`
-    if (fieldTypeToFilter[field.type]) {
-      const rowValue =
-        fieldName in overrides ? overrides[fieldName] : row[fieldName]
-      if (rowValue) {
-        const doesMatch = registry
-          .get('viewFilter', fieldTypeToFilter[field.type])
-          .matches(rowValue, activeSearchTerm)
-        if (doesMatch) {
-          fieldSearchMatches.push(field.id)
-        }
+    const rowValue =
+      fieldName in overrides ? overrides[fieldName] : row[fieldName]
+    if (rowValue) {
+      const doesMatch = registry
+        .get('field', field.type)
+        .containsFilter(rowValue, activeSearchTerm)
+      if (doesMatch) {
+        fieldSearchMatches.push(field.id)
       }
     }
   }
+
   return fieldSearchMatches
 }
 

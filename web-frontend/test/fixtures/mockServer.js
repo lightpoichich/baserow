@@ -65,6 +65,10 @@ export class MockServer {
       })
   }
 
+  creatingRowInTableReturns(table, result) {
+    this.mock.onPost(`/database/rows/table/${table.id}/`).reply(200, result)
+  }
+
   resetMockEndpoints() {
     this.mock.reset()
   }

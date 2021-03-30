@@ -81,10 +81,11 @@ export class TestApp {
    * Cleans up after a test run performed by TestApp. Make sure you call this
    * in your test suits afterEach method!
    */
-  afterEach() {
+  async afterEach() {
     this.mock.reset()
     this.store.replaceState(_.cloneDeep(this._initialCleanStoreState))
     this._vueContext.teardownVueContext()
+    await flushPromises()
   }
 
   /**

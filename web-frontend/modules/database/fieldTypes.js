@@ -53,6 +53,10 @@ import {
   getDateMomentFormat,
   getTimeMomentFormat,
 } from '@baserow/modules/database/utils/date'
+import {
+  filenameContainsFilter,
+  genericContainsFilter,
+} from '@baserow/modules/database/utils/fieldFilters'
 
 export class FieldType extends Registerable {
   /**
@@ -280,6 +284,13 @@ export class FieldType extends Registerable {
   getDocsResponseExample(field) {
     return this.getDocsRequestExample(field)
   }
+
+  /**
+   * For a rowValue of this field type returns if searchTerm is contained within it.
+   */
+  containsFilter(rowValue, searchTerm) {
+    return false
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -337,6 +348,10 @@ export class TextFieldType extends FieldType {
   getDocsRequestExample(field) {
     return 'string'
   }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -389,6 +404,10 @@ export class LongTextFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return 'string'
+  }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
   }
 }
 
@@ -636,6 +655,10 @@ export class NumberFieldType extends FieldType {
     }
     return 0
   }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -807,6 +830,10 @@ export class DateFieldType extends FieldType {
   getDocsRequestExample(field) {
     return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
   }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
+  }
 }
 
 export class URLFieldType extends FieldType {
@@ -861,6 +888,10 @@ export class URLFieldType extends FieldType {
   getDocsRequestExample(field) {
     return 'https://baserow.io'
   }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -914,6 +945,10 @@ export class EmailFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return 'example@baserow.io'
+  }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
   }
 }
 
@@ -1026,6 +1061,10 @@ export class FileFieldType extends FieldType {
       },
     ]
   }
+
+  containsFilter(rowValue, searchTerm) {
+    return filenameContainsFilter(rowValue, searchTerm)
+  }
 }
 
 export class SingleSelectFieldType extends FieldType {
@@ -1135,6 +1174,10 @@ export class SingleSelectFieldType extends FieldType {
       color: 'light-blue',
     }
   }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
+  }
 }
 
 export class PhoneNumberFieldType extends FieldType {
@@ -1196,5 +1239,9 @@ export class PhoneNumberFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return '+1-541-754-3010'
+  }
+
+  containsFilter(rowValue, searchTerm) {
+    return genericContainsFilter(rowValue, searchTerm)
   }
 }

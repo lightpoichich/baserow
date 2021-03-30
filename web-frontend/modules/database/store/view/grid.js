@@ -263,7 +263,7 @@ export const mutations = {
   SET_ROW_HOVER(state, { row, value }) {
     row._.hover = value
   },
-  SET_ALL_ROW_SEARCH_MATCHES(state, rowSearchMatches) {
+  SET_ROW_SEARCH_MATCHES(state, rowSearchMatches) {
     for (const { row, matchSearch, fieldSearchMatches } of rowSearchMatches) {
       row._.fieldSearchMatches = fieldSearchMatches
       row._.matchSearch = matchSearch
@@ -676,7 +676,7 @@ export const actions = {
       this.$registry
     )
 
-    commit('SET_ALL_ROW_SEARCH_MATCHES', rowSearchMatches)
+    commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is

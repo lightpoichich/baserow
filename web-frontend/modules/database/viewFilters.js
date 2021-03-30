@@ -5,6 +5,11 @@ import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/vi
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import { trueString } from '@baserow/modules/database/utils/constants'
+import {
+  filenameContainsFilter,
+  genericContainsFilter,
+  genericNotContainsFilter,
+} from '@baserow/modules/database/utils/fieldFilters'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -158,24 +163,7 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue) {
-    filterValue = filterValue.toString().toLowerCase().trim()
-
-    if (filterValue === '') {
-      return true
-    }
-
-    for (let i = 0; i < rowValue.length; i++) {
-      const visibleName = rowValue[i].visible_name
-        .toString()
-        .toLowerCase()
-        .trim()
-
-      if (visibleName.includes(filterValue)) {
-        return true
-      }
-    }
-
-    return false
+    return filenameContainsFilter(rowValue, filterValue)
   }
 }
 
@@ -206,14 +194,7 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue) {
-    if (rowValue === null) {
-      rowValue = ''
-    } else if (typeof rowValue === 'object' && 'value' in rowValue) {
-      rowValue = rowValue.value
-    }
-    rowValue = rowValue.toString().toLowerCase().trim()
-    filterValue = filterValue.toString().toLowerCase().trim()
-    return filterValue === '' || rowValue.includes(filterValue)
+    return genericContainsFilter(rowValue, filterValue)
   }
 }
 
@@ -244,14 +225,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue) {
-    if (rowValue === null) {
-      rowValue = ''
-    } else if (typeof rowValue === 'object' && 'value' in rowValue) {
-      rowValue = rowValue.value
-    }
-    rowValue = rowValue.toString().toLowerCase().trim()
-    filterValue = filterValue.toString().toLowerCase().trim()
-    return filterValue === '' || !rowValue.includes(filterValue)
+    return genericNotContainsFilter(rowValue, filterValue)
   }
 }
 

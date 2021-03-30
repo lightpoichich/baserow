@@ -4,69 +4,16 @@ import flushPromises from 'flush-promises'
 
 describe('Table Component Tests', () => {
   let testApp = null
-  let mock = null
   let mockServer = null
 
   beforeAll(() => {
     testApp = new TestApp()
-    mock = testApp.mock
     mockServer = testApp.mockServer
   })
 
-  afterEach(async () => {
-    testApp.afterEach()
-    await flushPromises()
-  })
+  afterEach(() => testApp.afterEach())
 
-  async function givenASingleSimpleTableInTheServer() {
-    const table = mockServer.createTable()
-    const { application } = await mockServer.createAppAndGroup(table)
-    const gridView = mockServer.createGridView(application, table)
-    const fields = mockServer.createFields(application, table, [
-      {
-        name: 'Name',
-        type: 'text',
-        primary: true,
-      },
-      {
-        name: 'Last name',
-        type: 'text',
-      },
-      {
-        name: 'Notes',
-        type: 'long_text',
-      },
-      {
-        name: 'Active',
-        type: 'boolean',
-      },
-    ])
-
-    mockServer.createRows(gridView, fields, [
-      {
-        id: 1,
-        order: 0,
-        field_1: 'name',
-        field_2: 'last_name',
-        field_3: 'notes',
-        field_4: false,
-      },
-    ])
-    return { application, table, gridView }
-  }
-
-  function expectServerCalledToCreateRow(tableId) {
-    mock.onPost(`/database/rows/table/${tableId}/`).reply(200, {
-      id: 2,
-      order: '2.00000000000000000000',
-      field_1: '',
-      field_2: '',
-      field_3: '',
-      field_4: false,
-    })
-  }
-
-  test('Add a row to a simple table increases the row count', async () => {
+  test('Adding a row to a table increases the row count', async () => {
     const {
       application,
       table,
@@ -83,13 +30,19 @@ describe('Table Component Tests', () => {
 
     expect(tableComponent.html()).toContain('1 rows')
 
-    expectServerCalledToCreateRow(table.id)
+    mockServer.creatingRowInTableReturns(table, {
+      id: 2,
+      order: '2.00000000000000000000',
+      field_1: '',
+      field_2: '',
+      field_3: '',
+      field_4: false,
+    })
 
     const button = tableComponent.find('.grid-view__add-row')
     await button.trigger('click')
 
     expect(tableComponent.html()).toContain('2 rows')
-    expect(true).toBeTruthy()
   })
 
   test('Searching for a cells value highlights it', async () => {
@@ -169,4 +122,41 @@ describe('Table Component Tests', () => {
     expect(tableComponent.html()).not.toContain('Row does not match search')
     await flushPromises()
   })
+
+  async function givenASingleSimpleTableInTheServer() {
+    const table = mockServer.createTable()
+    const { application } = await mockServer.createAppAndGroup(table)
+    const gridView = mockServer.createGridView(application, table)
+    const fields = mockServer.createFields(application, table, [
+      {
+        name: 'Name',
+        type: 'text',
+        primary: true,
+      },
+      {
+        name: 'Last name',
+        type: 'text',
+      },
+      {
+        name: 'Notes',
+        type: 'long_text',
+      },
+      {
+        name: 'Active',
+        type: 'boolean',
+      },
+    ])
+
+    mockServer.createRows(gridView, fields, [
+      {
+        id: 1,
+        order: 0,
+        field_1: 'name',
+        field_2: 'last_name',
+        field_3: 'notes',
+        field_4: false,
+      },
+    ])
+    return { application, table, gridView }
+  }
 })

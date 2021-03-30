@@ -68,7 +68,7 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import importer from '@baserow/modules/database/mixins/importer'
 import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
-import { parseXML } from '../../utils/xml'
+import { parseXML } from '@baserow/modules/database/utils/xml'
 
 export default {
   name: 'TableXMLImporter',

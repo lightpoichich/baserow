@@ -24,6 +24,8 @@
 * Add Phone Number field.
 * Add support for Date, Number and Single Select fields to the Contains and Not Contains view 
   filters.
+* Searching all rows and their fields at once can now be done by clicking the new search 
+  icon in the top right of a table.
 
 ## Released (2021-03-01)
 
@@ -41,7 +43,7 @@
 * Fixed bug where the Editable component was not working if a prent a user-select:
   none; property.
 * Fail hard when the web-frontend can't reach the backend because of a network error.
-* Use UTC time in the date picker.
+* Use UTC time in the date pickemodules/database/viewFilters.jsr.
 * Refactored handler get_* methods so that they never check for permissions.
 * Made it possible to configure SMTP settings via environment variables.
 * Added field name to the public REST API docs.

@@ -135,6 +135,19 @@ export default {
           xmlData.unshift(header)
           hasHeader = true
         }
+
+        const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
+        if (limit !== null) {
+          const count = xmlData.length
+          if (count > limit) {
+            this.values.data = ''
+            this.error = `It is not possible to import more than ${limit} rows.`
+            this.preview = {}
+            this.$emit('input', this.value)
+            return
+          }
+        }
+
         this.values.data = JSON.stringify(xmlData)
         this.error = ''
         this.preview = this.getPreview(xmlData, hasHeader)

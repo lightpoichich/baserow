@@ -78,8 +78,8 @@ function _findFieldsInRowMatchingSearch(
   row,
   activeSearchTerm,
   fields,
-  overrides,
-  registry
+  registry,
+  overrides
 ) {
   const fieldSearchMatches = []
   if (row.id.toString().includes(activeSearchTerm)) {
@@ -103,36 +103,32 @@ function _findFieldsInRowMatchingSearch(
 }
 
 /**
- * Helper function which calculates which rows and fields inside the rows match a
- * given search term.
+ * Helper function which calculates if a given row and which of it's fields matches a
+ * given search term. The rows values can be overridden by providing an overrides
+ * object containing a mapping of the field name to override to a value that will be
+ * used to check for matches instead of the rows real one. The rows values will not be
+ * changed.
  */
-export const calculateRowSearchMatches = (
-  fields,
-  rows,
+export function calculateSingleRowSearchMatches(
+  row,
   activeSearchTerm,
   hideRowsNotMatchingSearch,
-  overrides,
-  registry
-) => {
-  const values = []
-  for (const row of rows) {
-    const searchIsBlank = activeSearchTerm === ''
-    const fieldSearchMatches = searchIsBlank
-      ? []
-      : _findFieldsInRowMatchingSearch(
-          row,
-          activeSearchTerm,
-          fields,
-          overrides,
-          registry
-        )
+  fields,
+  registry,
+  overrides = {}
+) {
+  const searchIsBlank = activeSearchTerm === ''
+  const fieldSearchMatches = searchIsBlank
+    ? []
+    : _findFieldsInRowMatchingSearch(
+        row,
+        activeSearchTerm,
+        fields,
+        registry,
+        overrides
+      )
 
-    const matchSearch =
-      !hideRowsNotMatchingSearch ||
-      searchIsBlank ||
-      fieldSearchMatches.length > 0
-
-    values.push({ row, matchSearch, fieldSearchMatches })
-  }
-  return values
+  const matchSearch =
+    !hideRowsNotMatchingSearch || searchIsBlank || fieldSearchMatches.length > 0
+  return { row, matchSearch, fieldSearchMatches }
 }

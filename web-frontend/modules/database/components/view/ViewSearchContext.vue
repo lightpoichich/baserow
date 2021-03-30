@@ -97,7 +97,7 @@ export default {
           callback: callback.bind(this),
         })
       } else {
-        await this.$store.dispatch('view/grid/updateSearchMatches', {})
+        await this.$store.dispatch('view/grid/updateSearchMatches')
         this.loading = false
       }
     },

@@ -8,9 +8,9 @@ import { clone } from '@baserow/modules/core/utils/object'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 import {
+  calculateSingleRowSearchMatches,
   getRowSortFunction,
   matchSearchFilters,
-  calculateRowSearchMatches,
 } from '@baserow/modules/database/utils/view'
 
 export function populateRow(row) {
@@ -427,7 +427,7 @@ export const actions = {
           offset: requestOffset,
           limit: requestLimit,
           cancelToken: lastSource.token,
-          search: getters.getServerSearch,
+          search: getters.getServerSearchTerm,
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -446,7 +446,7 @@ export const actions = {
             scrollTop: null,
             windowHeight: null,
           })
-          dispatch('updateSearchMatches', {})
+          dispatch('updateSearchMatches')
           lastRequest = null
         })
         .catch((error) => {
@@ -566,7 +566,7 @@ export const actions = {
       offset: 0,
       limit,
       includeFieldOptions: true,
-      search: getters.getServerSearch,
+      search: getters.getServerSearchTerm,
     })
     data.results.forEach((part, index) => {
       populateRow(data.results[index])
@@ -588,7 +588,7 @@ export const actions = {
       top: 0,
     })
     commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
-    dispatch('updateSearchMatches', {})
+    dispatch('updateSearchMatches')
   },
   /**
    * Refreshes the current state with fresh data. It keeps the scroll offset the same
@@ -597,7 +597,7 @@ export const actions = {
   async refresh({ dispatch, commit, getters }, { gridId }) {
     const response = await GridService(this.$client).fetchCount(
       gridId,
-      getters.getServerSearch
+      getters.getServerSearchTerm
     )
     const count = response.data.count
 
@@ -612,7 +612,7 @@ export const actions = {
       gridId,
       offset,
       limit,
-      search: getters.getServerSearch,
+      search: getters.getServerSearchTerm,
     })
 
     // If there are results we can replace the existing rows so that the user stays
@@ -628,7 +628,7 @@ export const actions = {
       bufferStartIndex: offset,
       bufferLimit: data.results.length,
     })
-    dispatch('updateSearchMatches', {})
+    dispatch('updateSearchMatches')
   },
   /**
    * Triggered when a row has been changed, or has a pending change in the provided
@@ -640,7 +640,7 @@ export const actions = {
   ) {
     dispatch('updateMatchFilters', { view, row, overrides })
     dispatch('updateMatchSortings', { view, fields, primary, row, overrides })
-    dispatch('updateSearchMatches', { row, overrides })
+    dispatch('updateSearchMatchesForRow', { row, overrides })
   },
   /**
    * Checks if the given row still matches the given view filters. The row's
@@ -663,20 +663,33 @@ export const actions = {
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
-  updateSearchMatches(
-    { commit, getters, rootGetters },
-    { row = false, overrides = {} }
-  ) {
-    const rowSearchMatches = calculateRowSearchMatches(
-      [...rootGetters['field/getAll'], rootGetters['field/getPrimary']],
-      row ? [row] : getters.getAllRows,
-      getters.getSearch,
-      getters.getHide,
-      overrides,
-      this.$registry
+  updateSearchMatches({ commit, getters, rootGetters }) {
+    const allRowSearchMatches = getters.getAllRows.map((row) =>
+      calculateSingleRowSearchMatches(
+        row,
+        getters.getActiveSearchTerm,
+        getters.isHidingRowsNotMatchingSearch,
+        rootGetters['field/getAllWithPrimary'],
+        this.$registry
+      )
     )
 
-    commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
+    commit('SET_ROW_SEARCH_MATCHES', allRowSearchMatches)
+  },
+  updateSearchMatchesForRow(
+    { commit, getters, rootGetters },
+    { row, overrides }
+  ) {
+    const rowSearchMatches = calculateSingleRowSearchMatches(
+      row,
+      getters.getActiveSearchTerm,
+      getters.isHidingRowsNotMatchingSearch,
+      rootGetters['field/getAllWithPrimary'],
+      this.$registry,
+      overrides
+    )
+
+    commit('SET_ROW_SEARCH_MATCHES', [rowSearchMatches])
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is
@@ -1032,8 +1045,8 @@ export const actions = {
   ) {
     const rowShouldBeHidden =
       !row._.matchFilters ||
-      (getters.getSearch &&
-        getters.getHide &&
+      (getters.getActiveSearchTerm &&
+        getters.isHidingRowsNotMatchingSearch &&
         row._.fieldSearchMatches.length === 0)
     if (row._.selectedBy.length === 0 && rowShouldBeHidden) {
       dispatch('forceDelete', { grid, row, getScrollTop })
@@ -1146,13 +1159,13 @@ export const getters = {
   getAddRowHover(state) {
     return state.addRowHover
   },
-  getSearch(state) {
+  getActiveSearchTerm(state) {
     return state.activeSearchTerm
   },
-  getHide(state) {
+  isHidingRowsNotMatchingSearch(state) {
     return state.hideRowsNotMatchingSearch
   },
-  getServerSearch(state) {
+  getServerSearchTerm(state) {
     return state.hideRowsNotMatchingSearch ? state.activeSearchTerm : false
   },
 }

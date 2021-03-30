@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label"> Choose XML file </label>
+      <label class="control__label">Choose XML file</label>
       <div class="control__description">
         You can import an existing XML by uploading the .XML file with tabular
         data, i.e.:
@@ -20,8 +20,8 @@
     &lt;from&gt;Jani&lt;/from&gt;
     &lt;body&gt;Don't forget me this weekend!&lt;/body&gt;
   &lt;/note&gt;
-&lt;/notes&gt;
-        </pre>
+&lt;/notes&gt;</pre
+        >
       </div>
       <div class="control__elements">
         <div class="file-upload">
@@ -78,6 +78,7 @@ export default {
     return {
       values: {
         data: '',
+        firstRowHeader: true,
       },
       filename: '',
       error: '',

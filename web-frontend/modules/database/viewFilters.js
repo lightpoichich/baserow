@@ -5,11 +5,6 @@ import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/vi
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import { trueString } from '@baserow/modules/database/utils/constants'
-import {
-  filenameContainsFilter,
-  humanReadableStringContainsFilter,
-  humanReadableStringNotContainsFilter,
-} from '@baserow/modules/database/utils/fieldFilters'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -163,7 +158,7 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    return filenameContainsFilter(rowValue, filterValue)
+    return fieldType.containsFilter(rowValue, filterValue, field)
   }
 }
 
@@ -194,12 +189,7 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    return humanReadableStringContainsFilter(
-      rowValue,
-      filterValue,
-      field,
-      fieldType
-    )
+    return fieldType.containsFilter(rowValue, filterValue, field)
   }
 }
 
@@ -230,12 +220,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    return humanReadableStringNotContainsFilter(
-      rowValue,
-      filterValue,
-      field,
-      fieldType
-    )
+    return fieldType.notContainsFilter(rowValue, filterValue, field)
   }
 }
 

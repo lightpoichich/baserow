@@ -1,9 +1,14 @@
-export function filenameContainsFilter(rowValue, filterValue) {
+// We can't use the humanReadable value here as:
+// A: it contains commas which we don't want to match against
+// B: even if we removed the commas and compared filterValue against the concatted
+//    list of file names, we don't want the filterValue to accidentally match the end
+//    of one filename and the start of another.
+export function filenameContainsFilter(
+  rowValue,
+  humanReadableRowValue,
+  filterValue
+) {
   filterValue = filterValue.toString().toLowerCase().trim()
-
-  if (filterValue === '') {
-    return true
-  }
 
   for (let i = 0; i < rowValue.length; i++) {
     const visibleName = rowValue[i].visible_name.toString().toLowerCase().trim()
@@ -16,32 +21,12 @@ export function filenameContainsFilter(rowValue, filterValue) {
   return false
 }
 
-function _rowValueContainsFilterValue(rowValue, filterValue, field, fieldType) {
-  rowValue = fieldType.toHumanReadableString(field, rowValue)
-  rowValue = rowValue.toString().toLowerCase().trim()
+export function genericContainsFilter(
+  rowValue,
+  humanReadableRowValue,
+  filterValue
+) {
+  humanReadableRowValue = humanReadableRowValue.toString().toLowerCase().trim()
   filterValue = filterValue.toString().toLowerCase().trim()
-  return rowValue.includes(filterValue)
-}
-export function humanReadableStringContainsFilter(
-  rowValue,
-  filterValue,
-  field,
-  fieldType
-) {
-  return (
-    filterValue === '' ||
-    _rowValueContainsFilterValue(rowValue, filterValue, field, fieldType)
-  )
-}
-
-export function humanReadableStringNotContainsFilter(
-  rowValue,
-  filterValue,
-  field,
-  fieldType
-) {
-  return (
-    filterValue === '' ||
-    !_rowValueContainsFilterValue(rowValue, filterValue, field, fieldType)
-  )
+  return humanReadableRowValue.includes(filterValue)
 }

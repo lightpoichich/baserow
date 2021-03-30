@@ -55,7 +55,7 @@ import {
 } from '@baserow/modules/database/utils/date'
 import {
   filenameContainsFilter,
-  humanReadableStringContainsFilter,
+  genericContainsFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
 
 export class FieldType extends Registerable {
@@ -286,10 +286,40 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * For a rowValue of this field type returns if filterValue is contained within it.
+   * Should return a contains filter function unique for this field type.
+   */
+  getContainsFilterFunction() {
+    return (rowValue, humanReadableRowValue, filterValue) => false
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the
+   * filter returned from getContainsFilterFunction.
    */
   containsFilter(rowValue, filterValue, field) {
-    return false
+    return (
+      filterValue === '' ||
+      this.getContainsFilterFunction()(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the field
+   * filter returned by getContainsFilterFunction's notted.
+   */
+  notContainsFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      !this.getContainsFilterFunction()(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
   }
 }
 
@@ -349,8 +379,8 @@ export class TextFieldType extends FieldType {
     return 'string'
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -406,8 +436,8 @@ export class LongTextFieldType extends FieldType {
     return 'string'
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -656,8 +686,8 @@ export class NumberFieldType extends FieldType {
     return 0
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -831,8 +861,8 @@ export class DateFieldType extends FieldType {
     return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -889,8 +919,8 @@ export class URLFieldType extends FieldType {
     return 'https://baserow.io'
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -947,8 +977,8 @@ export class EmailFieldType extends FieldType {
     return 'example@baserow.io'
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -1062,8 +1092,8 @@ export class FileFieldType extends FieldType {
     ]
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return filenameContainsFilter(rowValue, filterValue)
+  getContainsFilterFunction() {
+    return filenameContainsFilter
   }
 }
 
@@ -1175,8 +1205,8 @@ export class SingleSelectFieldType extends FieldType {
     }
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -1241,7 +1271,7 @@ export class PhoneNumberFieldType extends FieldType {
     return '+1-541-754-3010'
   }
 
-  containsFilter(rowValue, filterValue, field) {
-    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }

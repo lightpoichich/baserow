@@ -28,7 +28,8 @@ function _createBaserowStoreAndRegistry(app, vueContext) {
 }
 
 /**
- * A testing framework for testing Baserow components and surrounding logic like stores.
+ * An acceptance testing framework for testing Baserow components and surrounding logic
+ * like stores.
  * TestApp sets up baserow components, registries and stores so they work out of the
  * box and can be tested without having to:
  *  - wait 30+ seconds for a Nuxt server to startup and build

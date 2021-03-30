@@ -7,8 +7,8 @@ import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFi
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
   filenameContainsFilter,
-  genericContainsFilter,
-  genericNotContainsFilter,
+  humanReadableStringContainsFilter,
+  humanReadableStringNotContainsFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
 
 export class ViewFilterType extends Registerable {
@@ -84,7 +84,7 @@ export class ViewFilterType extends Registerable {
    * alternative solution where we keep the real time check and we don't have
    * to wait for the server in order to tell us if the value matches.
    */
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     throw new Error('The matches method must be implemented for every filter.')
   }
 }
@@ -106,7 +106,7 @@ export class EqualViewFilterType extends ViewFilterType {
     return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -134,7 +134,7 @@ export class NotEqualViewFilterType extends ViewFilterType {
     return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -162,7 +162,7 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
     return ['file']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return filenameContainsFilter(rowValue, filterValue)
   }
 }
@@ -193,8 +193,13 @@ export class ContainsViewFilterType extends ViewFilterType {
     ]
   }
 
-  matches(rowValue, filterValue) {
-    return genericContainsFilter(rowValue, filterValue)
+  matches(rowValue, filterValue, field, fieldType) {
+    return humanReadableStringContainsFilter(
+      rowValue,
+      filterValue,
+      field,
+      fieldType
+    )
   }
 }
 
@@ -224,8 +229,13 @@ export class ContainsNotViewFilterType extends ViewFilterType {
     ]
   }
 
-  matches(rowValue, filterValue) {
-    return genericNotContainsFilter(rowValue, filterValue)
+  matches(rowValue, filterValue, field, fieldType) {
+    return humanReadableStringNotContainsFilter(
+      rowValue,
+      filterValue,
+      field,
+      fieldType
+    )
   }
 }
 
@@ -250,7 +260,7 @@ export class DateEqualViewFilterType extends ViewFilterType {
     return ['date']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -283,7 +293,7 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
     return ['date']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -316,7 +326,7 @@ export class HigherThanViewFilterType extends ViewFilterType {
     return ['number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (filterValue === '') {
       return true
     }
@@ -348,7 +358,7 @@ export class LowerThanViewFilterType extends ViewFilterType {
     return ['number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (filterValue === '') {
       return true
     }
@@ -380,7 +390,7 @@ export class SingleSelectEqualViewFilterType extends ViewFilterType {
     return ['single_select']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return (
       filterValue === '' ||
       (rowValue !== null && rowValue.id === parseInt(filterValue))
@@ -409,7 +419,7 @@ export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
     return ['single_select']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return (
       filterValue === '' ||
       rowValue === null ||
@@ -439,7 +449,7 @@ export class BooleanViewFilterType extends ViewFilterType {
     return ['boolean']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     filterValue = trueString.includes(
       filterValue.toString().toLowerCase().trim()
     )
@@ -481,7 +491,7 @@ export class EmptyViewFilterType extends ViewFilterType {
     ]
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return (
       rowValue === null ||
       rowValue === [] ||
@@ -524,7 +534,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
     ]
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return !(
       rowValue === null ||
       rowValue === [] ||

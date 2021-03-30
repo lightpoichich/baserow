@@ -39,7 +39,13 @@ export function getRowSortFunction(
  * filters. Returning false indicates that the row should not be visible for that
  * view.
  */
-export const matchSearchFilters = ($registry, filterType, filters, values) => {
+export const matchSearchFilters = (
+  $registry,
+  filterType,
+  filters,
+  fields,
+  values
+) => {
   // If there aren't any filters then it is not possible to check if the row
   // matches any of the filters, so we can mark it as valid.
   if (filters.length === 0) {
@@ -47,11 +53,14 @@ export const matchSearchFilters = ($registry, filterType, filters, values) => {
   }
 
   for (const i in filters) {
-    const filterValue = filters[i].value
-    const rowValue = values[`field_${filters[i].field}`]
+    const filter = filters[i]
+    const filterValue = filter.value
+    const rowValue = values[`field_${filter.field}`]
+    const field = fields.find((f) => f.id === filter.field)
+    const fieldType = $registry.get('field', field.type)
     const matches = $registry
-      .get('viewFilter', filters[i].type)
-      .matches(rowValue, filterValue)
+      .get('viewFilter', filter.type)
+      .matches(rowValue, filterValue, field, fieldType)
     if (filterType === 'AND' && !matches) {
       // With an `AND` filter type, the row must match all the filters, so if
       // one of the filters doesn't match we can mark it as isvalid.
@@ -92,7 +101,7 @@ function _findFieldsInRowMatchingSearch(
     if (rowValue) {
       const doesMatch = registry
         .get('field', field.type)
-        .containsFilter(rowValue, activeSearchTerm)
+        .containsFilter(rowValue, activeSearchTerm, field)
       if (doesMatch) {
         fieldSearchMatches[field.id] = true
       }

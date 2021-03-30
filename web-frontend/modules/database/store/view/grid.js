@@ -638,8 +638,8 @@ export const actions = {
     { dispatch },
     { view, row, fields, primary = null, overrides = {} }
   ) {
-    dispatch('updateMatchFilters', { view, row, overrides })
-    dispatch('updateMatchSortings', { view, fields, primary, row, overrides })
+    dispatch('updateMatchFilters', { view, row, fields, primary, overrides })
+    dispatch('updateMatchSortings', { view, row, fields, primary, overrides })
     dispatch('updateSearchMatchesForRow', { row, overrides })
   },
   /**
@@ -647,7 +647,10 @@ export const actions = {
    * matchFilters value is updated accordingly. It is also possible to provide some
    * override values that not actually belong to the row to do some preliminary checks.
    */
-  updateMatchFilters({ commit }, { view, row, overrides = {} }) {
+  updateMatchFilters(
+    { commit },
+    { view, row, fields, primary, overrides = {} }
+  ) {
     const values = JSON.parse(JSON.stringify(row))
     Object.keys(overrides).forEach((key) => {
       values[key] = overrides[key]
@@ -659,6 +662,7 @@ export const actions = {
           this.$registry,
           view.filter_type,
           view.filters,
+          primary === null ? fields : [primary, ...fields],
           values
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })

@@ -55,7 +55,7 @@ import {
 } from '@baserow/modules/database/utils/date'
 import {
   filenameContainsFilter,
-  genericContainsFilter,
+  humanReadableStringContainsFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
 
 export class FieldType extends Registerable {
@@ -286,9 +286,9 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * For a rowValue of this field type returns if searchTerm is contained within it.
+   * For a rowValue of this field type returns if filterValue is contained within it.
    */
-  containsFilter(rowValue, searchTerm) {
+  containsFilter(rowValue, filterValue, field) {
     return false
   }
 }
@@ -349,8 +349,8 @@ export class TextFieldType extends FieldType {
     return 'string'
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }
 
@@ -406,8 +406,8 @@ export class LongTextFieldType extends FieldType {
     return 'string'
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }
 
@@ -656,8 +656,8 @@ export class NumberFieldType extends FieldType {
     return 0
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }
 
@@ -831,8 +831,8 @@ export class DateFieldType extends FieldType {
     return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }
 
@@ -889,8 +889,8 @@ export class URLFieldType extends FieldType {
     return 'https://baserow.io'
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }
 
@@ -947,8 +947,8 @@ export class EmailFieldType extends FieldType {
     return 'example@baserow.io'
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }
 
@@ -1062,8 +1062,8 @@ export class FileFieldType extends FieldType {
     ]
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return filenameContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return filenameContainsFilter(rowValue, filterValue)
   }
 }
 
@@ -1175,8 +1175,8 @@ export class SingleSelectFieldType extends FieldType {
     }
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }
 
@@ -1241,7 +1241,7 @@ export class PhoneNumberFieldType extends FieldType {
     return '+1-541-754-3010'
   }
 
-  containsFilter(rowValue, searchTerm) {
-    return genericContainsFilter(rowValue, searchTerm)
+  containsFilter(rowValue, filterValue, field) {
+    return humanReadableStringContainsFilter(rowValue, filterValue, field, this)
   }
 }

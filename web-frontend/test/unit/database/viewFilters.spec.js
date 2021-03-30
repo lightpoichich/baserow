@@ -94,6 +94,12 @@ describe('View Filter Tests', () => {
   async function editFieldWithoutSavingNewValue(row, newValue) {
     await store.dispatch('view/grid/updateMatchFilters', {
       view: store.getters['view/first'],
+      fields: [],
+      primary: {
+        id: 1,
+        type: 'file',
+        primary: true,
+      },
       row,
       overrides: {
         field_1: newValue,

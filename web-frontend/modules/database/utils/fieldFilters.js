@@ -1,14 +1,3 @@
-function _rowValueContainsFilterValue(rowValue, filterValue) {
-  if (rowValue === null) {
-    rowValue = ''
-  } else if (typeof rowValue === 'object' && 'value' in rowValue) {
-    rowValue = rowValue.value
-  }
-  rowValue = rowValue.toString().toLowerCase().trim()
-  filterValue = filterValue.toString().toLowerCase().trim()
-  return rowValue.includes(filterValue)
-}
-
 export function filenameContainsFilter(rowValue, filterValue) {
   filterValue = filterValue.toString().toLowerCase().trim()
 
@@ -27,14 +16,32 @@ export function filenameContainsFilter(rowValue, filterValue) {
   return false
 }
 
-export function genericContainsFilter(rowValue, filterValue) {
+function _rowValueContainsFilterValue(rowValue, filterValue, field, fieldType) {
+  rowValue = fieldType.toHumanReadableString(field, rowValue)
+  rowValue = rowValue.toString().toLowerCase().trim()
+  filterValue = filterValue.toString().toLowerCase().trim()
+  return rowValue.includes(filterValue)
+}
+export function humanReadableStringContainsFilter(
+  rowValue,
+  filterValue,
+  field,
+  fieldType
+) {
   return (
-    filterValue === '' || _rowValueContainsFilterValue(rowValue, filterValue)
+    filterValue === '' ||
+    _rowValueContainsFilterValue(rowValue, filterValue, field, fieldType)
   )
 }
 
-export function genericNotContainsFilter(rowValue, filterValue) {
+export function humanReadableStringNotContainsFilter(
+  rowValue,
+  filterValue,
+  field,
+  fieldType
+) {
   return (
-    filterValue === '' || !_rowValueContainsFilterValue(rowValue, filterValue)
+    filterValue === '' ||
+    !_rowValueContainsFilterValue(rowValue, filterValue, field, fieldType)
   )
 }

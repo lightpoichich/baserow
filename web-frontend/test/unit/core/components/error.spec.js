@@ -1,7 +1,7 @@
 import Error from '@baserow/modules/core/components/Error'
 import { bootstrapVueContext } from '@baserow/test/helpers/components'
 
-describe('Component Tests', () => {
+describe('Error Component Tests', () => {
   let vueContext = null
 
   beforeEach(() => {

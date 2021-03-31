@@ -102,7 +102,7 @@
     background-color: $color-success-100;
   }
 
-  &.active--searched {
+  &.active--primary {
     background-color: $color-primary-100;
   }
 
@@ -110,7 +110,7 @@
     background-color: $color-warning-100;
   }
 
-  &.active--primary {
+  &.active--error {
     background-color: $color-error-100;
   }
 }
@@ -130,8 +130,6 @@
 }
 
 .header__search {
-  @extend .clearfix;
-
   margin: auto 0 auto auto;
   padding: 2px 12px;
   font-size: 14px;

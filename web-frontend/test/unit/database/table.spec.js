@@ -76,7 +76,7 @@ describe('Table Component Tests', () => {
 
     expect(
       tableComponent
-        .findAll('.grid-view__cell--searched')
+        .findAll('.grid-view__column--matches-search')
         .filter((w) => w.html().includes('last_name')).length
     ).toBe(1)
   })

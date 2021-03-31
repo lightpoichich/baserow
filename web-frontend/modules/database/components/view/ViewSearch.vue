@@ -4,7 +4,7 @@
       ref="contextLink"
       class="header__filter-link"
       :class="{
-        'active--searched': headerSearchTerm.length > 0,
+        'active--primary': headerSearchTerm.length > 0,
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
@@ -15,7 +15,7 @@
       ref="context"
       :view="view"
       @refresh="$emit('refresh', $event)"
-      @searchChanged="searchChanged"
+      @search-changed="searchChanged"
     ></ViewSearchContext>
   </div>
 </template>
@@ -36,11 +36,6 @@ export default {
     return {
       headerSearchTerm: '',
     }
-  },
-  computed: {
-    sortTitle() {
-      return 'Search'
-    },
   },
   methods: {
     searchChanged(newSearch) {

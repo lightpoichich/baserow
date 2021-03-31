@@ -2,7 +2,15 @@
   <div
     ref="wrapper"
     class="grid-view__column"
-    :class="[data.staticClass, data.class]"
+    :class="[
+      data.staticClass,
+      data.class,
+      {
+        'grid-view__column--matches-search': props.row._.fieldSearchMatches.has(
+          props.field.id.toString()
+        ),
+      },
+    ]"
     :style="data.style"
     @click="$options.methods.select($event, parent, props.field.id)"
   >

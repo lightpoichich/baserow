@@ -1,31 +1,37 @@
 <template>
-  <Context :class="{ 'context--loading-overlay': view._.loading }">
-    <form class="context__form" @submit.prevent="searchIfChanged">
-      <div class="control">
+  <Context
+    :class="{ 'context--loading-overlay': view._.loading }"
+    @shown="focus"
+  >
+    <form
+      class="context__form"
+      @submit.prevent="updateSearchLinkTextAndSearch(true)"
+    >
+      <div class="control margin-bottom-1">
         <div class="control__elements">
-          <div class="input__with-icon" :class="searchInputIconClasses">
+          <div
+            class="input__with-icon"
+            :class="{ 'input__with-icon--loading': loading }"
+          >
             <input
+              ref="activeSearchTermInput"
               v-model="activeSearchTerm"
               type="text"
               placeholder="Search in all rows"
               class="input"
-              :disabled="loading"
-              @keyup="delayedSearch"
+              @keyup="updateSearchLinkTextAndSearch"
             />
             <i class="fas fa-search"></i>
           </div>
         </div>
       </div>
-      <div class="control">
-        <div class="control__right">
-          <SwitchInput
-            v-model="hideRowsNotMatchingSearch"
-            :disabled="loading"
-            @input="searchIfChanged()"
-          >
-            hide not matching rows
-          </SwitchInput>
-        </div>
+      <div class="control control--align-right margin-bottom-0">
+        <SwitchInput
+          v-model="hideRowsNotMatchingSearch"
+          @input="searchIfChanged()"
+        >
+          hide not matching rows
+        </SwitchInput>
       </div>
     </form>
   </Context>
@@ -54,32 +60,37 @@ export default {
       loading: false,
     }
   },
-  computed: {
-    searchInputIconClasses() {
-      return {
-        'input__with-icon--loading': this.loading,
+  methods: {
+    focus() {
+      this.$nextTick(function () {
+        this.$refs.activeSearchTermInput.focus()
+      })
+    },
+    updateSearchLinkTextAndSearch(forceImmediateSearch = false) {
+      this.$emit('search-changed', this.activeSearchTerm)
+      if (this.hideRowsNotMatchingSearch && !forceImmediateSearch) {
+        // noinspection JSValidateTypes
+        this.debouncedSearchIfChanged()
+      } else {
+        this.searchIfChanged()
       }
     },
-  },
-  methods: {
-    delayedSearch: _.debounce(function () {
+    debouncedSearchIfChanged: _.debounce(function () {
       this.searchIfChanged()
     }, 400),
-    async searchIfChanged() {
+    searchIfChanged() {
       if (
         this.lastSearch === this.activeSearchTerm &&
         this.lastHide === this.hideRowsNotMatchingSearch
       ) {
         return
       }
-      await this.performSearch()
-
-      this.$emit('searchChanged', this.activeSearchTerm)
+      this.triggerSearch()
 
       this.lastSearch = this.activeSearchTerm
       this.lastHide = this.hideRowsNotMatchingSearch
     },
-    async performSearch() {
+    triggerSearch() {
       this.loading = true
       this.$store.commit('view/grid/SET_SEARCH', {
         activeSearchTerm: this.activeSearchTerm,
@@ -90,16 +101,21 @@ export default {
         this.hideRowsNotMatchingSearch || this.lastHide
 
       if (needToTriggerServerSideRefresh) {
-        const callback = function () {
-          this.loading = false
-        }
         this.$emit('refresh', {
-          callback: callback.bind(this),
+          callback: this.finishedLoading,
         })
       } else {
-        await this.$store.dispatch('view/grid/updateSearchMatches')
-        this.loading = false
+        // Force the client side only search update to run once this component has been
+        // rendered and updated showing the new loading state.
+        setTimeout(() => {
+          this.$store
+            .dispatch('view/grid/updateSearchMatches')
+            .then(this.finishedLoading)
+        })
       }
+    },
+    finishedLoading() {
+      this.loading = false
     },
   },
 }

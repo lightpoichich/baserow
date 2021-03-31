@@ -101,7 +101,7 @@
   color: $color-primary-900;
   background-color: $color-primary-100;
 
-  .grid-view__cell--searched & {
+  .grid-view__column--matches-search & {
     background-color: $color-primary-200;
   }
 
@@ -110,7 +110,7 @@
   &:hover {
     background-color: $color-primary-200;
 
-    .grid-view__cell--searched & {
+    .grid-view__column--matches-search & {
       background-color: $color-primary-300;
     }
   }

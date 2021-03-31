@@ -1,5 +1,10 @@
 .control {
   margin-bottom: 20px;
+
+  &.control--align-right {
+    display: flex;
+    justify-content: right;
+  }
 }
 
 .control__label {
@@ -13,11 +18,6 @@
     font-weight: 700;
     margin-bottom: 4px;
   }
-}
-
-.control__right {
-  float: right;
-  margin-bottom: 16px;
 }
 
 .control__label-icon {

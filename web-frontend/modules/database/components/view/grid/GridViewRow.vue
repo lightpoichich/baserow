@@ -32,7 +32,7 @@
         <div
           class="grid-view__row-info"
           :class="{
-            'grid-view__row-info--searched':
+            'grid-view__row-info--matches-search':
               row._.fieldSearchMatches &&
               row._.fieldSearchMatches.has('row_id'),
           }"

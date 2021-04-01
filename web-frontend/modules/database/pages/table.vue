@@ -263,6 +263,10 @@ export default {
         )
       } catch (error) {
         if (error instanceof RefreshCancelledError) {
+          // Multiple refresh calls have been made and the view has indicated that
+          // this particular one should be cancelled. However we do not want to
+          // set viewLoading back to false as the other non cancelled call/s might
+          // still be loading.
           return
         } else {
           notifyIf(error)

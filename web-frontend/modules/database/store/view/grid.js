@@ -22,14 +22,16 @@ export function populateRow(row) {
     matchSortings: true,
     // Whether the row should be displayed based on the current activeSearchTerm term.
     matchSearch: true,
-    // Contains the specific field ids which match the activeSearchTerm term.
-    // Could be empty even when matchSearch is true when there is no
-    // activeSearchTerm term applied.
-    fieldSearchMatches: new Set(),
     // Keeping the selected state with the row has the best performance when navigating
     // between cells.
     selected: false,
     selectedFieldId: -1,
+    // Additionally `fieldSearchMatches` is a set added to this object after a
+    // search has occurred which contains which fields in this cell are highlighted.
+    // We do not add it here as we do not want Vue's reactivity system to bind to it
+    // for performance reasons. Instead by adding it after the data has been
+    // initialized vue will not be watching for changes giving us the performance we
+    // need for quick cell search highlighting.
   }
   return row
 }
@@ -76,6 +78,11 @@ export const state = () => ({
   // entirely out. When false no server filter will be applied and rows which do not
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
+  // Using Vue's reactivity system can be very slow for updating the search state,
+  // instead it is much cheaper to just force a refresh of all of the rows functional
+  // cell components after a search term has changed which will occur when this
+  // counter is changed.
+  forceEveryCellToRefreshCounter: 0,
 })
 
 export const mutations = {
@@ -268,6 +275,8 @@ export const mutations = {
       row._.fieldSearchMatches = fieldSearchMatches
       row._.matchSearch = matchSearch
     }
+    state.forceEveryCellToRefreshCounter =
+      state.forceEveryCellToRefreshCounter + 1
   },
   SET_ROW_MATCH_FILTERS(state, { row, value }) {
     row._.matchFilters = value
@@ -1167,6 +1176,9 @@ export const getters = {
   },
   getServerSearchTerm(state) {
     return state.hideRowsNotMatchingSearch ? state.activeSearchTerm : false
+  },
+  getForceEveryCellToRefreshCounter(state) {
+    return state.forceEveryCellToRefreshCounter
   },
 }
 

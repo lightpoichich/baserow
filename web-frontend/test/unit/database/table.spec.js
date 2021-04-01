@@ -2,6 +2,10 @@ import { TestApp, UIHelpers } from '@baserow/test/helpers/testApp'
 import Table from '@baserow/modules/database/pages/table'
 import flushPromises from 'flush-promises'
 
+// Mock out debounce so we dont have to wait or simulate waiting for the various
+// debounces in the search functionality.
+jest.mock('lodash/debounce', () => jest.fn((fn) => fn))
+
 describe('Table Component Tests', () => {
   let testApp = null
   let mockServer = null

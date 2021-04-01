@@ -6,9 +6,9 @@
       data.staticClass,
       data.class,
       {
-        'grid-view__column--matches-search': props.row._.fieldSearchMatches.has(
-          props.field.id.toString()
-        ),
+        'grid-view__column--matches-search':
+          props.row._.fieldSearchMatches &&
+          props.row._.fieldSearchMatches.has(props.field.id.toString()),
       },
     ]"
     :style="data.style"

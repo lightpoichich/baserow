@@ -3,10 +3,7 @@
     :class="{ 'context--loading-overlay': view._.loading }"
     @shown="focus"
   >
-    <form
-      class="context__form"
-      @submit.prevent="updateSearchLinkTextAndSearch(true)"
-    >
+    <form class="context__form" @submit.prevent="searchIfChanged">
       <div class="control margin-bottom-1">
         <div class="control__elements">
           <div
@@ -19,7 +16,7 @@
               type="text"
               placeholder="Search in all rows"
               class="input"
-              @keyup="updateSearchLinkTextAndSearch"
+              @keyup="searchIfChanged"
             />
             <i class="fas fa-search"></i>
           </div>
@@ -28,7 +25,7 @@
       <div class="control control--align-right margin-bottom-0">
         <SwitchInput
           v-model="hideRowsNotMatchingSearch"
-          @input="searchIfChanged()"
+          @input="searchIfChanged"
         >
           hide not matching rows
         </SwitchInput>
@@ -38,7 +35,7 @@
 </template>
 
 <script>
-import _ from 'lodash'
+import debounce from 'lodash/debounce'
 
 import context from '@baserow/modules/core/mixins/context'
 
@@ -66,54 +63,50 @@ export default {
         this.$refs.activeSearchTermInput.focus()
       })
     },
-    updateSearchLinkTextAndSearch(forceImmediateSearch = false) {
-      this.$emit('search-changed', this.activeSearchTerm)
-      if (this.hideRowsNotMatchingSearch && !forceImmediateSearch) {
-        // noinspection JSValidateTypes
-        this.debouncedSearchIfChanged()
-      } else {
-        this.searchIfChanged()
-      }
-    },
-    debouncedSearchIfChanged: _.debounce(function () {
-      this.searchIfChanged()
-    }, 400),
     searchIfChanged() {
+      this.$emit('search-changed', this.activeSearchTerm)
       if (
         this.lastSearch === this.activeSearchTerm &&
         this.lastHide === this.hideRowsNotMatchingSearch
       ) {
         return
       }
-      this.triggerSearch()
+
+      this.search()
 
       this.lastSearch = this.activeSearchTerm
       this.lastHide = this.hideRowsNotMatchingSearch
     },
-    triggerSearch() {
+    search() {
       this.loading = true
+
       this.$store.commit('view/grid/SET_SEARCH', {
         activeSearchTerm: this.activeSearchTerm,
         hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
       })
 
-      const needToTriggerServerSideRefresh =
-        this.hideRowsNotMatchingSearch || this.lastHide
-
-      if (needToTriggerServerSideRefresh) {
-        this.$emit('refresh', {
-          callback: this.finishedLoading,
-        })
+      // When the user toggles from hiding rows to not hiding rows we still
+      // need to refresh as we need to fetch the un-searched rows from the server first.
+      if (this.hideRowsNotMatchingSearch || this.lastHide) {
+        // noinspection JSValidateTypes
+        this.debouncedServerSearchRefresh()
       } else {
-        // Force the client side only search update to run once this component has been
-        // rendered and updated showing the new loading state.
-        setTimeout(() => {
-          this.$store
-            .dispatch('view/grid/updateSearchMatches')
-            .then(this.finishedLoading)
-        })
+        // noinspection JSValidateTypes
+        this.debouncedClientSideSearchRefresh()
       }
     },
+    debouncedServerSearchRefresh: debounce(function () {
+      this.$emit('refresh', {
+        callback: this.finishedLoading,
+      })
+    }, 400),
+    // Debounce even the client side only refreshes as otherwise spamming the keyboard
+    // can cause many refreshes to queue up quickly bogging down the UI.
+    debouncedClientSideSearchRefresh: debounce(function () {
+      this.$store
+        .dispatch('view/grid/updateSearchMatches')
+        .then(this.finishedLoading)
+    }, 10),
     finishedLoading() {
       this.loading = false
     },

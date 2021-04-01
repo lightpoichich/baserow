@@ -32,9 +32,9 @@
         <div
           class="grid-view__row-info"
           :class="{
-            'grid-view__row-info--searched': row._.fieldSearchMatches.has(
-              'row_id'
-            ),
+            'grid-view__row-info--searched':
+              row._.fieldSearchMatches &&
+              row._.fieldSearchMatches.has('row_id'),
           }"
         >
           <div class="grid-view__row-count" :title="row.id">
@@ -53,7 +53,13 @@
     -->
     <GridViewCell
       v-for="field in fields"
-      :key="'row-field-' + row.id + '-' + field.id"
+      :key="
+        'row-field-' +
+        row.id +
+        '-' +
+        field.id.toString() +
+        forceEveryCellToRefreshCounter.toString()
+      "
       :field="field"
       :row="row"
       :state="state"
@@ -72,6 +78,7 @@
 <script>
 import GridViewCell from '@baserow/modules/database/components/view/grid/GridViewCell'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'GridViewRow',
@@ -108,6 +115,12 @@ export default {
       // has selected another cell while uploading.
       alive: [],
     }
+  },
+  computed: {
+    ...mapGetters({
+      forceEveryCellToRefreshCounter:
+        'view/grid/getForceEveryCellToRefreshCounter',
+    }),
   },
   methods: {
     isCellSelected(fieldId) {

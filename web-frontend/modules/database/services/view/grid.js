@@ -37,12 +37,16 @@ export default (client) => {
 
       return client.get(`/database/views/grid/${gridId}/`, config)
     },
-    fetchCount(gridId, search) {
+    fetchCount(gridId, search, cancelToken = null) {
       const config = {
         params: {
           count: true,
         },
       }
+      if (cancelToken !== null) {
+        config.cancelToken = cancelToken
+      }
+
       if (search) {
         config.params.search = search
       }

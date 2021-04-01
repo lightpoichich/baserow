@@ -12,6 +12,7 @@ import {
   getRowSortFunction,
   matchSearchFilters,
 } from '@baserow/modules/database/utils/view'
+import { RefreshCancelledError } from '@baserow/modules/core/errors'
 
 export function populateRow(row) {
   row._ = {
@@ -322,6 +323,8 @@ let lastScrollTop = null
 let lastRequest = null
 let lastRequestOffset = null
 let lastRequestLimit = null
+let lastRefreshRequest = null
+let lastRefreshRequestSource = null
 let lastSource = null
 
 export const actions = {
@@ -603,41 +606,68 @@ export const actions = {
    * Refreshes the current state with fresh data. It keeps the scroll offset the same
    * if possible. This can be used when a new filter or sort is created.
    */
-  async refresh({ dispatch, commit, getters }, { gridId }) {
-    const response = await GridService(this.$client).fetchCount(
-      gridId,
-      getters.getServerSearchTerm
-    )
-    const count = response.data.count
+  refresh({ dispatch, commit, getters }, { gridId }) {
+    if (lastRefreshRequest !== null) {
+      lastRefreshRequestSource.cancel('Cancelled in favor of new request')
+    }
+    lastRefreshRequestSource = axios.CancelToken.source()
+    lastRefreshRequest = GridService(this.$client)
+      .fetchCount(
+        gridId,
+        getters.getServerSearchTerm,
+        lastRefreshRequestSource.token
+      )
+      .then((response) => {
+        const count = response.data.count
 
-    const limit = getters.getBufferRequestSize * 3
-    const bufferEndIndex = getters.getBufferEndIndex
-    const offset =
-      count >= bufferEndIndex
-        ? getters.getBufferStartIndex
-        : Math.max(0, count - limit)
-
-    const { data } = await GridService(this.$client).fetchRows({
-      gridId,
-      offset,
-      limit,
-      search: getters.getServerSearchTerm,
-    })
-
-    // If there are results we can replace the existing rows so that the user stays
-    // at the same scroll offset.
-    data.results.forEach((part, index) => {
-      populateRow(data.results[index])
-    })
-    await commit('ADD_ROWS', {
-      rows: data.results,
-      prependToRows: -getters.getBufferLimit,
-      appendToRows: data.results.length,
-      count: data.count,
-      bufferStartIndex: offset,
-      bufferLimit: data.results.length,
-    })
-    dispatch('updateSearchMatches')
+        const limit = getters.getBufferRequestSize * 3
+        const bufferEndIndex = getters.getBufferEndIndex
+        const offset =
+          count >= bufferEndIndex
+            ? getters.getBufferStartIndex
+            : Math.max(0, count - limit)
+        return { limit, offset }
+      })
+      .then(({ limit, offset }) =>
+        GridService(this.$client)
+          .fetchRows({
+            gridId,
+            offset,
+            limit,
+            cancelToken: lastRefreshRequestSource.token,
+            search: getters.getServerSearchTerm,
+          })
+          .then(({ data }) => ({
+            data,
+            offset,
+          }))
+      )
+      .then(({ data, offset }) => {
+        // If there are results we can replace the existing rows so that the user stays
+        // at the same scroll offset.
+        data.results.forEach((part, index) => {
+          populateRow(data.results[index])
+        })
+        commit('ADD_ROWS', {
+          rows: data.results,
+          prependToRows: -getters.getBufferLimit,
+          appendToRows: data.results.length,
+          count: data.count,
+          bufferStartIndex: offset,
+          bufferLimit: data.results.length,
+        })
+        dispatch('updateSearchMatches')
+        lastRefreshRequest = null
+      })
+      .catch((error) => {
+        if (axios.isCancel(error)) {
+          throw new RefreshCancelledError()
+        } else {
+          lastRefreshRequest = null
+          throw error
+        }
+      })
+    return lastRefreshRequest
   },
   /**
    * Triggered when a row has been changed, or has a pending change in the provided

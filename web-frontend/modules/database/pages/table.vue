@@ -86,7 +86,10 @@
 <script>
 import { mapState } from 'vuex'
 
-import { StoreItemLookupError } from '@baserow/modules/core/errors'
+import {
+  RefreshCancelledError,
+  StoreItemLookupError,
+} from '@baserow/modules/core/errors'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
@@ -256,7 +259,11 @@ export default {
       try {
         await type.refresh({ store: this.$store }, this.view)
       } catch (error) {
-        notifyIf(error)
+        if (error instanceof RefreshCancelledError) {
+          return
+        } else {
+          notifyIf(error)
+        }
       }
       if (
         Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&

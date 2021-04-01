@@ -99,12 +99,13 @@ export class ViewType extends Registerable {
   fetch() {}
 
   /**
-   * Should refresh the data inside a few. This is method could be called when a filter
+   * Should refresh the data inside a view. This is method could be called when a filter
    * or sort has been changed or when a field is updated or deleted. It should keep the
    * state as much the same as it was before. So for example the scroll offset should
-   * stay the same if possible.
+   * stay the same if possible. Can throw a RefreshCancelledException when the view
+   * wishes to cancel the current refresh call due to a new refresh call.
    */
-  refresh() {}
+  refresh({ store }) {}
 
   /**
    * Method that is called when a field has been created. This can be useful to

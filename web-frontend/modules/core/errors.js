@@ -4,3 +4,5 @@
  * be found.
  */
 export class StoreItemLookupError extends Error {}
+
+export class RefreshCancelledError extends Error {}

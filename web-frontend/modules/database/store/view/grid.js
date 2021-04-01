@@ -604,11 +604,22 @@ export const actions = {
   },
   /**
    * Refreshes the current state with fresh data. It keeps the scroll offset the same
-   * if possible. This can be used when a new filter or sort is created.
+   * if possible. This can be used when a new filter or sort is created. Will also
+   * update search highlighting if a new activeSearchTerm and hideRowsNotMatchingSearch
+   * are provided in the refreshEvent.
    */
-  refresh({ dispatch, commit, getters }, { gridId }) {
+  refresh({ dispatch, commit, getters }, { gridId, refreshEvent }) {
     if (lastRefreshRequest !== null) {
       lastRefreshRequestSource.cancel('Cancelled in favor of new request')
+    }
+    if (
+      'activeSearchTerm' in refreshEvent &&
+      'hideRowsNotMatchingSearch' in refreshEvent
+    ) {
+      commit('SET_SEARCH', {
+        activeSearchTerm: refreshEvent.activeSearchTerm,
+        hideRowsNotMatchingSearch: refreshEvent.hideRowsNotMatchingSearch,
+      })
     }
     lastRefreshRequestSource = axios.CancelToken.source()
     lastRefreshRequest = GridService(this.$client)
@@ -705,6 +716,13 @@ export const actions = {
           values
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
+  },
+  changeSearchAndUpdateMatches(
+    { commit, dispatch },
+    { activeSearchTerm, hideRowsNotMatchingSearch }
+  ) {
+    commit('SET_SEARCH', { activeSearchTerm, hideRowsNotMatchingSearch })
+    dispatch('updateSearchMatches')
   },
   updateSearchMatches({ commit, getters, rootGetters }) {
     const allRowSearchMatches = getters.getAllRows.map((row) =>

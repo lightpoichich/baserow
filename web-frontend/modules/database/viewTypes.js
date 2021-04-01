@@ -105,7 +105,7 @@ export class ViewType extends Registerable {
    * stay the same if possible. Can throw a RefreshCancelledException when the view
    * wishes to cancel the current refresh call due to a new refresh call.
    */
-  refresh({ store }) {}
+  refresh({ store, refreshEvent }, view) {}
 
   /**
    * Method that is called when a field has been created. This can be useful to
@@ -189,8 +189,8 @@ export class GridViewType extends ViewType {
     await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
   }
 
-  async refresh({ store }, view) {
-    await store.dispatch('view/grid/refresh', { gridId: view.id })
+  async refresh({ store, refreshEvent }, view) {
+    await store.dispatch('view/grid/refresh', { gridId: view.id, refreshEvent })
   }
 
   async fieldCreated({ dispatch }, table, field, fieldType) {

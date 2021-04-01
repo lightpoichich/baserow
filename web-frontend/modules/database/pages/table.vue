@@ -257,7 +257,10 @@ export default {
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       try {
-        await type.refresh({ store: this.$store }, this.view)
+        await type.refresh(
+          { store: this.$store, refreshEvent: event },
+          this.view
+        )
       } catch (error) {
         if (error instanceof RefreshCancelledError) {
           return

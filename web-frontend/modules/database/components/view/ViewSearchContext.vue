@@ -80,11 +80,6 @@ export default {
     search() {
       this.loading = true
 
-      this.$store.commit('view/grid/SET_SEARCH', {
-        activeSearchTerm: this.activeSearchTerm,
-        hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
-      })
-
       // When the user toggles from hiding rows to not hiding rows we still
       // need to refresh as we need to fetch the un-searched rows from the server first.
       if (this.hideRowsNotMatchingSearch || this.lastHide) {
@@ -98,13 +93,18 @@ export default {
     debouncedServerSearchRefresh: debounce(function () {
       this.$emit('refresh', {
         callback: this.finishedLoading,
+        activeSearchTerm: this.activeSearchTerm,
+        hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
       })
     }, 400),
     // Debounce even the client side only refreshes as otherwise spamming the keyboard
     // can cause many refreshes to queue up quickly bogging down the UI.
     debouncedClientSideSearchRefresh: debounce(function () {
       this.$store
-        .dispatch('view/grid/updateSearchMatches')
+        .dispatch('view/grid/changeSearchAndUpdateMatches', {
+          activeSearchTerm: this.activeSearchTerm,
+          hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
+        })
         .then(this.finishedLoading)
     }, 10),
     finishedLoading() {

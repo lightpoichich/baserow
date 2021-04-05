@@ -6,7 +6,7 @@ from baserow.core.models import TemplateCategory, Template
 class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
-        fields = ('id', 'name', 'icon', 'group_id')
+        fields = ('id', 'name', 'icon', 'keywords', 'group_id')
 
 
 class TemplateCategoriesSerializer(serializers.ModelSerializer):

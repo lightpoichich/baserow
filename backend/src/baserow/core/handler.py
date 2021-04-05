@@ -1,18 +1,24 @@
+import os
+import json
+import hashlib
+from pathlib import Path
 from urllib.parse import urlparse, urljoin
 from itsdangerous import URLSafeSerializer
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import Q, Count
 
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
-    Settings, Group, GroupUser, GroupInvitation, Application,
-    GROUP_USER_PERMISSION_CHOICES, GROUP_USER_PERMISSION_ADMIN
+    Settings, Group, GroupUser, GroupInvitation, Application, Template,
+    TemplateCategory, GROUP_USER_PERMISSION_CHOICES, GROUP_USER_PERMISSION_ADMIN
 )
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch, GroupInvitationDoesNotExist, GroupUserDoesNotExist,
-    GroupUserAlreadyExists, IsNotAdminError
+    GroupUserAlreadyExists, IsNotAdminError, TemplateFileDoesNotExist
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -21,6 +27,9 @@ from .signals import (
     group_updated, group_deleted, group_user_updated, group_user_deleted
 )
 from .emails import GroupInvitationEmail
+
+
+User = get_user_model()
 
 
 class CoreHandler:
@@ -693,3 +702,138 @@ class CoreHandler:
             imported_applications.append(imported_application)
 
         return imported_applications, id_mapping
+
+    def sync_templates(self):
+        """
+        Synchronizes the JSON template files with the templates stored in the database.
+        We need to have a copy in the database so that the user can live preview a
+        template before installing.
+        """
+
+        installed_templates = Template.objects.all().prefetch_related(
+            'categories'
+        ).select_related('group')
+        installed_categories = list(TemplateCategory.objects.all())
+        user, created = User.objects.get_or_create(
+            username='_templates@baserow.localhost'
+        )
+
+        # Loop over the JSON template files in the directory to see which database
+        # templates need to be created or updated.
+        templates = list(Path(settings.APPLICATION_TEMPLATES_DIR).glob('*.json'))
+        for template_file_path in templates:
+            content = Path(template_file_path).read_text()
+            parsed_json = json.loads(content)
+
+            if 'baserow_template_version' not in parsed_json:
+                continue
+
+            slug = '.'.join(template_file_path.name.split('.')[:-1])
+            installed_template = next(
+                (t for t in installed_templates if t.slug == slug), None
+            )
+            hash_json = json.dumps(parsed_json['export'])
+            export_hash = hashlib.sha256(hash_json.encode("utf-8")).hexdigest()
+            keywords = (
+                ','.join(parsed_json['keywords']) if 'keywords' in parsed_json else ''
+            )
+
+            # If the installed template does not yet exist or if there is a hash
+            # mismatch, we need to delete the old group and all the related
+            # applications in it. This is because a new group will be created.
+            if installed_template and installed_template.export_hash != export_hash:
+                self.delete_group(user, installed_template.group)
+
+            # If the installed template does not yet exist or if there is a export
+            # hash mismatch, which means the group has already been deleted, we can
+            # create a new group and import the exported applications into that group.
+            if not installed_template or installed_template.export_hash != export_hash:
+                group_user = self.create_group(user, name=parsed_json['name'])
+                group = group_user.group
+                self.import_application_to_group(group, parsed_json['export'])
+            else:
+                group = installed_template.group
+                group.name = parsed_json['name']
+                group.save()
+
+            kwargs = {
+                'name': parsed_json['name'],
+                'icon': parsed_json['icon'],
+                'export_hash': export_hash,
+                'keywords': keywords,
+                'group': group
+            }
+
+            if not installed_template:
+                installed_template = Template.objects.create(slug=slug, **kwargs)
+            else:
+                # If the installed template already exists, we only need to update the
+                # values to the latest version according to the JSON template.
+                for key, value in kwargs.items():
+                    setattr(installed_template, key, value)
+                installed_template.save()
+
+            # Loop over the categories related to the template and check which ones
+            # already exist and which need to be created. Based on that we can create
+            # a list of category ids that we can set for the template.
+            template_category_ids = []
+            for category_name in parsed_json['categories']:
+                installed_category = next(
+                    (c for c in installed_categories if c.name == category_name), None
+                )
+                if not installed_category:
+                    installed_category = TemplateCategory.objects.create(
+                        name=category_name
+                    )
+                    installed_categories.append(installed_category)
+                template_category_ids.append(installed_category.id)
+
+            installed_template.categories.set(template_category_ids)
+
+        # Delete all the installed templates that were installed, but don't exist in
+        # the template directory anymore.
+        slugs = [
+            '.'.join(template_file_path.name.split('.')[:-1])
+            for template_file_path in templates
+        ]
+        for template in Template.objects.filter(~Q(slug__in=slugs)):
+            self.delete_group(user, template.group)
+            template.delete()
+
+        # Delete all the categories that don't have any templates anymore.
+        TemplateCategory.objects.annotate(
+            num_templates=Count('templates')
+        ).filter(num_templates=0).delete()
+
+    def install_template(self, user, group, template):
+        """
+        Installs the exported application into the given group if the provided user
+        has access to that group.
+
+        :param user: The user on whose behalf the template installed.
+        :type user: User
+        :param group: The group where the template applications must be imported into.
+        :type group: Group
+        :param template: The template that must be installed.
+        :type template: Template
+        :return: The imported applications.
+        :rtype: list
+        """
+
+        group.has_user(user, raise_error=True)
+
+        file_name = f'{template.slug}.json'
+        template_path = Path(os.path.join(
+            settings.APPLICATION_TEMPLATES_DIR,
+            file_name
+        ))
+
+        if not template_path.exists():
+            raise TemplateFileDoesNotExist(
+                f'The template with file name {file_name} does not exist. You might '
+                f'need to run the `sync_templates` management command.'
+            )
+
+        content = template_path.read_text()
+        parsed_json = json.loads(content)
+        return self.import_application_to_group(group, parsed_json['export'])

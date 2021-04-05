@@ -69,11 +69,32 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         help_text='The group containing the applications related to '
                                   'the template. The read endpoints related to that '
-                                  'group are publicly accesible for preview purposes.',
-                        on_delete=django.db.models.deletion.CASCADE,
+                                  'group are publicly accessible for preview '
+                                  'purposes.',
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        null=True,
                         to='core.Group'
                     )
                 ),
+                (
+                    'export_hash',
+                    models.CharField(
+                        blank=True,
+                        help_text='The export hash that is used to compare if the '
+                                  'exported group applications have changed when '
+                                  'syncing the templates.',
+                        max_length=64
+                    )
+                ),
+                (
+                    'keywords',
+                    models.TextField(
+                        blank=True,
+                        default='',
+                        help_text='Keywords related to the template that can be used '
+                                  'for search.'
+                    )
+                )
             ],
             options={
                 'ordering': ('name',),

@@ -216,12 +216,23 @@ class Template(models.Model):
     categories = models.ManyToManyField(TemplateCategory, related_name='templates')
     group = models.ForeignKey(
         Group,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         help_text='The group containing the applications related to the template. The '
-                  'read endpoints related to that group are publicly accesible for '
+                  'read endpoints related to that group are publicly accessible for '
                   'preview purposes.'
     )
-    # @TODO add keywords.
+    export_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text='The export hash that is used to compare if the exported group '
+                  'applications have changed when syncing the templates.'
+    )
+    keywords = models.TextField(
+        default='',
+        blank=True,
+        help_text='Keywords related to the template that can be used for search.'
+    )
 
     class Meta:
         ordering = ('name',)

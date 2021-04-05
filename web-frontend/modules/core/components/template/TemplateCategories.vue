@@ -85,8 +85,10 @@ export default {
       return clone(this.categories)
         .map((category) => {
           category.templates = category.templates.filter((template) => {
+            const keywords = template.keywords.split(',')
+            keywords.push(template.name)
             const regex = new RegExp('(' + escapeRegExp(this.search) + ')', 'i')
-            return template.name.match(regex)
+            return keywords.some((value) => value.match(regex))
           })
           return category
         })

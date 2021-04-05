@@ -1,20 +1,25 @@
 import pytest
+import os
+from pathlib import Path
 from unittest.mock import patch
 
 from itsdangerous.exc import BadSignature
 
 from django.db import connection
+from django.conf import settings
+from django.contrib.auth import get_user_model
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
-    Settings, Group, GroupUser, GroupInvitation, Application,
-    GROUP_USER_PERMISSION_ADMIN
+    Settings, Group, GroupUser, GroupInvitation, Application, Template,
+    TemplateCategory, GROUP_USER_PERMISSION_ADMIN
 )
 from baserow.core.exceptions import (
     UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
     GroupUserDoesNotExist, ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
     BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
-    GroupInvitationDoesNotExist, GroupUserAlreadyExists, IsNotAdminError
+    GroupInvitationDoesNotExist, GroupUserAlreadyExists, IsNotAdminError,
+    TemplateFileDoesNotExist
 )
 from baserow.contrib.database.models import Database, Table
 
@@ -740,3 +745,122 @@ def test_export_import_group_application(data_fixture):
     assert imported_database.table_set.all().count() == 1
     assert database.id in id_mapping['applications']
     assert id_mapping['applications'][database.id] == imported_database.id
+
+
+@pytest.mark.django_db
+def test_sync_all_templates():
+    handler = CoreHandler()
+    handler.sync_templates()
+
+    User = get_user_model()
+    assert User.objects.all().first().username == '_templates@baserow.localhost'
+    assert (
+        Template.objects.count() ==
+        len(list(Path(settings.APPLICATION_TEMPLATES_DIR).glob('*.json')))
+    )
+
+
+@pytest.mark.django_db
+def test_sync_templates(data_fixture):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR,
+        '../../../tests/templates'
+    )
+
+    user_1 = data_fixture.create_user(username='_templates@baserow.localhost')
+    group_1 = data_fixture.create_group(user=user_1)
+    group_2 = data_fixture.create_group(user=user_1)
+    group_3 = data_fixture.create_group(user=user_1)
+
+    category_1 = data_fixture.create_template_category(name='No templates')
+    category_2 = data_fixture.create_template_category(name='Has template')
+    template = data_fixture.create_template(
+        slug='is-going-to-be-deleted',
+        group=group_1,
+        category=category_2
+    )
+    template_2 = data_fixture.create_template(
+        slug='example-template',
+        group=group_2,
+        category=category_2,
+        export_hash='IS_NOT_GOING_MATCH'
+    )
+    template_3 = data_fixture.create_template(
+        slug='example-template-2',
+        group=group_3,
+        category=category_2,
+        export_hash='f086c9b4b0dfea6956d0bb32af210277bb645ff3faebc5fb37a9eae85c433f2d',
+    )
+
+    handler = CoreHandler()
+    handler.sync_templates()
+
+    groups = Group.objects.all()
+    assert len(groups) == 3
+    assert groups[0].id == group_3.id
+    assert groups[1].id not in [group_1.id, group_2.id]
+    assert groups[2].id not in [group_1.id, group_2.id]
+
+    assert not TemplateCategory.objects.filter(id=category_1.id).exists()
+    assert not TemplateCategory.objects.filter(id=category_2.id).exists()
+    categories = TemplateCategory.objects.all()
+    assert len(categories) == 1
+    assert categories[0].name == 'Test category 1'
+
+    assert not Template.objects.filter(id=template.id).exists()
+    assert Template.objects.filter(id=template_2.id).exists()
+    assert Template.objects.filter(id=template_3.id).exists()
+
+    refreshed_template_2 = Template.objects.get(id=template_2.id)
+    assert refreshed_template_2.name == 'Example template'
+    assert refreshed_template_2.icon == 'file'
+    assert (
+        refreshed_template_2.export_hash ==
+        'f086c9b4b0dfea6956d0bb32af210277bb645ff3faebc5fb37a9eae85c433f2d'
+    )
+    assert refreshed_template_2.keywords == 'Example,Template,For,Search'
+    assert refreshed_template_2.categories.all().first().id == categories[0].id
+    assert template_2.group_id != refreshed_template_2.group_id
+    assert refreshed_template_2.group.name == 'Example template'
+    assert refreshed_template_2.group.application_set.count() == 1
+
+    refreshed_template_3 = Template.objects.get(id=template_3.id)
+    assert template_3.group_id == refreshed_template_3.group_id
+    # We expect the group count to be zeor because the export hash matches and
+    # nothing was updated.
+    assert refreshed_template_3.group.application_set.count() == 0
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+
+@pytest.mark.django_db
+def test_install_template(data_fixture):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR,
+        '../../../tests/templates'
+    )
+
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group()
+
+    handler = CoreHandler()
+    handler.sync_templates()
+
+    template_2 = data_fixture.create_template(slug='does-not-exist')
+
+    with pytest.raises(TemplateFileDoesNotExist):
+        handler.install_template(user, group, template_2)
+
+    template = Template.objects.get(slug='example-template')
+
+    with pytest.raises(UserNotInGroupError):
+        handler.install_template(user, group_2, template)
+
+    applications, id_mapping = handler.install_template(user, group, template)
+    assert applications[0].group_id == group.id
+    assert applications[0].name == 'Event marketing'
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates

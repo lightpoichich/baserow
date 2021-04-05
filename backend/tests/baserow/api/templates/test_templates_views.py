@@ -15,6 +15,7 @@ def test_list_templates(api_client, data_fixture):
         name='Template 1',
         icon='document',
         category=category_1,
+        keywords='test1,test2'
     )
     template_2 = data_fixture.create_template(
         name='Template 2',
@@ -38,6 +39,7 @@ def test_list_templates(api_client, data_fixture):
     assert response_json[0]['templates'][0]['id'] == template_1.id
     assert response_json[0]['templates'][0]['name'] == template_1.name
     assert response_json[0]['templates'][0]['icon'] == template_1.icon
+    assert response_json[0]['templates'][0]['keywords'] == 'test1,test2'
     assert response_json[0]['templates'][0]['group_id'] == template_1.group_id
     assert len(response_json[1]['templates']) == 2
     assert response_json[1]['templates'][0]['id'] == template_2.id

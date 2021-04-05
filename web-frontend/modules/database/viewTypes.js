@@ -184,19 +184,25 @@ export class GridViewType extends ViewType {
     return GridView
   }
 
-  async fetch({ store }, view) {
-    await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
+  async fetch({ store }, view, storePrefix = '') {
+    await store.dispatch(storePrefix + 'view/grid/fetchInitial', {
+      gridId: view.id,
+    })
   }
 
-  async refresh({ store }, view) {
-    await store.dispatch('view/grid/refresh', { gridId: view.id })
+  async refresh({ store }, view, storePrefix = '') {
+    await store.dispatch(storePrefix + 'view/grid/refresh', { gridId: view.id })
   }
 
-  async fieldCreated({ dispatch }, table, field, fieldType) {
+  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
     const value = fieldType.getEmptyValue(field)
-    await dispatch('view/grid/addField', { field, value }, { root: true })
     await dispatch(
-      'view/grid/setFieldOptionsOfField',
+      storePrefix + 'view/grid/addField',
+      { field, value },
+      { root: true }
+    )
+    await dispatch(
+      storePrefix + 'view/grid/setFieldOptionsOfField',
       {
         field,
         // The default values should be the same as in the `GridViewFieldOptions`
@@ -211,10 +217,14 @@ export class GridViewType extends ViewType {
     )
   }
 
-  async fieldDeleted({ dispatch }, field, fieldType) {
-    await dispatch('view/grid/forceDeleteFieldOptions', field.id, {
-      root: true,
-    })
+  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+    await dispatch(
+      storePrefix + 'view/grid/forceDeleteFieldOptions',
+      field.id,
+      {
+        root: true,
+      }
+    )
   }
 
   isCurrentView(store, tableId) {
@@ -227,9 +237,9 @@ export class GridViewType extends ViewType {
     )
   }
 
-  rowCreated({ store }, tableId, rowValues) {
+  rowCreated({ store }, tableId, rowValues, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch('view/grid/forceCreate', {
+      store.dispatch(storePrefix + 'view/grid/forceCreate', {
         view: store.getters['view/getSelected'],
         fields: store.getters['field/getAll'],
         primary: store.getters['field/getPrimary'],
@@ -239,9 +249,9 @@ export class GridViewType extends ViewType {
     }
   }
 
-  rowUpdated({ store }, tableId, rowValues) {
+  rowUpdated({ store }, tableId, rowValues, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch('view/grid/forceUpdate', {
+      store.dispatch(storePrefix + 'view/grid/forceUpdate', {
         view: store.getters['view/getSelected'],
         fields: store.getters['field/getAll'],
         primary: store.getters['field/getPrimary'],
@@ -251,10 +261,10 @@ export class GridViewType extends ViewType {
     }
   }
 
-  rowDeleted({ store }, tableId, rowId) {
+  rowDeleted({ store }, tableId, rowId, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
       const row = { id: rowId }
-      store.dispatch('view/grid/forceDelete', {
+      store.dispatch(storePrefix + 'view/grid/forceDelete', {
         grid: store.getters['view/getSelected'],
         row,
         getScrollTop: () => store.getters['view/grid/getScrollTop'],

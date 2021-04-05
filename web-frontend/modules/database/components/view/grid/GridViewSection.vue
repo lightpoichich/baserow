@@ -8,6 +8,8 @@
         :include-field-width-handles="includeFieldWidthHandles"
         :include-row-details="includeRowDetails"
         :include-add-field="includeAddField"
+        :read-only="readOnly"
+        :store-prefix="storePrefix"
         @refresh="$emit('refresh', $event)"
         @dragging="
           canOrderFields &&
@@ -19,17 +21,22 @@
           <GridViewPlaceholder
             :fields="visibleFields"
             :include-row-details="includeRowDetails"
+            :store-prefix="storePrefix"
           ></GridViewPlaceholder>
           <GridViewRows
             :table="table"
             :view="view"
             :fields="visibleFields"
             :include-row-details="includeRowDetails"
+            :read-only="readOnly"
+            :store-prefix="storePrefix"
             v-on="$listeners"
           ></GridViewRows>
           <GridViewRowAdd
+            v-if="!readOnly"
             :fields="visibleFields"
             :include-row-details="includeRowDetails"
+            :store-prefix="storePrefix"
             v-on="$listeners"
           ></GridViewRowAdd>
         </div>
@@ -43,6 +50,7 @@
       :view="view"
       :fields="visibleFields"
       :container-width="width"
+      :store-prefix="storePrefix"
       @scroll="$emit('scroll', $event)"
     ></GridViewFieldDragging>
   </div>
@@ -99,6 +107,10 @@ export default {
       type: Boolean,
       required: false,
       default: () => false,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
     },
   },
   computed: {

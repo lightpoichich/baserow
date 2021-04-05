@@ -24,14 +24,6 @@ export class ApplicationType extends Registerable {
   }
 
   /**
-   * Must return the route name where the application can navigate to when the
-   * application is selected.
-   */
-  getRouteName() {
-    return null
-  }
-
-  /**
    * The form component that will be rendered when creating a new instance of
    * this application. By default the ApplicationForm component is returned, but
    * this only contains a name field. If custom fields are required upon
@@ -42,21 +34,30 @@ export class ApplicationType extends Registerable {
   }
 
   /**
-   * The sidebar component that will be rendered when an application instance
-   * is selected. By default no component will rendered. This could be used for
-   * example to render a list of tables that belong to a database.
+   * @TODO docs
    */
-  getSelectedSidebarComponent() {
+  getSidebarComponent() {
     return null
   }
 
   /**
-   * A user can open a small context menu related to the application. He might need
-   * this for example for changing the name or to delete the application. Optionally
-   * extra options can be added unique per application type by providing a component
-   * that will be added to the context menu.
+   * @TODO docs
    */
-  getContextComponent() {
+  getTemplateSidebarComponent() {
+    return null
+  }
+
+  /**
+   * @TODO docs
+   */
+  getTemplatesPageComponent() {
+    return null
+  }
+
+  /**
+   * @TODO docs
+   */
+  getTemplatePage() {
     return null
   }
 
@@ -87,7 +88,6 @@ export class ApplicationType extends Registerable {
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
-    this.routeName = this.getRouteName()
 
     if (this.type === null) {
       throw new Error('The type name of an application type must be set.')
@@ -109,7 +109,7 @@ export class ApplicationType extends Registerable {
       iconClass: this.iconClass,
       name: this.name,
       routeName: this.routeName,
-      hasSelectedSidebarComponent: this.getSelectedSidebarComponent() !== null,
+      hasSidebarComponent: this.getSidebarComponent() !== null,
     }
   }
 

@@ -1,7 +1,12 @@
 <template>
   <ul v-if="!tableLoading" class="header__filter">
     <li class="header__filter-item">
-      <GridViewHide :view="view" :fields="fields"></GridViewHide>
+      <GridViewHide
+        :view="view"
+        :fields="fields"
+        :read-only="readOnly"
+        :store-prefix="storePrefix"
+      ></GridViewHide>
     </li>
   </ul>
 </template>
@@ -21,6 +26,14 @@ export default {
     },
     view: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
       required: true,
     },
   },

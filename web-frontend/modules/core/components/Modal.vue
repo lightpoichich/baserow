@@ -12,7 +12,7 @@
         'modal__box--full-screen': fullScreen,
       }"
     >
-      <a class="modal__close" @click="hide()">
+      <a v-if="closeButton" class="modal__close" @click="hide()">
         <i class="fas fa-times"></i>
       </a>
       <template v-if="sidebar">
@@ -45,6 +45,11 @@ export default {
     fullScreen: {
       type: Boolean,
       default: false,
+      required: false,
+    },
+    closeButton: {
+      type: Boolean,
+      default: true,
       required: false,
     },
   },

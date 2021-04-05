@@ -46,6 +46,7 @@
       :field="field"
       :row="row"
       :state="state"
+      :read-only="readOnly"
       :style="{ width: fieldWidths[field.id] + 'px' }"
       @update="$emit('update', $event)"
       @edit="$emit('edit', $event)"
@@ -84,6 +85,10 @@ export default {
       required: false,
       default: () => false,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -103,7 +108,7 @@ export default {
       return this.row._.selected && this.row._.selectedFieldId === fieldId
     },
     selectCell(fieldId, rowId = this.row.id) {
-      this.$store.dispatch('view/grid/setSelectedCell', {
+      this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
         rowId,
         fieldId,
       })

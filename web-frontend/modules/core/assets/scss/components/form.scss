@@ -57,6 +57,16 @@
   &.input--error {
     border-color: $color-error-500;
   }
+
+  &[disabled] {
+    color: $color-primary-900;
+    background-color: $color-neutral-50;
+
+    &:active,
+    &:focus {
+      border-color: $color-neutral-400;
+    }
+  }
 }
 
 .textarea--modal {
@@ -130,6 +140,14 @@
 
   &.active::before {
     content: fa-content($fa-var-check);
+  }
+
+  &.checkbox--disabled {
+    cursor: inherit;
+
+    &::before {
+      background-color: $color-neutral-50;
+    }
   }
 }
 
@@ -216,6 +234,18 @@
 
     &.unknown::after {
       left: 10.5px;
+    }
+  }
+
+  &.switch--disabled {
+    cursor: inherit;
+
+    &.active::before {
+      background-color: $color-neutral-600;
+    }
+
+    &.unknown::before {
+      background-color: $color-neutral-400;
     }
   }
 }

@@ -2,7 +2,7 @@ from django.db import transaction
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -46,6 +46,12 @@ from .errors import (
 class ViewsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+
+        return super().get_permissions()
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -62,10 +68,11 @@ class ViewsView(APIView):
                 description=(
                     'A comma separated list of extra attributes to include on each '
                     'view in the response. The supported attributes are `filters` and '
-                    '`sortings`. '
-                    'For example `include=filters,sortings` will add the attributes '
-                    '`filters` and `sortings` to every returned view, containing '
-                    'a list of the views filters and sortings respectively.'
+                    '`sortings`. If the group is related to a template, then this '
+                    'endpoint will be publicly accessible. For example '
+                    '`include=filters,sortings` will add the attributes `filters` and '
+                    '`sortings` to every returned view, containing a list of the '
+                    'views filters and sortings respectively.'
                 )
             ),
         ],
@@ -102,7 +109,8 @@ class ViewsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+        table.database.group.has_user(request.user, raise_error=True,
+                                      allow_if_template=True)
         views = View.objects.filter(table=table).select_related('content_type')
 
         if filters:

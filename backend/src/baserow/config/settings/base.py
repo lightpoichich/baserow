@@ -190,6 +190,7 @@ SPECTACULAR_SETTINGS = {
         {'name': 'User files'},
         {'name': 'Groups'},
         {'name': 'Group invitations'},
+        {'name': 'Templates'},
         {'name': 'Applications'},
         {'name': 'Database tables'},
         {'name': 'Database table fields'},

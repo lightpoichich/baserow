@@ -147,5 +147,7 @@
 }
 
 .templates__body {
+  background-color: $color-neutral-100;
+
   @include absolute(72px, 240px, 0, 0);
 }

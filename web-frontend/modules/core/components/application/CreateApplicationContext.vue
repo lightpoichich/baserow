@@ -20,11 +20,11 @@
         ></CreateApplicationModal>
       </li>
       <li>
-        <a @click="$refs.templatesModal.show()">
+        <a @click="$refs.templateModal.show()">
           <i class="context__menu-icon fas fa-fw fa-file-alt"></i>
           From template
         </a>
-        <TemplatesModal ref="templatesModal"></TemplatesModal>
+        <TemplateModal ref="templateModal"></TemplateModal>
       </li>
     </ul>
   </Context>
@@ -32,14 +32,14 @@
 
 <script>
 import CreateApplicationModal from '@baserow/modules/core/components/application/CreateApplicationModal'
-import TemplatesModal from '@baserow/modules/core/components/template/TemplatesModal'
+import TemplateModal from '@baserow/modules/core/components/template/TemplateModal'
 import context from '@baserow/modules/core/mixins/context'
 
 export default {
   name: 'CreateApplicationContext',
   components: {
     CreateApplicationModal,
-    TemplatesModal,
+    TemplateModal,
   },
   mixins: [context],
   props: {

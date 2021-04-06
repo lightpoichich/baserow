@@ -613,6 +613,8 @@ export const actions = {
       lastRefreshRequestSource.cancel('Cancelled in favor of new request')
     }
     if (
+      typeof refreshEvent === 'object' &&
+      refreshEvent !== null &&
       'activeSearchTerm' in refreshEvent &&
       'hideRowsNotMatchingSearch' in refreshEvent
     ) {

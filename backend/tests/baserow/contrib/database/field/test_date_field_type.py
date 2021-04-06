@@ -3,7 +3,7 @@ from pytz import timezone
 from datetime import date
 
 from django.core.exceptions import ValidationError
-from django.utils.timezone import make_aware, datetime
+from django.utils.timezone import make_aware, datetime, utc
 
 from baserow.contrib.database.fields.field_types import DateFieldType
 from baserow.contrib.database.fields.models import DateField
@@ -475,7 +475,7 @@ def test_get_set_export_serialized_value_date_field(data_fixture):
     row_1 = model.objects.create()
     row_2 = model.objects.create(**{
         f'field_{date_field.id}': '2010-02-03',
-        f'field_{datetime_field.id}': '2010-02-03 12:30',
+        f'field_{datetime_field.id}': make_aware(datetime(2010, 2, 3, 12, 30, 0), utc),
     })
 
     row_1.refresh_from_db()

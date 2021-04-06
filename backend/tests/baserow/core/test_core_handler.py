@@ -796,7 +796,7 @@ def test_sync_templates(data_fixture):
     handler = CoreHandler()
     handler.sync_templates()
 
-    groups = Group.objects.all()
+    groups = Group.objects.all().order_by('id')
     assert len(groups) == 3
     assert groups[0].id == group_3.id
     assert groups[1].id not in [group_1.id, group_2.id]

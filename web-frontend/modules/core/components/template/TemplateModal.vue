@@ -7,6 +7,7 @@
         :category="selectedTemplateCategory"
       ></TemplateHeader>
       <TemplateCategories
+        ref="categories"
         :categories="categories"
         :selected-template="selectedTemplate"
         @selected="selectTemplate"
@@ -62,6 +63,21 @@ export default {
       } catch (error) {
         notifyIf(error, 'templates')
         this.hide()
+      }
+
+      // Check if there is a default template and if so, select that template.
+      for (let i = 0; i < this.categories.length; i++) {
+        const category = this.categories[i]
+        for (let i2 = 0; i < category.templates.length; i++) {
+          const template = category.templates[i2]
+          if (template.is_default) {
+            this.$nextTick(() => {
+              this.$refs.categories.selectCategory(category.id)
+              this.selectTemplate({ template, category })
+            })
+            return
+          }
+        }
       }
     },
     selectTemplate({ template, category }) {

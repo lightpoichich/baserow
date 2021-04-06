@@ -20,7 +20,8 @@ def test_list_templates(api_client, data_fixture):
         name='Template 1',
         icon='document',
         category=category_1,
-        keywords='test1,test2'
+        keywords='test1,test2',
+        slug='example-template'
     )
     template_2 = data_fixture.create_template(
         name='Template 2',
@@ -36,7 +37,6 @@ def test_list_templates(api_client, data_fixture):
     response = api_client.get(reverse('api:templates:list'))
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
-
     assert len(response_json) == 3
     assert response_json[0]['id'] == category_1.id
     assert response_json[0]['name'] == 'Cat 1'
@@ -46,11 +46,15 @@ def test_list_templates(api_client, data_fixture):
     assert response_json[0]['templates'][0]['icon'] == template_1.icon
     assert response_json[0]['templates'][0]['keywords'] == 'test1,test2'
     assert response_json[0]['templates'][0]['group_id'] == template_1.group_id
+    assert response_json[0]['templates'][0]['is_default'] is True
     assert len(response_json[1]['templates']) == 2
     assert response_json[1]['templates'][0]['id'] == template_2.id
+    assert response_json[1]['templates'][0]['is_default'] is False
     assert response_json[1]['templates'][1]['id'] == template_3.id
+    assert response_json[1]['templates'][1]['is_default'] is False
     assert len(response_json[2]['templates']) == 1
     assert response_json[2]['templates'][0]['id'] == template_3.id
+    assert response_json[2]['templates'][0]['is_default'] is False
 
 
 @pytest.mark.django_db

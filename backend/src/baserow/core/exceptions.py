@@ -93,6 +93,12 @@ class GroupInvitationEmailMismatch(Exception):
     """
 
 
+class TemplateDoesNotExist(Exception):
+    """
+    Raised when the requested template does not exist.
+    """
+
+
 class TemplateFileDoesNotExist(Exception):
     """
     Raised when the JSON template file does not exist.

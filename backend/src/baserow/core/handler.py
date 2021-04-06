@@ -18,7 +18,8 @@ from .models import (
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch, GroupInvitationDoesNotExist, GroupUserDoesNotExist,
-    GroupUserAlreadyExists, IsNotAdminError, TemplateFileDoesNotExist
+    GroupUserAlreadyExists, IsNotAdminError, TemplateFileDoesNotExist,
+    TemplateDoesNotExist
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -702,6 +703,32 @@ class CoreHandler:
             imported_applications.append(imported_application)
 
         return imported_applications, id_mapping
+
+    def get_template(self, template_id, base_queryset=None):
+        """
+        Selects a template with a given id from the database.
+
+        :param template_id: The identifier of the template that must be returned.
+        :type template_id: int
+        :param base_queryset: The base queryset from where to select the group
+            object. This can for example be used to do a `prefetch_related`.
+        :type base_queryset: Queryset
+        :raises TemplateDoesNotExist: When the group with the provided id does not
+            exist.
+        :return: The requested template instance related to the provided id.
+        :rtype: Template
+        """
+
+        if not base_queryset:
+            base_queryset = Template.objects
+
+        try:
+            template = base_queryset.get(id=template_id)
+        except Template.DoesNotExist:
+            raise TemplateDoesNotExist(f'The template with id {template_id} does not '
+                                       f'exist.')
+
+        return template
 
     def sync_templates(self):
         """

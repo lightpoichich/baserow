@@ -1,8 +1,13 @@
 import pytest
+import os
 
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from django.shortcuts import reverse
+from django.conf import settings
+
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Template, Application
 
 
 @pytest.mark.django_db
@@ -46,3 +51,80 @@ def test_list_templates(api_client, data_fixture):
     assert response_json[1]['templates'][1]['id'] == template_3.id
     assert len(response_json[2]['templates']) == 1
     assert response_json[2]['templates'][0]['id'] == template_3.id
+
+
+@pytest.mark.django_db
+def test_install_template(api_client, data_fixture):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR,
+        '../../../tests/templates'
+    )
+
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group()
+
+    handler = CoreHandler()
+    handler.sync_templates()
+
+    template_2 = data_fixture.create_template(slug='does-not-exist')
+    template = Template.objects.get(slug='example-template')
+
+    response = api_client.get(
+        reverse('api:templates:install', kwargs={
+            'group_id': group.id,
+            'template_id': template_2.id
+        }),
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_TEMPLATE_FILE_DOES_NOT_EXIST'
+
+    response = api_client.get(
+        reverse('api:templates:install', kwargs={
+            'group_id': group_2.id,
+            'template_id': template.id
+        }),
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    response = api_client.get(
+        reverse('api:templates:install', kwargs={
+            'group_id': 0,
+            'template_id': template.id
+        }),
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_GROUP_DOES_NOT_EXIST'
+
+    response = api_client.get(
+        reverse('api:templates:install', kwargs={
+            'group_id': group.id,
+            'template_id': 0
+        }),
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TEMPLATE_DOES_NOT_EXIST'
+
+    response = api_client.get(
+        reverse('api:templates:install', kwargs={
+            'group_id': group.id,
+            'template_id': template.id
+        }),
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert len(response_json) == 1
+    assert response_json[0]['group']['id'] == group.id
+    application = Application.objects.all().order_by('id').last()
+    assert response_json[0]['id'] == application.id
+    assert response_json[0]['group']['id'] == application.group_id
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates

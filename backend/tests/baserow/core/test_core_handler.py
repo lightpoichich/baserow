@@ -19,7 +19,7 @@ from baserow.core.exceptions import (
     GroupUserDoesNotExist, ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
     BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist, GroupUserAlreadyExists, IsNotAdminError,
-    TemplateFileDoesNotExist
+    TemplateFileDoesNotExist, TemplateDoesNotExist
 )
 from baserow.contrib.database.models import Database, Table
 
@@ -721,6 +721,27 @@ def test_delete_database_application(send_mock, data_fixture):
     assert send_mock.call_args[1]['application_id'] == database.id
     assert send_mock.call_args[1]['application'].id == database.id
     assert send_mock.call_args[1]['user'].id == user.id
+
+
+@pytest.mark.django_db
+def test_get_template(data_fixture):
+    data_fixture.create_user()
+    template_1 = data_fixture.create_template()
+
+    handler = CoreHandler()
+
+    with pytest.raises(TemplateDoesNotExist):
+        handler.get_template(template_id=0)
+
+    template_1_copy = handler.get_template(template_id=template_1.id)
+    assert template_1_copy.id == template_1.id
+
+    # If the error is raised we know for sure that the query has resolved.
+    with pytest.raises(AttributeError):
+        handler.get_template(
+            template_id=template_1.id,
+            base_queryset=Template.objects.prefetch_related('UNKNOWN')
+        )
 
 
 @pytest.mark.django_db

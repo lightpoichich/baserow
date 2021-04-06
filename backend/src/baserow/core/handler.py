@@ -169,16 +169,21 @@ class CoreHandler:
         group_id = group.id
         group_users = list(group.users.all())
 
+        self._delete_group(group)
+
+        group_deleted.send(self, group_id=group_id, group=group,
+                           group_users=group_users, user=user)
+
+    def _delete_group(self, group):
+        """Deletes the provided group."""
+
         # Select all the applications so we can delete them via the handler which is
         # needed in order to call the pre_delete method for each application.
         applications = group.application_set.all().select_related('group')
         for application in applications:
-            self.delete_application(user, application)
+            self._delete_application(application)
 
         group.delete()
-
-        group_deleted.send(self, group_id=group_id, group=group,
-                           group_users=group_users, user=user)
 
     def order_groups(self, user, group_ids):
         """
@@ -627,7 +632,8 @@ class CoreHandler:
 
     def delete_application(self, user, application):
         """
-        Deletes an existing application instance.
+        Deletes an existing application instance if the user has access to the
+        related group. The `application_deleted` signal is also called.
 
         :param user: The user on whose behalf the application is deleted.
         :type user: User
@@ -642,14 +648,19 @@ class CoreHandler:
         application.group.has_user(user, raise_error=True)
 
         application_id = application.id
-        application = application.specific
-        application_type = application_type_registry.get_by_model(application)
-        application_type.pre_delete(user, application)
-
-        application.delete()
+        application = self._delete_application(application)
 
         application_deleted.send(self, application_id=application_id,
                                  application=application, user=user)
+
+    def _delete_application(self, application):
+        """Deletes an application"""
+
+        application = application.specific
+        application_type = application_type_registry.get_by_model(application)
+        application_type.pre_delete(application)
+        application.delete()
+        return application
 
     def export_group_applications(self, group):
         """
@@ -741,9 +752,6 @@ class CoreHandler:
             'categories'
         ).select_related('group')
         installed_categories = list(TemplateCategory.objects.all())
-        user, created = User.objects.get_or_create(
-            username='_templates@baserow.localhost'
-        )
 
         # Loop over the JSON template files in the directory to see which database
         # templates need to be created or updated.
@@ -769,20 +777,13 @@ class CoreHandler:
             # mismatch, we need to delete the old group and all the related
             # applications in it. This is because a new group will be created.
             if installed_template and installed_template.export_hash != export_hash:
-                self.delete_group(user, installed_template.group)
+                self._delete_group(installed_template.group)
 
             # If the installed template does not yet exist or if there is a export
             # hash mismatch, which means the group has already been deleted, we can
             # create a new group and import the exported applications into that group.
             if not installed_template or installed_template.export_hash != export_hash:
                 group = Group.objects.create(name=parsed_json['name'])
-                last_order = GroupUser.get_last_order(user)
-                GroupUser.objects.create(
-                    group=group,
-                    user=user,
-                    order=last_order,
-                    permissions=GROUP_USER_PERMISSION_ADMIN
-                )
                 self.import_application_to_group(group, parsed_json['export'])
             else:
                 group = installed_template.group
@@ -830,7 +831,7 @@ class CoreHandler:
             for template_file_path in templates
         ]
         for template in Template.objects.filter(~Q(slug__in=slugs)):
-            self.delete_group(user, template.group)
+            self._delete_group(template.group)
             template.delete()
 
         # Delete all the categories that don't have any templates anymore.

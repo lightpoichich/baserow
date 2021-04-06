@@ -7,7 +7,6 @@ from itsdangerous.exc import BadSignature
 
 from django.db import connection
 from django.conf import settings
-from django.contrib.auth import get_user_model
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
@@ -773,8 +772,6 @@ def test_sync_all_templates():
     handler = CoreHandler()
     handler.sync_templates()
 
-    User = get_user_model()
-    assert User.objects.all().first().username == '_templates@baserow.localhost'
     assert (
         Template.objects.count() ==
         len(list(Path(settings.APPLICATION_TEMPLATES_DIR).glob('*.json')))
@@ -789,10 +786,9 @@ def test_sync_templates(data_fixture):
         '../../../tests/templates'
     )
 
-    user_1 = data_fixture.create_user(username='_templates@baserow.localhost')
-    group_1 = data_fixture.create_group(user=user_1)
-    group_2 = data_fixture.create_group(user=user_1)
-    group_3 = data_fixture.create_group(user=user_1)
+    group_1 = data_fixture.create_group()
+    group_2 = data_fixture.create_group()
+    group_3 = data_fixture.create_group()
 
     category_1 = data_fixture.create_template_category(name='No templates')
     category_2 = data_fixture.create_template_category(name='Has template')

@@ -16,7 +16,7 @@ class DatabaseApplicationType(ApplicationType):
     model_class = Database
     instance_serializer_class = DatabaseSerializer
 
-    def pre_delete(self, user, database):
+    def pre_delete(self, database):
         """
         When a database is deleted we must also delete the related tables via the table
         handler.
@@ -26,7 +26,7 @@ class DatabaseApplicationType(ApplicationType):
         table_handler = TableHandler()
 
         for table in database_tables:
-            table_handler.delete_table(user, table)
+            table_handler._delete_table(table)
 
     def get_api_urls(self):
         from .api import urls as api_urls

@@ -99,6 +99,7 @@
 </template>
 
 <script>
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
@@ -211,7 +212,11 @@ export default {
 
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
-      await type.refresh({ store: this.$store }, this.view, this.storePrefix)
+      try {
+        await type.refresh({ store: this.$store }, this.view, this.storePrefix)
+      } catch (error) {
+        notifyIf(error)
+      }
       if (
         Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&
         Object.prototype.hasOwnProperty.call(this.$refs.view, 'refresh')

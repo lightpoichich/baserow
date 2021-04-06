@@ -848,7 +848,7 @@ def test_sync_templates(data_fixture):
 
     refreshed_template_3 = Template.objects.get(id=template_3.id)
     assert template_3.group_id == refreshed_template_3.group_id
-    # We expect the group count to be zeor because the export hash matches and
+    # We expect the group count to be zero because the export hash matches and
     # nothing was updated.
     assert refreshed_template_3.group.application_set.count() == 0
 
@@ -856,7 +856,8 @@ def test_sync_templates(data_fixture):
 
 
 @pytest.mark.django_db
-def test_install_template(data_fixture):
+@patch('baserow.core.signals.application_created.send')
+def test_install_template(send_mock, data_fixture):
     old_templates = settings.APPLICATION_TEMPLATES_DIR
     settings.APPLICATION_TEMPLATES_DIR = os.path.join(
         settings.BASE_DIR,
@@ -881,7 +882,13 @@ def test_install_template(data_fixture):
         handler.install_template(user, group_2, template)
 
     applications, id_mapping = handler.install_template(user, group, template)
+    assert len(applications) == 1
     assert applications[0].group_id == group.id
     assert applications[0].name == 'Event marketing'
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['application'].id == applications[0].id
+    assert send_mock.call_args[1]['user'].id == user.id
+    assert send_mock.call_args[1]['type_name'] == 'database'
 
     settings.APPLICATION_TEMPLATES_DIR = old_templates

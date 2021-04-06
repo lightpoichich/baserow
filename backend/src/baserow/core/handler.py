@@ -863,4 +863,16 @@ class CoreHandler:
 
         content = template_path.read_text()
         parsed_json = json.loads(content)
-        return self.import_application_to_group(group, parsed_json['export'])
+        applications, id_mapping = self.import_application_to_group(
+            group,
+            parsed_json['export']
+        )
+
+        # Because a user has initiated the creation of applications, we can need to
+        # call `application_created` signal for each created application.
+        for application in applications:
+            application_type = application_type_registry.get_by_model(application)
+            application_created.send(self, application=application, user=user,
+                                     type_name=application_type.type)
+
+        return applications, id_mapping

@@ -218,6 +218,20 @@ export class GridViewType extends ViewType {
     })
   }
 
+  async fieldUpdated({ dispatch }, field, oldField, fieldType) {
+    // The field changing may change which cells in the field should be highlighted
+    // refresh them to ensure that they still correctly match. E.g. changing a date
+    // fields date_format needs search update as a date search string might no longer
+    // match the new format.
+    await dispatch(
+      'view/grid/updateSearchMatches',
+      {},
+      {
+        root: true,
+      }
+    )
+  }
+
   isCurrentView(store, tableId) {
     const table = store.getters['table/getSelected']
     const grid = store.getters['view/getSelected']

@@ -719,6 +719,10 @@ export const actions = {
         )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
+  /**
+   * Changes the current search parameters and updates every rows row._.matchSearch
+   * and row._.fieldSearchMatches based on the new parameters.
+   */
   changeSearchAndUpdateMatches(
     { commit, dispatch },
     { activeSearchTerm, hideRowsNotMatchingSearch }
@@ -726,6 +730,10 @@ export const actions = {
     commit('SET_SEARCH', { activeSearchTerm, hideRowsNotMatchingSearch })
     dispatch('updateSearchMatches')
   },
+  /**
+   * Updates every rows row._.matchSearch and row._.fieldSearchMatches based on the
+   * current search parameters and row data.
+   */
   updateSearchMatches({ commit, getters, rootGetters }) {
     const allRowSearchMatches = getters.getAllRows.map((row) =>
       calculateSingleRowSearchMatches(
@@ -739,6 +747,11 @@ export const actions = {
 
     commit('SET_ROW_SEARCH_MATCHES', allRowSearchMatches)
   },
+  /**
+   * Updates a single row's row._.matchSearch and row._.fieldSearchMatches based on the
+   * current search parameters and row data. Overrides can be provided which can be used
+   * to override a row's field values when checking if they match the search parameters.
+   */
   updateSearchMatchesForRow(
     { commit, getters, rootGetters },
     { row, overrides }

@@ -58,6 +58,7 @@
         row.id +
         '-' +
         field.id.toString() +
+        '-' +
         forceEveryCellToRefreshCounter.toString()
       "
       :field="field"

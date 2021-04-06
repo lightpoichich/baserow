@@ -623,11 +623,11 @@ export const actions = {
     }
     lastRefreshRequestSource = axios.CancelToken.source()
     lastRefreshRequest = GridService(this.$client)
-      .fetchCount(
+      .fetchCount({
         gridId,
-        getters.getServerSearchTerm,
-        lastRefreshRequestSource.token
-      )
+        search: getters.getServerSearchTerm,
+        cancelToken: lastRefreshRequestSource.token,
+      })
       .then((response) => {
         const count = response.data.count
 

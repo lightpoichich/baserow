@@ -20,11 +20,11 @@
         ></CreateApplicationModal>
       </li>
       <li>
-        <a @click="$refs.templateModal.show()">
+        <a @click=";[$refs.templateModal.show(), hide()]">
           <i class="context__menu-icon fas fa-fw fa-file-alt"></i>
           From template
         </a>
-        <TemplateModal ref="templateModal"></TemplateModal>
+        <TemplateModal ref="templateModal" :group="group"></TemplateModal>
       </li>
     </ul>
   </Context>

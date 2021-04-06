@@ -3,8 +3,10 @@
     <div v-if="loading" class="loading-absolute-center"></div>
     <template v-else>
       <TemplateHeader
+        :group="group"
         :template="selectedTemplate"
         :category="selectedTemplateCategory"
+        @installed="hide()"
       ></TemplateHeader>
       <TemplateCategories
         ref="categories"
@@ -34,6 +36,12 @@ export default {
   name: 'TemplateModal',
   components: { TemplateHeader, TemplateCategories, TemplateBody },
   mixins: [modal],
+  props: {
+    group: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       loading: true,

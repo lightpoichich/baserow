@@ -3,5 +3,8 @@ export default (client) => {
     fetchAll() {
       return client.get('/templates/')
     },
+    install(groupId, templateId) {
+      return client.get(`/templates/install/${groupId}/${templateId}/`)
+    },
   }
 }

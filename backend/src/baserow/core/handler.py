@@ -775,8 +775,14 @@ class CoreHandler:
             # hash mismatch, which means the group has already been deleted, we can
             # create a new group and import the exported applications into that group.
             if not installed_template or installed_template.export_hash != export_hash:
-                group_user = self.create_group(user, name=parsed_json['name'])
-                group = group_user.group
+                group = Group.objects.create(name=parsed_json['name'])
+                last_order = GroupUser.get_last_order(user)
+                GroupUser.objects.create(
+                    group=group,
+                    user=user,
+                    order=last_order,
+                    permissions=GROUP_USER_PERMISSION_ADMIN
+                )
                 self.import_application_to_group(group, parsed_json['export'])
             else:
                 group = installed_template.group

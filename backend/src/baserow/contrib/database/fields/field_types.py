@@ -224,19 +224,10 @@ class BooleanFieldType(FieldType):
         return fake.pybool()
 
     def get_export_serialized_value(self, row, field_name, cache):
-        return (
-            'true'
-            if super().get_export_serialized_value(row, field_name, cache) else
-            'false'
-        )
+        return 'true' if getattr(row, field_name) else 'false'
 
     def set_import_serialized_value(self, row, field_name, value, id_mapping):
-        return super().set_import_serialized_value(
-            row,
-            field_name,
-            value == 'true',
-            id_mapping
-        )
+        setattr(row, field_name, value == 'true')
 
 
 class DateFieldType(FieldType):

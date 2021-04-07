@@ -5,7 +5,7 @@ from baserow.core.handler import CoreHandler
 
 class Command(BaseCommand):
     help = (
-        'Synchornizes all the templates stored in the database with the JSON files in '
+        'Synchronizes all the templates stored in the database with the JSON files in '
         'the templates directory. This command must be ran everytime a template '
         'changes.'
     )

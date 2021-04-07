@@ -42,5 +42,5 @@ class Command(BaseCommand):
 
         content = json.load(json_file)
         handler = CoreHandler()
-        application = handler.import_application_to_group(group, content)
-        self.stdout.write(f'{len(application)} applications have been imported.')
+        applications, _ = handler.import_application_to_group(group, content)
+        self.stdout.write(f'{len(applications)} applications have been imported.')

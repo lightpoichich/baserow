@@ -4,6 +4,7 @@ from pytz import timezone
 
 from django.utils.timezone import make_aware, datetime
 
+from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.handler import FieldHandler
 
@@ -614,6 +615,16 @@ def test_single_select_equal_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
+
+
+@pytest.mark.django_db
+def test_single_select_equal_filter_type_export_import(data_fixture):
+    view_filter_type = view_filter_type_registry.get('single_select_equal')
+    id_mapping = {'database_field_select_options': {1: 2}}
+    value = view_filter_type.get_export_value('1')
+    imported_value = view_filter_type.get_import_value('1', id_mapping)
+    assert value == '1'
+    assert imported_value == '2'
 
 
 @pytest.mark.django_db

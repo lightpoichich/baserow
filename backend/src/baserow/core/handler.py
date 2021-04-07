@@ -773,10 +773,14 @@ class CoreHandler:
                 ','.join(parsed_json['keywords']) if 'keywords' in parsed_json else ''
             )
 
-            # If the installed template does not yet exist or if there is a hash
+            # If the installed template and group exist, and if there is a hash
             # mismatch, we need to delete the old group and all the related
             # applications in it. This is because a new group will be created.
-            if installed_template and installed_template.export_hash != export_hash:
+            if (
+                installed_template and
+                installed_template.group and
+                installed_template.export_hash != export_hash
+            ):
                 self._delete_group(installed_template.group)
 
             # If the installed template does not yet exist or if there is a export

@@ -81,12 +81,14 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
             serialized['filters_disabled'] = view.filters_disabled
             serialized['filters'] = [
                 {
-                    'id': filter.id,
-                    'field_id': filter.field_id,
-                    'type': filter.type,
-                    'value': filter.value
+                    'id': view_filter.id,
+                    'field_id': view_filter.field_id,
+                    'type': view_filter.type,
+                    'value': view_filter_type_registry.get(
+                        view_filter.type
+                    ).get_export_value(view_filter.value)
                 }
-                for filter in view.viewfilter_set.all()
+                for view_filter in view.viewfilter_set.all()
             ]
 
         if self.can_sort:
@@ -136,10 +138,15 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
 
         if self.can_filter:
             for view_filter in filters:
+                view_filter_type = view_filter_type_registry.get(view_filter['type'])
                 view_filter_copy = view_filter.copy()
                 view_filter_id = view_filter_copy.pop('id')
                 view_filter_copy['field_id'] = (
                     id_mapping['database_fields'][view_filter_copy['field_id']]
+                )
+                view_filter_copy['value'] = view_filter_type.get_import_value(
+                    view_filter_copy['value'],
+                    id_mapping
                 )
                 view_filter_object = ViewFilter.objects.create(
                     view=view,
@@ -226,6 +233,36 @@ class ViewFilterType(Instance):
         """
 
         raise NotImplementedError('Each must have his own get_filter method.')
+
+    def get_export_value(self, value) -> str:
+        """
+        This method is called before the filter value is exported. Here it can
+        optionally be modified.
+
+        :param value: The original value.
+        :type value: str
+        :return: The updated value.
+        :rtype: str
+        """
+
+        return value
+
+    def get_import_value(self, value, id_mapping) -> str:
+        """
+        This method is called before a field is imported. It can optionally be
+        modified. If the value for example points to a field or select option id, it
+        can be replaced with the correct value by doing a lookup in the id_mapping.
+
+        :param value: The original exported value.
+        :type value: str
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        :return: The new value that will be imported.
+        :rtype: str
+        """
+
+        return value
 
 
 class ViewFilterTypeRegistry(Registry):

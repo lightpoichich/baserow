@@ -4,7 +4,7 @@ from baserow.core.registries import application_type_registry
 
 
 @pytest.mark.django_db
-def test_import_export_database(data_fixture):
+def test_import_export_database(data_fixture, user_tables_in_separate_db):
     database = data_fixture.create_database_application()
     table = data_fixture.create_database_table(database=database)
     text_field = data_fixture.create_text_field(table=table)
@@ -55,3 +55,7 @@ def test_import_export_database(data_fixture):
         imported_row,
         f'field_{id_mapping["database_fields"][text_field.id]}'
     ) == (getattr(row, f'field_{text_field.id}'))
+
+    # It must still be possible to create a new row in the imported table
+    row_2 = imported_model.objects.create()
+    assert row_2.id == 2

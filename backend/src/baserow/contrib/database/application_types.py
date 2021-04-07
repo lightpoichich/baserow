@@ -1,3 +1,4 @@
+from django.core.management.color import no_style
 from django.urls import path, include
 from django.db import connections
 from django.conf import settings
@@ -184,5 +185,13 @@ class DatabaseApplicationType(ApplicationType):
             # hundreds of thousands of rows in there and this will result in better
             # performance.
             model.objects.bulk_create(rows_to_be_inserted)
+
+            # When the rows are inserted we keep the provide the old ids and because of
+            # that the auto increment is still set at `1`. This needs to be set to the
+            # maximum value because otherwise creating a new row could later fail.
+            connection = connections[settings.USER_TABLE_DATABASE]
+            sequence_sql = connection.ops.sequence_reset_sql(no_style(), [model])
+            with connection.cursor() as cursor:
+                cursor.execute(sequence_sql[0])
 
         return database

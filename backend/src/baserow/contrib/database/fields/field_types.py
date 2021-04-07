@@ -755,17 +755,18 @@ class LinkRowFieldType(FieldType):
             # we want to fetch all the relations and add it to a temporary in memory
             # cache containing a mapping of the old ids to the new ids. Every relation
             # can use the cached mapped relations to find the correct id.
-            relations = defaultdict(list)
+            cache[cache_entry] = defaultdict(list)
             through_model = row._meta.get_field(field_name).remote_field.through
             through_model_fields = through_model._meta.get_fields()
             current_field_name = through_model_fields[1].name
             relation_field_name = through_model_fields[2].name
             for relation in through_model.objects.all():
-                relations[getattr(relation, f'{current_field_name}_id')].append(
-                    getattr(relation, f'{relation_field_name}_id')
-                )
+                cache[cache_entry][getattr(
+                    relation,
+                    f'{current_field_name}_id'
+                )].append(getattr(relation, f'{relation_field_name}_id'))
 
-        return relations[row.id]
+        return cache[cache_entry][row.id]
 
     def set_import_serialized_value(self, row, field_name, value, id_mapping):
         getattr(row, field_name).set(value)

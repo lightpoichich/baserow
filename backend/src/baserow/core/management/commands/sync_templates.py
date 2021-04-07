@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.core.management.base import BaseCommand
 
 from baserow.core.handler import CoreHandler
@@ -10,5 +11,6 @@ class Command(BaseCommand):
         'changes.'
     )
 
+    @transaction.atomic
     def handle(self, *args, **options):
         CoreHandler().sync_templates()

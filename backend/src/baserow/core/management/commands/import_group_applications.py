@@ -2,6 +2,7 @@ import sys
 import json
 import argparse
 
+from django.db import transaction
 from django.core.management.base import BaseCommand
 
 from baserow.core.models import Group
@@ -29,6 +30,7 @@ class Command(BaseCommand):
             default=sys.stdin
         )
 
+    @transaction.atomic
     def handle(self, *args, **options):
         group_id = options['group_id']
         json_file = options['json']

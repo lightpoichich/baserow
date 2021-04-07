@@ -237,7 +237,12 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
             return Q()
 
     def set_import_serialized_value(self, value, id_mapping):
-        return str(id_mapping['database_field_select_options'][int(value)])
+        try:
+            value = int(value)
+        except ValueError:
+            return ''
+
+        return str(id_mapping['database_field_select_options'].get(value, ''))
 
 
 class SingleSelectNotEqualViewFilterType(NotViewFilterTypeMixin,

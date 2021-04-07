@@ -205,8 +205,8 @@ class TemplateCategory(models.Model):
 class Template(models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(
-        help_text='The template slug that is used to match the template with JSON '
-                  'file.'
+        help_text='The template slug that is used to match the template with the JSON '
+                  'file name.'
     )
     icon = models.CharField(
         max_length=32,

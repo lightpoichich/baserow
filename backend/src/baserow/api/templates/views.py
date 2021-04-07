@@ -13,6 +13,7 @@ from baserow.api.utils import PolymorphicMappingSerializer
 from baserow.api.applications.serializers import (
     ApplicationSerializer, get_application_serializer
 )
+from baserow.api.applications.views import application_type_serializers
 from baserow.core.models import TemplateCategory
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import application_type_registry
@@ -32,16 +33,17 @@ class TemplatesView(APIView):
         operation_id='list_templates',
         description=(
             'Lists all the template categories and the related templates that are in '
-            'that category. The `group_id` can be used for previewing purposes. All '
-            'the `get` and `list`endpoints are publicly accessible if the group is '
-            'related to a template.'
+            'that category. The template\'s `group_id` can be used for previewing '
+            'purposes because that group contains the applications that are in the '
+            'template. All the `get` and `list` endpoints related to that group are '
+            'publicly accessible.'
         ),
         responses={
             200: TemplateCategoriesSerializer(many=True)
         }
     )
     def get(self, request):
-        """Responds with a list of template categories and templates."""
+        """Responds with a list of all template categories and templates."""
 
         categories = TemplateCategory.objects.all().prefetch_related('templates')
         serializer = TemplateCategoriesSerializer(categories, many=True)
@@ -60,32 +62,25 @@ class InstallTemplateView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description='The id related to the group where the template '
-                            'applications must be added to.'
+                            'applications must be installed into.'
             ),
             OpenApiParameter(
                 name='template_id',
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description='The id related to the template that must be installed. '
-                            'The application related to that template will be added '
-                            'to the group.'
+                description='The id related to the template that must be installed.'
             )
         ],
         description=(
             'Installs the applications of the given template into the given group if '
-            'the user has access to that group.'
+            'the user has access to that group. The response contains those newly '
+            'created applications.'
         ),
         responses={
             200: PolymorphicMappingSerializer(
                 'Applications',
-                {
-                    application_type.type: (
-                        application_type.instance_serializer_class(many=True)
-                        if application_type.instance_serializer_class else
-                        ApplicationSerializer(many=True)
-                    )
-                    for application_type in application_type_registry.registry.values()
-                }
+                application_type_serializers,
+                many=True
             ),
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP',

@@ -73,7 +73,7 @@ export default {
         this.hide()
       }
 
-      // Check if there is a default template and if so, select that template.
+      // Check if there is a default template, and if so select that template.
       for (let i = 0; i < this.categories.length; i++) {
         const category = this.categories[i]
         for (let i2 = 0; i2 < category.templates.length; i2++) {

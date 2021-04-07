@@ -65,7 +65,7 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
 
         :param view: The view instance that must be exported.
         :type view: View
-        :return: The exported view as a serialized dict.
+        :return: The exported view.
         :rtype: dict
         """
 
@@ -86,7 +86,7 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
                     'type': view_filter.type,
                     'value': view_filter_type_registry.get(
                         view_filter.type
-                    ).get_export_value(view_filter.value)
+                    ).get_export_serialized_value(view_filter.value)
                 }
                 for view_filter in view.viewfilter_set.all()
             ]
@@ -106,8 +106,8 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
     def import_serialized(self, table, serialized_values, id_mapping):
         """
         Imported an exported serialized view dict that was exported via the
-        `export_serialized` method. Note that the fields must be imported first because
-        we depend on the new field id to be in the mapping.
+        `export_serialized` method. Note that all the fields must be imported first
+        because we depend on the new field id to be in the mapping.
 
         :param table: The table where the view should be added to.
         :type table: Table
@@ -144,7 +144,7 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
                 view_filter_copy['field_id'] = (
                     id_mapping['database_fields'][view_filter_copy['field_id']]
                 )
-                view_filter_copy['value'] = view_filter_type.get_import_value(
+                view_filter_copy['value'] = view_filter_type.set_import_serialized_value(
                     view_filter_copy['value'],
                     id_mapping
                 )
@@ -234,7 +234,7 @@ class ViewFilterType(Instance):
 
         raise NotImplementedError('Each must have his own get_filter method.')
 
-    def get_export_value(self, value) -> str:
+    def get_export_serialized_value(self, value) -> str:
         """
         This method is called before the filter value is exported. Here it can
         optionally be modified.
@@ -247,7 +247,7 @@ class ViewFilterType(Instance):
 
         return value
 
-    def get_import_value(self, value, id_mapping) -> str:
+    def set_import_serialized_value(self, value, id_mapping) -> str:
         """
         This method is called before a field is imported. It can optionally be
         modified. If the value for example points to a field or select option id, it

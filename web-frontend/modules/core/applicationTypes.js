@@ -34,30 +34,39 @@ export class ApplicationType extends Registerable {
   }
 
   /**
-   * @TODO docs
+   * The sidebar component will be rendered in the sidebar if the application is
+   * in the selected group. All the applications of a group are listed in the
+   * sidebar and this component should give the user the possibility to select
+   * that application.
    */
   getSidebarComponent() {
     return null
   }
 
   /**
-   * @TODO docs
+   * The sidebar component that will be rendered in the sidebar of the templates
+   * modal. It should represent an application that is in the template and should
+   * also give the possibility to select that application.
    */
   getTemplateSidebarComponent() {
     return null
   }
 
   /**
-   * @TODO docs
+   * When an application is selected in the templates modal, it must show a
+   * preview. This method should return a component that shows this preview if
+   * this application is selected.
    */
   getTemplatesPageComponent() {
     return null
   }
 
   /**
-   * @TODO docs
+   * Should return an object that will be passed as property into the component
+   * returned by the `getTemplatesPageComponent` method. It can for example
+   * contain the selected application id.
    */
-  getTemplatePage() {
+  getTemplatePage(application) {
     return null
   }
 

@@ -533,7 +533,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         Exports the value to a the value of a row to serialized value that is also JSON
         serializable.
 
-        :param row: The row instance that the value must be exported from,
+        :param row: The row instance that the value must be exported from.
         :type row: Object
         :param field_name: The name of the field that must be exported.
         :type field_name: str

@@ -10,7 +10,8 @@ from baserow.core.handler import CoreHandler
 class Command(BaseCommand):
     help = (
         'Exports all the application of a group to a JSON file that can later be '
-        'imported.'
+        'imported via the `import_group_applications` management command. This export '
+        'can also be used as a template.'
     )
 
     def add_arguments(self, parser):
@@ -22,7 +23,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--indent',
             action='store_true',
-            help='',
+            help='Indicates if the JSON must be formatted and indented to improve '
+                 'readability.',
         )
 
     def handle(self, *args, **options):

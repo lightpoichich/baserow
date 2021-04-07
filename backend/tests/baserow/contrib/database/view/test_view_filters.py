@@ -621,8 +621,8 @@ def test_single_select_equal_filter_type(data_fixture):
 def test_single_select_equal_filter_type_export_import(data_fixture):
     view_filter_type = view_filter_type_registry.get('single_select_equal')
     id_mapping = {'database_field_select_options': {1: 2}}
-    value = view_filter_type.get_export_value('1')
-    imported_value = view_filter_type.get_import_value('1', id_mapping)
+    value = view_filter_type.get_export_serialized_value('1')
+    imported_value = view_filter_type.set_import_serialized_value('1', id_mapping)
     assert value == '1'
     assert imported_value == '2'
 

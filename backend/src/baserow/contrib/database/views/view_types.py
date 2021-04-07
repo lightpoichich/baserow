@@ -37,7 +37,7 @@ class GridViewType(ViewType):
 
     def import_serialized(self, table, serialized_values, id_mapping):
         """
-        Also imports the serialized grid view field options.
+        Imports the serialized grid view field options.
         """
 
         serialized_copy = serialized_values.copy()

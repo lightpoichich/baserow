@@ -260,6 +260,9 @@ USER_THUMBNAILS = {
     'small': [48, 48]
 }
 
+# The directory that contains the all the templates in JSON format. When for example
+# the `sync_templates` management command is called, then the templates in the
+# database will be synced with these files.
 APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, '../../../templates')
 # The template that must be selected when the user first opens the templates select
 # modal.

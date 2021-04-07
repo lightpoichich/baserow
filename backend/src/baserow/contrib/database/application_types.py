@@ -105,8 +105,8 @@ class DatabaseApplicationType(ApplicationType):
         database = super().import_serialized(group, serialized_values, id_mapping)
         connection = connections[settings.USER_TABLE_DATABASE]
 
-        # First we want to create all the table instances because it could be that
-        # field or view properties depend on a table to exist.
+        # First, we want to create all the table instances because it could be that
+        # field or view properties depend on the existance of a table.
         for table in tables:
             table_object = Table.objects.create(
                 database=database,
@@ -117,8 +117,8 @@ class DatabaseApplicationType(ApplicationType):
             table['_object'] = table_object
             table['_field_objects'] = []
 
-        # Because view properties might depend on fields we first want to create all
-        # the field instances.
+        # Because view properties might depend on fields, we first want to create all
+        # the fields.
         for table in tables:
             for field in table['fields']:
                 field_type = field_type_registry.get(field['type'])
@@ -131,7 +131,7 @@ class DatabaseApplicationType(ApplicationType):
                 if field_object:
                     table['_field_objects'].append(field_object)
 
-        # Not that the all tables and views exist we can create the views and create
+        # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.
         for table in tables:
             for view in table['views']:
@@ -181,8 +181,8 @@ class DatabaseApplicationType(ApplicationType):
                 rows_to_be_inserted.append(row_object)
 
             # We want to insert the rows in bulk because there could potentially be
-            # hundreds of thousands of rows in there and this will result in a
-            # performance increase.
+            # hundreds of thousands of rows in there and this will result in better
+            # performance.
             model.objects.bulk_create(rows_to_be_inserted)
 
         return database

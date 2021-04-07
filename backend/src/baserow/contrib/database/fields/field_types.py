@@ -709,8 +709,6 @@ class LinkRowFieldType(FieldType):
         return serialized
 
     def import_serialized(self, table, serialized_values, id_mapping):
-        # Try to fetch the related field and set the correct values if it is in the
-        # mapping.
         serialized_copy = serialized_values.copy()
         serialized_copy['link_row_table_id'] = (
             id_mapping['database_tables'][serialized_copy['link_row_table_id']]
@@ -722,6 +720,9 @@ class LinkRowFieldType(FieldType):
         )
 
         if related_field_found:
+            # If the related field is found, it means that it has already been
+            # imported. In that case, we can directly set the `link_row_relation_id`
+            # when creating the current field.
             serialized_copy['link_row_related_field_id'] = (
                 id_mapping['database_fields'][link_row_related_field_id]
             )
@@ -733,10 +734,16 @@ class LinkRowFieldType(FieldType):
         field = super().import_serialized(table, serialized_copy, id_mapping)
 
         if related_field_found:
+            # If the related field is found, it means that when creating that field
+            # the `link_row_relation_id` was not yet set because this field,
+            # where the relation is being made to, did not yet exist. So we need to
+            # set it right now.
             related_field.link_row_related_field_id = field.id
             related_field.save()
             # By returning None, the field is ignored when creating the table schema
-            # and inserting the data, which is exactly what we want
+            # and inserting the data, which is exactly what we want because the
+            # through table has already been created and will result in an error if
+            # we do it again.
             return None
 
         return field
@@ -744,6 +751,10 @@ class LinkRowFieldType(FieldType):
     def get_export_serialized_value(self, row, field_name, cache):
         cache_entry = f'{field_name}_relations'
         if cache_entry not in cache:
+            # In order to prevent a lot of lookup queries in the through table,
+            # we want to fetch all the relations and add it to a temporary in memory
+            # cache containing a mapping of the old ids to the new ids. Every relation
+            # can use the cached mapped relations to find the correct id.
             relations = defaultdict(list)
             through_model = row._meta.get_field(field_name).remote_field.through
             through_model_fields = through_model._meta.get_fields()

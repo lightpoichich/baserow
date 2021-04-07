@@ -153,8 +153,8 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixi
 
     def export_serialized(self, application):
         """
-        Exports the application to a serialized dict that should be imported by the
-        `import_serialized` method.
+        Exports the application to a serialized dict that can be imported by the
+        `import_serialized` method. The dict is JSON serializable.
 
         :param application: The application that must be exported.
         :type application: Application

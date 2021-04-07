@@ -654,7 +654,7 @@ class CoreHandler:
                                  application=application, user=user)
 
     def _delete_application(self, application):
-        """Deletes an application"""
+        """Deletes an application and the related relations in the correct way."""
 
         application = application.specific
         application_type = application_type_registry.get_by_model(application)
@@ -664,7 +664,8 @@ class CoreHandler:
 
     def export_group_applications(self, group):
         """
-        Exports the applications of a group to a list which can later be imported.
+        Exports the applications of a group to a list. They can later be imported via
+        the `import_application_to_group` method. The result can be serialized to JSON.
 
         @TODO look into speed optimizations by streaming to a JSON file instead of
             generating the entire file in memory.
@@ -687,7 +688,8 @@ class CoreHandler:
 
     def import_application_to_group(self, group, exported_applications):
         """
-        Imports multiple exported applications into the given group.
+        Imports multiple exported applications into the given group. It is compatible
+        with an export of the `export_group_applications` method.
 
         @TODO look into speed optimizations by streaming from a JSON file instead of
             loading the entire file into memory.
@@ -717,7 +719,7 @@ class CoreHandler:
 
     def get_template(self, template_id, base_queryset=None):
         """
-        Selects a template with a given id from the database.
+        Selects a template with the given id from the database.
 
         :param template_id: The identifier of the template that must be returned.
         :type template_id: int
@@ -745,7 +747,14 @@ class CoreHandler:
         """
         Synchronizes the JSON template files with the templates stored in the database.
         We need to have a copy in the database so that the user can live preview a
-        template before installing.
+        template before installing. It will also make sure that the right categories
+        exist and that old ones are deleted.
+
+        If the template doesn't exist, a group can be created and we can import the
+        export in that group. If the template already exists we check if the
+        `export_hash` has changed, if so it means the export has changed. Because we
+        don't have updating capability, we delete the old group and create a new one
+        where we can import the export into.
         """
 
         installed_templates = Template.objects.all().prefetch_related(
@@ -845,8 +854,8 @@ class CoreHandler:
 
     def install_template(self, user, group, template):
         """
-        Installs the exported application into the given group if the provided user
-        has access to that group.
+        Installs the exported applications of a template into the given group if the
+        provided user has access to that group.
 
         :param user: The user on whose behalf the template installed.
         :type user: User
@@ -879,8 +888,8 @@ class CoreHandler:
             parsed_json['export']
         )
 
-        # Because a user has initiated the creation of applications, we can need to
-        # call `application_created` signal for each created application.
+        # Because a user has initiated the creation of applications, we need to
+        # call the `application_created` signal for each created application.
         for application in applications:
             application_type = application_type_registry.get_by_model(application)
             application_created.send(self, application=application, user=user,

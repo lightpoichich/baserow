@@ -87,8 +87,8 @@ export default {
       this.views = viewsData
 
       // After selecting the table, the user expects to see the table data and that is
-      // only possible if a view is selected. By calling the `selectView` method, the
-      // first view is selected.
+      // only possible if a view is selected. By calling the `selectView` method
+      // without parameters, the first view is selected.
       await this.selectView()
     },
     /**
@@ -98,7 +98,7 @@ export default {
     async selectView(viewId = null) {
       this.tableLoading = true
 
-      // If no viewId is provided we want to select the first the first view.
+      // If no viewId is provided, we want to select the first the first view.
       const firstView = this.views.length > 0 ? this.views[0] : null
       if (viewId === null && firstView !== null) {
         viewId = firstView.id

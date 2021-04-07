@@ -68,11 +68,9 @@ class ViewsView(APIView):
                 description=(
                     'A comma separated list of extra attributes to include on each '
                     'view in the response. The supported attributes are `filters` and '
-                    '`sortings`. If the group is related to a template, then this '
-                    'endpoint will be publicly accessible. For example '
-                    '`include=filters,sortings` will add the attributes `filters` and '
-                    '`sortings` to every returned view, containing a list of the '
-                    'views filters and sortings respectively.'
+                    '`sortings`. For example `include=filters,sortings` will add the '
+                    'attributes `filters` and `sortings` to every returned view, '
+                    'containing a list of the views filters and sortings respectively.'
                 )
             ),
         ],
@@ -80,12 +78,13 @@ class ViewsView(APIView):
         operation_id='list_database_table_views',
         description=(
             'Lists all views of the table related to the provided `table_id` if the '
-            'user has access to the related database\'s group. A table can have '
-            'multiple views. Each view can display the data in a different way. For '
-            'example the `grid` view shows the in a spreadsheet like way. That type '
-            'has custom endpoints for data retrieval and manipulation. In the future '
-            'other views types like a calendar or Kanban are going to be added. Each '
-            'type can have different properties.'
+            'user has access to the related database\'s group. If the group is '
+            'related to a template, then this endpoint will be publicly accessible. A '
+            'table can have multiple views. Each view can display the data in a '
+            'different way. For example the `grid` view shows the in a spreadsheet '
+            'like way. That type has custom endpoints for data retrieval and '
+            'manipulation. In the future other views types like a calendar or Kanban '
+            'are going to be added. Each type can have different properties.'
         ),
         responses={
             200: PolymorphicCustomFieldRegistrySerializer(

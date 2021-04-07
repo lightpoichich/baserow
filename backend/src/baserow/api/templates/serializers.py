@@ -10,7 +10,9 @@ from baserow.core.models import TemplateCategory, Template
 
 class TemplateSerializer(serializers.ModelSerializer):
     is_default = serializers.SerializerMethodField(
-        help_text='Indicates if the template is the template is selected by default.'
+        help_text='Indicates if the template must be selected by default. The '
+                  'web-frontend automatically selects the first `is_default` template '
+                  'that it can find.'
     )
 
     class Meta:

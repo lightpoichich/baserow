@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
                     'slug',
                     models.SlugField(
                         help_text='The template slug that is used to match the '
-                                  'template with JSON file.'
+                                  'template with the JSON file name.'
                     )
                 ),
                 (

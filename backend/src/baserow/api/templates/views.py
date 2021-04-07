@@ -10,13 +10,10 @@ from baserow.api.decorators import map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import PolymorphicMappingSerializer
-from baserow.api.applications.serializers import (
-    ApplicationSerializer, get_application_serializer
-)
+from baserow.api.applications.serializers import get_application_serializer
 from baserow.api.applications.views import application_type_serializers
 from baserow.core.models import TemplateCategory
 from baserow.core.handler import CoreHandler
-from baserow.core.registries import application_type_registry
 from baserow.core.exceptions import (
     UserNotInGroupError, GroupDoesNotExist, TemplateDoesNotExist,
     TemplateFileDoesNotExist

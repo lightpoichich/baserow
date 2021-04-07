@@ -144,9 +144,11 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
                 view_filter_copy['field_id'] = (
                     id_mapping['database_fields'][view_filter_copy['field_id']]
                 )
-                view_filter_copy['value'] = view_filter_type.set_import_serialized_value(
-                    view_filter_copy['value'],
-                    id_mapping
+                view_filter_copy['value'] = (
+                    view_filter_type.set_import_serialized_value(
+                        view_filter_copy['value'],
+                        id_mapping
+                    )
                 )
                 view_filter_object = ViewFilter.objects.create(
                     view=view,

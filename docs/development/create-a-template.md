@@ -1,9 +1,9 @@
 # Create a template
 
-Templates are a starting point for other users. They can use it as inspiration and
-easily install it in their group. A template consists of one or more applications that
-will be copied into the desired group if a user decides to install it. It is also
-possible for the user to see an example before installing.
+Templates are a starting point for other users. They can use them for inspiration and
+easily install them into their groups. A template consists of one or more applications 
+that will be copied into the desired group if a user decides to install it. It is also
+possible for the user to see an example of the template before installing.
 
 ## Build your own
 
@@ -17,15 +17,16 @@ you just created.
 
 If you for example want to create a content calendar, you might want to create a
 database named `Content Calendar` that contains three tables names `Pipeline`,
-`Campaigns` and `Authors`. Once you have filled all the tables the way you want, you
-can proceed to the next step, which is exporting all the data.
+`Campaigns` and `Authors`. Once you have filled in all the tables in the way you want, 
+you can proceed to the next step, which is exporting the group you just made to then
+create a template based off it.
 
 ## Exporting the applications
 
-It is possible to make an export of all the application that are in the group. If a
-user wants to install a template, then that export is used to import the applications
-into the desired group. It is only possible to make this export via the command line
-interface of Baserow.
+It is possible to make an export of all the applications that are in a group. When a 
+user installs a template, then that export is used to import the applications
+into the user's desired group. It is only possible to make this export via the command 
+line interface of Baserow.
 
 Before you can export the application, you first need to figure out what the ID of your
 group is. You will see a list of all your groups when you click on the name of your
@@ -71,9 +72,9 @@ $ baserow export_group_applications YOUR_GROUP_ID --indent
 ## Creating the template file
 
 Inside the `backend/templates` directory you will find all the existing templates. You
-need to create a new JSON file here that has the same content as below. You can replace
-the values with something that matches your template. We keep all the templates as JSON
-files so that everyone who self hosts also has access them.
+need to create a new JSON file here that has the same content as shown below. You can 
+replace the values with something that matches your template. We keep all the templates 
+as JSON files so that everyone who self hosts also has access them.
 
 * **name**: The name of the template that is visible to the user.
 * **icon**: A font awesome class name that is visible to the user (`fa-{icon}`).

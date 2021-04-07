@@ -106,7 +106,7 @@ class DatabaseApplicationType(ApplicationType):
         connection = connections[settings.USER_TABLE_DATABASE]
 
         # First, we want to create all the table instances because it could be that
-        # field or view properties depend on the existance of a table.
+        # field or view properties depend on the existence of a table.
         for table in tables:
             table_object = Table.objects.create(
                 database=database,
@@ -154,7 +154,7 @@ class DatabaseApplicationType(ApplicationType):
                 fields=table['_field_objects'],
                 field_ids=[]
             )
-            field_ids = [table_object.id for table_object in table['_field_objects']]
+            field_ids = [field_object.id for field_object in table['_field_objects']]
             rows_to_be_inserted = []
 
             for row in table['rows']:

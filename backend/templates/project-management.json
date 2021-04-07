@@ -3,11 +3,11 @@
   "name": "Project Tracker",
   "icon": "project-diagram",
   "keywords": ["project", "management", "tracker", "customers", "tasks", "clients"],
-  "categories": ["Local business", "Project management"],
+  "categories": ["Local Business", "Project Management"],
   "export": [
     {
       "id": 5,
-      "name": "Project tracker",
+      "name": "Project Tracker",
       "order": 1,
       "type": "database",
       "tables": [

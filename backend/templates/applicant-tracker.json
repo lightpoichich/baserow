@@ -2,12 +2,12 @@
   "baserow_template_version": 1,
   "name": "Applicant tracker",
   "icon": "user-plus",
-  "keywords": ["applicant", "vacancy", "job", "offers", "cancidates"],
-  "categories": ["Local business", "Human resources"],
+  "keywords": ["applicant", "vacancy", "job", "offers", "candidates"],
+  "categories": ["Local Business", "Human Resources"],
   "export": [
     {
       "id": 9,
-      "name": "Applicant tracker",
+      "name": "Applicant Tracker",
       "order": 1,
       "type": "database",
       "tables": [

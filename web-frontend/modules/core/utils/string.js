@@ -34,18 +34,55 @@ export const slugify = (string) => {
     .replace(/^-+/, '') // Trim - from start of text
     .replace(/-+$/, '') // Trim - from end of text
 }
+/**
+ * According to https://www.w3resource.com/javascript/form/ip-address-validation.php
+ */
+export const isValidIp = (str) => {
+  const regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+  return regex.test(str)
+}
 
+/**
+ * Really only checks if any dot split is empty
+ * and if last value is more than one char (no tld with one char)
+ * Also, localhost is perfectly valid, like anything in /etc/hosts arbitrarily added
+ */
+export const isValidDomain = (str) => {
+  const domainSplit = str.split('.')
+  return (
+    (domainSplit.length > 1 &&
+      domainSplit.every((val) => {
+        return val !== ''
+      }) &&
+      domainSplit[domainSplit.length - 1].length > 1) ||
+    str === 'localhost'
+  )
+}
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/API/URL Compatibility matrix
+ */
 export const isValidURL = (str) => {
-  const pattern = new RegExp(
-    '^((https?|ftps?):\\/\\/)?' + // protocol
-      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-      '(\\:\\d+)?(\\/[-a-z\\d\\*%_.~+]*)*' + // port and path
-      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-      '(\\#[-a-z\\d_]*)?$',
-    'i'
-  ) // fragment locator
-  return !!pattern.test(str)
+  let url
+  try {
+    url = new URL(str)
+  } catch (_) {
+    return false
+  }
+  const protoMatch =
+    url.protocol === 'http:' ||
+    url.protocol === 'https:' ||
+    url.protocol === 'ftp:'
+  // This may sound stupid, but URL tries to autofix the url if it thinks it can
+  // So we need to check one last time if they're the same before assuming its valid
+  // for example https:/test.com works without that.
+  const originMatch = str.startsWith(url.origin)
+  // Now we need to make sure the domain is correct, because URL only tells us if the URI part if its correct
+  // Dumb way is to just know if there is more than one non-empty dot split values
+  // domain www. is not valid, but www.d may as well be
+  // I think tradeoff here is to not validate TLD and gTLD because they're just too dynamic to keep up with.
+  const validDomain = isValidDomain(url.hostname) || isValidIp(url.hostname)
+  return protoMatch && originMatch && validDomain
 }
 
 export const isValidEmail = (str) => {

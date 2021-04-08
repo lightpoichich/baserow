@@ -13,7 +13,7 @@ describe('test string utils', () => {
     expect(typeof value).toBe('string')
   })
 
-  test('test lowerCaseFirst', () => {
+  test('test upperCaseFirst', () => {
     expect(upperCaseFirst('test string')).toBe('Test string')
     expect(upperCaseFirst('Test string')).toBe('Test string')
     expect(upperCaseFirst('TEST string')).toBe('TEST string')

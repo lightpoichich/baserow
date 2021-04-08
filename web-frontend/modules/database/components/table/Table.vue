@@ -144,7 +144,7 @@ export default {
     },
     view: {
       type: Object,
-      required: true,
+      validator: (prop) => typeof prop === 'object' || prop === undefined,
     },
     tableLoading: {
       type: Boolean,

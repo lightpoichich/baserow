@@ -75,6 +75,7 @@ export default {
     // the data.
     data.fields = store.getters['field/getAll']
     data.primary = store.getters['field/getPrimary']
+    data.view = undefined
 
     // Because we do not have a dashboard for the table yet we're going to redirect to
     // the first available view.

@@ -110,9 +110,6 @@ export default {
       })
 
       const view = this.views.find((item) => item.id === viewId)
-      if (view === undefined) {
-        throw new Error('@TODO view not found')
-      }
       this.view = view
 
       // It might be possible that the view also has some stores that need to be

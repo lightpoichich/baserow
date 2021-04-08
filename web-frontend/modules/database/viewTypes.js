@@ -105,7 +105,7 @@ export class ViewType extends Registerable {
    * stay the same if possible. Can throw a RefreshCancelledException when the view
    * wishes to cancel the current refresh call due to a new refresh call.
    */
-  refresh({ store, refreshEvent }, view) {}
+  refresh({ store }, view) {}
 
   /**
    * Method that is called when a field has been created. This can be useful to
@@ -189,8 +189,8 @@ export class GridViewType extends ViewType {
     await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
   }
 
-  async refresh({ store, refreshEvent }, view) {
-    await store.dispatch('view/grid/refresh', { gridId: view.id, refreshEvent })
+  async refresh({ store }, view) {
+    await store.dispatch('view/grid/refresh', { gridId: view.id })
   }
 
   async fieldCreated({ dispatch }, table, field, fieldType) {
@@ -224,7 +224,7 @@ export class GridViewType extends ViewType {
     // fields date_format needs a search update as search string might no longer
     // match the new format.
     await dispatch(
-      'view/grid/updateSearchMatches',
+      'view/grid/updateSearch',
       {},
       {
         root: true,

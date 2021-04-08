@@ -23,16 +23,14 @@ export function populateRow(row) {
     matchSortings: true,
     // Whether the row should be displayed based on the current activeSearchTerm term.
     matchSearch: true,
+    // Contains the specific field ids which match the activeSearchTerm term.
+    // Could be empty even when matchSearch is true when there is no
+    // activeSearchTerm term applied.
+    fieldSearchMatches: [],
     // Keeping the selected state with the row has the best performance when navigating
     // between cells.
     selected: false,
     selectedFieldId: -1,
-    // Additionally `fieldSearchMatches` is a set added to this object after a
-    // search has occurred which contains which fields in this cell are highlighted.
-    // We do not add it here as we do not want Vue's reactivity system to bind to it
-    // for performance reasons. Instead by adding it after the data has been
-    // initialized vue will not be watching for changes giving us the performance we
-    // need for quick cell search highlighting.
   }
   return row
 }
@@ -79,11 +77,6 @@ export const state = () => ({
   // entirely out. When false no server filter will be applied and rows which do not
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
-  // Using Vue's reactivity system can be very slow for updating the search state,
-  // instead it is much cheaper to just force a refresh of all of the rows functional
-  // cell components after a search term has changed which will occur when this
-  // counter is changed.
-  forceEveryCellToRefreshCounter: 0,
 })
 
 export const mutations = {
@@ -271,14 +264,21 @@ export const mutations = {
   SET_ROW_HOVER(state, { row, value }) {
     row._.hover = value
   },
-  SET_ROW_SEARCH_MATCHES(state, rowSearchMatches) {
-    for (const { row, matchSearch, fieldSearchMatches } of rowSearchMatches) {
-      row._.fieldSearchMatches = fieldSearchMatches
-      row._.matchSearch = matchSearch
-    }
-    state.forceEveryCellToRefreshCounter =
-      state.forceEveryCellToRefreshCounter + 1
+  SET_ROW_SEARCH_MATCHES(state, { row, matchSearch, fieldSearchMatches }) {
+    row._.fieldSearchMatches.forEach((value) => {
+      if (!fieldSearchMatches.has(value)) {
+        const index = row._.fieldSearchMatches.indexOf(value)
+        row._.fieldSearchMatches.splice(index, 1)
+      }
+    })
+    fieldSearchMatches.forEach((value) => {
+      if (!row._.fieldSearchMatches.includes(value)) {
+        row._.fieldSearchMatches.push(value)
+      }
+    })
+    row._.matchSearch = matchSearch
   },
+
   SET_ROW_MATCH_FILTERS(state, { row, value }) {
     row._.matchFilters = value
   },
@@ -458,7 +458,7 @@ export const actions = {
             scrollTop: null,
             windowHeight: null,
           })
-          dispatch('updateSearchMatches')
+          dispatch('updateSearch', {})
           lastRequest = null
         })
         .catch((error) => {
@@ -600,7 +600,7 @@ export const actions = {
       top: 0,
     })
     commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
-    dispatch('updateSearchMatches')
+    dispatch('updateSearch', {})
   },
   /**
    * Refreshes the current state with fresh data. It keeps the scroll offset the same
@@ -608,20 +608,9 @@ export const actions = {
    * update search highlighting if a new activeSearchTerm and hideRowsNotMatchingSearch
    * are provided in the refreshEvent.
    */
-  refresh({ dispatch, commit, getters }, { gridId, refreshEvent }) {
+  refresh({ dispatch, commit, getters }, { gridId }) {
     if (lastRefreshRequest !== null) {
       lastRefreshRequestSource.cancel('Cancelled in favor of new request')
-    }
-    if (
-      typeof refreshEvent === 'object' &&
-      refreshEvent !== null &&
-      'activeSearchTerm' in refreshEvent &&
-      'hideRowsNotMatchingSearch' in refreshEvent
-    ) {
-      commit('SET_SEARCH', {
-        activeSearchTerm: refreshEvent.activeSearchTerm,
-        hideRowsNotMatchingSearch: refreshEvent.hideRowsNotMatchingSearch,
-      })
     }
     lastRefreshRequestSource = axios.CancelToken.source()
     lastRefreshRequest = GridService(this.$client)
@@ -669,7 +658,7 @@ export const actions = {
           bufferStartIndex: offset,
           bufferLimit: data.results.length,
         })
-        dispatch('updateSearchMatches')
+        dispatch('updateSearch', {})
         lastRefreshRequest = null
       })
       .catch((error) => {
@@ -720,32 +709,24 @@ export const actions = {
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
   /**
-   * Changes the current search parameters and updates every rows row._.matchSearch
-   * and row._.fieldSearchMatches based on the new parameters.
+   * Changes the current search parameters if provided and optionally refreshes which
+   * cells match the new search parameters by updating every rows row._.matchSearch and
+   * row._.fieldSearchMatches attributes.
    */
-  changeSearchAndUpdateMatches(
-    { commit, dispatch },
-    { activeSearchTerm, hideRowsNotMatchingSearch }
+  updateSearch(
+    { commit, dispatch, getters, state },
+    {
+      activeSearchTerm = state.activeSearchTerm,
+      hideRowsNotMatchingSearch = state.hideRowsNotMatchingSearch,
+      refreshMatchesOnClient = true,
+    }
   ) {
     commit('SET_SEARCH', { activeSearchTerm, hideRowsNotMatchingSearch })
-    dispatch('updateSearchMatches')
-  },
-  /**
-   * Updates every rows row._.matchSearch and row._.fieldSearchMatches based on the
-   * current search parameters and row data.
-   */
-  updateSearchMatches({ commit, getters, rootGetters }) {
-    const allRowSearchMatches = getters.getAllRows.map((row) =>
-      calculateSingleRowSearchMatches(
-        row,
-        getters.getActiveSearchTerm,
-        getters.isHidingRowsNotMatchingSearch,
-        rootGetters['field/getAllWithPrimary'],
-        this.$registry
+    if (refreshMatchesOnClient) {
+      getters.getAllRows.forEach((row) =>
+        dispatch('updateSearchMatchesForRow', { row })
       )
-    )
-
-    commit('SET_ROW_SEARCH_MATCHES', allRowSearchMatches)
+    }
   },
   /**
    * Updates a single row's row._.matchSearch and row._.fieldSearchMatches based on the
@@ -765,7 +746,7 @@ export const actions = {
       overrides
     )
 
-    commit('SET_ROW_SEARCH_MATCHES', [rowSearchMatches])
+    commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is
@@ -1239,9 +1220,6 @@ export const getters = {
   },
   getServerSearchTerm(state) {
     return state.hideRowsNotMatchingSearch ? state.activeSearchTerm : false
-  },
-  getForceEveryCellToRefreshCounter(state) {
-    return state.forceEveryCellToRefreshCounter
   },
 }
 

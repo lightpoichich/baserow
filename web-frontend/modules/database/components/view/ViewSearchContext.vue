@@ -90,22 +90,27 @@ export default {
         this.debouncedClientSideSearchRefresh()
       }
     },
-    debouncedServerSearchRefresh: debounce(function () {
-      this.$emit('refresh', {
-        callback: this.finishedLoading,
+    debouncedServerSearchRefresh: debounce(async function () {
+      await this.$store.dispatch('view/grid/updateSearch', {
         activeSearchTerm: this.activeSearchTerm,
         hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
+        // The refresh event we fire below will cause the table to refresh it state from
+        // the server using the newly set search terms.
+        refreshMatchesOnClient: false,
+      })
+      this.$emit('refresh', {
+        callback: this.finishedLoading,
       })
     }, 400),
     // Debounce even the client side only refreshes as otherwise spamming the keyboard
     // can cause many refreshes to queue up quickly bogging down the UI.
-    debouncedClientSideSearchRefresh: debounce(function () {
-      this.$store
-        .dispatch('view/grid/changeSearchAndUpdateMatches', {
-          activeSearchTerm: this.activeSearchTerm,
-          hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
-        })
-        .then(this.finishedLoading)
+    debouncedClientSideSearchRefresh: debounce(async function () {
+      await this.$store.dispatch('view/grid/updateSearch', {
+        activeSearchTerm: this.activeSearchTerm,
+        hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
+        refreshMatchesOnClient: true,
+      })
+      this.finishedLoading()
     }, 10),
     finishedLoading() {
       this.loading = false

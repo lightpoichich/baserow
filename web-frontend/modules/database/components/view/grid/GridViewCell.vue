@@ -3,12 +3,10 @@
     ref="wrapper"
     class="grid-view__column"
     :class="[
-      data.staticClass,
-      data.class,
       {
         'grid-view__column--matches-search':
-          props.row._.fieldSearchMatches &&
-          props.row._.fieldSearchMatches.has(props.field.id.toString()),
+          props.row._.matchSearch &&
+          props.row._.fieldSearchMatches.includes(props.field.id.toString()),
       },
     ]"
     :style="data.style"

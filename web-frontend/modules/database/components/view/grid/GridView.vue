@@ -278,8 +278,11 @@ export default {
      * to update the scrollbars.
      */
     fieldsUpdated() {
-      if (this.$refs.scrollbars) {
-        this.$refs.scrollbars.update()
+      const scrollbars = this.$refs.scrollbars
+      // Vue can sometimes trigger this via watch before the child component
+      // scrollbars has been created, check it exists and has the expected method
+      if (scrollbars && scrollbars.update) {
+        scrollbars.update()
       }
     },
     /**
@@ -309,16 +312,11 @@ export default {
     editValue({ field, row, value, oldValue }) {
       const overrides = {}
       overrides[`field_${field.id}`] = value
-      this.$store.dispatch(this.storePrefix + 'view/grid/updateMatchFilters', {
+      this.$store.dispatch(this.storePrefix + 'view/grid/onRowChange', {
         view: this.view,
         row,
-        overrides,
-      })
-      this.$store.dispatch(this.storePrefix + 'view/grid/updateMatchSortings', {
-        view: this.view,
         fields: this.fields,
         primary: this.primary,
-        row,
         overrides,
       })
     },
@@ -366,6 +364,8 @@ export default {
           gridId: this.view.id,
           scrollTop: this.$refs.left.$refs.body.scrollTop,
           windowHeight: this.$refs.left.$refs.body.clientHeight,
+          fields: this.fields,
+          primary: this.primary,
         }
       )
     },
@@ -387,7 +387,8 @@ export default {
           view: this.view,
           table: this.table,
           // We need a list of all fields including the primary one here.
-          fields: [this.primary].concat(...this.fields),
+          fields: this.fields,
+          primary: this.primary,
           values: {},
           before,
         })
@@ -423,6 +424,8 @@ export default {
           table: this.table,
           grid: this.view,
           row,
+          fields: this.fields,
+          primary: this.primary,
           getScrollTop,
         })
       } catch (error) {
@@ -640,7 +643,7 @@ export default {
         }
       )
       this.$nextTick(() => {
-        this.$refs.scrollbars.update()
+        this.fieldsUpdated()
       })
     },
   },

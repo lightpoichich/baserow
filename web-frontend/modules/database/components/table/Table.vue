@@ -73,11 +73,8 @@
         :primary="primary"
         :read-only="readOnly"
         :store-prefix="storePrefix"
+        @refresh="refresh"
       />
-      <ul v-if="!tableLoading" class="header__info">
-        <li>{{ database.name }}</li>
-        <li>{{ table.name }}</li>
-      </ul>
     </header>
     <div class="layout__col-2-2 content">
       <component
@@ -99,10 +96,12 @@
 </template>
 
 <script>
+import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
+import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -113,6 +112,7 @@ export default {
     ViewsContext,
     ViewFilter,
     ViewSort,
+    ViewSearch,
   },
   /**
    * Because there is no hook that is called before the route changes, we need the
@@ -213,9 +213,23 @@ export default {
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       try {
-        await type.refresh({ store: this.$store }, this.view, this.storePrefix)
+        await type.refresh(
+          { store: this.$store },
+          this.view,
+          this.fields,
+          this.primary,
+          this.storePrefix
+        )
       } catch (error) {
-        notifyIf(error)
+        if (error instanceof RefreshCancelledError) {
+          // Multiple refresh calls have been made and the view has indicated that
+          // this particular one should be cancelled. However we do not want to
+          // set viewLoading back to false as the other non cancelled call/s might
+          // still be loading.
+          return
+        } else {
+          notifyIf(error)
+        }
       }
       if (
         Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&

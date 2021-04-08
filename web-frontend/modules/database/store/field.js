@@ -195,7 +195,7 @@ export const actions = {
     // Call the field updated event on all the registered views because they might
     // need to change things in loaded data. For example the changed rows.
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldUpdated(context, data, oldField, fieldType)
+      await viewType.fieldUpdated(context, data, oldField, fieldType, 'page/')
     }
   },
   /**

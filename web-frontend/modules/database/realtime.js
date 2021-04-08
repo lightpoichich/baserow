@@ -83,23 +83,44 @@ export const registerRealtimeEvents = (realtime) => {
   })
 
   realtime.registerEvent('row_created', (context, data) => {
-    const { app } = context
+    const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
-      viewType.rowCreated(context, data.table_id, data.row, 'page/')
+      viewType.rowCreated(
+        context,
+        data.table_id,
+        data.row,
+        store.getters['field/getAll'],
+        store.getters['field/getPrimary'],
+        'page/'
+      )
     }
   })
 
   realtime.registerEvent('row_updated', (context, data) => {
-    const { app } = context
+    const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
-      viewType.rowUpdated(context, data.table_id, data.row, 'page/')
+      viewType.rowUpdated(
+        context,
+        data.table_id,
+        data.row,
+        store.getters['field/getAll'],
+        store.getters['field/getPrimary'],
+        'page/'
+      )
     }
   })
 
   realtime.registerEvent('row_deleted', (context, data) => {
-    const { app } = context
+    const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
-      viewType.rowDeleted(context, data.table_id, data.row_id, 'page/')
+      viewType.rowDeleted(
+        context,
+        data.table_id,
+        data.row_id,
+        store.getters['field/getAll'],
+        store.getters['field/getPrimary'],
+        'page/'
+      )
     }
   })
 

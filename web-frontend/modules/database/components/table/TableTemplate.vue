@@ -118,7 +118,13 @@ export default {
       // It might be possible that the view also has some stores that need to be
       // filled with initial data, so we're going to call the fetch function here.
       const type = this.$registry.get('view', view.type)
-      await type.fetch({ store: this.$store }, view, 'template/')
+      await type.fetch(
+        { store: this.$store },
+        view,
+        this.fields,
+        this.primary,
+        'template/'
+      )
       this.tableLoading = false
     },
   },

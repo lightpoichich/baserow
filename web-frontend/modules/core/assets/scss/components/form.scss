@@ -1,5 +1,10 @@
 .control {
   margin-bottom: 20px;
+
+  &.control--align-right {
+    display: flex;
+    justify-content: right;
+  }
 }
 
 .control__label {
@@ -106,6 +111,24 @@
     i {
       right: auto;
       left: 12px;
+    }
+  }
+
+  &.input__with-icon--loading {
+    &::after {
+      content: " ";
+
+      @include loading(14px);
+      @include absolute(10px, 10px, auto, auto);
+    }
+
+    i {
+      display: none;
+    }
+
+    &.input__with-icon--left::after {
+      left: 10px;
+      right: auto;
     }
   }
 }

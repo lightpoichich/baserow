@@ -265,7 +265,7 @@ export const mutations = {
     row._.hover = value
   },
   SET_ROW_SEARCH_MATCHES(state, { row, matchSearch, fieldSearchMatches }) {
-    row._.fieldSearchMatches.forEach((value) => {
+    row._.fieldSearchMatches.slice(0).forEach((value) => {
       if (!fieldSearchMatches.has(value)) {
         const index = row._.fieldSearchMatches.indexOf(value)
         row._.fieldSearchMatches.splice(index, 1)

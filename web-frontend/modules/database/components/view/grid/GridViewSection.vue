@@ -4,27 +4,31 @@
       <GridViewHead
         :table="table"
         :view="view"
-        :fields="visibleFields"
+        :fields="fields"
         :include-field-width-handles="includeFieldWidthHandles"
         :include-row-details="includeRowDetails"
         :include-add-field="includeAddField"
         @refresh="$emit('refresh', $event)"
+        @dragging="
+          canOrderFields &&
+            $refs.fieldDragging.start($event.field, $event.event)
+        "
       ></GridViewHead>
       <div ref="body" class="grid-view__body">
         <div class="grid-view__body-inner">
           <GridViewPlaceholder
-            :fields="visibleFields"
+            :fields="fields"
             :include-row-details="includeRowDetails"
           ></GridViewPlaceholder>
           <GridViewRows
             :table="table"
             :view="view"
-            :fields="visibleFields"
+            :fields="fields"
             :include-row-details="includeRowDetails"
             v-on="$listeners"
           ></GridViewRows>
           <GridViewRowAdd
-            :fields="visibleFields"
+            :fields="fields"
             :include-row-details="includeRowDetails"
             v-on="$listeners"
           ></GridViewRowAdd>
@@ -34,6 +38,13 @@
         <slot name="foot"></slot>
       </div>
     </div>
+    <GridViewFieldDragging
+      ref="fieldDragging"
+      :view="view"
+      :fields="fields"
+      :container-width="width"
+      @scroll="$emit('scroll', $event)"
+    ></GridViewFieldDragging>
   </div>
 </template>
 
@@ -42,6 +53,7 @@ import GridViewHead from '@baserow/modules/database/components/view/grid/GridVie
 import GridViewPlaceholder from '@baserow/modules/database/components/view/grid/GridViewPlaceholder'
 import GridViewRows from '@baserow/modules/database/components/view/grid/GridViewRows'
 import GridViewRowAdd from '@baserow/modules/database/components/view/grid/GridViewRowAdd'
+import GridViewFieldDragging from '@baserow/modules/database/components/view/grid/GridViewFieldDragging'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
@@ -51,6 +63,7 @@ export default {
     GridViewPlaceholder,
     GridViewRows,
     GridViewRowAdd,
+    GridViewFieldDragging,
   },
   mixins: [gridViewHelpers],
   props: {
@@ -81,23 +94,19 @@ export default {
       required: false,
       default: () => false,
     },
+    canOrderFields: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
   },
   computed: {
-    visibleFields() {
-      return this.fields.filter((field) => {
-        const exists = Object.prototype.hasOwnProperty.call(
-          this.fieldOptions,
-          field.id
-        )
-        return !exists || (exists && !this.fieldOptions[field.id].hidden)
-      })
-    },
     /**
      * Calculates the total width of the whole section based on the fields and the
      * given options.
      */
     width() {
-      let width = Object.values(this.visibleFields).reduce(
+      let width = Object.values(this.fields).reduce(
         (value, field) => this.getFieldWidth(field.id) + value,
         0
       )

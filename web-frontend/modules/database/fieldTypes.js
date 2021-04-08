@@ -1,7 +1,11 @@
 import moment from 'moment'
 import BigNumber from 'bignumber.js'
 
-import { isValidURL, isValidEmail } from '@baserow/modules/core/utils/string'
+import {
+  isValidURL,
+  isValidEmail,
+  isSimplePhoneNumber,
+} from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
@@ -20,6 +24,7 @@ import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDate'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
+import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
@@ -29,6 +34,7 @@ import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
+import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -40,12 +46,17 @@ import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEdi
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
+import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
   getDateMomentFormat,
   getTimeMomentFormat,
 } from '@baserow/modules/database/utils/date'
+import {
+  filenameContainsFilter,
+  genericContainsFilter,
+} from '@baserow/modules/database/utils/fieldFilters'
 
 export class FieldType extends Registerable {
   /**
@@ -273,6 +284,43 @@ export class FieldType extends Registerable {
   getDocsResponseExample(field) {
     return this.getDocsRequestExample(field)
   }
+
+  /**
+   * Should return a contains filter function unique for this field type.
+   */
+  getContainsFilterFunction() {
+    return (rowValue, humanReadableRowValue, filterValue) => false
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the
+   * filter returned from getContainsFilterFunction.
+   */
+  containsFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      this.getContainsFilterFunction()(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the field
+   * filter returned by getContainsFilterFunction's notted.
+   */
+  notContainsFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      !this.getContainsFilterFunction()(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -330,6 +378,10 @@ export class TextFieldType extends FieldType {
   getDocsRequestExample(field) {
     return 'string'
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -382,6 +434,10 @@ export class LongTextFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return 'string'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -629,6 +685,10 @@ export class NumberFieldType extends FieldType {
     }
     return 0
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -800,6 +860,10 @@ export class DateFieldType extends FieldType {
   getDocsRequestExample(field) {
     return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class URLFieldType extends FieldType {
@@ -854,6 +918,10 @@ export class URLFieldType extends FieldType {
   getDocsRequestExample(field) {
     return 'https://baserow.io'
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -907,6 +975,10 @@ export class EmailFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return 'example@baserow.io'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -1019,6 +1091,10 @@ export class FileFieldType extends FieldType {
       },
     ]
   }
+
+  getContainsFilterFunction() {
+    return filenameContainsFilter
+  }
 }
 
 export class SingleSelectFieldType extends FieldType {
@@ -1127,5 +1203,75 @@ export class SingleSelectFieldType extends FieldType {
       value: 'Option',
       color: 'light-blue',
     }
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+}
+
+export class PhoneNumberFieldType extends FieldType {
+  static getType() {
+    return 'phone_number'
+  }
+
+  getIconClass() {
+    return 'phone'
+  }
+
+  getName() {
+    return 'Phone Number'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldPhoneNumber
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldPhoneNumber
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldPhoneNumber
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    return isSimplePhoneNumber(value) ? value : ''
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  getSortIndicator() {
+    return ['text', '0', '9']
+  }
+
+  getDocsDataType(field) {
+    return 'string'
+  }
+
+  getDocsDescription(field) {
+    return (
+      'Accepts a phone number which has a maximum length of 100 characters' +
+      ' consisting solely of digits, spaces and the following characters: ' +
+      'Nx,._+*()#=;/- .'
+    )
+  }
+
+  getDocsRequestExample(field) {
+    return '+1-541-754-3010'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }

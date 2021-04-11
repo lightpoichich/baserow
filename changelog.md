@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Fixed memory leak in the `link_roww` field.
+
 ## Released (2021-04-08)
 
 * Added support for importing tables from XML files.

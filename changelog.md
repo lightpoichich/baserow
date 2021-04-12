@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Switch to using a celery based email backend by default. 
+
 ## Released (2021-04-08)
 
 * Added support for importing tables from XML files.

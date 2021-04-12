@@ -7,8 +7,9 @@ from baserow.contrib.database.fields.registries import field_type_registry
 FieldKeywordArgPossibilities = Dict[str, Union[List[str], str]]
 
 
-def map_dict_key_into_values(field_type_kwargs: FieldKeywordArgPossibilities) -> \
-        Dict[str, List[Tuple[str, str]]]:
+def map_dict_key_into_values(
+    field_type_kwargs: FieldKeywordArgPossibilities,
+) -> Dict[str, List[Tuple[str, str]]]:
     """
     Given a dictionary in the form of::
 
@@ -37,7 +38,8 @@ def map_dict_key_into_values(field_type_kwargs: FieldKeywordArgPossibilities) ->
 
 
 def construct_all_possible_kwargs_for_field(
-        field_type_kwargs: FieldKeywordArgPossibilities) -> List[Dict[str, Any]]:
+    field_type_kwargs: FieldKeywordArgPossibilities,
+) -> List[Dict[str, Any]]:
     """
     Given a dictionary containing for each field type a dictionary of that
     field types kwargs and all of their associated possible values::
@@ -81,8 +83,10 @@ def construct_all_possible_kwargs_for_field(
 
     """
     dict_of_kwarg_value_pairs = map_dict_key_into_values(field_type_kwargs)
-    all_possible_kwargs = [dict(pairwise_args) for pairwise_args in itertools.product(
-        *dict_of_kwarg_value_pairs.values())]
+    all_possible_kwargs = [
+        dict(pairwise_args)
+        for pairwise_args in itertools.product(*dict_of_kwarg_value_pairs.values())
+    ]
 
     return all_possible_kwargs
 
@@ -95,16 +99,14 @@ def construct_all_possible_field_kwargs(link_table) -> Dict[str, List[Dict[str, 
     kwarg dicts, one for each interesting possible 'subtype' of the field.
     """
     extra_kwargs_for_type = {
-        'date': {
-            'date_include_time': [True, False],
+        "date": {
+            "date_include_time": [True, False],
         },
-        'number': {
-            'number_type': [number_type for number_type, _ in NUMBER_TYPE_CHOICES],
-            'number_negative': [True, False],
+        "number": {
+            "number_type": [number_type for number_type, _ in NUMBER_TYPE_CHOICES],
+            "number_negative": [True, False],
         },
-        'link_row': {
-            'link_row_table': link_table
-        }
+        "link_row": {"link_row_table": link_table},
     }
 
     all_possible_kwargs_per_type = {}

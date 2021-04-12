@@ -1,16 +1,30 @@
 from django.db.models import Q
 
 from baserow.core.registry import (
-    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
-    CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin,
-    APIUrlsRegistryMixin, APIUrlsInstanceMixin
+    Instance,
+    Registry,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    CustomFieldsInstanceMixin,
+    CustomFieldsRegistryMixin,
+    MapAPIExceptionsInstanceMixin,
+    APIUrlsRegistryMixin,
+    APIUrlsInstanceMixin,
+    ImportExportMixin,
 )
 
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
+from .models import SelectOption
 
 
-class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
-                CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
+class FieldType(
+    MapAPIExceptionsInstanceMixin,
+    APIUrlsInstanceMixin,
+    CustomFieldsInstanceMixin,
+    ModelInstanceMixin,
+    ImportExportMixin,
+    Instance,
+):
     """
     This abstract class represents a custom field type that can be added to the
     field type registry. It must be extended so customisation can be done. Each field
@@ -124,7 +138,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :rtype: serializer.Field
         """
 
-        raise NotImplementedError('Each must have his own get_serializer_field method.')
+        raise NotImplementedError("Each must have his own get_serializer_field method.")
 
     def get_response_serializer_field(self, instance, **kwargs):
         """
@@ -156,7 +170,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :rtype: str
         """
 
-        return ''
+        return ""
 
     def get_model_field(self, instance, **kwargs):
         """
@@ -172,7 +186,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :rtype: model.Field
         """
 
-        raise NotImplementedError('Each must have his own get_model_field method.')
+        raise NotImplementedError("Each must have his own get_model_field method.")
 
     def after_model_generation(self, instance, model, field_name, manytomany_models):
         """
@@ -327,8 +341,16 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type user: User
         """
 
-    def before_schema_change(self, from_field, to_field, from_model, to_model,
-                             from_model_field, to_model_field, user):
+    def before_schema_change(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        from_model_field,
+        to_model_field,
+        user,
+    ):
         """
         This hook is called just before the database's schema change. In some cases
         some additional cleanup or creation of related instances has to happen if the
@@ -352,8 +374,17 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type user: User
         """
 
-    def after_update(self, from_field, to_field, from_model, to_model, user, connection,
-                     altered_column, before):
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+    ):
         """
         This hook is called right after a field has been updated. In some cases data
         mutation still has to be done in order to maintain data integrity. For example
@@ -440,16 +471,138 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         return False
 
+    def export_serialized(self, field, include_allowed_fields=True):
+        """
+        Exports the field to a serialized dict that can be imported by the
+        `import_serialized` method. This dict is also JSON serializable.
 
-class FieldTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,
-                        ModelRegistryMixin, Registry):
+        :param field: The field instance that must be exported.
+        :type field: Field
+        :param include_allowed_fields: Indicates whether or not the allowed fields
+            should automatically be added to the serialized object.
+        :type include_allowed_fields: bool
+        :return: The exported field in as serialized dict.
+        :rtype: dict
+        """
+
+        serialized = {
+            "id": field.id,
+            "type": self.type,
+            "name": field.name,
+            "order": field.order,
+            "primary": field.primary,
+        }
+
+        if include_allowed_fields:
+            for field_name in self.allowed_fields:
+                serialized[field_name] = getattr(field, field_name)
+
+        if self.can_have_select_options:
+            serialized["select_options"] = [
+                {
+                    "id": select_option.id,
+                    "value": select_option.value,
+                    "color": select_option.color,
+                    "order": select_option.order,
+                }
+                for select_option in field.select_options.all()
+            ]
+
+        return serialized
+
+    def import_serialized(self, table, serialized_values, id_mapping):
+        """
+        Imported an exported serialized field dict that was exported via the
+        `export_serialized` method.
+
+        :param table: The table where the field should be added to.
+        :type table: Table
+        :param serialized_values: The exported serialized field values that need to
+            be imported.
+        :type serialized_values: dict
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        :return: The newly created field instance.
+        :rtype: Field
+        """
+
+        if "database_fields" not in id_mapping:
+            id_mapping["database_fields"] = {}
+            id_mapping["database_field_select_options"] = {}
+
+        serialized_copy = serialized_values.copy()
+        field_id = serialized_copy.pop("id")
+        serialized_copy.pop("type")
+        select_options = (
+            serialized_copy.pop("select_options")
+            if self.can_have_select_options
+            else []
+        )
+        field = self.model_class.objects.create(table=table, **serialized_copy)
+
+        id_mapping["database_fields"][field_id] = field.id
+
+        if self.can_have_select_options:
+            for select_option in select_options:
+                select_option_copy = select_option.copy()
+                select_option_id = select_option_copy.pop("id")
+                select_option_object = SelectOption.objects.create(
+                    field=field, **select_option_copy
+                )
+                id_mapping["database_field_select_options"][
+                    select_option_id
+                ] = select_option_object.id
+
+        return field
+
+    def get_export_serialized_value(self, row, field_name, cache):
+        """
+        Exports the value to a the value of a row to serialized value that is also JSON
+        serializable.
+
+        :param row: The row instance that the value must be exported from.
+        :type row: Object
+        :param field_name: The name of the field that must be exported.
+        :type field_name: str
+        :param cache: An in memory dictionary that is shared between all fields while
+            exporting the table. This is for example used by the link row field type
+            to prefetch all relations.
+        :type cache: dict
+        :return: The exported value.
+        :rtype: Object
+        """
+
+        return getattr(row, field_name)
+
+    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+        """
+        Sets an imported and serialized value on a row instance.
+
+        :param row: The row instance where the value be set on.
+        :type row: Object
+        :param field_name: The name of the field that must be set.
+        :type field_name: str
+        :param value: The value that must be set.
+        :type value: Object
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        """
+
+        setattr(row, field_name, value)
+
+
+class FieldTypeRegistry(
+    APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
+):
     """
     With the field type registry it is possible to register new field types.  A field
     type is an abstraction made specifically for Baserow. If added to the registry a
     user can create new fields based on this type.
     """
 
-    name = 'field'
+    name = "field"
     does_not_exist_exception_class = FieldTypeDoesNotExist
     already_registered_exception_class = FieldTypeAlreadyRegistered
 
@@ -515,11 +668,21 @@ class FieldConverter(Instance):
         :rtype: bool
         """
 
-        raise NotImplementedError('Each field converter must have an is_applicable '
-                                  'method.')
+        raise NotImplementedError(
+            "Each field converter must have an is_applicable " "method."
+        )
 
-    def alter_field(self, from_field, to_field, from_model, to_model,
-                    from_model_field, to_model_field, user, connection):
+    def alter_field(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        from_model_field,
+        to_model_field,
+        user,
+        connection,
+    ):
         """
         Should perform the schema change and changes related to the field change. It
         must bring the field's schema into the desired state.
@@ -544,8 +707,9 @@ class FieldConverter(Instance):
         :type connection: DatabaseWrapper
         """
 
-        raise NotImplementedError('Each field converter must have an alter_field '
-                                  'method.')
+        raise NotImplementedError(
+            "Each field converter must have an alter_field " "method."
+        )
 
 
 class FieldConverterRegistry(Registry):
@@ -556,7 +720,7 @@ class FieldConverterRegistry(Registry):
     default lenient schema editor does not work.
     """
 
-    name = 'field_converter'
+    name = "field_converter"
 
     def find_applicable_converter(self, *args, **kwargs):
         """

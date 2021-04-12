@@ -5,15 +5,16 @@ class IsNotAdminError(Exception):
     """
 
 
-class UserNotInGroupError(Exception):
+class UserNotInGroup(Exception):
     """Raised when the user doesn't have access to the related group."""
 
     def __init__(self, user=None, group=None, *args, **kwargs):
         if user and group:
-            super().__init__(f'User {user} doesn\'t belong to group {group}.', *args,
-                             **kwargs)
+            super().__init__(
+                f"User {user} doesn't belong to group {group}.", *args, **kwargs
+            )
         else:
-            super().__init__('The user doesn\'t belong to the group', *args, **kwargs)
+            super().__init__("The user doesn't belong to the group", *args, **kwargs)
 
 
 class UserInvalidGroupPermissionsError(Exception):
@@ -24,10 +25,10 @@ class UserInvalidGroupPermissionsError(Exception):
         self.group = group
         self.permissions = permissions
         super().__init__(
-            f'The user {user} doesn\'t have the right permissions {permissions} to '
-            f'{group}.',
+            f"The user {user} doesn't have the right permissions {permissions} to "
+            f"{group}.",
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -90,4 +91,17 @@ class GroupInvitationDoesNotExist(Exception):
 class GroupInvitationEmailMismatch(Exception):
     """
     Raised when the group invitation email is not the expected email address.
+    """
+
+
+class TemplateDoesNotExist(Exception):
+    """
+    Raised when the requested template does not exist in the database.
+    """
+
+
+class TemplateFileDoesNotExist(Exception):
+    """
+    Raised when the JSON template file does not exist in the
+    APPLICATION_TEMPLATE_DIRS directory.
     """

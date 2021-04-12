@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## Released (2021-04-08)
 
+* Added support for importing tables from XML files.
 * Added support for different character encodings when importing CSV files.
 * Prevent websocket reconnect loop when the authentication fails.
 * Refactored the GridView component and improved interface speed.
@@ -22,6 +23,9 @@
 * Fixed bug where an invalid date could be converted to 0001-01-01.
 * The list_database_table_rows search query parameter now searches all possible field types.
 * Add Phone Number field.
+* Add support for Date, Number and Single Select fields to the Contains and Not Contains view 
+  filters.
+* Searching all rows can now be done by clicking the new search icon in the top right.
 
 ## Released (2021-03-01)
 

@@ -48,7 +48,7 @@ Baserow's code to your computer.
 
 ```
 $ cd ~/baserow
-$ git clone git@gitlab.com:bramw/baserow.git
+$ git clone https://gitlab.com/bramw/baserow.git
 Cloning into 'baserow'...
 ...
 $ cd baserow
@@ -74,15 +74,17 @@ Starting web-frontend   ... done
 ## Starting backend development server
 
 Now that you have your development environment up and running, you need to apply all the
-database migrations and start the backend's development server. You need to execute the
-bash command of the backend container first. Because Baserow is not installed as a
-dependency you have to use the manage.py file in the source directory.
+database migrations, synchronize the templates and start the backend's development
+server. You need to execute the bash command of the backend container first. Because
+Baserow is not installed as a dependency you have to use the manage.py file in the
+source directory.
 
 ```
 $ docker exec -it backend bash
 $ python src/baserow/manage.py migrate
 Running migrations:
 ...
+$ python src/baserow/manage.py sync_templates
 $ python src/baserow/manage.py runserver 0.0.0.0:8000
 ```
 
@@ -125,3 +127,15 @@ Both the web-frontend and backend containers need to keep running while you are
 developing. They also monitor file changes and update automatically so you don't need to
 worry about reloading. Go and make some changes yourself. You should see the result
 right away.
+
+
+## Fixing git blame
+
+A large formatting only commit was made to the repo when we converted to use the black
+auto-formatter on April, 12 2021. If you don't want to see this commit in git blame, you
+can run the command below to get your local git to ignore that commit in blame for this
+repo:
+
+```bash
+$ git config blame.ignoreRevsFile .git-blame-ignore-revs
+```

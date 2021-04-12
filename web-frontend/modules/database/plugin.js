@@ -32,6 +32,7 @@ import {
 import {
   CSVImporterType,
   PasteImporterType,
+  XMLImporterType,
 } from '@baserow/modules/database/importerTypes'
 import { APITokenSettingsType } from '@baserow/modules/database/settingsTypes'
 
@@ -46,7 +47,8 @@ export default ({ store, app }) => {
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
   store.registerModule('field', fieldStore)
-  store.registerModule('view/grid', gridStore)
+  store.registerModule('page/view/grid', gridStore)
+  store.registerModule('template/view/grid', gridStore)
 
   app.$registry.register('application', new DatabaseApplicationType())
   app.$registry.register('view', new GridViewType())
@@ -77,6 +79,7 @@ export default ({ store, app }) => {
   app.$registry.register('field', new PhoneNumberFieldType())
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
+  app.$registry.register('importer', new XMLImporterType())
   app.$registry.register('settings', new APITokenSettingsType())
 
   registerRealtimeEvents(app.$realtime)

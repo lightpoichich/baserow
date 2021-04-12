@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { lowerCaseFirst } from '@baserow/modules/core/utils/string'
+import { upperCaseFirst } from '@baserow/modules/core/utils/string'
 
 export class ResponseErrorMessage {
   constructor(title, message) {
@@ -24,7 +24,7 @@ class ErrorHandler {
         "The action couldn't be completed because you aren't a " +
           'member of the related group.'
       ),
-      ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR: new ResponseErrorMessage(
+      ERROR_USER_INVALID_GROUP_PERMISSIONS: new ResponseErrorMessage(
         'Action not allowed.',
         "The action couldn't be completed because you don't have the right " +
           'permissions to the related group.'
@@ -133,7 +133,7 @@ class ErrorHandler {
   getNotFoundMessage(name) {
     if (!Object.prototype.hasOwnProperty.call(this.notFoundMap, name)) {
       return new ResponseErrorMessage(
-        `${lowerCaseFirst(name)} not found.`,
+        `${upperCaseFirst(name)} not found.`,
         `The selected ${name.toLowerCase()} wasn't found, maybe it has already been deleted.`
       )
     }

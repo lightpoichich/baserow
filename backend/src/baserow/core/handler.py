@@ -1,26 +1,55 @@
+import os
+import json
+import hashlib
+from pathlib import Path
 from urllib.parse import urlparse, urljoin
 from itsdangerous import URLSafeSerializer
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import Q, Count
 
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
-    Settings, Group, GroupUser, GroupInvitation, Application,
-    GROUP_USER_PERMISSION_CHOICES, GROUP_USER_PERMISSION_ADMIN
+    Settings,
+    Group,
+    GroupUser,
+    GroupInvitation,
+    Application,
+    Template,
+    TemplateCategory,
+    GROUP_USER_PERMISSION_CHOICES,
+    GROUP_USER_PERMISSION_ADMIN,
 )
 from .exceptions import (
-    GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch, GroupInvitationDoesNotExist, GroupUserDoesNotExist,
-    GroupUserAlreadyExists, IsNotAdminError
+    GroupDoesNotExist,
+    ApplicationDoesNotExist,
+    BaseURLHostnameNotAllowed,
+    GroupInvitationEmailMismatch,
+    GroupInvitationDoesNotExist,
+    GroupUserDoesNotExist,
+    GroupUserAlreadyExists,
+    IsNotAdminError,
+    TemplateFileDoesNotExist,
+    TemplateDoesNotExist,
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
 from .signals import (
-    application_created, application_updated, application_deleted, group_created,
-    group_updated, group_deleted, group_user_updated, group_user_deleted
+    application_created,
+    application_updated,
+    application_deleted,
+    group_created,
+    group_updated,
+    group_deleted,
+    group_user_updated,
+    group_user_deleted,
 )
 from .emails import GroupInvitationEmail
+
+
+User = get_user_model()
 
 
 class CoreHandler:
@@ -84,7 +113,7 @@ class CoreHandler:
         try:
             group = base_queryset.get(id=group_id)
         except Group.DoesNotExist:
-            raise GroupDoesNotExist(f'The group with id {group_id} does not exist.')
+            raise GroupDoesNotExist(f"The group with id {group_id} does not exist.")
 
         return group
 
@@ -98,14 +127,14 @@ class CoreHandler:
         :rtype: GroupUser
         """
 
-        group_values = extract_allowed(kwargs, ['name'])
+        group_values = extract_allowed(kwargs, ["name"])
         group = Group.objects.create(**group_values)
         last_order = GroupUser.get_last_order(user)
         group_user = GroupUser.objects.create(
             group=group,
             user=user,
             order=last_order,
-            permissions=GROUP_USER_PERMISSION_ADMIN
+            permissions=GROUP_USER_PERMISSION_ADMIN,
         )
 
         group_created.send(self, group=group, user=user)
@@ -127,10 +156,10 @@ class CoreHandler:
         """
 
         if not isinstance(group, Group):
-            raise ValueError('The group is not an instance of Group.')
+            raise ValueError("The group is not an instance of Group.")
 
-        group.has_user(user, 'ADMIN', raise_error=True)
-        group = set_allowed_attrs(kwargs, ['name'], group)
+        group.has_user(user, "ADMIN", raise_error=True)
+        group = set_allowed_attrs(kwargs, ["name"], group)
         group.save()
 
         group_updated.send(self, group=group, user=user)
@@ -150,25 +179,31 @@ class CoreHandler:
         """
 
         if not isinstance(group, Group):
-            raise ValueError('The group is not an instance of Group.')
+            raise ValueError("The group is not an instance of Group.")
 
-        group.has_user(user, 'ADMIN', raise_error=True)
+        group.has_user(user, "ADMIN", raise_error=True)
 
         # Load the group users before the group is deleted so that we can pass those
         # along with the signal.
         group_id = group.id
         group_users = list(group.users.all())
 
+        self._delete_group(group)
+
+        group_deleted.send(
+            self, group_id=group_id, group=group, group_users=group_users, user=user
+        )
+
+    def _delete_group(self, group):
+        """Deletes the provided group."""
+
         # Select all the applications so we can delete them via the handler which is
         # needed in order to call the pre_delete method for each application.
-        applications = group.application_set.all().select_related('group')
+        applications = group.application_set.all().select_related("group")
         for application in applications:
-            self.delete_application(user, application)
+            self._delete_application(application)
 
         group.delete()
-
-        group_deleted.send(self, group_id=group_id, group=group,
-                           group_users=group_users, user=user)
 
     def order_groups(self, user, group_ids):
         """
@@ -181,10 +216,9 @@ class CoreHandler:
         """
 
         for index, group_id in enumerate(group_ids):
-            GroupUser.objects.filter(
-                user=user,
-                group_id=group_id
-            ).update(order=index + 1)
+            GroupUser.objects.filter(user=user, group_id=group_id).update(
+                order=index + 1
+            )
 
     def get_group_user(self, group_user_id, base_queryset=None):
         """
@@ -204,10 +238,11 @@ class CoreHandler:
             base_queryset = GroupUser.objects
 
         try:
-            group_user = base_queryset.select_related('group').get(id=group_user_id)
+            group_user = base_queryset.select_related("group").get(id=group_user_id)
         except GroupUser.DoesNotExist:
-            raise GroupUserDoesNotExist(f'The group user with id {group_user_id} does '
-                                        f'not exist.')
+            raise GroupUserDoesNotExist(
+                f"The group user with id {group_user_id} does " f"not exist."
+            )
 
         return group_user
 
@@ -224,10 +259,10 @@ class CoreHandler:
         """
 
         if not isinstance(group_user, GroupUser):
-            raise ValueError('The group user is not an instance of GroupUser.')
+            raise ValueError("The group user is not an instance of GroupUser.")
 
-        group_user.group.has_user(user, 'ADMIN', raise_error=True)
-        group_user = set_allowed_attrs(kwargs, ['permissions'], group_user)
+        group_user.group.has_user(user, "ADMIN", raise_error=True)
+        group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
         group_user.save()
 
         group_user_updated.send(self, group_user=group_user, user=user)
@@ -245,14 +280,15 @@ class CoreHandler:
         """
 
         if not isinstance(group_user, GroupUser):
-            raise ValueError('The group user is not an instance of GroupUser.')
+            raise ValueError("The group user is not an instance of GroupUser.")
 
-        group_user.group.has_user(user, 'ADMIN', raise_error=True)
+        group_user.group.has_user(user, "ADMIN", raise_error=True)
         group_user_id = group_user.id
         group_user.delete()
 
-        group_user_deleted.send(self, group_user_id=group_user_id,
-                                group_user=group_user, user=user)
+        group_user_deleted.send(
+            self, group_user_id=group_user_id, group_user=group_user, user=user
+        )
 
     def get_group_invitation_signer(self):
         """
@@ -264,7 +300,7 @@ class CoreHandler:
         :rtype: URLSafeSerializer
         """
 
-        return URLSafeSerializer(settings.SECRET_KEY, 'group-invite')
+        return URLSafeSerializer(settings.SECRET_KEY, "group-invite")
 
     def send_group_invitation_email(self, invitation, base_url):
         """
@@ -284,21 +320,19 @@ class CoreHandler:
         parsed_base_url = urlparse(base_url)
         if parsed_base_url.hostname != settings.PUBLIC_WEB_FRONTEND_HOSTNAME:
             raise BaseURLHostnameNotAllowed(
-                f'The hostname {parsed_base_url.netloc} is not allowed.'
+                f"The hostname {parsed_base_url.netloc} is not allowed."
             )
 
         signer = self.get_group_invitation_signer()
         signed_invitation_id = signer.dumps(invitation.id)
 
-        if not base_url.endswith('/'):
-            base_url += '/'
+        if not base_url.endswith("/"):
+            base_url += "/"
 
         public_accept_url = urljoin(base_url, signed_invitation_id)
 
         email = GroupInvitationEmail(
-            invitation,
-            public_accept_url,
-            to=[invitation.email]
+            invitation, public_accept_url, to=[invitation.email]
         )
         email.send()
 
@@ -328,12 +362,12 @@ class CoreHandler:
             base_queryset = GroupInvitation.objects
 
         try:
-            group_invitation = base_queryset.select_related(
-                'group', 'invited_by'
-            ).get(id=group_invitation_id)
+            group_invitation = base_queryset.select_related("group", "invited_by").get(
+                id=group_invitation_id
+            )
         except GroupInvitation.DoesNotExist:
             raise GroupInvitationDoesNotExist(
-                f'The group invitation with id {group_invitation_id} does not exist.'
+                f"The group invitation with id {group_invitation_id} does not exist."
             )
 
         return group_invitation
@@ -357,18 +391,19 @@ class CoreHandler:
             base_queryset = GroupInvitation.objects
 
         try:
-            group_invitation = base_queryset.select_related('group', 'invited_by').get(
+            group_invitation = base_queryset.select_related("group", "invited_by").get(
                 id=group_invitation_id
             )
         except GroupInvitation.DoesNotExist:
             raise GroupInvitationDoesNotExist(
-                f'The group invitation with id {group_invitation_id} does not exist.'
+                f"The group invitation with id {group_invitation_id} does not exist."
             )
 
         return group_invitation
 
-    def create_group_invitation(self, user, group, email, permissions, message,
-                                base_url):
+    def create_group_invitation(
+        self, user, group, email, permissions, message, base_url
+    ):
         """
         Creates a new group invitation for the given email address and sends out an
         email containing the invitation.
@@ -396,25 +431,26 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        group.has_user(user, 'ADMIN', raise_error=True)
+        group.has_user(user, "ADMIN", raise_error=True)
 
         if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
-            raise ValueError('Incorrect permissions provided.')
+            raise ValueError("Incorrect permissions provided.")
 
         email = normalize_email_address(email)
 
         if GroupUser.objects.filter(group=group, user__email=email).exists():
-            raise GroupUserAlreadyExists(f'The user {email} is already part of the '
-                                         f'group.')
+            raise GroupUserAlreadyExists(
+                f"The user {email} is already part of the " f"group."
+            )
 
         invitation, created = GroupInvitation.objects.update_or_create(
             group=group,
             email=email,
             defaults={
-                'message': message,
-                'permissions': permissions,
-                'invited_by': user
-            }
+                "message": message,
+                "permissions": permissions,
+                "invited_by": user,
+            },
         )
 
         self.send_group_invitation_email(invitation, base_url)
@@ -440,10 +476,10 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        invitation.group.has_user(user, 'ADMIN', raise_error=True)
+        invitation.group.has_user(user, "ADMIN", raise_error=True)
 
         if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
-            raise ValueError('Incorrect permissions provided.')
+            raise ValueError("Incorrect permissions provided.")
 
         invitation.permissions = permissions
         invitation.save()
@@ -463,7 +499,7 @@ class CoreHandler:
             group or doesn't have right permissions in the group.
         """
 
-        invitation.group.has_user(user, 'ADMIN', raise_error=True)
+        invitation.group.has_user(user, "ADMIN", raise_error=True)
         invitation.delete()
 
     def reject_group_invitation(self, user, invitation):
@@ -482,8 +518,8 @@ class CoreHandler:
 
         if user.username != invitation.email:
             raise GroupInvitationEmailMismatch(
-                'The email address of the invitation does not match the one of the '
-                'user.'
+                "The email address of the invitation does not match the one of the "
+                "user."
             )
 
         invitation.delete()
@@ -508,17 +544,17 @@ class CoreHandler:
 
         if user.username != invitation.email:
             raise GroupInvitationEmailMismatch(
-                'The email address of the invitation does not match the one of the '
-                'user.'
+                "The email address of the invitation does not match the one of the "
+                "user."
             )
 
         group_user, created = GroupUser.objects.update_or_create(
             user=user,
             group=invitation.group,
             defaults={
-                'order': GroupUser.get_last_order(user),
-                'permissions': invitation.permissions
-            }
+                "order": GroupUser.get_last_order(user),
+                "permissions": invitation.permissions,
+            },
         )
         invitation.delete()
 
@@ -545,12 +581,12 @@ class CoreHandler:
             base_queryset = Application.objects
 
         try:
-            application = base_queryset.select_related(
-                'group', 'content_type'
-            ).get(id=application_id)
+            application = base_queryset.select_related("group", "content_type").get(
+                id=application_id
+            )
         except Application.DoesNotExist:
             raise ApplicationDoesNotExist(
-                f'The application with id {application_id} does not exist.'
+                f"The application with id {application_id} does not exist."
             )
 
         return application
@@ -572,19 +608,21 @@ class CoreHandler:
         :rtype: Application
         """
 
-        group.has_user(user,  raise_error=True)
+        group.has_user(user, raise_error=True)
 
         # Figure out which model is used for the given application type.
         application_type = application_type_registry.get(type_name)
         model = application_type.model_class
-        application_values = extract_allowed(kwargs, ['name'])
+        application_values = extract_allowed(kwargs, ["name"])
         last_order = model.get_last_order(group)
 
-        instance = model.objects.create(group=group, order=last_order,
-                                        **application_values)
+        instance = model.objects.create(
+            group=group, order=last_order, **application_values
+        )
 
-        application_created.send(self, application=instance, user=user,
-                                 type_name=type_name)
+        application_created.send(
+            self, application=instance, user=user, type_name=type_name
+        )
 
         return instance
 
@@ -604,11 +642,11 @@ class CoreHandler:
         """
 
         if not isinstance(application, Application):
-            raise ValueError('The application is not an instance of Application.')
+            raise ValueError("The application is not an instance of Application.")
 
         application.group.has_user(user, raise_error=True)
 
-        application = set_allowed_attrs(kwargs, ['name'], application)
+        application = set_allowed_attrs(kwargs, ["name"], application)
         application.save()
 
         application_updated.send(self, application=application, user=user)
@@ -617,7 +655,8 @@ class CoreHandler:
 
     def delete_application(self, user, application):
         """
-        Deletes an existing application instance.
+        Deletes an existing application instance if the user has access to the
+        related group. The `application_deleted` signal is also called.
 
         :param user: The user on whose behalf the application is deleted.
         :type user: User
@@ -627,16 +666,260 @@ class CoreHandler:
         """
 
         if not isinstance(application, Application):
-            raise ValueError('The application is not an instance of Application')
+            raise ValueError("The application is not an instance of Application")
 
         application.group.has_user(user, raise_error=True)
 
         application_id = application.id
+        application = self._delete_application(application)
+
+        application_deleted.send(
+            self, application_id=application_id, application=application, user=user
+        )
+
+    def _delete_application(self, application):
+        """Deletes an application and the related relations in the correct way."""
+
         application = application.specific
         application_type = application_type_registry.get_by_model(application)
-        application_type.pre_delete(user, application)
-
+        application_type.pre_delete(application)
         application.delete()
+        return application
 
-        application_deleted.send(self, application_id=application_id,
-                                 application=application, user=user)
+    def export_group_applications(self, group):
+        """
+        Exports the applications of a group to a list. They can later be imported via
+        the `import_application_to_group` method. The result can be serialized to JSON.
+
+        @TODO look into speed optimizations by streaming to a JSON file instead of
+            generating the entire file in memory.
+
+        :param group: The group of which the applications must be exported.
+        :type group: Group
+        :return: A list containing the exported applications.
+        :rtype: list
+        """
+
+        exported_applications = []
+        applications = group.application_set.all()
+        for a in applications:
+            application = a.specific
+            application_type = application_type_registry.get_by_model(application)
+            exported_application = application_type.export_serialized(application)
+            exported_applications.append(exported_application)
+
+        return exported_applications
+
+    def import_application_to_group(self, group, exported_applications):
+        """
+        Imports multiple exported applications into the given group. It is compatible
+        with an export of the `export_group_applications` method.
+
+        @TODO look into speed optimizations by streaming from a JSON file instead of
+            loading the entire file into memory.
+
+        :param group: The group that the applications must be imported to.
+        :type group: Group
+        :param exported_applications: A list containing the applications generated by
+            the `export_group_applications` method.
+        :type exported_applications: list
+        :return: The newly created applications based on the import and a dict
+            containing a mapping of old ids to new ids.
+        :rtype: list, dict
+        """
+
+        id_mapping = {}
+        imported_applications = []
+        for application in exported_applications:
+            application_type = application_type_registry.get(application["type"])
+            imported_application = application_type.import_serialized(
+                group, application, id_mapping
+            )
+            imported_applications.append(imported_application)
+
+        return imported_applications, id_mapping
+
+    def get_template(self, template_id, base_queryset=None):
+        """
+        Selects a template with the given id from the database.
+
+        :param template_id: The identifier of the template that must be returned.
+        :type template_id: int
+        :param base_queryset: The base queryset from where to select the group
+            object. This can for example be used to do a `prefetch_related`.
+        :type base_queryset: Queryset
+        :raises TemplateDoesNotExist: When the group with the provided id does not
+            exist.
+        :return: The requested template instance related to the provided id.
+        :rtype: Template
+        """
+
+        if not base_queryset:
+            base_queryset = Template.objects
+
+        try:
+            template = base_queryset.get(id=template_id)
+        except Template.DoesNotExist:
+            raise TemplateDoesNotExist(
+                f"The template with id {template_id} does not " f"exist."
+            )
+
+        return template
+
+    def sync_templates(self):
+        """
+        Synchronizes the JSON template files with the templates stored in the database.
+        We need to have a copy in the database so that the user can live preview a
+        template before installing. It will also make sure that the right categories
+        exist and that old ones are deleted.
+
+        If the template doesn't exist, a group can be created and we can import the
+        export in that group. If the template already exists we check if the
+        `export_hash` has changed, if so it means the export has changed. Because we
+        don't have updating capability, we delete the old group and create a new one
+        where we can import the export into.
+        """
+
+        installed_templates = (
+            Template.objects.all()
+            .prefetch_related("categories")
+            .select_related("group")
+        )
+        installed_categories = list(TemplateCategory.objects.all())
+
+        # Loop over the JSON template files in the directory to see which database
+        # templates need to be created or updated.
+        templates = list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
+        for template_file_path in templates:
+            content = Path(template_file_path).read_text()
+            parsed_json = json.loads(content)
+
+            if "baserow_template_version" not in parsed_json:
+                continue
+
+            slug = ".".join(template_file_path.name.split(".")[:-1])
+            installed_template = next(
+                (t for t in installed_templates if t.slug == slug), None
+            )
+            hash_json = json.dumps(parsed_json["export"])
+            export_hash = hashlib.sha256(hash_json.encode("utf-8")).hexdigest()
+            keywords = (
+                ",".join(parsed_json["keywords"]) if "keywords" in parsed_json else ""
+            )
+
+            # If the installed template and group exist, and if there is a hash
+            # mismatch, we need to delete the old group and all the related
+            # applications in it. This is because a new group will be created.
+            if (
+                installed_template
+                and installed_template.group
+                and installed_template.export_hash != export_hash
+            ):
+                self._delete_group(installed_template.group)
+
+            # If the installed template does not yet exist or if there is a export
+            # hash mismatch, which means the group has already been deleted, we can
+            # create a new group and import the exported applications into that group.
+            if not installed_template or installed_template.export_hash != export_hash:
+                group = Group.objects.create(name=parsed_json["name"])
+                self.import_application_to_group(group, parsed_json["export"])
+            else:
+                group = installed_template.group
+                group.name = parsed_json["name"]
+                group.save()
+
+            kwargs = {
+                "name": parsed_json["name"],
+                "icon": parsed_json["icon"],
+                "export_hash": export_hash,
+                "keywords": keywords,
+                "group": group,
+            }
+
+            if not installed_template:
+                installed_template = Template.objects.create(slug=slug, **kwargs)
+            else:
+                # If the installed template already exists, we only need to update the
+                # values to the latest version according to the JSON template.
+                for key, value in kwargs.items():
+                    setattr(installed_template, key, value)
+                installed_template.save()
+
+            # Loop over the categories related to the template and check which ones
+            # already exist and which need to be created. Based on that we can create
+            # a list of category ids that we can set for the template.
+            template_category_ids = []
+            for category_name in parsed_json["categories"]:
+                installed_category = next(
+                    (c for c in installed_categories if c.name == category_name), None
+                )
+                if not installed_category:
+                    installed_category = TemplateCategory.objects.create(
+                        name=category_name
+                    )
+                    installed_categories.append(installed_category)
+                template_category_ids.append(installed_category.id)
+
+            installed_template.categories.set(template_category_ids)
+
+        # Delete all the installed templates that were installed, but don't exist in
+        # the template directory anymore.
+        slugs = [
+            ".".join(template_file_path.name.split(".")[:-1])
+            for template_file_path in templates
+        ]
+        for template in Template.objects.filter(~Q(slug__in=slugs)):
+            self._delete_group(template.group)
+            template.delete()
+
+        # Delete all the categories that don't have any templates anymore.
+        TemplateCategory.objects.annotate(num_templates=Count("templates")).filter(
+            num_templates=0
+        ).delete()
+
+    def install_template(self, user, group, template):
+        """
+        Installs the exported applications of a template into the given group if the
+        provided user has access to that group.
+
+        :param user: The user on whose behalf the template installed.
+        :type user: User
+        :param group: The group where the template applications must be imported into.
+        :type group: Group
+        :param template: The template that must be installed.
+        :type template: Template
+        :return: The imported applications.
+        :rtype: list
+        """
+
+        group.has_user(user, raise_error=True)
+
+        file_name = f"{template.slug}.json"
+        template_path = Path(
+            os.path.join(settings.APPLICATION_TEMPLATES_DIR, file_name)
+        )
+
+        if not template_path.exists():
+            raise TemplateFileDoesNotExist(
+                f"The template with file name {file_name} does not exist. You might "
+                f"need to run the `sync_templates` management command."
+            )
+
+        content = template_path.read_text()
+        parsed_json = json.loads(content)
+        applications, id_mapping = self.import_application_to_group(
+            group, parsed_json["export"]
+        )
+
+        # Because a user has initiated the creation of applications, we need to
+        # call the `application_created` signal for each created application.
+        for application in applications:
+            application_type = application_type_registry.get_by_model(application)
+            application_created.send(
+                self,
+                application=application,
+                user=user,
+                type_name=application_type.type,
+            )
+
+        return applications, id_mapping

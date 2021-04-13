@@ -72,9 +72,7 @@ class BaseEmailMessage(EmailMultiAlternatives):
 
     def send(self, fail_silently=False):
         s = super()
-        transaction.on_commit(
-            lambda: s.send(fail_silently)
-        )
+        transaction.on_commit(lambda: s.send(fail_silently))
 
 
 class GroupInvitationEmail(BaseEmailMessage):

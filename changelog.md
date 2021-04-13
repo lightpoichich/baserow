@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-* Fixed memory leak in the `link_roww` field.
+* Fixed memory leak in the `link_row` field.
+* Switch to using a celery based email backend by default.
+* Added `--add-columns` flag to the `fill_table` management command. It creates all the
+  field types before filling the table with random data.
 
 ## Released (2021-04-08)
 

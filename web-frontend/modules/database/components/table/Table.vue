@@ -103,6 +103,8 @@
 </template>
 
 <script>
+import ResizeObserver from 'resize-observer-polyfill'
+
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'

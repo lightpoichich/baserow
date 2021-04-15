@@ -13,12 +13,18 @@ web-frontend-eslint:
     - cd web-frontend
     - make install-dependencies
     - make eslint
+    - cd ../premium/web-frontend
+    - make install-dependencies
+    - make eslint
 
 web-frontend-stylelint:
   stage: lint
   image: node:10
   script:
     - cd web-frontend
+    - make install-dependencies
+    - make stylelint
+    - cd ../premium/web-frontend
     - make install-dependencies
     - make stylelint
 
@@ -29,6 +35,9 @@ web-frontend-test:
     - cd web-frontend
     - make install-dependencies
     - make test
+    - cd ../premium/web-frontend
+    - make install-dependencies
+    - make test
 
 backend-flake8:
   stage: lint
@@ -37,6 +46,8 @@ backend-flake8:
     - cd backend
     - make install-dependencies
     - make install-dev-dependencies
+    - make lint
+    - cd ../premium/backend
     - make lint
 
 backend-pytest:
@@ -55,7 +66,9 @@ backend-pytest:
     - cd backend
     - make install-dependencies
     - make install-dev-dependencies
-    - export PYTHONPATH=$CI_PROJECT_DIR/backend/src
+    - export PYTHONPATH=$CI_PROJECT_DIR/backend/src:$CI_PROJECT_DIR/premium/backend/src
+    - make test
+    - cd ../premium/backend
     - make test
 
 backend-setup:

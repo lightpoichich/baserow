@@ -10,7 +10,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType,
-    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
+    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError, MaxFieldLimitExceeded
 )
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
@@ -96,6 +96,9 @@ class FieldHandler:
         allowed_fields = ['name'] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
+
+        if (last_order + 1) >= settings.MAX_FIELD_LIMIT:
+            raise MaxFieldLimitExceeded(f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}")
 
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_create(table, primary, field_values, last_order,

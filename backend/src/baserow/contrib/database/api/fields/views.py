@@ -19,10 +19,10 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.api.fields.errors import (
     ERROR_CANNOT_DELETE_PRIMARY_FIELD, ERROR_CANNOT_CHANGE_FIELD_TYPE,
-    ERROR_FIELD_DOES_NOT_EXIST
+    ERROR_FIELD_DOES_NOT_EXIST, ERROR_MAX_FIELD_COUNT_EXCEEDED
 )
 from baserow.contrib.database.fields.exceptions import (
-    CannotDeletePrimaryField, CannotChangeFieldType, FieldDoesNotExist
+    CannotDeletePrimaryField, CannotChangeFieldType, FieldDoesNotExist, MaxFieldLimitExceeded
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -122,7 +122,7 @@ class FieldsView(APIView):
                 FieldSerializer
             ),
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',  'ERROR_MAX_FIELD_COUNT_EXCEEDED'
             ]),
             404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
@@ -132,7 +132,8 @@ class FieldsView(APIView):
         field_type_registry, base_serializer_class=CreateFieldSerializer)
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
     })
     def post(self, request, data, table_id):
         """Creates a new field for a table."""

@@ -6,6 +6,7 @@ from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
 from baserow.contrib.database.fields.field_types import (
     LongTextFieldType, BooleanFieldType
 )
@@ -71,6 +72,8 @@ class TableHandler:
 
         if data is not None:
             fields, data = self.normalize_initial_table_data(data, first_row_header)
+            if len(fields) >= settings.MAX_FIELD_LIMIT:
+                raise MaxFieldLimitExceeded(f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}")
 
         table_values = extract_allowed(kwargs, ['name'])
         last_order = Table.get_last_order(database)

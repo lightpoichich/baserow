@@ -69,9 +69,9 @@ export const actions = {
    * If not already loading or loaded it will trigger the fetchAll action which
    * will load all the groups for the user.
    */
-  loadAll({ state, dispatch }) {
+  async loadAll({ state, dispatch }) {
     if (!state.loaded && !state.loading) {
-      dispatch('fetchAll')
+      await dispatch('fetchAll')
     }
   },
   /**
@@ -97,13 +97,13 @@ export const actions = {
 
     try {
       const { data } = await GroupService(this.$client).fetchAll()
-      commit('SET_LOADED', true)
-      commit('SET_ITEMS', data)
+      await commit('SET_LOADED', true)
+      await commit('SET_ITEMS', data)
     } catch {
-      commit('SET_ITEMS', [])
+      await commit('SET_ITEMS', [])
     }
 
-    commit('SET_LOADING', false)
+    await commit('SET_LOADING', false)
   },
   /**
    * Creates a new group with the given values.
@@ -111,6 +111,7 @@ export const actions = {
   async create({ commit, dispatch }, values) {
     const { data } = await GroupService(this.$client).create(values)
     dispatch('forceCreate', data)
+    return data
   },
   /**
    * Forcefully create an item in the store without making a call to the server.

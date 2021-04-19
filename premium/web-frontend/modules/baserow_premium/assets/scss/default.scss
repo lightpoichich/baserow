@@ -88,20 +88,21 @@
 .user-admin-rows__field {
   @extend %ellipsis;
 
-  flex: 0 0 200px;
   background-color: $color-neutral-100;
   border-bottom: 1px solid $color-neutral-200;
+  border-collapse: collapse;
+  border-right: 1px solid $color-neutral-200;
   padding: 0 10px;
+  flex-grow: 1;
 
   @include fixed-height(33px, 13px);
 
-  .user-admin-rows__right & {
-    border-right: 1px solid $color-neutral-200;
-  }
+  //.user-admin-rows__right & {
+  //  border-right: 1px solid $color-neutral-200;
+  //}
 
   &.user-admin-rows__field--first {
-    flex-basis: 40px;
-    border-right: none;
+    flex-grow: 0;
   }
 }
 
@@ -154,16 +155,6 @@
   .grid-view__cell {
     background-color: $color-neutral-50;
   }
-}
-
-.user-admin-rows__foot {
-  display: flex;
-  align-items: center;
-  margin-top: auto;
-  padding: 0 10px;
-  height: 44px;
-  background-color: $color-neutral-50;
-  border-top: solid 1px $color-neutral-200;
 }
 
 .user-admin-rows__pagination {

@@ -3,7 +3,7 @@
     <div class="user-admin-rows__left">
       <div class="user-admin-rows__head">
         <div class="user-admin-rows__field user-admin-rows__field--first">
-          <div class="user-admin-rows__field">Id</div>
+          <div>ID</div>
         </div>
         <div class="user-admin-rows__field">
           <i class="fas user-admin-rows__field-icon"></i>

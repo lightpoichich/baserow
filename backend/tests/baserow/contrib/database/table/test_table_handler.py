@@ -136,8 +136,9 @@ def test_fill_table_with_initial_data(data_fixture):
     settings.MAX_FIELD_LIMIT = 2
 
     with pytest.raises(MaxFieldLimitExceeded):
-        table_handler.create_table(user, database, name='Table 1',
-                                   data=[['fields'] * 3, ['rows'] * 3])
+        table_handler.create_table(
+            user, database, name="Table 1", data=[["fields"] * 3, ["rows"] * 3]
+        )
 
     settings.MAX_FIELD_LIMIT = field_limit
 

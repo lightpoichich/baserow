@@ -43,7 +43,8 @@ class RegisterSerializer(serializers.Serializer):
         default=None,
         queryset=Template.objects.all(),
         help_text="The id of the template that must be installed after creating the "
-        "account. This only works if no `group_invitation_token` is provided.",
+        "account. This only works if the `group_invitation_token` param is not "
+        "provided.",
     )
 
 

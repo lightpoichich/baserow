@@ -84,9 +84,9 @@ class Plugin(APIUrlsInstanceMixin, Instance):
         :param group_invitation: Is provided if the user has signed up using a valid
             group invitation token.
         :type group_invitation: GroupInvitation
-        :param template: The template that was installed right after creating the
-            account.
-        :type template: Template
+        :param template: The template that is installed right after creating the
+            account. Is `None` if the template was not created.
+        :type template: Template or None
         """
 
     def user_signed_in(self, user):

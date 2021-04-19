@@ -179,8 +179,9 @@ export default {
           values.groupInvitationToken = this.$route.query.groupInvitationToken
         }
 
-        // If a template is provided then that one must be installed right after
-        // creating the account.
+        // If a template is provided, we can add that id to the parameters so that the
+        // template will be installed right while creating the account. This is going
+        // to done instead of the default example template.
         if (this.template !== null) {
           values.templateId = this.template.id
         }

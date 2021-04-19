@@ -17,8 +17,8 @@
         </a>
       </header>
       <div class="user-admin-rows">
-        <div class="user-admin-rows__field">
-          <div>ID</div>
+        <div class="user-admin-rows__field user-admin-rows__field-sticky">
+          ID
         </div>
         <div class="user-admin-rows__field user-admin-rows__field-right">
           <i class="fas user-admin-rows__field-icon"></i>
@@ -34,6 +34,7 @@
           :key="'admin-row-' + cell.row_id + '-' + cell.cell_id"
           :class="{
             'user-admin-rows__cell-right': cell.cell_id === 2,
+            'user-admin-rows__cell-sticky': cell.cell_id <= 2,
           }"
           class="user-admin-rows__cell"
         >

@@ -95,11 +95,21 @@
   border-collapse: collapse;
   border-right: 1px solid $color-neutral-200;
   padding: 0 10px;
+  position: sticky;
+  top: 0;
+  z-index: 0;
 
   @include fixed-height(33px, 13px);
 
   &.user-admin-rows__field-right {
     border-right: 2px solid $color-neutral-200;
+    left: 0;
+    z-index: 1;
+  }
+
+  &.user-admin-rows__field-sticky {
+    left: 0;
+    z-index: 1;
   }
 }
 
@@ -129,6 +139,11 @@
 
   &.user-admin-rows__cell-right {
     border-right: 2px solid $color-neutral-200;
+  }
+
+  &.user-admin-rows__cell-sticky {
+    position: sticky;
+    left: 0;
   }
   //
   //&.user-admin-rows__cell--first {

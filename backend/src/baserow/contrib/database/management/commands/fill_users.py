@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "limit", type=int, help="Amount of users that need to be " "inserted."
+            "limit", type=int, help="Amount of users that need to be inserted."
         )
 
     def handle(self, *args, **options):

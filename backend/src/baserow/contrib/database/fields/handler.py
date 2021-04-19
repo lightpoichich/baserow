@@ -105,7 +105,8 @@ class FieldHandler:
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
-        if (last_order + 1) >= settings.MAX_FIELD_LIMIT:
+        num_fields = table.field_set.count()
+        if (num_fields + 1) > settings.MAX_FIELD_LIMIT:
             raise MaxFieldLimitExceeded(
                 f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
             )

@@ -74,6 +74,7 @@ class TableHandler:
         :type first_row_header: bool
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
+        :raises MaxFieldLimitExceeded: When the data contains more column than the field limit.
         :return: The created table instance.
         :rtype: Table
         """

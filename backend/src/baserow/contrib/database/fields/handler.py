@@ -81,6 +81,8 @@ class FieldHandler:
         :type kwargs: object
         :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
             but one already exists.
+        :raises MaxFieldLimitExceeded: When we try to create a field,
+            but exceeds the field limit.
         :return: The created field instance.
         :rtype: Field
         """

@@ -1,17 +1,5 @@
 <template>
-  <div class="admin_content">
-    <header class="admin_header">
-      <b>User Settings</b>
-      <a
-        ref="contextLink"
-        class="admin-header__link"
-        @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 4)"
-      >
-        <i class="fas fa-search"></i>
-      </a>
-    </header>
-    <UsersAdminContent></UsersAdminContent>
-  </div>
+  <UsersAdminContent></UsersAdminContent>
 </template>
 
 <script>

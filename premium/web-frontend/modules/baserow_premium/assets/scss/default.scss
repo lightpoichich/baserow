@@ -45,14 +45,23 @@
   }
 }
 
-.user-admin-rows {
+.user-admin-wrapper {
   display: flex;
   height: 100%;
+  flex-direction: column;
+}
+
+.user-admin-rows {
+  display: grid;
+  height: 100%;
+  flex-wrap: wrap;
+  align-content: start;
+  padding: 0;
+  grid-template-columns: minmax(min-content, max-content) repeat(2, minmax(min-content, auto)) minmax(150px, auto) repeat(3, minmax(min-content, auto));
   background-color: $color-neutral-100;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
-  overflow: hidden;
-  align-items: stretch;
+  overflow-x: auto;
 }
 
 .user-admin-rows__left {
@@ -72,17 +81,10 @@
 
 .user-admin-rows__foot {
   display: flex;
-  align-items: center;
-  margin-top: auto;
   padding: 0 10px;
   height: 44px;
   background-color: $color-neutral-50;
   border-top: solid 1px $color-neutral-200;
-}
-
-.user-admin-rows__head {
-  display: flex;
-  flex-wrap: nowrap;
 }
 
 .user-admin-rows__field {
@@ -93,16 +95,11 @@
   border-collapse: collapse;
   border-right: 1px solid $color-neutral-200;
   padding: 0 10px;
-  flex-grow: 1;
 
   @include fixed-height(33px, 13px);
 
-  //.user-admin-rows__right & {
-  //  border-right: 1px solid $color-neutral-200;
-  //}
-
-  &.user-admin-rows__field--first {
-    flex-grow: 0;
+  &.user-admin-rows__field-right {
+    border-right: 2px solid $color-neutral-200;
   }
 }
 
@@ -120,23 +117,27 @@
 }
 
 .user-admin-rows__cell {
-  position: relative;
-  flex: 0 0 200px;
+  @extend %ellipsis;
+
   background-color: $white;
   height: 33px;
   border-bottom: 1px solid $color-neutral-200;
+  box-sizing: border-box;
+  padding: 0 10px;
 
-  .user-admin-rows__right & {
-    border-right: 1px solid $color-neutral-200;
+  @include fixed-height(33px, 12px);
+
+  &.user-admin-rows__cell-right {
+    border-right: 2px solid $color-neutral-200;
   }
-
-  &.user-admin-rows__cell--first {
-    @extend %ellipsis;
-
-    flex-basis: 40px;
-    line-height: 32px;
-    padding-left: 8px;
-  }
+  //
+  //&.user-admin-rows__cell--first {
+  //  @extend %ellipsis;
+  //
+  //  flex-basis: 40px;
+  //  line-height: 32px;
+  //  padding-left: 8px;
+  //}
 }
 
 .user-admin-rows__row--hover {
@@ -215,4 +216,40 @@
   padding: 0 10px;
   color: $color-neutral-500;
   border-right: solid 1px $color-neutral-400;
+}
+
+.user-admin-rows__initial-loading {
+  position: relative;
+  height: 44px + 33px + (33px * 10) + 44px;
+
+  &::after {
+    content: '';
+    z-index: 5;
+    margin: -7px auto auto -7px;
+
+    @include loading(14px);
+    @include absolute(50%, auto, auto, 50%);
+  }
+}
+
+.user-admin-rows__loading {
+  position: relative;
+
+  &::before {
+    content: '';
+    z-index: 4;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+
+    @include absolute(0, 0, 0, 0);
+  }
+
+  &::after {
+    content: '';
+    z-index: 5;
+    margin: -7px auto auto -7px;
+
+    @include loading(14px);
+    @include absolute(50%, auto, auto, 50%);
+  }
 }

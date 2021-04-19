@@ -6,6 +6,7 @@
 * Switch to using a celery based email backend by default.
 * Added `--add-columns` flag to the `fill_table` management command. It creates all the
   field types before filling the table with random data.
+* Added `fill_users` admin management command which fills baserow with fake users.
 * Reworked Baserow's Docker setup to be easier to use, faster to build and more secure.
 
 ## Released (2021-04-08)

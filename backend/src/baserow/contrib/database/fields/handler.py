@@ -98,7 +98,8 @@ class FieldHandler:
         last_order = model_class.get_last_order(table)
 
         if (last_order + 1) >= settings.MAX_FIELD_LIMIT:
-            raise MaxFieldLimitExceeded(f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}")
+            raise MaxFieldLimitExceeded(f"Fields count exceeds "
+                                        f"the limit of {settings.MAX_FIELD_LIMIT}")
 
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_create(table, primary, field_values, last_order,

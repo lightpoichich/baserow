@@ -22,7 +22,8 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_DOES_NOT_EXIST, ERROR_MAX_FIELD_COUNT_EXCEEDED
 )
 from baserow.contrib.database.fields.exceptions import (
-    CannotDeletePrimaryField, CannotChangeFieldType, FieldDoesNotExist, MaxFieldLimitExceeded
+    CannotDeletePrimaryField, CannotChangeFieldType, FieldDoesNotExist,
+    MaxFieldLimitExceeded
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -122,7 +123,8 @@ class FieldsView(APIView):
                 FieldSerializer
             ),
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',  'ERROR_MAX_FIELD_COUNT_EXCEEDED'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
+                'ERROR_MAX_FIELD_COUNT_EXCEEDED'
             ]),
             404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }

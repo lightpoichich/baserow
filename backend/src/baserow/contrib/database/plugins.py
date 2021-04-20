@@ -27,7 +27,7 @@ class DatabasePlugin(Plugin):
         # If the user created an account in combination with a group invitation we
         # don't want to create the initial data in the group because data should
         # already exist.
-        if group_invitation or (not group_invitation and template):
+        if group_invitation or template:
             return
 
         core_handler = CoreHandler()

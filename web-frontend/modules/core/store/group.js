@@ -97,13 +97,13 @@ export const actions = {
 
     try {
       const { data } = await GroupService(this.$client).fetchAll()
-      await commit('SET_LOADED', true)
-      await commit('SET_ITEMS', data)
+      commit('SET_LOADED', true)
+      commit('SET_ITEMS', data)
     } catch {
-      await commit('SET_ITEMS', [])
+      commit('SET_ITEMS', [])
     }
 
-    await commit('SET_LOADING', false)
+    commit('SET_LOADING', false)
   },
   /**
    * Creates a new group with the given values.

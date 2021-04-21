@@ -3,7 +3,7 @@
 
 ## Unreleased
 
-* Added configurable field limit
+* Added configurable field limit.
 * Fixed memory leak in the `link_row` field.
 * Switch to using a celery based email backend by default.
 * Added `--add-columns` flag to the `fill_table` management command. It creates all the

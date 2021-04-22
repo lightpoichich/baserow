@@ -46,12 +46,16 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-baserow}
       - DATABASE_NAME=${DATABASE_NAME:-baserow}
       - ADDITIONAL_APPS
+      - MEDIA_URL=http://localhost:${MEDIA_PORT:-4000}/media/
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       - db
       - redis
       - mjml
+      - media-volume-fixer
+    volumes:
+      - media:/baserow/media
     networks:
       local:
 
@@ -61,6 +65,8 @@ services:
     command: celery
     depends_on:
       - backend
+    volumes:
+      - media:/baserow/media
     networks:
       local:
 
@@ -79,8 +85,34 @@ services:
     networks:
       local:
 
+  # A nginx container purely to serve up django's MEDIA files.
+  media:
+    container_name: media
+    build: media
+    ports:
+      - "${MEDIA_PORT:-4000}:80"
+    depends_on:
+      - media-volume-fixer
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+  # When switching between dev and local the media files in the media volume will be
+  # owned by different users. Ensure that we chown them to the user appropriate for the
+  # environment here.
+  media-volume-fixer:
+    container_name: media-volume-fixer
+    image: bash:4.4
+    command: chown 9999:9999 -R /baserow/media
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
 volumes:
   pgdata:
+  media:
 
 networks:
   local:

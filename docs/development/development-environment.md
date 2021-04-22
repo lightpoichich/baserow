@@ -7,14 +7,12 @@ found in the root of the Baserow repo.
 
 ## Further reading
 
-- See [running the dev environment](../guides/running-the-dev-environment.md) for a
+- See [running the dev environment](running-the-dev-environment.md) for a
   step-by-step guide on how to set-up the dev env.
 - See [baserow docker api](../reference/baserow-docker-api.md) for more detail on how
   Baserow's docker setup can be used and configured.
 - See [dev.sh](../development/dev_sh.md) for further detail on the CLI tool for managing
   the dev environment.
-- See [contributing](../development/CONTRIBUTING.md) for info on how to get started
-  contributing to baserow.
 
 ## Fixing git blame
 

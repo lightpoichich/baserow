@@ -33,7 +33,6 @@ ADD --chown=$UID:$GID ./backend/requirements /baserow/requirements
 RUN pip3 install --no-warn-script-location -r /baserow/requirements/base.txt -r /baserow/requirements/dev.txt
 
 ADD --chown=$UID:$GID ./docs /baserow/docs
-ADD --chown=$UID:$GID ./CONTRIBUTING.md /baserow/docs/development/CONTRIBUTING.md
 ADD --chown=$UID:$GID ./backend /baserow/backend
 ADD --chown=$UID:$GID ./premium/backend /baserow/backend/plugins/premium
 
@@ -48,5 +47,8 @@ ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.dev'
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/backend/docker/docker-entrypoint.sh
 
+# Ensure we don't pollute the devs actual repo when mounting in files by
+# putting these two folders into anonymous docker volumes.
+VOLUME ["/baserow/backend/plugins"]
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]
 CMD ["dev"]

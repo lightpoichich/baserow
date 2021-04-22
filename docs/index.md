@@ -27,8 +27,6 @@ Need some help with setting things up?
 
 * [Running Locally](guides/running-baserow-locally.md): A step-by-step guide to run
   Baserow on your computer.
-* [Running the Dev Environment](guides/running-the-dev-environment.md): A step-by-step guide to
-  run Baserow for development.
 * [Install on Ubuntu](./guides/installation/install-on-ubuntu.md): A step-by-step guide
   to install Baserow on an Ubuntu server.
 * [Install on Cloudron](guides/installation/install-on-cloudron.md): Instructions
@@ -40,7 +38,8 @@ Everything related to contributing and developing for Baserow.
 
 * [Development environment](./development/development-environment.md): More detailed
   information on baserow's local development environment.
-* [Contributing](./development/CONTRIBUTING.md): How to contribute to Baserow.
+* [Running the Dev Environment](development/running-the-dev-environment.md): A
+  step-by-step guide to run Baserow for development.
 * [Directory structure](./development/directory-structure.md): The structure of all the
   directories in the Baserow repository explained.
 * [Tools](./development/tools.md): The tools (flake8, pytest, eslint, etc) and how to

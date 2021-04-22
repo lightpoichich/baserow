@@ -25,21 +25,69 @@
           Username
         </div>
         <div class="user-admin-rows__field">Full Name</div>
-        <div class="user-admin-rows__field">Groups</div>
+        <div ref="groupsHeader" class="user-admin-rows__field">Groups</div>
         <div class="user-admin-rows__field">Last Login</div>
         <div class="user-admin-rows__field">Signed Up</div>
         <div class="user-admin-rows__field">Active</div>
-        <div
-          v-for="cell in cells"
-          :key="'admin-row-' + cell.row_id + '-' + cell.cell_id"
-          :class="{
-            'user-admin-rows__cell-right': cell.cell_id === 2,
-            'user-admin-rows__cell-sticky': cell.cell_id <= 2,
-          }"
-          class="user-admin-rows__cell"
-        >
-          {{ cell.content }}
-        </div>
+        <template v-for="user in users">
+          <div
+            :key="'admin-row-' + user.id + '-1'"
+            class="user-admin-rows__cell-sticky user-admin-rows__cell"
+          >
+            {{ user.id }}
+          </div>
+          <div
+            :key="'admin-row-' + user.id + '-2'"
+            class="user-admin-rows__cell-sticky user-admin-rows__cell-right user-admin-rows__cell"
+          >
+            <UsernameField
+              :user="user"
+              @update="onUserChange"
+              @delete-user="onDeleteUser"
+            ></UsernameField>
+          </div>
+          <div
+            :key="'admin-row-' + user.id + '-3'"
+            class="user-admin-rows__cell"
+          >
+            {{ user.full_name }}
+          </div>
+          <div
+            :key="'admin-row-' + user.id + '-4'"
+            class="user-admin-rows__cell"
+          >
+            <UserGroupsField
+              :groups="user.groups"
+              :user-id="user.id"
+              :parent-width="groupWidth"
+            />
+          </div>
+          <div
+            :key="'admin-row-' + user.id + '-5'"
+            class="user-admin-rows__cell"
+          >
+            {{ toLocal(user.last_login) }}
+          </div>
+          <div
+            :key="'admin-row-' + user.id + '-6'"
+            class="user-admin-rows__cell"
+          >
+            {{ toLocal(user.date_joined) }}
+          </div>
+          <div
+            :key="'admin-row-' + user.id + '-7'"
+            class="user-admin-rows__cell"
+          >
+            <div v-if="user.is_active">
+              <i class="fas fa-fw fa-check user-admin-rows__active-icon"></i>
+              Active
+            </div>
+            <div v-else>
+              <i class="fas fa-fw fa-times user-admin-rows__deactive-icon"></i>
+              Deactivated
+            </div>
+          </div>
+        </template>
       </div>
       <div class="user-admin-rows__foot">
         <div class="user-admin-rows__pagination">
@@ -83,9 +131,14 @@
 <script>
 import UserAdminService from '@baserow_premium/services/userAdmin'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import UsernameField from '@baserow_premium/components/UsernameField'
+import moment from 'moment'
+import UserGroupsField from '@baserow_premium/components/UserGroupsField'
+import ResizeObserver from 'resize-observer-polyfill'
 
 export default {
   name: 'UsersAdminContent',
+  components: { UserGroupsField, UsernameField },
   props: {},
   data() {
     return {
@@ -96,13 +149,31 @@ export default {
       page: 1,
       visiblePage: 1,
       totalPages: null,
-      cells: [],
+      users: [],
+      groupWidth: 0,
     }
   },
   async fetch() {
     await this.fetchPage(1)
   },
+  mounted() {
+    this.$el.resizeObserver = new ResizeObserver(this.onResize)
+    this.$el.resizeObserver.observe(this.$el)
+  },
+  beforeDestroy() {
+    this.$el.resizeObserver.unobserve(this.$el)
+  },
   methods: {
+    onResize() {
+      this.$nextTick(() => {
+        if (this.$refs.groupsHeader) {
+          this.groupWidth = this.$refs.groupsHeader.clientWidth
+        }
+      })
+    },
+    toLocal(date) {
+      return moment.utc(date).local().format('L LT')
+    },
     async doSearch(query) {
       this.search = query
       this.totalPages = null
@@ -118,7 +189,6 @@ export default {
         this.totalPages !== 0 &&
         (page > this.totalPages || page < 1)
       ) {
-        console.log('SOME DUBM SHIT')
         this.visiblePage = this.page
         return
       }
@@ -130,37 +200,26 @@ export default {
         const { data: userData } = await UserAdminService(
           this.$client
         ).fetchPage(page)
-        const newCells = []
-        for (const user of userData.results) {
-          const attrs = [
-            user.id,
-            user.username,
-            user.full_name,
-            user.groups.map((e) => e.name).join(', '),
-            user.last_login,
-            user.date_joined,
-            user.is_active,
-          ]
-          let i = 1
-          for (const attr of attrs) {
-            newCells.push({
-              row_id: user.id,
-              cell_id: i++,
-              content: attr,
-            })
-          }
-        }
         this.page = page
         this.visiblePage = page
         this.totalPages = Math.ceil(userData.count / 100)
+        this.users = userData.results
         this.loaded = true
-        this.cells = newCells
+        this.onResize()
       } catch (error) {
         notifyIf(error, 'row')
         this.loaded = false
       }
 
       this.loading = false
+    },
+    onUserChange(newUser) {
+      const i = this.users.findIndex((u) => u.id === newUser.id)
+      this.users.splice(i, 1, newUser)
+    },
+    onDeleteUser(userId) {
+      const i = this.users.findIndex((u) => u.id === userId)
+      this.users.splice(i, 1)
     },
   },
 }

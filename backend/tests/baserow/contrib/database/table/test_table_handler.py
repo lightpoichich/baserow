@@ -216,6 +216,22 @@ def test_fill_table_with_initial_data(data_fixture):
     assert getattr(results[2], f"field_{text_fields[0].id}") == "3-1"
     assert getattr(results[2], f"field_{text_fields[1].id}") == "3-2"
 
+    field_limit = settings.MAX_FIELD_LIMIT
+    settings.MAX_FIELD_LIMIT = 5
+    data = [
+        ["A", "B", "C", "D", "E"],
+        ["1-1", "1-2", "1-3", "1-4", "1-5"],
+    ]
+    table = table_handler.create_table(
+        user, database, name="Table 3", data=data, first_row_header=True
+    )
+    num_fields = table.field_set.count()
+
+    assert GridView.objects.all().count() == 3
+    assert num_fields == settings.MAX_FIELD_LIMIT
+
+    settings.MAX_FIELD_LIMIT = field_limit
+
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.table.signals.table_updated.send")

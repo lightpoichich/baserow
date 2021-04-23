@@ -84,7 +84,7 @@ class TableHandler:
 
         if data is not None:
             fields, data = self.normalize_initial_table_data(data, first_row_header)
-            if len(fields) >= settings.MAX_FIELD_LIMIT:
+            if len(fields) > settings.MAX_FIELD_LIMIT:
                 raise MaxFieldLimitExceeded(
                     f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
                 )

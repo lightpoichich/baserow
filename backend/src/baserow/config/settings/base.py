@@ -260,4 +260,4 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # modal.
 DEFAULT_APPLICATION_TEMPLATE = "project-management"
 
-MAX_FIELD_LIMIT = 1600
+MAX_FIELD_LIMIT = 1500

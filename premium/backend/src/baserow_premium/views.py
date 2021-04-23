@@ -1,6 +1,11 @@
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema
-from rest_framework.fields import SerializerMethodField, BooleanField
+from rest_framework.fields import (
+    SerializerMethodField,
+    BooleanField,
+    EmailField,
+    CharField,
+)
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer, Serializer
@@ -16,12 +21,8 @@ User = get_user_model()
 
 
 class AdminUserSerializer(ModelSerializer):
-    full_name = SerializerMethodField("get_full_name")
+    full_name = CharField(source="first_name")
     groups = GroupSerializer(source="group_set", many=True)
-
-    # noinspection PyMethodMayBeStatic
-    def get_full_name(self, obj):
-        return obj.first_name + obj.last_name
 
     class Meta:
         model = User
@@ -38,7 +39,15 @@ class AdminUserSerializer(ModelSerializer):
 
 
 class AdminUserUpdateSerializer(Serializer):
-    is_active = BooleanField()
+    full_name = CharField(min_length=2, allow_null=True)
+    is_active = BooleanField(allow_null=True)
+    is_staff = BooleanField(allow_null=True)
+    username = EmailField(allow_null=True)
+    password = CharField(write_only=True, max_length=256, allow_null=True)
+
+    def __init__(self, *args, **kwargs):
+        kwargs["partial"] = True
+        super().__init__(*args, **kwargs)
 
 
 class UsersAdminView(APIView):
@@ -48,13 +57,7 @@ class UsersAdminView(APIView):
     @extend_schema(
         tags=["Admin"],
         operation_id="list_users_admin",
-        description=(
-            "Lists all the API users that belong to the authorized user. An API token "
-            "can be used to create, read, update and delete rows in the tables of the "
-            "token's group. It only works on the tables if the token has the correct "
-            "permissions. The **Database table rows** endpoints can be used for these "
-            "operations."
-        ),
+        description="TODO",
         responses={
             200: AdminUserSerializer(many=True),
         },
@@ -78,13 +81,7 @@ class UserAdminView(APIView):
     @extend_schema(
         tags=["Admin"],
         operation_id="edit_users_admin",
-        description=(
-            "Lists all the API users that belong to the authorized user. An API token "
-            "can be used to create, read, update and delete rows in the tables of the "
-            "token's group. It only works on the tables if the token has the correct "
-            "permissions. The **Database table rows** endpoints can be used for these "
-            "operations."
-        ),
+        description="TODO",
         responses={
             200: AdminUserSerializer(many=True),
         },
@@ -93,7 +90,9 @@ class UserAdminView(APIView):
         """Edits a user"""
 
         handler = UserAdminHandler()
+        print(request.data)
         data = validate_data(AdminUserUpdateSerializer, request.data)
+        print(data)
         user = handler.update_user(user_id, data)
 
         return Response(AdminUserSerializer(user).data)
@@ -101,13 +100,7 @@ class UserAdminView(APIView):
     @extend_schema(
         tags=["Admin"],
         operation_id="delete_users_admin",
-        description=(
-            "Lists all the API users that belong to the authorized user. An API token "
-            "can be used to create, read, update and delete rows in the tables of the "
-            "token's group. It only works on the tables if the token has the correct "
-            "permissions. The **Database table rows** endpoints can be used for these "
-            "operations."
-        ),
+        description="TODO",
         responses={200},
     )
     def delete(self, request, user_id):

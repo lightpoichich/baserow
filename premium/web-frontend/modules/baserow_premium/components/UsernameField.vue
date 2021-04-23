@@ -17,13 +17,13 @@
     <Context ref="context">
       <ul class="context__menu">
         <li>
-          <a>
+          <a @click.prevent="showEditModal">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
             Edit
           </a>
         </li>
         <li>
-          <a>
+          <a @click.prevent="showChangePasswordModal">
             <i class="context__menu-icon fas fa-fw fa-key"></i>
             Change password
           </a>
@@ -50,6 +50,15 @@
         :user="user"
         @delete-user="$emit('delete-user', $event)"
       ></DeleteUserModal>
+      <EditUserModal
+        ref="editUserModal"
+        :user="user"
+        @update="$emit('update', $event)"
+        @switch-to-delete="showDeleteModal"
+      >
+      </EditUserModal>
+      <ChangePasswordModal ref="changePasswordModal" :user="user">
+      </ChangePasswordModal>
     </Context>
   </div>
 </template>
@@ -57,10 +66,12 @@
 <script>
 import UserAdminService from '@baserow_premium/services/userAdmin'
 import DeleteUserModal from '@baserow_premium/components/DeleteUserModal'
+import EditUserModal from '@baserow_premium/components/EditUserModal'
+import ChangePasswordModal from '@baserow_premium/components/ChangeUserPasswordModal'
 
 export default {
   name: 'UsernameField',
-  components: { DeleteUserModal },
+  components: { ChangePasswordModal, DeleteUserModal, EditUserModal },
   props: {
     user: {
       required: true,
@@ -78,9 +89,19 @@ export default {
     },
   },
   methods: {
+    showChangePasswordModal() {
+      this.$refs.context.hide()
+      this.$refs.changePasswordModal.show()
+    },
     showDeleteModal() {
       this.$refs.context.hide()
+      this.$refs.editUserModal.hide()
       this.$refs.deleteUserModal.show()
+    },
+    showEditModal() {
+      this.$refs.context.hide()
+      this.$refs.deleteUserModal.hide()
+      this.$refs.editUserModal.show()
     },
     async activate() {
       const { data: newUser } = await UserAdminService(this.$client).update(

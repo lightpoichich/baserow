@@ -8,6 +8,10 @@
         class="user-admin-rows__cell-group-item"
       >
         {{ group.name }}
+        <i
+          v-if="group.permissions == 'ADMIN'"
+          class="user-admin-rows__cell-group-icon fas fa-users-cog"
+        ></i>
       </span>
     </div>
     <a
@@ -20,13 +24,17 @@
       >+{{ numHidden }}</a
     >
     <Context ref="context">
-      <ul
-        v-for="group in hiddenGroups"
-        :key="'hidden-admin-row-group' + userId + '-' + group.id"
-        class="context__menu"
-      >
-        <li class="user-admin-rows__cell-group-hidden-item">
+      <ul class="context__menu">
+        <li
+          v-for="group in hiddenGroups"
+          :key="'hidden-admin-row-group' + userId + '-' + group.id"
+          class="user-admin-rows__cell-group-hidden-item"
+        >
           {{ group.name }}
+          <i
+            v-if="group.permissions == 'ADMIN'"
+            class="user-admin-rows__cell-group-icon fas fa-users-cog"
+          ></i>
         </li>
       </ul>
     </Context>
@@ -62,6 +70,14 @@ export default {
   },
   watch: {
     parentWidth() {
+      this.updatedOverflow()
+    },
+  },
+  created() {
+    this.updatedOverflow()
+  },
+  methods: {
+    updatedOverflow() {
       this.$nextTick(() => {
         const container = this.$refs.groups_container
         this.overflowing =

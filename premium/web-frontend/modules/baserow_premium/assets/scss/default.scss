@@ -309,6 +309,11 @@
   align-items: center;
 }
 
+.user-admin-rows__cell-group-icon {
+  width: $fa-fw-width;
+  color: $color-neutral-700;
+}
+
 .user-admin-rows__cell-group-container {
   height: 49px;
   margin-right: 5px;
@@ -339,6 +344,7 @@
   margin: 5px 10px;
   background-color: $color-neutral-100;
   box-sizing: border-box;
+  width: fit-content;
 }
 
 .user-admin-rows__cell-group-inner {

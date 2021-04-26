@@ -13,8 +13,6 @@ from baserow_premium.user_admin.handler import UserAdminHandler
 
 
 class UsersAdminView(APIView):
-    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
-
     @extend_schema(
         tags=["Admin"],
         operation_id="list_users_admin",
@@ -54,8 +52,6 @@ class UsersAdminView(APIView):
 
 
 class UserAdminView(APIView):
-    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
-
     @extend_schema(
         tags=["Admin"],
         operation_id="edit_users_admin",

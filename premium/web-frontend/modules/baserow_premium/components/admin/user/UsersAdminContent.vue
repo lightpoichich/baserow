@@ -1,7 +1,7 @@
 <template>
   <div class="user-admin-wrapper">
     <header class="admin_header">
-      <b>User Settings</b>
+      <strong>User Settings</strong>
       <UserSearch :loading="loading" @search-changed="doSearch" />
     </header>
     <div

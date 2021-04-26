@@ -34,13 +34,15 @@
               :disabled="loading"
               @blur="$v.formUser.username.$touch()"
             />
-            <div v-if="$v.formUser.username.$error" class="error">
+            <div v-show="$v.formUser.username.$error" class="error">
               Please enter a valid e-mail address.
             </div>
-            <div class="warning">
-              Changing this users email address means when they sign in they
-              must use the new email address to do so. This must be communicated
-              with that user.
+            <div v-show="formUser.username !== user.username" class="warning">
+              <strong>
+                Changing this users email address means when they sign in they
+                must use the new email address to do so. This must be
+                communicated with that user.
+              </strong>
             </div>
           </div>
         </div>
@@ -52,9 +54,11 @@
               :disabled="loading"
             ></Checkbox>
           </div>
-          <div class="warning">
-            When a user is marked as inactive they are prevented from signing
-            in.
+          <div v-show="!formUser.isActive" class="warning">
+            <strong>
+              When a user is marked as inactive they are prevented from signing
+              in.
+            </strong>
           </div>
         </div>
         <label class="control__label">Is Staff</label>
@@ -62,9 +66,11 @@
           <div class="control__elements">
             <Checkbox v-model="formUser.isStaff" :disabled="loading"></Checkbox>
           </div>
-          <div class="warning">
-            Making the user staff gives them access to all users, all groups and
-            the ability to revoke your own staff permissions.
+          <div v-show="formUser.isStaff" class="warning">
+            <strong>
+              Making the user staff gives them admin access to all users, all
+              groups and the ability to revoke your own staff permissions.
+            </strong>
           </div>
         </div>
         <div class="actions">

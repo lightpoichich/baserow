@@ -99,12 +99,10 @@ export default {
     },
     showDeleteModal() {
       this.$refs.context.hide()
-      this.$refs.editUserModal.hide()
       this.$refs.deleteUserModal.show()
     },
     showEditModal() {
       this.$refs.context.hide()
-      this.$refs.deleteUserModal.hide()
       this.$refs.editUserModal.show()
     },
     async activate() {

@@ -25,15 +25,17 @@ class UserAdminHandler:
 
     def update_user(self, requesting_user, user_id, data):
         self.raise_if_not_permitted(requesting_user)
+
         user = User.objects.get(id=user_id)
-        for editable_field, setattr_func in self.editable_user_fields():
-            if editable_field in data:
-                setattr_func(user, editable_field, data[editable_field])
+        for field_name, setattr_func in self.editable_user_fields():
+            if field_name in data:
+                setattr_func(user, field_name, data[field_name])
         user.save()
         return user
 
     def delete_user(self, requesting_user, user_id):
         self.raise_if_not_permitted(requesting_user)
+
         user = User.objects.get(id=user_id)
         user.delete()
 

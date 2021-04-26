@@ -17,7 +17,8 @@
               @blur="$v.formUser.fullName.$touch()"
             />
             <div v-if="$v.formUser.fullName.$error" class="error">
-              Please enter a valid fullName.
+              Please enter a valid full name, it must be longer than 2 letters
+              and less than 30.
             </div>
           </div>
         </div>
@@ -96,7 +97,7 @@
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import UserAdminService from '@baserow_premium/services/userAdmin'
-import { required, email, minLength } from 'vuelidate/lib/validators'
+import { required, email, minLength, maxLength } from 'vuelidate/lib/validators'
 
 export default {
   name: 'EditUserModal',
@@ -151,7 +152,7 @@ export default {
   },
   validations: {
     formUser: {
-      fullName: { required, minLength: minLength(2) },
+      fullName: { required, minLength: minLength(2), maxLength: maxLength(30) },
       username: { required, email },
     },
   },

@@ -65,9 +65,9 @@
 
 <script>
 import UserAdminService from '@baserow_premium/services/userAdmin'
-import DeleteUserModal from '@baserow_premium/components/DeleteUserModal'
-import EditUserModal from '@baserow_premium/components/EditUserModal'
-import ChangePasswordModal from '@baserow_premium/components/ChangeUserPasswordModal'
+import DeleteUserModal from '@baserow_premium/components/admin/user/DeleteUserModal'
+import EditUserModal from '@baserow_premium/components/admin/user/EditUserModal'
+import ChangePasswordModal from '@baserow_premium/components/admin/user/ChangeUserPasswordModal'
 
 export default {
   name: 'UsernameField',

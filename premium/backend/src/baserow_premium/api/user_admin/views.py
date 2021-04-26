@@ -1,4 +1,5 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -18,6 +19,15 @@ class UsersAdminView(APIView):
         tags=["Admin"],
         operation_id="list_users_admin",
         description="TODO",
+        parameters=[
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="If provided only users with a username that matches the "
+                "search query are going to be returned.",
+            ),
+        ],
         responses={
             200: PartialAdminUserSerializer(many=True),
         },
@@ -30,8 +40,12 @@ class UsersAdminView(APIView):
     def get(self, request):
         """Lists all the users of a user."""
 
+        search = request.GET.get("search")
+
         handler = UserAdminHandler()
         users = handler.get_users(request.user)
+        if search:
+            users = users.filter(username__icontains=search)
         paginator = PageNumberPagination()
         page = paginator.paginate_queryset(users, request, self)
         serializer = PartialAdminUserSerializer(page, many=True)

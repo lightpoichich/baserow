@@ -1,7 +1,8 @@
 export default (client) => {
   return {
-    fetchPage(page) {
-      return client.get(`/premium/admin/user/?page=${page}`)
+    fetchPage(page, searchQuery) {
+      const searchQueryParam = searchQuery ? `&search=${searchQuery}` : ''
+      return client.get(`/premium/admin/user/?page=${page}${searchQueryParam}`)
     },
     update(userId, values) {
       values.id = userId

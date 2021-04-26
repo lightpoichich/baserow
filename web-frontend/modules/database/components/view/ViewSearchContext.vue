@@ -66,7 +66,6 @@ export default {
       lastSearch: '',
       hideRowsNotMatchingSearch: true,
       lastHide: true,
-      loading: false,
     }
   },
   methods: {

@@ -5,7 +5,6 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.pagination import PageNumberPagination
-from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow_premium.api.user_admin.errors import ERROR_ADMIN_ONLY_OPERATION
 from baserow_premium.api.user_admin.serializers import PartialAdminUserSerializer
 from baserow_premium.user_admin.exceptions import AdminOnlyOperationException

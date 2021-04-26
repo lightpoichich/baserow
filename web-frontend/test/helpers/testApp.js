@@ -54,6 +54,7 @@ function _createBaserowStoreAndRegistry(app, vueContext) {
  */
 export class TestApp {
   constructor() {
+    this.mock = new MockAdapter(axios, { onNoMatch: 'throwException' })
     // In the future we can extend this stub realtime implementation to perform
     // useful testing of realtime interaction in the frontend!
     this._realtime = {
@@ -70,8 +71,8 @@ export class TestApp {
       $env: {
         PUBLIC_WEB_FRONTEND_URL: 'https://localhost/',
       },
+      $client: axios,
     }
-    this.mock = new MockAdapter(axios)
     this._vueContext = bootstrapVueContext()
     this.store = _createBaserowStoreAndRegistry(this._app, this._vueContext)
     this._initialCleanStoreState = _.cloneDeep(this.store.state)
@@ -105,10 +106,19 @@ export class TestApp {
         return data
       }
     }
-    return this._vueContext.vueTestUtils.mount(Component, {
+    const wrapper = this._vueContext.vueTestUtils.mount(Component, {
       localVue: this._vueContext.vue,
       mocks: this._app,
     })
+    const realComponent = wrapper.vm
+    if (realComponent.$options.fetch) {
+      const fetch = realComponent.$options.fetch
+      if (typeof fetch !== 'function') {
+        throw new TypeError('fetch should be a function')
+      }
+      await realComponent.$options.fetch.bind(realComponent)()
+    }
+    return wrapper
   }
 }
 /**

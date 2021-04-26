@@ -4,7 +4,11 @@
       {{ firstTwoInitials }}
     </div>
     {{ user.username }}
-    <i v-if="user.is_staff" v-tooltip="'is staff'" class="fas fa-users"></i>
+    <i
+      v-if="user.is_staff"
+      v-tooltip="'is staff'"
+      class="user-admin-rows__username--icon fas fa-users"
+    ></i>
     <a
       ref="contextLink"
       class="user-admin-rows__username--menu"

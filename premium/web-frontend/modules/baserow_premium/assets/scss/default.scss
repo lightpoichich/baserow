@@ -145,15 +145,6 @@
     position: sticky;
     left: 0;
   }
-
-  //
-  //&.user-admin-rows__cell--first {
-  //  @extend %ellipsis;
-  //
-  //  flex-basis: 40px;
-  //  line-height: 32px;
-  //  padding-left: 8px;
-  //}
 }
 
 .user-admin-rows__row--hover {
@@ -283,6 +274,10 @@
   margin-right: 12px;
 
   @include center-text(28px, 15px);
+}
+
+.user-admin-rows__username--icon {
+  margin-left: 5px;
 }
 
 .user-admin-rows__username--menu {

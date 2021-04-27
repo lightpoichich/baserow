@@ -20,14 +20,26 @@ def api_client():
     return APIClient()
 
 
+# We reuse this file in the premium backend folder, if you run a pytest session over
+# plugins and the core at the same time pytest will crash
+_pytest_already_configured = False
+_pytest_already_addedoptions = False
+
+
 def pytest_addoption(parser):
-    parser.addoption(
-        "--runslow", action="store_true", default=False, help="run slow tests"
-    )
+    global _pytest_already_addedoptions
+    if not _pytest_already_addedoptions:
+        parser.addoption(
+            "--runslow", action="store_true", default=False, help="run slow tests"
+        )
+        _pytest_already_addedoptions = True
 
 
 def pytest_configure(config):
-    config.addinivalue_line("markers", "slow: mark test as slow to run")
+    global _pytest_already_configured
+    if not _pytest_already_configured:
+        config.addinivalue_line("markers", "slow: mark test as slow to run")
+        _pytest_already_configured = True
 
 
 def pytest_collection_modifyitems(config, items):

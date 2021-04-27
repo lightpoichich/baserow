@@ -14,7 +14,7 @@ from baserow_premium.user_admin.handler import UserAdminHandler
 
 class UsersAdminView(APIView):
     @extend_schema(
-        tags=["Premium", "Admin", "Users"],
+        tags=["Premium", "Admin"],
         operation_id="admin_list_users",
         description="Returns all baserow users with detailed information on each user.",
         parameters=[
@@ -75,7 +75,8 @@ class UsersAdminView(APIView):
 
 class UserAdminView(APIView):
     @extend_schema(
-        tags=["Premium", "Admin", "Users"],
+        tags=["Premium", "Admin"],
+        request=AdminUserSerializer,
         operation_id="admin_edit_user",
         description="Updates specified user attributes and returns the updated user.",
         parameters=[
@@ -109,7 +110,7 @@ class UserAdminView(APIView):
         return Response(AdminUserSerializer(user).data)
 
     @extend_schema(
-        tags=["Admin"],
+        tags=["Admin", "Premium"],
         operation_id="admin_delete_user",
         description="Deletes the specified user.",
         parameters=[
@@ -121,7 +122,7 @@ class UserAdminView(APIView):
             ),
         ],
         responses={
-            200: {},
+            200: None,
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
         },
     )

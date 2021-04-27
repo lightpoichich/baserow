@@ -345,6 +345,51 @@ def test_update_row(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.row_updated.send")
+def test_move_row(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+
+    handler = RowHandler()
+    row_1 = handler.create_row(user=user, table=table)
+    row_2 = handler.create_row(user=user, table=table)
+    row_3 = handler.create_row(user=user, table=table)
+
+    with pytest.raises(UserNotInGroup):
+        handler.move_row(user=user_2, table=table, row_id=row_1.id)
+
+    with pytest.raises(RowDoesNotExist):
+        handler.move_row(user=user, table=table, row_id=99999)
+
+    handler.move_row(user=user, table=table, row_id=row_1.id)
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+    assert row_1.order == Decimal("4.00000000000000000000")
+    assert row_2.order == Decimal("2.00000000000000000000")
+    assert row_3.order == Decimal("3.00000000000000000000")
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["row"].id == row_1.id
+    assert send_mock.call_args[1]["user"].id == user.id
+    assert send_mock.call_args[1]["table"].id == table.id
+    assert send_mock.call_args[1]["model"]._generated_table_model
+
+    handler.move_row(user=user, table=table, row_id=row_1.id, before=row_3)
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+    assert row_1.order == Decimal("2.99999999999999999999")
+    assert row_2.order == Decimal("2.00000000000000000000")
+    assert row_3.order == Decimal("3.00000000000000000000")
+
+    row_ids = table.get_model().objects.all()
+    assert row_ids[0].id == row_2.id
+    assert row_ids[1].id == row_1.id
+    assert row_ids[2].id == row_3.id
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.row_deleted.send")
 def test_delete_row(send_mock, data_fixture):
     user = data_fixture.create_user()

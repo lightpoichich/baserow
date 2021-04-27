@@ -147,7 +147,7 @@ export const mutations = {
     state.count++
     state.bufferLimit++
 
-    const min = new BigNumber(row.order.split('.')[0])
+    const min = new BigNumber(row.order).integerValue(BigNumber.ROUND_FLOOR)
     const max = new BigNumber(row.order)
 
     // Decrease all the orders that have already have been inserted before the same
@@ -180,6 +180,18 @@ export const mutations = {
       state.bufferLimit--
       state.rows.splice(index, 1)
     }
+  },
+  /**
+   * Called when we're sure the row exists and is moved from the top of the target
+   * position.
+   */
+  DELETE_ROW_FROM_TOP(state, id) {
+    const index = state.rows.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      state.rows.splice(index, 1)
+    }
+    state.count--
+    state.bufferStartIndex--
   },
   DELETE_ROW_MOVED_UP(state, id) {
     const index = state.rows.findIndex((item) => item.id === id)
@@ -811,6 +823,100 @@ export const actions = {
     }
   },
   /**
+   * Adds the given row before the `before` by updating the order and adding the row
+   * to the correct position in the buffer. It is expected that the row does not
+   * already exist in the buffer, so if it is moved then it needs to be deleted
+   * first. If no before row is provided then the row is moved to the end.
+   */
+  addRowBefore({ commit, getters }, { row, before = null }) {
+    if (before !== null) {
+      // If the row has been placed before another row we can specifically insert to
+      // the row at a calculated index.
+      const index = getters.getAllRows.findIndex((r) => r.id === before.id)
+      const change = new BigNumber('0.00000000000000000001')
+      row.order = new BigNumber(before.order).minus(change).toString()
+      commit('INSERT_ROW_AT', { row, index })
+    } else {
+      // By default the row is inserted at the end.
+      row.order = (getters.getCount + 1).toString() + '.00000000000000000000'
+      commit('ADD_ROWS', {
+        rows: [row],
+        prependToRows: 0,
+        appendToRows: 1,
+        count: getters.getCount + 1,
+        bufferStartIndex: getters.getBufferStartIndex,
+        bufferLimit: getters.getBufferLimit + 1,
+      })
+    }
+  },
+  /**
+   * Moves an existing row to the position before the provided before row. It will
+   * update the order and makes sure that the row is inserted in the correct place.
+   * A call to the backend will also be made to update the order persistent.
+   */
+  async move(
+    { commit, dispatch, getters },
+    {
+      table,
+      grid,
+      fields,
+      primary,
+      getScrollTop,
+      windowHeight,
+      row,
+      before = null,
+    }
+  ) {
+    const oldOrder = row.order
+    dispatch('forceMove', {
+      scrollTop: getScrollTop(),
+      windowHeight,
+      row,
+      before,
+    })
+
+    try {
+      await RowService(this.$client).move(
+        table.id,
+        row.id,
+        before !== null ? before.id : null
+      )
+    } catch (error) {
+      commit('UPDATE_ROW', { row, values: { order: oldOrder } })
+      dispatch('forceRefreshRowSort', {
+        grid,
+        fields,
+        primary,
+        row,
+        getScrollTop,
+      })
+      throw error
+    }
+  },
+  forceMove(
+    { commit, dispatch, getters },
+    { scrollTop, windowHeight, row, before = null }
+  ) {
+    let movedFromTop = true
+    const index = getters.getAllRows.findIndex((r) => r.id === row.id)
+    const existsInBuffer = index > -1
+
+    if (before !== null) {
+      const rowOrder = new BigNumber(row.order)
+      const beforeOrder = new BigNumber(before.order)
+      movedFromTop = rowOrder.isLessThan(beforeOrder)
+    }
+
+    if (!existsInBuffer && movedFromTop) {
+      commit('DELETE_ROW_FROM_TOP', row.id)
+    } else {
+      commit('DELETE_ROW', row.id)
+    }
+
+    dispatch('addRowBefore', { row, before })
+    dispatch('visibleByScrollTop', { scrollTop, windowHeight })
+  },
+  /**
    * Creates a new row. Based on the default values of the fields a row is created
    * which will be added to the store. Only if the request fails the row is removed.
    */
@@ -837,24 +943,7 @@ export const actions = {
     row.id = uuid()
     row._.loading = true
 
-    if (before !== null) {
-      // If the row has been placed before another row we can specifically insert to
-      // the row at a calculated index.
-      const index = getters.getAllRows.findIndex((r) => r.id === before.id)
-      const change = new BigNumber('0.00000000000000000001')
-      row.order = new BigNumber(before.order).minus(change).toString()
-      commit('INSERT_ROW_AT', { row, index })
-    } else {
-      // By default the row is inserted at the end.
-      commit('ADD_ROWS', {
-        rows: [row],
-        prependToRows: 0,
-        appendToRows: 1,
-        count: getters.getCount + 1,
-        bufferStartIndex: getters.getBufferStartIndex,
-        bufferLimit: getters.getBufferLimit + 1,
-      })
-    }
+    dispatch('addRowBefore', { row, before })
 
     // Recalculate all the values.
     dispatch('visibleByScrollTop', {
@@ -1121,33 +1210,45 @@ export const actions = {
     }
 
     if (row._.selectedBy.length === 0 && !row._.matchSortings) {
-      const sortFunction = getRowSortFunction(
-        this.$registry,
-        grid.sortings,
+      dispatch('forceRefreshRowSort', {
+        grid,
         fields,
-        primary
-      )
-      commit('SORT_ROWS', sortFunction)
+        primary,
+        row,
+        getScrollTop,
+      })
+    }
+  },
+  forceRefreshRowSort(
+    { commit, dispatch, getters },
+    { grid, fields, primary, row, getScrollTop }
+  ) {
+    const sortFunction = getRowSortFunction(
+      this.$registry,
+      grid.sortings,
+      fields,
+      primary
+    )
+    commit('SORT_ROWS', sortFunction)
 
-      // We cannot know for sure if the row has been moved outside the scope of the
-      // current buffer. Therefore if the row is at the beginning or the end of the
-      // buffer we are going to remove it. This doesn't matter because the
-      // fetchByScrollTop action, which is called in the forceDelete action, will fix
-      // the buffer automatically.
-      const up = getters.isFirst(row.id) && getters.getBufferStartIndex > 0
-      const down =
-        getters.isLast(row.id) && getters.getBufferEndIndex < getters.getCount
-      if (up || down) {
-        const moved = up ? 'up' : 'down'
-        dispatch('forceDelete', {
-          grid,
-          row,
-          fields,
-          primary,
-          getScrollTop,
-          moved,
-        })
-      }
+    // We cannot know for sure if the row has been moved outside the scope of the
+    // current buffer. Therefore if the row is at the beginning or the end of the
+    // buffer we are going to remove it. This doesn't matter because the
+    // fetchByScrollTop action, which is called in the forceDelete action, will fix
+    // the buffer automatically.
+    const up = getters.isFirst(row.id) && getters.getBufferStartIndex > 0
+    const down =
+      getters.isLast(row.id) && getters.getBufferEndIndex < getters.getCount
+    if (up || down) {
+      const moved = up ? 'up' : 'down'
+      dispatch('forceDelete', {
+        grid,
+        row,
+        fields,
+        primary,
+        getScrollTop,
+        moved,
+      })
     }
   },
   setAddRowHover({ commit }, value) {

@@ -22,6 +22,7 @@
       @refresh="$emit('refresh', $event)"
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
+      @row-dragging="rowDragStart"
       @add-row="addRow()"
       @update="updateValue"
       @edit="editValue"
@@ -72,6 +73,16 @@
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewSection>
+    <GridViewRowDragging
+      ref="rowDragging"
+      :table="table"
+      :view="view"
+      :primary="primary"
+      :fields="visibleFields"
+      :store-prefix="storePrefix"
+      vertical="getVerticalScrollbarElement"
+      @scroll="scroll($event.pixelY, $event.pixelX)"
+    ></GridViewRowDragging>
     <Context ref="rowContext">
       <ul class="context__menu">
         <li v-if="!readOnly">
@@ -128,6 +139,7 @@ import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import { GridViewType } from '@baserow/modules/database/viewTypes'
@@ -137,6 +149,7 @@ export default {
   components: {
     GridViewSection,
     GridViewFieldWidthHandle,
+    GridViewRowDragging,
     RowEditModal,
   },
   mixins: [gridViewHelpers],
@@ -461,6 +474,13 @@ export default {
         'right',
         0
       )
+    },
+    /**
+     * Called when the user starts dragging the row. This will initiate the dragging
+     * effect and allows the user to move it to another position.
+     */
+    rowDragStart({ event, row }) {
+      this.$refs.rowDragging.start(row, event)
     },
     /**
      * When the modal hides and the related row does not match the filters anymore it

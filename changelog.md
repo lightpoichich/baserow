@@ -10,6 +10,7 @@
 * Make the view header more compact when the content doesn't fit anymore.
 * Allow providing a `template_id` when registering a new account, which will install
   that template instead of the default database.
+* Made it possible to drag and drop rows in the desired order.
 
 ## Released (2021-04-08)
 

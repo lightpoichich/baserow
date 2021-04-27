@@ -141,6 +141,44 @@ class RowHandler:
 
         return values, manytomany_values
 
+    def get_order_before_row(self, before, model):
+        """
+        Calculates a new unique order which will be before the provided before row
+        order. This order can be used by an existing or new row. Several other rows
+        could be updated as their order needs to change change.
+
+        :param before: The row instance where the before order must be calculated for.
+        :type before: Table
+        :param model: The model of the related table
+        :type model: Model
+        :return: The new order.
+        :rtype: Decimal
+        """
+
+        if before:
+            # Here we calculate the order value, which indicates the position of the
+            # row, by subtracting a fraction of the row that it must be placed
+            # before. The same fraction is also going to be subtracted from the other
+            # rows that have been placed before. By using these fractions we don't
+            # have to re-order every row in the table.
+            change = Decimal("0.00000000000000000001")
+            order = before.order - change
+            model.objects.filter(order__gt=floor(order), order__lte=order).update(
+                order=F("order") - change
+            )
+        else:
+            # Because the row is by default added as last, we have to figure out what
+            # the highest order is and increase that by one. Because the order of new
+            # rows should always be a whole number we round it up.
+            order = (
+                ceil(
+                    model.objects.aggregate(max=Max("order")).get("max") or Decimal("0")
+                )
+                + 1
+            )
+
+        return order
+
     def get_row(self, user, table, row_id, model=None):
         """
         Fetches a single row from the provided table.
@@ -204,29 +242,7 @@ class RowHandler:
 
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
-
-        if before:
-            # Here we calculate the order value, which indicates the position of the
-            # row, by subtracting a fraction of the row that it must be placed
-            # before. The same fraction is also going to be subtracted from the other
-            # rows that have been placed before. By using these fractions we don't
-            # have to re-order every row in the table.
-            change = Decimal("0.00000000000000000001")
-            values["order"] = before.order - change
-            model.objects.filter(
-                order__gt=floor(values["order"]), order__lte=values["order"]
-            ).update(order=F("order") - change)
-        else:
-            # Because the row is by default added as last, we have to figure out what
-            # the highest order is and increase that by one. Because the order of new
-            # rows should always be a whole number we round it up.
-            values["order"] = (
-                ceil(
-                    model.objects.aggregate(max=Max("order")).get("max") or Decimal("0")
-                )
-                + 1
-            )
-
+        values["order"] = self.get_order_before_row(before, model)
         instance = model.objects.create(**values)
 
         for name, value in manytomany_values.items():
@@ -283,6 +299,48 @@ class RowHandler:
 
             for name, value in manytomany_values.items():
                 getattr(row, name).set(value)
+
+        row_updated.send(self, row=row, user=user, table=table, model=model)
+
+        return row
+
+    def move_row(self, user, table, row_id, before=None, model=None):
+        """
+        Moves the row related to the row_id before another row or to the end if no
+        before row is provided. This moving is done by updating the `order` value of
+        the order.
+
+        :param user: The user of whose behalf the row is moved
+        :type user: User
+        :param table: The table that contains the row that needs to be moved.
+        :type table: Table
+        :param row_id: The row id that needs to be moved.
+        :type row_id: int
+        :param before: If provided the new row will be placed right before that row
+            instance. Otherwise the row will be moved to the end.
+        :type before: Table
+        :param model: If the correct model has already been generated, it can be
+            provided so that it does not have to be generated for a second time.
+        :type model: Model
+        """
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        if not model:
+            model = table.get_model()
+
+        # Because it is possible to have a different database for the user tables we
+        # need to start another transaction here, otherwise it is not possible to use
+        # the select_for_update function.
+        with transaction.atomic(settings.USER_TABLE_DATABASE):
+            try:
+                row = model.objects.select_for_update().get(id=row_id)
+            except model.DoesNotExist:
+                raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+
+            row.order = self.get_order_before_row(before, model)
+            row.save()
 
         row_updated.send(self, row=row, user=user, table=table, model=model)
 

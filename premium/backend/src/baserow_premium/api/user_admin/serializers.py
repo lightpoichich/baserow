@@ -11,7 +11,7 @@ from baserow.core.models import GroupUser
 User = get_user_model()
 
 
-class GroupUserSerializer(HyperlinkedModelSerializer):
+class AdminGroupUserSerializer(HyperlinkedModelSerializer):
     id = serializers.IntegerField(source="group.id")
     name = serializers.CharField(source="group.name")
 
@@ -25,10 +25,11 @@ class GroupUserSerializer(HyperlinkedModelSerializer):
         )
 
 
-class PartialAdminUserSerializer(ModelSerializer):
-    full_name = CharField(source="first_name", required=False, max_length=30)
+class AdminUserSerializer(ModelSerializer):
+    # Max length set to match django user models first_name fields max length
+    full_name = CharField(source="first_name", max_length=30, required=False)
     username = EmailField(required=False)
-    groups = GroupUserSerializer(source="groupuser_set", many=True, required=False)
+    groups = AdminGroupUserSerializer(source="groupuser_set", many=True, required=False)
 
     class Meta:
         model = User

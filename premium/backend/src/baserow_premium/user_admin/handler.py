@@ -5,6 +5,11 @@ from baserow_premium.user_admin.exceptions import AdminOnlyOperationException
 User = get_user_model()
 
 
+def multi_setattr(obj, attributes):
+    for key, value in attributes:
+        setattr(obj, key, value)
+
+
 class UserAdminHandler:
     def get_users(self, requesting_user):
         self.raise_if_not_permitted(requesting_user)
@@ -15,7 +20,12 @@ class UserAdminHandler:
         return [
             ("is_active", setattr),
             ("is_staff", setattr),
-            ("username", setattr),
+            (
+                "username",
+                lambda user, _, username: multi_setattr(
+                    user, [("username", username), ("email", username)]
+                ),
+            ),
             (
                 "full_name",
                 lambda user, _, full_name: setattr(user, "first_name", full_name),

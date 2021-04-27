@@ -30,6 +30,16 @@
               {{ $v.account.password.$params.maxLength.max }} characters is
               allowed here.
             </div>
+            <div
+              v-if="
+                $v.account.password.$error && !$v.account.password.minLength
+              "
+              class="error"
+            >
+              A minimum of
+              {{ $v.account.password.$params.minLength.min }} characters is
+              required here.
+            </div>
           </div>
         </div>
         <div class="control">

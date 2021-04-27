@@ -18,64 +18,24 @@
     >
       <i class="fas fa-ellipsis-h"></i>
     </a>
-    <Context ref="context">
-      <ul class="context__menu">
-        <li>
-          <a @click.prevent="showEditModal">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
-            Edit
-          </a>
-        </li>
-        <li>
-          <a @click.prevent="showChangePasswordModal">
-            <i class="context__menu-icon fas fa-fw fa-key"></i>
-            Change password
-          </a>
-        </li>
-        <li>
-          <a v-if="user.is_active" @click.prevent="deactivate">
-            <i class="context__menu-icon fas fa-fw fa-times"></i>
-            Deactivate
-          </a>
-          <a v-else @click.prevent="activate">
-            <i class="context__menu-icon fas fa-fw fa-check"></i>
-            Activate
-          </a>
-        </li>
-        <li>
-          <a @click.prevent="showDeleteModal">
-            <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
-            Permanently delete
-          </a>
-        </li>
-      </ul>
-      <DeleteUserModal
-        ref="deleteUserModal"
-        :user="user"
-        @delete-user="$emit('delete-user', $event)"
-      ></DeleteUserModal>
-      <EditUserModal
-        ref="editUserModal"
-        :user="user"
-        @update="$emit('update', $event)"
-        @switch-to-delete="showDeleteModal"
-      >
-      </EditUserModal>
-      <ChangePasswordModal ref="changePasswordModal" :user="user">
-      </ChangePasswordModal>
-    </Context>
+    <EditUserContext
+      ref="context"
+      :user="user"
+      @delete-user="$emit('delete-user', $event)"
+      @update="$emit('update', $event)"
+    >
+    </EditUserContext>
   </div>
 </template>
 
 <script>
-import UserAdminService from '@baserow_premium/services/userAdmin'
-import DeleteUserModal from '@baserow_premium/components/admin/user/DeleteUserModal'
-import EditUserModal from '@baserow_premium/components/admin/user/EditUserModal'
-import ChangePasswordModal from '@baserow_premium/components/admin/user/ChangeUserPasswordModal'
+import EditUserContext from '@baserow_premium/components/admin/user/EditUserContext'
 
 export default {
   name: 'UsernameField',
-  components: { ChangePasswordModal, DeleteUserModal, EditUserModal },
+  components: {
+    EditUserContext,
+  },
   props: {
     user: {
       required: true,
@@ -90,38 +50,6 @@ export default {
         .join('')
         .slice(0, 2)
         .toUpperCase()
-    },
-  },
-  methods: {
-    showChangePasswordModal() {
-      this.$refs.context.hide()
-      this.$refs.changePasswordModal.show()
-    },
-    showDeleteModal() {
-      this.$refs.context.hide()
-      this.$refs.deleteUserModal.show()
-    },
-    showEditModal() {
-      this.$refs.context.hide()
-      this.$refs.editUserModal.show()
-    },
-    async activate() {
-      const { data: newUser } = await UserAdminService(this.$client).update(
-        this.user.id,
-        { is_active: true }
-      )
-
-      this.$refs.context.hide()
-      this.$emit('update', newUser)
-    },
-    async deactivate() {
-      const { data: newUser } = await UserAdminService(this.$client).update(
-        this.user.id,
-        { is_active: false }
-      )
-      this.$refs.context.hide()
-
-      this.$emit('update', newUser)
     },
   },
 }

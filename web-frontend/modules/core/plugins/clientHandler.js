@@ -56,6 +56,11 @@ class ErrorHandler {
         'Invalid URL',
         'The provided file URL is invalid or not allowed.'
       ),
+      ERROR_ADMIN_ONLY_OPERATION: new ResponseErrorMessage(
+        'Action not allowed.',
+        "The action couldn't be completed because you don't have the right " +
+          'permissions.'
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the

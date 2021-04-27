@@ -43,7 +43,6 @@ export default {
       this.debounceEmit()
     },
     debounceEmit: debounce(function () {
-      console.log('Emit')
       this.$emit('search-changed', this.headerSearchTerm)
     }, 400),
   },

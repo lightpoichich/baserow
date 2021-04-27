@@ -260,6 +260,25 @@ describe('User Admin Component Tests', () => {
     expect(fullNameCell.text()).toContain(newFullName)
   })
 
+  test('when an server error is returned when editing a user it is shown', async () => {
+    const { user, ui } = await whenThereIsAUserAndYouOpenUserAdmin({})
+
+    testApp.dontFailOnErrorResponses()
+
+    mockPremiumServer.expectUserUpdatedRespondsWithError(user, {
+      error: 'ERROR_ADMIN_ONLY_OPERATION',
+      detail: 'You do not have permission to perform this operation.',
+    })
+
+    const modal = await ui.changeFullName('some terrible value')
+
+    await flushPromises()
+
+    expect(ui.getErrorText(modal)).toBe(
+      "The action couldn't be completed because you don't have the right permissions."
+    )
+  })
+
   test('a users full name cant be changed to less than 2 characters', async () => {
     const { ui } = await whenThereIsAUserAndYouOpenUserAdmin()
 

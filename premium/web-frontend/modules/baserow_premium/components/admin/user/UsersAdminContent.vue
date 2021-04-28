@@ -64,39 +64,11 @@
       </template>
     </div>
     <div class="user-admin-rows__foot">
-      <div class="user-admin-rows__pagination">
-        <div class="user-admin-rows__pagination-name">page</div>
-        <div class="user-admin-rows__pagination-group">
-          <a
-            class="user-admin-rows__pagination-button"
-            :class="{
-              'user-admin-rows__pagination-button--disabled': page === 1,
-            }"
-            @click="fetchPage(page - 1, {})"
-          >
-            <i class="fas fa-caret-left"></i>
-          </a>
-          <input
-            v-model="visiblePage"
-            class="input user-admin-rows__pagination-page-input"
-            type="number"
-            @keypress.enter="fetchPage(visiblePage, {})"
-          />
-          <div class="user-admin-rows__pagination-count">
-            of {{ totalPages }}
-          </div>
-          <a
-            class="user-admin-rows__pagination-button"
-            :class="{
-              'user-admin-rows__pagination-button--disabled':
-                page === totalPages,
-            }"
-            @click="fetchPage(page + 1, {})"
-          >
-            <i class="fas fa-caret-right"></i>
-          </a>
-        </div>
-      </div>
+      <Paginator
+        :total-pages="totalPages"
+        :page="page"
+        @change-page="fetchPage"
+      ></Paginator>
     </div>
   </div>
 </template>
@@ -109,23 +81,23 @@ import moment from 'moment'
 import UserGroupsField from '@baserow_premium/components/admin/user/UserGroupsField'
 import ResizeObserver from 'resize-observer-polyfill'
 import UserSearch from '@baserow_premium/components/admin/user/UserSearch'
+import Paginator from '@baserow/modules/core/components/Paginator'
 
 export default {
   name: 'UsersAdminContent',
-  components: { UserSearch, UserGroupsField, UsernameField },
+  components: { UserSearch, UserGroupsField, UsernameField, Paginator },
   props: {},
   data() {
     return {
       loading: false,
       page: 1,
-      visiblePage: 1,
       totalPages: null,
       users: [],
       groupWidth: 0,
     }
   },
   async fetch() {
-    await this.fetchPage(1, {})
+    await this.fetchPage(1)
   },
   mounted() {
     this.$el.resizeObserver = new ResizeObserver(this.onResize)
@@ -153,16 +125,7 @@ export default {
      * Fetches the rows of a given page and adds them to the state. If a search query
      * has been stored in the state then that will be remembered.
      */
-    async fetchPage(page, { searchQuery = '' }) {
-      if (
-        this.totalPages !== null &&
-        this.totalPages !== 0 &&
-        (page > this.totalPages || page < 1)
-      ) {
-        this.visiblePage = this.page
-        return
-      }
-
+    async fetchPage(page, { searchQuery = '' } = {}) {
       this.loading = true
 
       try {

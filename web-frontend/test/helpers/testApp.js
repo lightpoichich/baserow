@@ -143,15 +143,21 @@ export class TestApp {
       attachTo: rootDiv,
       ...kwargs,
     })
-    const realComponent = wrapper.vm
-    if (realComponent.$options.fetch) {
-      const fetch = realComponent.$options.fetch
+    await this.callFetchOnChildren(wrapper.vm)
+    return wrapper
+  }
+
+  async callFetchOnChildren(c) {
+    if (c.$options.fetch) {
+      const fetch = c.$options.fetch
       if (typeof fetch !== 'function') {
         throw new TypeError('fetch should be a function')
       }
-      await realComponent.$options.fetch.bind(realComponent)()
+      await c.$options.fetch.bind(c)()
     }
-    return wrapper
+    for (const child of c.$children) {
+      await this.callFetchOnChildren(child)
+    }
   }
 }
 /**

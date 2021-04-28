@@ -2,7 +2,7 @@
   <div>
     <a
       ref="contextLink"
-      class="admin-header__link"
+      class="crud-header__link"
       :class="{
         'active--primary': headerSearchTerm.length > 0,
       }"
@@ -11,21 +11,21 @@
       <i class="fas fa-search"></i>
       {{ headerSearchTerm }}
     </a>
-    <UserSearchContext
+    <CrudTableSearchContext
       ref="context"
       :loading="loading"
       @search-changed="searchChanged"
-    ></UserSearchContext>
+    ></CrudTableSearchContext>
   </div>
 </template>
 
 <script>
 import debounce from 'lodash/debounce'
-import UserSearchContext from '@baserow_premium/components/admin/user/UserSearchContext'
+import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
 
 export default {
-  name: 'UserSearch',
-  components: { UserSearchContext },
+  name: 'CrudTableSearch',
+  components: { CrudTableSearchContext },
   props: {
     loading: {
       type: Boolean,

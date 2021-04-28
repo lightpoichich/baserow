@@ -27,7 +27,7 @@
 import context from '@baserow/modules/core/mixins/context'
 
 export default {
-  name: 'UserSearchContext',
+  name: 'CrudTableSearchContext',
   mixins: [context],
   props: {
     loading: {

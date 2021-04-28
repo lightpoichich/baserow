@@ -2,8 +2,8 @@ import EditUserContext from '@baserow_premium/components/admin/user/EditUserCont
 import Error from '@baserow/modules/core/components/Error'
 import ChangeUserPasswordModal from '@baserow_premium/components/admin/user/ChangeUserPasswordModal'
 import EditUserModal from '@baserow_premium/components/admin/user/EditUserModal'
-import UserSearch from '@baserow_premium/components/admin/user/UserSearch'
-import UserSearchContext from '@baserow_premium/components/admin/user/UserSearchContext'
+import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
+import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
 
 export default class UserAdminUserHelpers {
   constructor(userAdminComponent) {
@@ -11,7 +11,7 @@ export default class UserAdminUserHelpers {
   }
 
   findCells(numCellsExpected = 7) {
-    const cells = this.c.findAll('.user-admin-rows__cell')
+    const cells = this.c.findAll('.crud-table-rows__cell')
     expect(cells.length).toBe(numCellsExpected)
     return cells
   }
@@ -172,9 +172,9 @@ export default class UserAdminUserHelpers {
   }
 
   async typeIntoSearchBox(searchText) {
-    const searchBox = this.c.findComponent(UserSearch)
+    const searchBox = this.c.findComponent(CrudTableSearch)
     await searchBox.find('a').trigger('click')
-    const searchBoxContext = searchBox.findComponent(UserSearchContext)
+    const searchBoxContext = searchBox.findComponent(CrudTableSearchContext)
     const searchInput = searchBoxContext.find('input')
     searchInput.element.value = searchText
     await searchInput.trigger('input')

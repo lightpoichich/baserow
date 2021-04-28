@@ -41,20 +41,17 @@
   </div>
 </template>
 <script>
+import ResizeObserver from 'resize-observer-polyfill'
 export default {
   name: 'UserGroupsField',
   props: {
-    groups: {
+    row: {
       required: true,
-      type: Array,
+      type: Object,
     },
-    userId: {
+    column: {
       required: true,
-      type: Number,
-    },
-    parentWidth: {
-      required: true,
-      type: Number,
+      type: Object,
     },
   },
   data() {
@@ -67,17 +64,28 @@ export default {
     hiddenGroups() {
       return this.groups.slice(this.groups.length - this.numHidden)
     },
-  },
-  watch: {
-    parentWidth() {
-      this.updatedOverflow()
+    groups() {
+      return this.row[this.column.key]
     },
+    userId() {
+      return this.row.id
+    },
+  },
+  mounted() {
+    this.$el.resizeObserver = new ResizeObserver(this.updatedOverflow)
+    this.$el.resizeObserver.observe(this.$el)
+  },
+  beforeDestroy() {
+    this.$el.resizeObserver.unobserve(this.$el)
   },
   created() {
     this.updatedOverflow()
   },
   methods: {
     updatedOverflow() {
+      if (process.server) {
+        return
+      }
       this.$nextTick(() => {
         const container = this.$refs.groups_container
         this.overflowing =

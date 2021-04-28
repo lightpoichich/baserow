@@ -38,10 +38,7 @@ export default {
   props: {
     /**
      */
-    totalPages: {
-      required: true,
-      type: Number,
-    },
+    totalPages: Number,
     /**
      */
     page: {

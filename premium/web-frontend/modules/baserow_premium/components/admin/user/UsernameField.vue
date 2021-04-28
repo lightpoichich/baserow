@@ -3,9 +3,9 @@
     <div class="user-admin-rows__username--initials">
       {{ firstTwoInitials }}
     </div>
-    {{ user.username }}
+    {{ row.username }}
     <i
-      v-if="user.is_staff"
+      v-if="row.is_staff"
       v-tooltip="'is staff'"
       class="user-admin-rows__username--icon fas fa-users"
     ></i>
@@ -20,9 +20,9 @@
     </a>
     <EditUserContext
       ref="context"
-      :user="user"
-      @delete-user="$emit('delete-user', $event)"
-      @update="$emit('update', $event)"
+      :user="row"
+      @delete-user="$emit('row-delete', $event)"
+      @update="$emit('row-update', $event)"
     >
     </EditUserContext>
   </div>
@@ -37,14 +37,14 @@ export default {
     EditUserContext,
   },
   props: {
-    user: {
+    row: {
       required: true,
       type: Object,
     },
   },
   computed: {
     firstTwoInitials() {
-      return this.user.full_name
+      return this.row.full_name
         .split(' ')
         .map((s) => s.slice(0, 1))
         .join('')

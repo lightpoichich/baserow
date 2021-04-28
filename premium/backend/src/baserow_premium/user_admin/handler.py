@@ -1,6 +1,11 @@
+from typing import List, Optional
+
 from django.contrib.auth import get_user_model
 
-from baserow_premium.user_admin.exceptions import AdminOnlyOperationException
+from baserow_premium.user_admin.exceptions import (
+    AdminOnlyOperationException,
+    InvalidSortAttributeException,
+)
 
 User = get_user_model()
 
@@ -10,10 +15,51 @@ def multi_setattr(obj, attributes):
         setattr(obj, key, value)
 
 
+class Sort:
+    def __init__(self, sort_descending: bool, field_name: str):
+        self.sort_descending = sort_descending
+        self.field_name = field_name
+
+
 class UserAdminHandler:
-    def get_users(self, requesting_user):
+    def get_users(
+        self, requesting_user: User, username_search: Optional[str], sorts: List[Sort]
+    ):
         self.raise_if_not_permitted(requesting_user)
-        return User.objects.order_by("id").all()
+        users = User.objects.all()
+        if username_search:
+            users = users.filter(username__icontains=username_search)
+
+        users = self.apply_sorts(sorts, users)
+
+        return users
+
+    def apply_sorts(self, sorts, users):
+        django_sorts = []
+        for sort in sorts:
+            sort_prefix = "" if sort.sort_descending else "-"
+            if sort.field_name not in self.sortable_user_fields():
+                raise InvalidSortAttributeException()
+
+            django_sorts.append(
+                f"{sort_prefix}{self.sortable_user_fields()[sort.field_name]}"
+            )
+        if django_sorts:
+            users = users.order_by(*django_sorts)
+        else:
+            users = users.order_by("id")
+        return users
+
+    @staticmethod
+    def sortable_user_fields():
+        return {
+            "id": "id",
+            "is_active": "is_active",
+            "username": "username",
+            "full_name": "first_name",
+            "date_joined": "date_joined",
+            "last_login": "last_login",
+        }
 
     @staticmethod
     def editable_user_fields():

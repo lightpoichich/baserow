@@ -1,3 +1,5 @@
+from typing import Tuple, List, Optional
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
@@ -6,10 +8,18 @@ from rest_framework.views import APIView
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
-from baserow_premium.api.user_admin.errors import ERROR_ADMIN_ONLY_OPERATION
+from baserow_premium.api.user_admin.errors import (
+    ERROR_ADMIN_ONLY_OPERATION,
+    InvalidSortDirectionException,
+    INVALID_SORT_DIRECTION,
+    INVALID_SORT_ATTRIBUTE,
+)
 from baserow_premium.api.user_admin.serializers import AdminUserSerializer
-from baserow_premium.user_admin.exceptions import AdminOnlyOperationException
-from baserow_premium.user_admin.handler import UserAdminHandler
+from baserow_premium.user_admin.exceptions import (
+    AdminOnlyOperationException,
+    InvalidSortAttributeException,
+)
+from baserow_premium.user_admin.handler import UserAdminHandler, Sort
 
 
 class UsersAdminView(APIView):
@@ -24,6 +34,14 @@ class UsersAdminView(APIView):
                 type=OpenApiTypes.STR,
                 description="If provided only users with a username that matches the "
                 "search query will be returned.",
+            ),
+            OpenApiParameter(
+                name="sorts",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="A comma separated string of user attributes to sort by, "
+                "each attribute must be prefixed with + for a descending "
+                "sort or a - for an ascending sort.",
             ),
             OpenApiParameter(
                 name="page",
@@ -44,6 +62,8 @@ class UsersAdminView(APIView):
                 [
                     "ERROR_PAGE_SIZE_LIMIT",
                     "ERROR_INVALID_PAGE",
+                    "INVALID_SORT_DIRECTION",
+                    "INVALID_SORT_ATTRIBUTE",
                 ]
             ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
@@ -52,6 +72,8 @@ class UsersAdminView(APIView):
     @map_exceptions(
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
+            InvalidSortDirectionException: INVALID_SORT_DIRECTION,
+            InvalidSortAttributeException: INVALID_SORT_ATTRIBUTE,
         }
     )
     def get(self, request):
@@ -61,16 +83,29 @@ class UsersAdminView(APIView):
         """
 
         search = request.GET.get("search")
+        sorts_param = request.GET.get("sorts")
 
         handler = UserAdminHandler()
-        users = handler.get_users(request.user)
-        if search:
-            users = users.filter(username__icontains=search)
+        sorts = self.parse_sorts(sorts_param)
+        users = handler.get_users(request.user, search, sorts)
+
         paginator = PageNumberPagination(limit_page_size=100)
         page = paginator.paginate_queryset(users, request, self)
         serializer = AdminUserSerializer(page, many=True)
 
         return paginator.get_paginated_response(serializer.data)
+
+    @staticmethod
+    def parse_sorts(sorts: Optional[str]) -> List[Sort]:
+        if sorts is None:
+            return []
+        parsed_sorts = []
+        for s in sorts.split(","):
+            sort_direction_prefix = s[0]
+            if sort_direction_prefix not in ["-", "+"]:
+                raise InvalidSortDirectionException()
+            parsed_sorts.append(Sort(sort_direction_prefix == "-", s[1:]))
+        return parsed_sorts
 
 
 class UserAdminView(APIView):

@@ -1,5 +1,5 @@
 <template>
-  <Context>
+  <Context @hide="$emit(hide, $event)">
     <ul class="context__menu">
       <li>
         <a @click.prevent="showEditModal">

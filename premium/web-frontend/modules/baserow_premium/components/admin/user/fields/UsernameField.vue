@@ -14,15 +14,15 @@
     <a
       ref="contextLink"
       class="user-admin-username__menu"
-      @click.prevent="
-        $refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)
-      "
+      @click.prevent="displayContext"
     >
       <i class="fas fa-ellipsis-h"></i>
     </a>
     <EditUserContext
+      v-if="showContext"
       ref="context"
       :user="row"
+      @hide="hideContext"
       @delete-user="$emit('row-delete', $event)"
       @update="$emit('row-update', $event)"
     >
@@ -44,6 +44,11 @@ export default {
       type: Object,
     },
   },
+  data() {
+    return {
+      showContext: false,
+    }
+  },
   computed: {
     firstTwoInitials() {
       return this.row.full_name
@@ -52,6 +57,17 @@ export default {
         .join('')
         .slice(0, 2)
         .toUpperCase()
+    },
+  },
+  methods: {
+    displayContext(e) {
+      this.showContext = true
+      this.$nextTick(function () {
+        this.$refs.context.toggle(this.$refs.contextLink, 'bottom', 'left', 4)
+      })
+    },
+    hideContext() {
+      this.showContext = false
     },
   },
 }

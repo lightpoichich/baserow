@@ -30,16 +30,17 @@ export default {
         cellComponent: SimpleField,
         minWidth: 'min-content',
         maxWidth: 'max-content',
+        sortable: true,
       },
       {
         key: 'username',
         header: 'Username',
-        icon: 'fa-sort-down',
         isInLeftSection: true,
         hasRightBar: true,
         cellComponent: UsernameField,
         minWidth: '200px',
         maxWidth: 'max-content',
+        sortable: true,
       },
       {
         key: 'full_name',
@@ -49,6 +50,7 @@ export default {
         cellComponent: SimpleField,
         minWidth: '100px',
         maxWidth: '200px',
+        sortable: true,
       },
       {
         key: 'groups',
@@ -67,6 +69,7 @@ export default {
         cellComponent: LocalDateField,
         minWidth: 'min-content',
         maxWidth: '200px',
+        sortable: true,
       },
       {
         key: 'date_joined',
@@ -76,6 +79,7 @@ export default {
         cellComponent: LocalDateField,
         minWidth: 'min-content',
         maxWidth: '200px',
+        sortable: true,
       },
       {
         key: 'is_active',
@@ -85,6 +89,7 @@ export default {
         cellComponent: ActiveField,
         minWidth: 'min-content',
         maxWidth: '200px',
+        sortable: true,
       },
     ]
     this.service = UserAdminService(this.$client)

@@ -80,6 +80,13 @@
 
   @include fixed-height(33px, 13px);
 
+  &.crudtable__field--sortable {
+    &:hover {
+      text-decoration: none;
+      background-color: $color-neutral-200;
+    }
+  }
+
   &.crudtable__field--right {
     border-right: 2px solid $color-neutral-200;
     left: 0;
@@ -92,11 +99,13 @@
   }
 }
 
+.crudtable__field-icon {
+  margin-left: 5px;
+}
+
 .crudtable__cell {
   @extend %ellipsis;
 
-  //display: flex;
-  //align-items: center;
   background-color: $white;
   height: 49px;
   border-bottom: 1px solid $color-neutral-200;

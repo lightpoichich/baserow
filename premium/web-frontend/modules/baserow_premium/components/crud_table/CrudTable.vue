@@ -18,10 +18,16 @@
           :class="{
             'crudtable__field--sticky': col.isInLeftSection,
             'crudtable__field--right': col.hasRightBar,
+            'crudtable__field--sortable': col.sortable,
           }"
+          @click="toggleSort(col)"
         >
           {{ col.header }}
-          <i v-if="col.icon" class="fas" :class="col.icon"></i>
+          <i
+            v-if="sorted(col)"
+            class="crudtable__field-icon fas"
+            :class="sortIcon(col)"
+          ></i>
         </div>
       </template>
       <template v-for="row in rows">
@@ -38,6 +44,7 @@
             }"
             @row-update="onRowUpdate"
             @row-delete="onRowDelete"
+            @clicked="onClick"
           />
         </template>
       </template>
@@ -76,6 +83,7 @@ export default {
       page: 1,
       totalPages: null,
       rows: [],
+      columnSorts: [],
     }
   },
   async fetch() {
@@ -89,6 +97,38 @@ export default {
     },
   },
   methods: {
+    onClick(e) {
+      console.log(e)
+    },
+    toggleSort(column) {
+      if (!column.sortable) {
+        return
+      }
+      const i = this.columnSorts.findIndex((c) => c.key === column.key)
+      if (i === -1) {
+        this.columnSorts.push({ key: column.key, direction: 'desc' })
+      } else {
+        const current = this.columnSorts[i]
+        if (current.direction === 'desc') {
+          this.columnSorts.splice(i, 1, {
+            key: current.key,
+            direction: 'asc',
+          })
+        } else {
+          this.columnSorts.splice(i, 1)
+        }
+      }
+      this.fetchPage(this.page)
+    },
+    sortIcon(column) {
+      const i = this.columnSorts.findIndex((c) => c.key === column.key)
+      return this.columnSorts[i].direction === 'desc'
+        ? 'fa-sort-down'
+        : 'fa-sort-up'
+    },
+    sorted(column) {
+      return this.columnSorts.find((c) => c.key === column.key) !== undefined
+    },
     async doSearch(searchQuery) {
       this.totalPages = null
       await this.fetchPage(1, { searchQuery })
@@ -101,7 +141,11 @@ export default {
       this.loading = true
 
       try {
-        const { data } = await this.service.fetchPage(page, searchQuery)
+        const { data } = await this.service.fetchPage(
+          page,
+          searchQuery,
+          this.columnSorts
+        )
         this.page = page
         this.totalPages = Math.ceil(data.count / 100)
         this.rows = data.results

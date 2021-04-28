@@ -18,12 +18,10 @@
       v-show="overflowing"
       ref="contextLink"
       class="user-admin-group__expand"
-      @click.prevent="
-        $refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)
-      "
+      @click.prevent="showContext"
       >+{{ numHidden }}</a
     >
-    <Context ref="context">
+    <Context v-if="renderContext" ref="context" @hide="hideContext">
       <ul class="context__menu">
         <li
           v-for="group in hiddenGroups"
@@ -58,6 +56,7 @@ export default {
     return {
       overflowing: false,
       numHidden: 0,
+      renderContext: false,
     }
   },
   computed: {
@@ -82,6 +81,15 @@ export default {
     this.updatedOverflow()
   },
   methods: {
+    showContext() {
+      this.renderContext = true
+      this.$nextTick(function () {
+        this.$refs.context.toggle(this.$refs.contextLink, 'bottom', 'left', 4)
+      })
+    },
+    hideContext() {
+      this.renderContext = false
+    },
     updatedOverflow() {
       if (process.server) {
         return

@@ -3,7 +3,7 @@
     <div class="user-admin-username__initials">
       {{ firstTwoInitials }}
     </div>
-    <div class="user-admin-username__name">
+    <div v-tooltip="row.username" class="user-admin-username__name">
       {{ row.username }}
     </div>
     <i

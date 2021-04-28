@@ -1,5 +1,8 @@
 <template functional>
-  <div :class="[data.staticClass, data.class]">
+  <div
+    v-tooltip="props.row[props.column.key]"
+    :class="[data.staticClass, data.class]"
+  >
     {{ props.row[props.column.key] }}
   </div>
 </template>

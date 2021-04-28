@@ -1,10 +1,13 @@
-<template>
-  <div>{{ row[column.key] }}</div>
+<template functional>
+  <div :class="[data.staticClass, data.class]">
+    {{ props.row[props.column.key] }}
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'SimpleCell',
+  name: 'SimpleField',
+  functional: true,
   props: {
     row: {
       required: true,

@@ -48,10 +48,10 @@
 </template>
 
 <script>
-import ChangePasswordModal from '@baserow_premium/components/admin/user/ChangeUserPasswordModal'
+import ChangePasswordModal from '@baserow_premium/components/admin/user/modals/ChangeUserPasswordModal'
 import context from '@baserow/modules/core/mixins/context'
-import DeleteUserModal from '@baserow_premium/components/admin/user/DeleteUserModal'
-import EditUserModal from '@baserow_premium/components/admin/user/EditUserModal'
+import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
+import EditUserModal from '@baserow_premium/components/admin/user/modals/EditUserModal'
 import UserAdminService from '@baserow_premium/services/userAdmin'
 
 export default {

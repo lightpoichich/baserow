@@ -2,7 +2,7 @@
   <div>
     <a
       ref="contextLink"
-      class="crud-header__link"
+      class="crudtable__header-link"
       :class="{
         'active--primary': headerSearchTerm.length > 0,
       }"

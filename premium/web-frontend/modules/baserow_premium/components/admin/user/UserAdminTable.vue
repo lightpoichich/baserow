@@ -8,15 +8,15 @@
 
 <script>
 import UserAdminService from '@baserow_premium/services/userAdmin'
-import UsernameField from '@baserow_premium/components/admin/user/UsernameField'
-import UserGroupsField from '@baserow_premium/components/admin/user/UserGroupsField'
+import UsernameField from '@baserow_premium/components/admin/user/fields/UsernameField'
+import UserGroupsField from '@baserow_premium/components/admin/user/fields/UserGroupsField'
 import CrudTable from '@baserow_premium/components/crud_table/CrudTable'
-import SimpleCell from '@baserow_premium/components/crud_table/SimpleCell'
-import LocalDateField from '@baserow_premium/components/crud_table/LocalDateField'
-import ActiveField from '@baserow_premium/components/admin/user/ActiveField'
+import SimpleField from '@baserow_premium/components/crud_table/fields/SimpleField'
+import LocalDateField from '@baserow_premium/components/crud_table/fields/LocalDateField'
+import ActiveField from '@baserow_premium/components/admin/user/fields/ActiveField'
 
 export default {
-  name: 'UsersAdminContent',
+  name: 'UserAdminTable',
   components: {
     CrudTable,
   },
@@ -27,7 +27,7 @@ export default {
         header: 'ID',
         isInLeftSection: true,
         hasRightBar: false,
-        cellComponent: SimpleCell,
+        cellComponent: SimpleField,
         minWidth: 'min-content',
         maxWidth: 'max-content',
       },
@@ -38,15 +38,15 @@ export default {
         isInLeftSection: true,
         hasRightBar: true,
         cellComponent: UsernameField,
-        minWidth: '100px',
-        maxWidth: '300px',
+        minWidth: '200px',
+        maxWidth: 'max-content',
       },
       {
         key: 'full_name',
         header: 'Full Name',
         isInLeftSection: false,
         hasRightBar: false,
-        cellComponent: SimpleCell,
+        cellComponent: SimpleField,
         minWidth: '100px',
         maxWidth: '200px',
       },

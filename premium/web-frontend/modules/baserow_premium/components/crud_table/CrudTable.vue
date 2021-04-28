@@ -1,12 +1,12 @@
 <template>
-  <div class="crud-table-wrapper">
-    <header class="crud_header">
+  <div class="crudtable">
+    <header class="crudtable__header">
       <slot name="header"></slot>
       <CrudTableSearch :loading="loading" @search-changed="doSearch" />
     </header>
     <div
-      :class="{ 'crud-table-rows__loading': loading }"
-      class="crud-table-rows"
+      :class="{ crudtable__loading: loading }"
+      class="crudtable__rows"
       :style="{
         'grid-template-columns': columnWidths,
       }"
@@ -14,10 +14,10 @@
       <template v-for="col in columns">
         <div
           :key="col.key"
-          class="crud-table-rows__field"
+          class="crudtable__field"
           :class="{
-            'crud-table-rows__field-sticky': col.isInLeftSection,
-            'crud-table-rows__field-right': col.hasRightBar,
+            'crudtable__field--sticky': col.isInLeftSection,
+            'crudtable__field--right': col.hasRightBar,
           }"
         >
           {{ col.header }}
@@ -26,26 +26,23 @@
       </template>
       <template v-for="row in rows">
         <template v-for="col in columns">
-          <div
+          <component
+            :is="col.cellComponent"
             :key="col.key + '-' + row.id"
-            class="crud-table-rows__cell"
+            :row="row"
+            :column="col"
+            class="crudtable__cell"
             :class="{
-              'crud-table-rows__cell-sticky': col.isInLeftSection,
-              'crud-table-rows__cell-right': col.hasRightBar,
+              'crudtable__cell--sticky': col.isInLeftSection,
+              'crudtable__cell--right': col.hasRightBar,
             }"
-          >
-            <component
-              :is="col.cellComponent"
-              :row="row"
-              :column="col"
-              @row-update="onRowUpdate"
-              @row-delete="onRowDelete"
-            />
-          </div>
+            @row-update="onRowUpdate"
+            @row-delete="onRowDelete"
+          />
         </template>
       </template>
     </div>
-    <div class="crud-table-rows__foot">
+    <div class="crudtable__footer">
       <Paginator
         :page="page"
         :total-pages="totalPages"

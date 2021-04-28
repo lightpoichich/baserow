@@ -1,12 +1,12 @@
 <template>
-  <UsersAdminContent></UsersAdminContent>
+  <UserAdminTable></UserAdminTable>
 </template>
 
 <script>
-import UsersAdminContent from '@baserow_premium/components/admin/user/UsersAdminContent'
+import UserAdminTable from '@baserow_premium/components/admin/user/UserAdminTable'
 
 export default {
-  components: { UsersAdminContent },
+  components: { UserAdminTable },
   layout: 'app',
   middleware: 'staff',
 }

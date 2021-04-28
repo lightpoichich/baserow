@@ -1,10 +1,11 @@
-.user-admin-rows__username {
+.user-admin-username {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  overflow: auto;
 }
 
-.user-admin-rows__username--initials {
+.user-admin-username__initials {
   flex: 0 0 28px;
   font-weight: bold;
   color: $white;
@@ -15,11 +16,17 @@
   @include center-text(28px, 15px);
 }
 
-.user-admin-rows__username--icon {
+.user-admin-username__name {
+  @extend %ellipsis;
+
+  word-wrap: break-word;
+}
+
+.user-admin-username__icon {
   margin-left: 5px;
 }
 
-.user-admin-rows__username--menu {
+.user-admin-username__menu {
   @include fixed-height(24px, 14px);
 
   border-radius: 3px;
@@ -33,27 +40,29 @@
   }
 }
 
-.user-admin-rows__active-icon {
+.user-admin-active__icon {
   margin-right: 5px;
-  color: $color-success-500;
+
+  &.user-admin-active__icon--activated {
+    color: $color-success-500;
+  }
+
+  &.user-admin-active__icon--deactivated {
+    color: $color-error-500;
+  }
 }
 
-.user-admin-rows__deactive-icon {
-  margin-right: 5px;
-  color: $color-error-500;
-}
-
-.user-admin-rows__cell-group {
+.user-admin-group {
   display: flex;
   align-items: center;
 }
 
-.user-admin-rows__cell-group-icon {
+.user-admin-group__icon {
   width: $fa-fw-width;
   color: $color-neutral-700;
 }
 
-.user-admin-rows__cell-group-container {
+.user-admin-group__container {
   height: 49px;
   margin-right: 5px;
   display: flex;
@@ -63,7 +72,7 @@
   flex-shrink: 3;
 }
 
-.user-admin-rows__cell-group-item {
+.user-admin-group__item {
   @include fixed-height(28px, 12px);
 
   flex: 0 1 auto;
@@ -76,7 +85,7 @@
   box-sizing: border-box;
 }
 
-.user-admin-rows__cell-group-hidden-item {
+.user-admin-group__dropdown-item {
   @include fixed-height(28px, 12px);
 
   border-radius: 15px;
@@ -86,13 +95,7 @@
   width: fit-content;
 }
 
-.user-admin-rows__cell-group-inner {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-}
-
-.user-admin-rows__cell-group-plus {
+.user-admin-group__expand {
   @include fixed-height(28px, 12px);
 
   padding: 0 10px;

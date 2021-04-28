@@ -1,6 +1,6 @@
-<template>
-  <div>
-    {{ localDate }}
+<template functional>
+  <div :class="[data.staticClass, data.class]">
+    {{ $options.methods.localDate(props.row[props.column.key]) }}
   </div>
 </template>
 
@@ -8,6 +8,7 @@
 import moment from 'moment'
 export default {
   name: 'LocalDateField',
+  functional: true,
   props: {
     row: {
       required: true,
@@ -18,9 +19,8 @@ export default {
       type: Object,
     },
   },
-  computed: {
-    localDate() {
-      const date = this.row[this.column.key]
+  methods: {
+    localDate(date) {
       if (date) {
         return moment.utc(date).local().format('L LT')
       } else {

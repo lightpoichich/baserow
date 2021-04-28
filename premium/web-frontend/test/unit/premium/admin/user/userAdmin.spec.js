@@ -1,8 +1,8 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
-import UsersAdminContent from '@baserow_premium/components/admin/user/UsersAdminContent'
+import UserAdminTable from '@baserow_premium/components/admin/user/UserAdminTable'
 import moment from 'moment'
 import flushPromises from 'flush-promises'
-import DeleteUserModal from '@baserow_premium/components/admin/user/DeleteUserModal'
+import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
 import UserAdminUserHelpers from '../../../../fixtures/uiHelpers'
 import MockPremiumServer from '@baserow_premium/../../test/fixtures/mockPremiumServer'
 
@@ -376,7 +376,7 @@ describe('User Admin Component Tests', () => {
     mockPremiumServer.createUsers([firstPageUser], 1, { count: 150 })
     mockPremiumServer.createUsers([secondPageUser], 2, { count: 150 })
 
-    const userAdmin = await testApp.mount(UsersAdminContent, {})
+    const userAdmin = await testApp.mount(UserAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
 
     expect(ui.getSingleRowUsernameText()).toContain(firstPageUser.username)
@@ -404,7 +404,7 @@ describe('User Admin Component Tests', () => {
     mockPremiumServer.createUsers([firstUser, secondUser], 1)
     mockPremiumServer.createUsers([firstUser], 1, { search: 'firstUser' })
 
-    const userAdmin = await testApp.mount(UsersAdminContent, {})
+    const userAdmin = await testApp.mount(UserAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
 
     const cells = ui.findCells(14)
@@ -481,7 +481,7 @@ describe('User Admin Component Tests', () => {
     const user = mockPremiumServer.aUser(userSetup)
     mockPremiumServer.createUsers([user], 1)
 
-    const userAdmin = await testApp.mount(UsersAdminContent, {})
+    const userAdmin = await testApp.mount(UserAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
     return { user, userAdmin, ui }
   }

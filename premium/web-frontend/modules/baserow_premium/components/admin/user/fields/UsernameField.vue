@@ -1,17 +1,19 @@
 <template>
-  <div class="user-admin-rows__username">
-    <div class="user-admin-rows__username--initials">
+  <div class="user-admin-username">
+    <div class="user-admin-username__initials">
       {{ firstTwoInitials }}
     </div>
-    {{ row.username }}
+    <div class="user-admin-username__name">
+      {{ row.username }}
+    </div>
     <i
       v-if="row.is_staff"
       v-tooltip="'is staff'"
-      class="user-admin-rows__username--icon fas fa-users"
+      class="user-admin-username__icon fas fa-users"
     ></i>
     <a
       ref="contextLink"
-      class="user-admin-rows__username--menu"
+      class="user-admin-username__menu"
       @click.prevent="
         $refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)
       "
@@ -29,7 +31,7 @@
 </template>
 
 <script>
-import EditUserContext from '@baserow_premium/components/admin/user/EditUserContext'
+import EditUserContext from '@baserow_premium/components/admin/user/fields/EditUserContext'
 
 export default {
   name: 'UsernameField',

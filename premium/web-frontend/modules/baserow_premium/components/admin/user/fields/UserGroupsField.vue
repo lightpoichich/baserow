@@ -1,23 +1,23 @@
 <template>
-  <div class="user-admin-rows__cell-group">
-    <div ref="groups_container" class="user-admin-rows__cell-group-container">
+  <div class="user-admin-group">
+    <div ref="groups_container" class="user-admin-group__container">
       <span
         v-for="group in groups"
         ref="groups"
         :key="'admin-row-group' + userId + '-' + group.id"
-        class="user-admin-rows__cell-group-item"
+        class="user-admin-group__item"
       >
         {{ group.name }}
         <i
           v-if="group.permissions == 'ADMIN'"
-          class="user-admin-rows__cell-group-icon fas fa-users-cog"
+          class="user-admin-group__icon fas fa-users-cog"
         ></i>
       </span>
     </div>
     <a
       v-show="overflowing"
       ref="contextLink"
-      class="user-admin-rows__cell-group-plus"
+      class="user-admin-group__expand"
       @click.prevent="
         $refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)
       "
@@ -28,12 +28,12 @@
         <li
           v-for="group in hiddenGroups"
           :key="'hidden-admin-row-group' + userId + '-' + group.id"
-          class="user-admin-rows__cell-group-hidden-item"
+          class="user-admin-group__dropdown-item"
         >
           {{ group.name }}
           <i
             v-if="group.permissions == 'ADMIN'"
-            class="user-admin-rows__cell-group-icon fas fa-users-cog"
+            class="user-admin-group__icon fas fa-users-cog"
           ></i>
         </li>
       </ul>

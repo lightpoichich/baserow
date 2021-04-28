@@ -1,7 +1,7 @@
-import EditUserContext from '@baserow_premium/components/admin/user/EditUserContext'
+import EditUserContext from '@baserow_premium/components/admin/user/fields/EditUserContext'
 import Error from '@baserow/modules/core/components/Error'
-import ChangeUserPasswordModal from '@baserow_premium/components/admin/user/ChangeUserPasswordModal'
-import EditUserModal from '@baserow_premium/components/admin/user/EditUserModal'
+import ChangeUserPasswordModal from '@baserow_premium/components/admin/user/modals/ChangeUserPasswordModal'
+import EditUserModal from '@baserow_premium/components/admin/user/modals/EditUserModal'
 import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
 import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
 
@@ -11,7 +11,7 @@ export default class UserAdminUserHelpers {
   }
 
   findCells(numCellsExpected = 7) {
-    const cells = this.c.findAll('.crud-table-rows__cell')
+    const cells = this.c.findAll('.crudtable__cell')
     expect(cells.length).toBe(numCellsExpected)
     return cells
   }
@@ -36,24 +36,24 @@ export default class UserAdminUserHelpers {
   }
 
   getUsernameInitials(usernameCell) {
-    const initials = usernameCell.get('.user-admin-rows__username--initials')
+    const initials = usernameCell.get('.user-admin-username__initials')
     return initials.text()
   }
 
   usernameCellIsForStaffMember(usernameCell) {
-    return usernameCell.find('.user-admin-rows__username--icon').exists()
+    return usernameCell.find('.user-admin-username__icon').exists()
   }
 
   getGroups(groupsCell) {
-    return groupsCell.findAll('.user-admin-rows__cell-group-item')
+    return groupsCell.findAll('.user-admin-group__item')
   }
 
   groupCellShowsThisUserIsGroupAdmin(groupCell) {
-    return groupCell.find('.user-admin-rows__cell-group-icon').exists()
+    return groupCell.find('.user-admin-group__icon').exists()
   }
 
   async openFirstUserActionsMenu() {
-    await this.c.get('.user-admin-rows__username--menu').trigger('click')
+    await this.c.get('.user-admin-username__menu').trigger('click')
     return this.c.findComponent(EditUserContext)
   }
 

@@ -131,7 +131,7 @@ class UsersAdminView(APIView):
 
             try:
                 field = SortableUserAdminField(sort_field_name)
-            except KeyError:
+            except ValueError:
                 raise InvalidSortAttributeException()
 
             is_descending_sort = sort_direction_prefix == "-"

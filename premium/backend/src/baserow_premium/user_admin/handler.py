@@ -77,17 +77,6 @@ class UserAdminHandler:
         return users
 
     @staticmethod
-    def sortable_user_fields():
-        return {
-            "id": "id",
-            "is_active": "is_active",
-            "username": "username",
-            "full_name": "first_name",
-            "date_joined": "date_joined",
-            "last_login": "last_login",
-        }
-
-    @staticmethod
     def editable_user_fields():
         return [
             ("is_active", setattr),

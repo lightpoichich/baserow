@@ -53,6 +53,7 @@ import context from '@baserow/modules/core/mixins/context'
 import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
 import EditUserModal from '@baserow_premium/components/admin/user/modals/EditUserModal'
 import UserAdminService from '@baserow_premium/services/userAdmin'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'EditUserContext',
@@ -91,23 +92,23 @@ export default {
       this.hide()
       this.$refs.editUserModal.show()
     },
-    async activate() {
-      const { data: newUser } = await UserAdminService(this.$client).update(
-        this.selectedUser.user.id,
-        { is_active: true }
-      )
+    async changeIsActive(isActive) {
+      try {
+        const { data: newUser } = await UserAdminService(
+          this.$client
+        ).update(this.selectedUser.user.id, { is_active: isActive })
 
-      this.hide()
-      this.$emit('update', newUser)
+        this.hide()
+        this.$emit('update', newUser)
+      } catch (error) {
+        notifyIf(error, 'settings')
+      }
+    },
+    async activate() {
+      await this.changeIsActive(true)
     },
     async deactivate() {
-      const { data: newUser } = await UserAdminService(this.$client).update(
-        this.selectedUser.user.id,
-        { is_active: false }
-      )
-      this.hide()
-
-      this.$emit('update', newUser)
+      await this.changeIsActive(false)
     },
   },
 }

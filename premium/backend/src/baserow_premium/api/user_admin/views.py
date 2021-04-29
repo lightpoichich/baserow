@@ -195,8 +195,12 @@ class UserAdminView(APIView):
         user_id = int(user_id)
 
         handler = UserAdminHandler()
+        # the data param is the valid AND serialized form of the request data
+        # as we have write only fields these have been removed from data, but we still
+        # want them hence we use request.data which we know is valid but still contains
+        # the write_only fields.
         user = handler.update_user(
-            request.user, user_id, self.parse_editable_fields(data)
+            request.user, user_id, self.parse_editable_fields(request.data)
         )
 
         return Response(AdminUserSerializer(user).data)

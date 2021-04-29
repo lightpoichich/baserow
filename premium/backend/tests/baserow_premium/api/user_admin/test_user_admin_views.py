@@ -423,12 +423,15 @@ def test_admin_can_patch_user(api_client, data_fixture):
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
     url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+    old_password = user.password
     response = api_client.patch(
         url,
-        {"username": "some_other_email@test.nl"},
+        {"username": "some_other_email@test.nl", "password": "new_password"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    user.refresh_from_db()
+    assert user.password != old_password
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "date_joined": "2021-04-01T01:00:00Z",

@@ -38,7 +38,10 @@ export default {
   props: {
     /**
      */
-    totalPages: Number,
+    totalPages: {
+      required: true,
+      validator: (prop) => typeof prop === 'number' || prop === null,
+    },
     /**
      */
     page: {

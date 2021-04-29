@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -11,9 +11,11 @@ from baserow.api.schemas import get_error_schema
 from baserow_premium.api.user_admin.errors import (
     ERROR_ADMIN_ONLY_OPERATION,
     InvalidSortDirectionException,
-    INVALID_SORT_DIRECTION,
-    INVALID_SORT_ATTRIBUTE,
+    INVALID_USER_ADMIN_SORT_DIRECTION,
+    INVALID_USER_ADMIN_SORT_ATTRIBUTE,
     InvalidSortAttributeException,
+    InvalidUserAdminEditField,
+    INVALID_USER_ADMIN_UPDATE,
 )
 from baserow_premium.api.user_admin.serializers import AdminUserSerializer
 from baserow_premium.user_admin.exceptions import (
@@ -23,6 +25,8 @@ from baserow_premium.user_admin.handler import (
     UserAdminHandler,
     UserAdminSort,
     SortableUserAdminField,
+    EditableUserAdminField,
+    UserAdminSortDirection,
 )
 
 
@@ -71,8 +75,8 @@ class UsersAdminView(APIView):
                 [
                     "ERROR_PAGE_SIZE_LIMIT",
                     "ERROR_INVALID_PAGE",
-                    "INVALID_SORT_DIRECTION",
-                    "INVALID_SORT_ATTRIBUTE",
+                    "INVALID_USER_ADMIN_SORT_DIRECTION",
+                    "INVALID_USER_ADMIN_SORT_ATTRIBUTE",
                 ]
             ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
@@ -81,8 +85,8 @@ class UsersAdminView(APIView):
     @map_exceptions(
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
-            InvalidSortDirectionException: INVALID_SORT_DIRECTION,
-            InvalidSortAttributeException: INVALID_SORT_ATTRIBUTE,
+            InvalidSortDirectionException: INVALID_USER_ADMIN_SORT_DIRECTION,
+            InvalidSortAttributeException: INVALID_USER_ADMIN_SORT_ATTRIBUTE,
         }
     )
     def get(self, request):
@@ -126,7 +130,9 @@ class UsersAdminView(APIView):
             sort_direction_prefix = s[0]
             sort_field_name = s[1:]
 
-            if sort_direction_prefix not in ["-", "+"]:
+            try:
+                direction = UserAdminSortDirection(sort_direction_prefix)
+            except ValueError:
                 raise InvalidSortDirectionException()
 
             try:
@@ -134,17 +140,22 @@ class UsersAdminView(APIView):
             except ValueError:
                 raise InvalidSortAttributeException()
 
-            is_descending_sort = sort_direction_prefix == "-"
-            parsed_sorts.append(UserAdminSort(is_descending_sort, field))
+            parsed_sorts.append(UserAdminSort(direction, field))
         return parsed_sorts
 
 
 class UserAdminView(APIView):
+    _valid_editable_fields = ",".join(
+        [f"`{f.value}`" for f in list(EditableUserAdminField)]
+    )
+
     @extend_schema(
         tags=["Premium", "Admin"],
         request=AdminUserSerializer,
         operation_id="admin_edit_user",
-        description="Updates specified user attributes and returns the updated user.",
+        description=f"Updates specified user attributes and returns the updated user. "
+        f"The attributes which can be "
+        f"edited are {_valid_editable_fields}.",
         parameters=[
             OpenApiParameter(
                 name="user_id",
@@ -155,7 +166,9 @@ class UserAdminView(APIView):
         ],
         responses={
             200: AdminUserSerializer(many=True),
-            400: get_error_schema(["ERROR_REQUEST_BODY_VALIDATION"]),
+            400: get_error_schema(
+                ["ERROR_REQUEST_BODY_VALIDATION", "INVALID_USER_ADMIN_UPDATE"]
+            ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
         },
     )
@@ -163,6 +176,7 @@ class UserAdminView(APIView):
     @map_exceptions(
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
+            InvalidUserAdminEditField: INVALID_USER_ADMIN_UPDATE,
         }
     )
     def patch(self, request, user_id, data):
@@ -171,9 +185,26 @@ class UserAdminView(APIView):
         """
 
         handler = UserAdminHandler()
-        user = handler.update_user(request.user, user_id, data)
+        user = handler.update_user(
+            request.user, user_id, self.parse_editable_fields(data)
+        )
 
         return Response(AdminUserSerializer(user).data)
+
+    @staticmethod
+    def parse_editable_fields(
+        data: Dict[str, Any]
+    ) -> Dict[EditableUserAdminField, Any]:
+        parsed_edits: Dict[EditableUserAdminField, Any] = {}
+        if not data:
+            raise InvalidUserAdminEditField()
+        for field_name, value in data.items():
+            try:
+                parsed_edits[EditableUserAdminField(field_name)] = value
+            except ValueError:
+                raise InvalidUserAdminEditField()
+
+        return parsed_edits
 
     @extend_schema(
         tags=["Admin", "Premium"],

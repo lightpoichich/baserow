@@ -30,11 +30,14 @@ export function createUsersForAdmin(
   mock,
   users,
   page,
-  { count = null, search = null }
+  { count = null, search = null, sorts = null }
 ) {
   const params = { page }
   if (search !== null) {
     params.search = search
+  }
+  if (sorts !== null) {
+    params.sorts = sorts
   }
   mock.onGet(`/premium/admin/user/`, { params }).reply(200, {
     count: count === null ? users.length : count,
@@ -47,7 +50,6 @@ export function expectUserDeleted(mock, userId) {
 }
 
 export function expectUserUpdated(mock, user, changes) {
-  changes.id = user.id
   mock
     .onPatch(`/premium/admin/user/${user.id}/`, changes)
     .reply(200, Object.assign({}, user, changes))

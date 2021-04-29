@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 
 from django.contrib.auth import get_user_model
 
@@ -13,6 +13,11 @@ User = get_user_model()
 
 @unique
 class SortableUserAdminField(Enum):
+    """
+    The various attributes for which users returned by the UserAdminHandler can be
+    sorted.
+    """
+
     ID = "id"
     IS_ACTIVE = "is_active"
     USERNAME = "username"
@@ -27,9 +32,54 @@ class SortableUserAdminField(Enum):
             return self.value
 
 
-def multi_setattr(obj, attributes):
-    for key, value in attributes:
-        setattr(obj, key, value)
+@unique
+class UserAdminSortDirection(Enum):
+    """
+    The directions in which user attributes can be sorted by the UserAdminHandler.
+    """
+
+    DESC = "+"
+    ASC = "-"
+
+    def to_django_sort_prefix(self) -> str:
+        """
+        :return: The prefix used by django's order_by method to achieve the desired sort
+                 direction.
+        """
+        if self == UserAdminSortDirection.DESC:
+            return ""
+        else:
+            return "-"
+
+
+@unique
+class EditableUserAdminField(Enum):
+    """
+    The various user attributes which can be updated for a given use by the
+    UserAdminHandler.
+    """
+
+    IS_ACTIVE = "is_active"
+    IS_STAFF = "is_staff"
+    USERNAME = "username"
+    FULL_NAME = "full_name"
+    PASSWORD = "password"
+
+    def edit_user(self, user, new_value):
+        """
+        Performs the correct user update operation for a given UserAdminField.
+        """
+        if self == EditableUserAdminField.FULL_NAME:
+            user.first_name = new_value
+        elif self == EditableUserAdminField.USERNAME:
+            user.username = new_value
+            user.email = new_value
+        elif self == EditableUserAdminField.PASSWORD:
+            user.set_password(new_value)
+        else:
+            setattr(user, self.value, new_value)
+
+        return user
 
 
 class UserAdminSort:
@@ -37,9 +87,11 @@ class UserAdminSort:
     A simple value class indicating how to sort a particular user admin field.
     """
 
-    def __init__(self, sort_descending: bool, field_name: SortableUserAdminField):
+    def __init__(
+        self, direction: UserAdminSortDirection, field_name: SortableUserAdminField
+    ):
         """"""
-        self.sort_descending = sort_descending
+        self.direction = direction
         self.field_name = field_name
 
 
@@ -50,7 +102,19 @@ class UserAdminHandler:
         username_search: Optional[str] = None,
         sorts: Optional[List[UserAdminSort]] = None,
     ):
-        self.raise_if_not_permitted(requesting_user)
+        """
+        Looks up all users, performs an optional username search and then sorts the
+        resulting user queryset and returns it. By default if no sorts are provided
+        sorts by user id ascending.
+
+        :param requesting_user: The user who is making the request to get_users
+        :param username_search: An optional icontains username search to filter the
+                                returned users by.
+        :param sorts: A list of sorts to be applied in order over the returned users.
+        :return: A queryset of users in Baserow, optionally sorted and ordered by the
+                 specified parameters.
+        """
+        self._raise_if_not_permitted(requesting_user)
 
         users = User.objects.all()
         if username_search is not None:
@@ -58,15 +122,22 @@ class UserAdminHandler:
 
         if sorts is None:
             sorts = []
-        users = self.apply_sorts(sorts, users)
+        users = self._apply_sorts(sorts, users)
 
         return users
 
     @staticmethod
-    def apply_sorts(sorts: List[UserAdminSort], users):
+    def _apply_sorts(sorts: List[UserAdminSort], users):
+        """
+        Takes a list of UserAdminSorts and applies them to a django queryset in order.
+
+        :param sorts: The list of sorts to apply to the users queryset
+        :param users: The users queryset to sort
+        :return:
+        """
         django_sorts = []
         for sort in sorts:
-            sort_prefix = "" if sort.sort_descending else "-"
+            sort_prefix = sort.direction.to_django_sort_prefix()
 
             sort_db_column = sort.field_name.underlying_user_database_column_name()
             django_sorts.append(f"{sort_prefix}{sort_db_column}")
@@ -76,41 +147,27 @@ class UserAdminHandler:
             users = users.order_by("id")
         return users
 
-    @staticmethod
-    def editable_user_fields():
-        return [
-            ("is_active", setattr),
-            ("is_staff", setattr),
-            (
-                "username",
-                lambda user, _, username: multi_setattr(
-                    user, [("username", username), ("email", username)]
-                ),
-            ),
-            (
-                "full_name",
-                lambda user, _, full_name: setattr(user, "first_name", full_name),
-            ),
-            ("password", lambda user, _, password: user.set_password(password)),
-        ]
-
-    def update_user(self, requesting_user, user_id, data):
-        self.raise_if_not_permitted(requesting_user)
+    def update_user(
+        self,
+        requesting_user: User,
+        user_id: int,
+        data: Dict[EditableUserAdminField, Any],
+    ):
+        self._raise_if_not_permitted(requesting_user)
 
         user = User.objects.get(id=user_id)
-        for field_name, setattr_func in self.editable_user_fields():
-            if field_name in data:
-                setattr_func(user, field_name, data[field_name])
+        for field, new_value in data.items():
+            field.edit_user(user, new_value)
         user.save()
         return user
 
-    def delete_user(self, requesting_user, user_id):
-        self.raise_if_not_permitted(requesting_user)
+    def delete_user(self, requesting_user: User, user_id: int):
+        self._raise_if_not_permitted(requesting_user)
 
         user = User.objects.get(id=user_id)
         user.delete()
 
     @staticmethod
-    def raise_if_not_permitted(requesting_user):
+    def _raise_if_not_permitted(requesting_user):
         if not requesting_user.is_staff:
             raise AdminOnlyOperationException()

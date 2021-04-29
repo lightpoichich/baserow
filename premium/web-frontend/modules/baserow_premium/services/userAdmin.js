@@ -16,7 +16,6 @@ export default (client) => {
       return client.get(`/premium/admin/user/`, { params })
     },
     update(userId, values) {
-      values.id = userId
       return client.patch(`/premium/admin/user/${userId}/`, values)
     },
     delete(userId) {

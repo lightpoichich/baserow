@@ -16,6 +16,21 @@ export default class UserAdminUserHelpers {
     return cells
   }
 
+  findUsernameColumnCellsText() {
+    const cells = this.c.findAll('.crudtable__cell')
+    const usernameCells = []
+    const numRows = cells.length / 7
+    for (let i = 0; i < numRows; i++) {
+      usernameCells.push(
+        cells
+          .at(i * 7 + 1)
+          .find('.user-admin-username__name')
+          .text()
+      )
+    }
+    return usernameCells
+  }
+
   getRow(cells, rowNumber) {
     const offset = rowNumber * 7
     return {
@@ -179,5 +194,13 @@ export default class UserAdminUserHelpers {
     searchInput.element.value = searchText
     await searchInput.trigger('input')
     await searchInput.trigger('keyup')
+  }
+
+  clickUsernameHeader() {
+    return this.c.findAll('.crudtable__field').at(1).trigger('click')
+  }
+
+  clickFullnameHeader() {
+    return this.c.findAll('.crudtable__field').at(2).trigger('click')
   }
 }

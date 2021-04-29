@@ -419,6 +419,66 @@ describe('User Admin Component Tests', () => {
     expect(ui.getSingleRowUsernameText()).toContain(firstUser.username)
   })
 
+  test('you can sort by multiple columns which will pass the sorts to the server', async () => {
+    const first = 'firstUser@example.com'
+    const second = 'secondUser@example.com'
+    const third = 'thirdUser@example.com'
+    const firstUser = mockPremiumServer.aUser({
+      id: 1,
+      username: first,
+    })
+    const secondUser = mockPremiumServer.aUser({
+      id: 2,
+      username: second,
+    })
+    const thirdUser = mockPremiumServer.aUser({
+      id: 3,
+      username: third,
+    })
+    mockPremiumServer.createUsers([firstUser, secondUser, thirdUser], 1)
+
+    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const ui = new UserAdminUserHelpers(userAdmin)
+
+    let usernameCellsText = ui.findUsernameColumnCellsText()
+    expect(usernameCellsText).toStrictEqual([first, second, third])
+
+    // Clicking once starts with a descending sort
+    mockPremiumServer.createUsers([secondUser, firstUser, thirdUser], 1, {
+      sorts: '+username',
+    })
+    await ui.clickUsernameHeader()
+    await flushPromises()
+    usernameCellsText = ui.findUsernameColumnCellsText()
+    expect(usernameCellsText).toStrictEqual([second, first, third])
+
+    // Clicking again toggles to a ascending sort
+    mockPremiumServer.createUsers([thirdUser, firstUser, secondUser], 1, {
+      sorts: '-username',
+    })
+    await ui.clickUsernameHeader()
+    await flushPromises()
+    usernameCellsText = ui.findUsernameColumnCellsText()
+    expect(usernameCellsText).toStrictEqual([third, first, second])
+
+    // Clicking again turns off the sort
+    await ui.clickUsernameHeader()
+    await flushPromises()
+    usernameCellsText = ui.findUsernameColumnCellsText()
+    expect(usernameCellsText).toStrictEqual([first, second, third])
+
+    // Can click multiple columns resulting in an ordered sort
+    mockPremiumServer.createUsers([firstUser, thirdUser, secondUser], 1, {
+      sorts: '-username,+full_name',
+    })
+    await ui.clickUsernameHeader()
+    await ui.clickUsernameHeader()
+    await ui.clickFullnameHeader()
+    await flushPromises()
+    usernameCellsText = ui.findUsernameColumnCellsText()
+    expect(usernameCellsText).toStrictEqual([first, third, second])
+  })
+
   async function testToggleStaff(startingIsStaff) {
     const { user, ui } = await whenThereIsAUserAndYouOpenUserAdmin({
       isStaff: startingIsStaff,

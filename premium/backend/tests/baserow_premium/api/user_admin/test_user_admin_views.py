@@ -239,7 +239,7 @@ def test_throws_error_if_invalid_sort_field_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -257,7 +257,7 @@ def test_throws_error_if_sort_direction_not_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -275,7 +275,7 @@ def test_throws_error_if_invalid_sort_direction_provided(api_client, data_fixtur
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -293,7 +293,7 @@ def test_throws_error_if_invalid_sorts_mixed_with_valid_ones(api_client, data_fi
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -311,7 +311,7 @@ def test_throws_error_if_blank_sorts_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -329,7 +329,7 @@ def test_throws_error_if_no_sorts_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -402,7 +402,7 @@ def test_non_admin_cannot_patch_user(api_client, data_fixture):
     )
     response = api_client.patch(
         url,
-        {"id": non_admin_user.id, "username": "some_other_email@test.nl"},
+        {"username": "some_other_email@test.nl"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {non_admin_user_token}",
     )
@@ -425,7 +425,7 @@ def test_admin_can_patch_user(api_client, data_fixture):
     url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
     response = api_client.patch(
         url,
-        {"id": user.id, "username": "some_other_email@test.nl"},
+        {"username": "some_other_email@test.nl"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -440,3 +440,23 @@ def test_admin_can_patch_user(api_client, data_fixture):
         "is_active": True,
         "last_login": None,
     }
+
+
+@pytest.mark.django_db
+def test_error_returned_when_invalid_field_supplied_to_edit(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+    response = api_client.patch(
+        url,
+        {"date_joined": "2021-04-01T01:00:00Z"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "INVALID_USER_ADMIN_UPDATE"

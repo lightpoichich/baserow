@@ -1,8 +1,16 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from django.utils.datetime_safe import datetime
 
 from baserow_premium.user_admin.exceptions import AdminOnlyOperationException
-from baserow_premium.user_admin.handler import UserAdminHandler
+from baserow_premium.user_admin.handler import (
+    UserAdminHandler,
+    EditableUserAdminField,
+    UserAdminSort,
+    SortableUserAdminField,
+    UserAdminSortDirection,
+)
 
 User = get_user_model()
 
@@ -30,6 +38,70 @@ def test_non_admin_cant_get_users(data_fixture):
     )
     with pytest.raises(AdminOnlyOperationException):
         handler.get_users(non_admin_user)
+
+
+@pytest.mark.django_db
+def test_admin_can_search_by_username(data_fixture):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    data_fixture.create_user(
+        email="other_user@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    results = handler.get_users(admin_user, username_search="other_user")
+    assert results.count() == 1
+    assert results[0].username == "other_user@test.nl"
+
+
+@pytest.mark.django_db
+def test_admin_can_sort_by_multiple_fields_in_specified_order_and_directions(
+    data_fixture,
+):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=False,
+        date_joined=datetime(2020, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    data_fixture.create_user(
+        email="other_user1@test.nl",
+        password="password",
+        first_name="Test2",
+        is_staff=True,
+        is_active=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    data_fixture.create_user(
+        email="other_user2@test.nl",
+        password="password",
+        first_name="Test3",
+        is_staff=True,
+        is_active=True,
+        date_joined=datetime(2022, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    results = handler.get_users(
+        admin_user,
+        sorts=[
+            UserAdminSort(UserAdminSortDirection.ASC, SortableUserAdminField.IS_ACTIVE),
+            UserAdminSort(
+                UserAdminSortDirection.DESC, SortableUserAdminField.DATE_JOINED
+            ),
+        ],
+    )
+    assert results.count() == 3
+    assert results[0].first_name == "Test2"
+    assert results[1].first_name == "Test3"
+    assert results[2].first_name == "Test1"
 
 
 @pytest.mark.django_db
@@ -85,12 +157,11 @@ def test_admin_can_modify_allowed_user_attributes(data_fixture):
         admin_user,
         user_to_modify.id,
         {
-            "id": user_to_modify.id,
-            "username": "new_email@example.com",
-            "full_name": "new full name",
-            "is_staff": True,
-            "is_active": True,
-            "password": "new_password",
+            EditableUserAdminField.USERNAME: "new_email@example.com",
+            EditableUserAdminField.FULL_NAME: "new full name",
+            EditableUserAdminField.IS_ACTIVE: True,
+            EditableUserAdminField.IS_STAFF: True,
+            EditableUserAdminField.PASSWORD: "new_password",
         },
     )
     user_to_modify.refresh_from_db()
@@ -100,36 +171,6 @@ def test_admin_can_modify_allowed_user_attributes(data_fixture):
     assert user_to_modify.is_staff
     assert user_to_modify.is_active
     assert old_password != user_to_modify.password
-
-
-@pytest.mark.django_db
-def test_unknown_fields_when_updating_a_user_will_be_ignored(data_fixture):
-    handler = UserAdminHandler()
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    user_to_modify = data_fixture.create_user(
-        email="delete_me@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=False,
-        is_active=False,
-    )
-    updated_user = handler.update_user(
-        admin_user,
-        user_to_modify.id,
-        {
-            "id": user_to_modify.id,
-            "username": "new_email@example.com",
-            "some_unknown_field": "blah",
-        },
-    )
-    assert updated_user.username == "new_email@example.com"
-    assert updated_user.email == "new_email@example.com"
-    assert not hasattr(updated_user, "some_unknown_field")
 
 
 @pytest.mark.django_db
@@ -156,8 +197,7 @@ def test_updating_a_users_password_uses_djangos_built_in_smart_set_password(
         admin_user,
         user_to_modify.id,
         {
-            "id": user_to_modify.id,
-            "password": "new_password",
+            EditableUserAdminField.PASSWORD: "new_password",
         },
     )
     assert updated_user.password != "new_password"
@@ -178,7 +218,7 @@ def test_non_admin_cant_edit_user(data_fixture):
         handler.update_user(
             non_admin_user,
             non_admin_user.id,
-            {"id": non_admin_user.id, "username": "new_email@example.com"},
+            {EditableUserAdminField.USERNAME: "new_email@example.com"},
         )
     non_admin_user.refresh_from_db()
     assert non_admin_user.username == "test@test.nl"

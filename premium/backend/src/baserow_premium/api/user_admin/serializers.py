@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.fields import (
     CharField,
     EmailField,
+    DateTimeField,
 )
 from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
 
@@ -29,7 +30,10 @@ class AdminUserSerializer(ModelSerializer):
     # Max length set to match django user models first_name fields max length
     full_name = CharField(source="first_name", max_length=30, required=False)
     username = EmailField(required=False)
-    groups = AdminGroupUserSerializer(source="groupuser_set", many=True, required=False)
+    groups = AdminGroupUserSerializer(
+        source="groupuser_set", many=True, required=False, read_only=True
+    )
+    date_joined = DateTimeField(read_only=True)
 
     class Meta:
         model = User

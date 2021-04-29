@@ -78,26 +78,19 @@ export default {
       }
       this.$nextTick(() => {
         const container = this.$refs.groups_container
-        this.overflowing =
-          container.clientWidth < container.scrollWidth ||
-          container.clientHeight < container.scrollHeight
-        if (this.overflowing) {
-          let numHiddenGroups = this.groups.length
-          let visibleWidthUsedUp = 0
-          this.$refs.groups.forEach((group) => {
-            if (
-              visibleWidthUsedUp + group.scrollWidth <
-              container.clientWidth
-            ) {
-              numHiddenGroups--
-              visibleWidthUsedUp += group.scrollWidth
-            } else {
-              this.numHidden = numHiddenGroups
-            }
-          })
-        } else {
-          this.numHidden = 0
+        let numHiddenGroups = this.groups.length
+        let visibleWidthUsedUp = 0
+        for (let i = 0; i < this.$refs.groups.length; i++) {
+          const group = this.$refs.groups[i]
+          if (visibleWidthUsedUp + group.scrollWidth < container.clientWidth) {
+            numHiddenGroups--
+            visibleWidthUsedUp += group.scrollWidth
+          } else {
+            break
+          }
         }
+        this.numHidden = numHiddenGroups
+        this.overflowing = numHiddenGroups !== 0
       })
     },
   },

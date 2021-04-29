@@ -102,6 +102,14 @@ export default {
       },
     }
   },
+  watch: {
+    user() {
+      this.account = {
+        password: '',
+        passwordConfirm: '',
+      }
+    },
+  },
   methods: {
     async changePassword() {
       this.$v.$touch()

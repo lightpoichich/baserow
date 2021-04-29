@@ -125,6 +125,16 @@ export default {
       },
     }
   },
+  watch: {
+    user(user) {
+      this.formUser = {
+        username: user.username,
+        fullName: user.full_name,
+        isActive: user.is_active,
+        isStaff: user.is_staff,
+      }
+    },
+  },
   methods: {
     deleteUser() {
       this.$emit('switch-to-delete')

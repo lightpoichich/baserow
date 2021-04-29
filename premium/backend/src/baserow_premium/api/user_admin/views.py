@@ -192,6 +192,7 @@ class UserAdminView(APIView):
         """
         Updates the specified user with the supplied attributes.
         """
+        user_id = int(user_id)
 
         handler = UserAdminHandler()
         user = handler.update_user(
@@ -247,6 +248,7 @@ class UserAdminView(APIView):
         """
         Deletes the specified user.
         """
+        user_id = int(user_id)
 
         handler = UserAdminHandler()
         handler.delete_user(request.user, user_id)

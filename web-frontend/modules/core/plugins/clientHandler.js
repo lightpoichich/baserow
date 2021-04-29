@@ -63,11 +63,11 @@ class ErrorHandler {
       ),
       USER_ADMIN_CANNOT_DEACTIVATE_SELF: new ResponseErrorMessage(
         'Action not allowed.',
-        'You cannot de-activate or un-staff yourself'
+        'You cannot de-activate or un-staff yourself.'
       ),
       USER_ADMIN_CANNOT_DELETE_SELF: new ResponseErrorMessage(
         'Action not allowed.',
-        'You cannot delete yourself'
+        'You cannot delete yourself.'
       ),
     }
 

@@ -197,10 +197,14 @@ export default class UserAdminUserHelpers {
   }
 
   clickUsernameHeader() {
-    return this.c.findAll('.crudtable__field').at(1).trigger('click')
+    return this.clickHeaderAt(1)
   }
 
   clickFullnameHeader() {
-    return this.c.findAll('.crudtable__field').at(2).trigger('click')
+    return this.clickHeaderAt(2)
+  }
+
+  clickHeaderAt(index) {
+    return this.c.findAll('.crudtable__field').at(index).trigger('click')
   }
 }

@@ -70,6 +70,8 @@ class EditableUserAdminField(Enum):
     def edit_user(self, requesting_user, user, new_value):
         """
         Performs the correct user update operation for a given UserAdminField.
+        Raises an exception if the requesting user is attempting to de-activate or
+        un-staff themselves.
         """
         if self == EditableUserAdminField.FULL_NAME:
             user.first_name = new_value
@@ -115,7 +117,9 @@ class UserAdminHandler:
         resulting user queryset and returns it. By default if no sorts are provided
         sorts by user id ascending.
 
-        :param requesting_user: The user who is making the request to get_users
+        :param requesting_user: The user who is making the request to get_users, the
+                                user must be a staff member or else an exception will
+                                be raised.
         :param username_search: An optional icontains username search to filter the
                                 returned users by.
         :param sorts: A list of sorts to be applied in order over the returned users.
@@ -130,14 +134,15 @@ class UserAdminHandler:
 
         if sorts is None:
             sorts = []
-        users = self._apply_sorts(sorts, users)
+        users = self._apply_sorts_or_default_sort(sorts, users)
 
         return users
 
     @staticmethod
-    def _apply_sorts(sorts: List[UserAdminSort], users):
+    def _apply_sorts_or_default_sort(sorts: List[UserAdminSort], users):
         """
         Takes a list of UserAdminSorts and applies them to a django queryset in order.
+        Defaults to sorting by user id if no sorts are provided.
 
         :param sorts: The list of sorts to apply to the users queryset
         :param users: The users queryset to sort
@@ -161,6 +166,17 @@ class UserAdminHandler:
         user_id: int,
         data: Dict[EditableUserAdminField, Any],
     ):
+        """
+        Updates a specified user with new attribute values. Will raise an exception
+        if a user attempts to de-activate or un-staff themselves.
+
+        :param requesting_user: The user who is making the request to update a user, the
+                                user must be a staff member or else an exception will
+                                be raised.
+        :param user_id: The id of the user to update.
+        :param data: The fields and their new values to update.
+        :return:
+        """
         self._raise_if_not_permitted(requesting_user)
 
         user = User.objects.get(id=user_id)
@@ -170,6 +186,14 @@ class UserAdminHandler:
         return user
 
     def delete_user(self, requesting_user: User, user_id: int):
+        """
+        Deletes a specified user, raises an exception if you attempt to delete yourself.
+
+        :param requesting_user: The user who is making the delete request , the
+                                user must be a staff member or else an exception will
+                                be raised.
+        :param user_id: The id of the user to delete.
+        """
         self._raise_if_not_permitted(requesting_user)
 
         if requesting_user.id == user_id:

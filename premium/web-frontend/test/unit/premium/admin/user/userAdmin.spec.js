@@ -373,8 +373,8 @@ describe('User Admin Component Tests', () => {
     const secondPageUser = mockPremiumServer.aUser({
       username: 'secondPageUser@example.com',
     })
-    mockPremiumServer.createUsers([firstPageUser], 1, { count: 150 })
-    mockPremiumServer.createUsers([secondPageUser], 2, { count: 150 })
+    mockPremiumServer.thereAreUsers([firstPageUser], 1, { count: 150 })
+    mockPremiumServer.thereAreUsers([secondPageUser], 2, { count: 150 })
 
     const userAdmin = await testApp.mount(UserAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
@@ -401,8 +401,8 @@ describe('User Admin Component Tests', () => {
       id: 2,
       username: 'secondUser@example.com',
     })
-    mockPremiumServer.createUsers([firstUser, secondUser], 1)
-    mockPremiumServer.createUsers([firstUser], 1, { search: 'firstUser' })
+    mockPremiumServer.thereAreUsers([firstUser, secondUser], 1)
+    mockPremiumServer.thereAreUsers([firstUser], 1, { search: 'firstUser' })
 
     const userAdmin = await testApp.mount(UserAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
@@ -435,7 +435,7 @@ describe('User Admin Component Tests', () => {
       id: 3,
       username: third,
     })
-    mockPremiumServer.createUsers([firstUser, secondUser, thirdUser], 1)
+    mockPremiumServer.thereAreUsers([firstUser, secondUser, thirdUser], 1)
 
     const userAdmin = await testApp.mount(UserAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
@@ -444,7 +444,7 @@ describe('User Admin Component Tests', () => {
     expect(usernameCellsText).toStrictEqual([first, second, third])
 
     // Clicking once starts with a descending sort
-    mockPremiumServer.createUsers([secondUser, firstUser, thirdUser], 1, {
+    mockPremiumServer.thereAreUsers([secondUser, firstUser, thirdUser], 1, {
       sorts: '+username',
     })
     await ui.clickUsernameHeader()
@@ -453,7 +453,7 @@ describe('User Admin Component Tests', () => {
     expect(usernameCellsText).toStrictEqual([second, first, third])
 
     // Clicking again toggles to a ascending sort
-    mockPremiumServer.createUsers([thirdUser, firstUser, secondUser], 1, {
+    mockPremiumServer.thereAreUsers([thirdUser, firstUser, secondUser], 1, {
       sorts: '-username',
     })
     await ui.clickUsernameHeader()
@@ -468,7 +468,7 @@ describe('User Admin Component Tests', () => {
     expect(usernameCellsText).toStrictEqual([first, second, third])
 
     // Can click multiple columns resulting in an ordered sort
-    mockPremiumServer.createUsers([firstUser, thirdUser, secondUser], 1, {
+    mockPremiumServer.thereAreUsers([firstUser, thirdUser, secondUser], 1, {
       sorts: '-username,+full_name',
     })
     await ui.clickUsernameHeader()
@@ -539,7 +539,7 @@ describe('User Admin Component Tests', () => {
 
   async function whenThereIsAUserAndYouOpenUserAdmin(userSetup = {}) {
     const user = mockPremiumServer.aUser(userSetup)
-    mockPremiumServer.createUsers([user], 1)
+    mockPremiumServer.thereAreUsers([user], 1)
 
     const userAdmin = await testApp.mount(UserAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)

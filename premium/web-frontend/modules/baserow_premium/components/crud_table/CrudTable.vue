@@ -65,6 +65,11 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
 import Paginator from '@baserow/modules/core/components/Paginator'
 
+/**
+ * This component is a generic wrapper for a basic crud service which displays its
+ * data in a table format. Comes with basic features like column sorting, searching
+ * by a field etc.
+ */
 export default {
   name: 'CrudTable',
   components: { Paginator, CrudTableSearch },

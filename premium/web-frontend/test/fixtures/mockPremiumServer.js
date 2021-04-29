@@ -11,7 +11,7 @@ export default class MockPremiumServer {
     this.mock = mock
   }
 
-  createUsers(users, page, options = {}) {
+  thereAreUsers(users, page, options = {}) {
     createUsersForAdmin(this.mock, users, page, options)
   }
 

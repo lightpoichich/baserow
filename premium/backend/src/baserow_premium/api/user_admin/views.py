@@ -190,7 +190,8 @@ class UserAdminView(APIView):
     )
     def patch(self, request, user_id, data):
         """
-        Updates the specified user with the supplied attributes.
+        Updates the specified user with the supplied attributes. Will raise an exception
+        if you attempt un-staff or de-activate yourself.
         """
         user_id = int(user_id)
 
@@ -209,6 +210,15 @@ class UserAdminView(APIView):
     def parse_editable_fields(
         data: Dict[str, Any]
     ) -> Dict[EditableUserAdminField, Any]:
+        """
+        Maps a raw string to value dictionary to the enum to value dictionary expected
+        by the user admin handler. Will raise exceptions if unknown fields are found
+        or none are given.
+
+        :param data: A dictionary of editable user admin field attribute names to values
+        :return: The input data dictionary but with its keys mapped to the correct enum
+        values.
+        """
         parsed_edits: Dict[EditableUserAdminField, Any] = {}
         if not data:
             raise InvalidUserAdminEditField()
@@ -250,7 +260,8 @@ class UserAdminView(APIView):
     )
     def delete(self, request, user_id):
         """
-        Deletes the specified user.
+        Deletes the specified user. Raises an exception if you attempt to delete
+        yourself.
         """
         user_id = int(user_id)
 

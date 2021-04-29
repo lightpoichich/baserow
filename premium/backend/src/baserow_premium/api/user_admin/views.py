@@ -16,10 +16,14 @@ from baserow_premium.api.user_admin.errors import (
     InvalidSortAttributeException,
     InvalidUserAdminEditField,
     INVALID_USER_ADMIN_UPDATE,
+    USER_ADMIN_CANNOT_DEACTIVATE_SELF,
+    USER_ADMIN_CANNOT_DELETE_SELF,
 )
 from baserow_premium.api.user_admin.serializers import AdminUserSerializer
 from baserow_premium.user_admin.exceptions import (
     AdminOnlyOperationException,
+    CannotDeactivateYourselfException,
+    CannotDeleteYourselfException,
 )
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,
@@ -167,7 +171,11 @@ class UserAdminView(APIView):
         responses={
             200: AdminUserSerializer(many=True),
             400: get_error_schema(
-                ["ERROR_REQUEST_BODY_VALIDATION", "INVALID_USER_ADMIN_UPDATE"]
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "INVALID_USER_ADMIN_UPDATE",
+                    "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
+                ]
             ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
         },
@@ -177,6 +185,7 @@ class UserAdminView(APIView):
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
             InvalidUserAdminEditField: INVALID_USER_ADMIN_UPDATE,
+            CannotDeactivateYourselfException: USER_ADMIN_CANNOT_DEACTIVATE_SELF,
         }
     )
     def patch(self, request, user_id, data):
@@ -220,12 +229,18 @@ class UserAdminView(APIView):
         ],
         responses={
             200: None,
+            400: get_error_schema(
+                [
+                    "USER_ADMIN_CANNOT_DELETE_SELF",
+                ]
+            ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
         },
     )
     @map_exceptions(
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
+            CannotDeleteYourselfException: USER_ADMIN_CANNOT_DELETE_SELF,
         }
     )
     def delete(self, request, user_id):

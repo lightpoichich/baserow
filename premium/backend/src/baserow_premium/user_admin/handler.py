@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 
 from baserow_premium.user_admin.exceptions import (
     AdminOnlyOperationException,
+    CannotDeactivateYourselfException,
+    CannotDeleteYourselfException,
 )
 
 from enum import Enum, unique
@@ -65,7 +67,7 @@ class EditableUserAdminField(Enum):
     FULL_NAME = "full_name"
     PASSWORD = "password"
 
-    def edit_user(self, user, new_value):
+    def edit_user(self, requesting_user, user, new_value):
         """
         Performs the correct user update operation for a given UserAdminField.
         """
@@ -76,6 +78,12 @@ class EditableUserAdminField(Enum):
             user.email = new_value
         elif self == EditableUserAdminField.PASSWORD:
             user.set_password(new_value)
+        elif (
+            self in [EditableUserAdminField.IS_ACTIVE, EditableUserAdminField.IS_STAFF]
+            and not new_value
+            and requesting_user == user
+        ):
+            raise CannotDeactivateYourselfException()
         else:
             setattr(user, self.value, new_value)
 
@@ -157,12 +165,15 @@ class UserAdminHandler:
 
         user = User.objects.get(id=user_id)
         for field, new_value in data.items():
-            field.edit_user(user, new_value)
+            field.edit_user(requesting_user, user, new_value)
         user.save()
         return user
 
     def delete_user(self, requesting_user: User, user_id: int):
         self._raise_if_not_permitted(requesting_user)
+
+        if requesting_user.id == user_id:
+            raise CannotDeleteYourselfException()
 
         user = User.objects.get(id=user_id)
         user.delete()

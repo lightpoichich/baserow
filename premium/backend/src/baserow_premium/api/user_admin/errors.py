@@ -23,6 +23,18 @@ INVALID_USER_ADMIN_SORT_ATTRIBUTE = (
     "Invalid attribute name provided to sort by.",
 )
 
+USER_ADMIN_CANNOT_DEACTIVATE_SELF = (
+    "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
+    HTTP_400_BAD_REQUEST,
+    "You cannot de-activate or un-staff yourself.",
+)
+
+USER_ADMIN_CANNOT_DELETE_SELF = (
+    "USER_ADMIN_CANNOT_DELETE_SELF",
+    HTTP_400_BAD_REQUEST,
+    "You cannot delete yourself.",
+)
+
 
 class InvalidSortDirectionException(Exception):
     """

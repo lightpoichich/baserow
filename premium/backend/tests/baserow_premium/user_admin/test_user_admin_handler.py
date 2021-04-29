@@ -3,7 +3,11 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
-from baserow_premium.user_admin.exceptions import AdminOnlyOperationException
+from baserow_premium.user_admin.exceptions import (
+    AdminOnlyOperationException,
+    CannotDeactivateYourselfException,
+    CannotDeleteYourselfException,
+)
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,
     EditableUserAdminField,
@@ -222,3 +226,59 @@ def test_non_admin_cant_edit_user(data_fixture):
         )
     non_admin_user.refresh_from_db()
     assert non_admin_user.username == "test@test.nl"
+
+
+@pytest.mark.django_db
+def test_admin_cant_deactivate_themselves(data_fixture):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=True,
+    )
+    with pytest.raises(CannotDeactivateYourselfException):
+        handler.update_user(
+            admin_user,
+            admin_user.id,
+            {EditableUserAdminField.IS_ACTIVE: False},
+        )
+    admin_user.refresh_from_db()
+    assert admin_user.is_active
+
+
+@pytest.mark.django_db
+def test_admin_cant_destaff_themselves(data_fixture):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=True,
+    )
+    with pytest.raises(CannotDeactivateYourselfException):
+        handler.update_user(
+            admin_user,
+            admin_user.id,
+            {EditableUserAdminField.IS_STAFF: False},
+        )
+    admin_user.refresh_from_db()
+    assert admin_user.is_staff
+
+
+@pytest.mark.django_db
+def test_admin_cant_delete_themselves(data_fixture):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=True,
+    )
+    with pytest.raises(CannotDeleteYourselfException):
+        handler.delete_user(admin_user, admin_user.id)
+
+    assert User.objects.filter(id=admin_user.id).exists()

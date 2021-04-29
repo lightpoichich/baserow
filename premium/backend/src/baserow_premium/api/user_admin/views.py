@@ -13,16 +13,24 @@ from baserow_premium.api.user_admin.errors import (
     InvalidSortDirectionException,
     INVALID_SORT_DIRECTION,
     INVALID_SORT_ATTRIBUTE,
+    InvalidSortAttributeException,
 )
 from baserow_premium.api.user_admin.serializers import AdminUserSerializer
 from baserow_premium.user_admin.exceptions import (
     AdminOnlyOperationException,
-    InvalidSortAttributeException,
 )
-from baserow_premium.user_admin.handler import UserAdminHandler, Sort
+from baserow_premium.user_admin.handler import (
+    UserAdminHandler,
+    UserAdminSort,
+    SortableUserAdminField,
+)
 
 
 class UsersAdminView(APIView):
+    _valid_sortable_fields = ",".join(
+        [f"`{f.value}`" for f in list(SortableUserAdminField)]
+    )
+
     @extend_schema(
         tags=["Premium", "Admin"],
         operation_id="admin_list_users",
@@ -40,8 +48,9 @@ class UsersAdminView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description="A comma separated string of user attributes to sort by, "
-                "each attribute must be prefixed with + for a descending "
-                "sort or a - for an ascending sort.",
+                "each attribute must be prefixed with `+` for a descending "
+                "sort or a `-` for an ascending sort. The accepted attribute names "
+                f"are: {_valid_sortable_fields}.",
             ),
             OpenApiParameter(
                 name="page",
@@ -79,7 +88,7 @@ class UsersAdminView(APIView):
     def get(self, request):
         """
         Lists all the users of a user, optionally filtering on username by the
-        'search' get parameter.
+        'search' get parameter, optionally sorting by the 'sorts' get parameter.
         """
 
         search = request.GET.get("search")
@@ -96,15 +105,37 @@ class UsersAdminView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     @staticmethod
-    def parse_sorts(sorts: Optional[str]) -> List[Sort]:
+    def parse_sorts(sorts: Optional[str]) -> List[UserAdminSort]:
+        """
+        Parses an optional comma separated string into a list of user sorts. Each item
+        in the string must either begin with a + for a ascending sort or a - for a
+        descending sort. Following the + or - a valid field name to sort must be
+        provided. The valid field names are the values of the baserow_premium.user_admin
+        .handler.SortableUserField enum.
+
+        :param sorts: An optional comma separated string of user sorts.
+        :return: A list of valid user sorts.
+        """
         if sorts is None:
             return []
         parsed_sorts = []
         for s in sorts.split(","):
+            if len(s) <= 2:
+                raise InvalidSortAttributeException()
+
             sort_direction_prefix = s[0]
+            sort_field_name = s[1:]
+
             if sort_direction_prefix not in ["-", "+"]:
                 raise InvalidSortDirectionException()
-            parsed_sorts.append(Sort(sort_direction_prefix == "-", s[1:]))
+
+            try:
+                field = SortableUserAdminField(sort_field_name)
+            except KeyError:
+                raise InvalidSortAttributeException()
+
+            is_descending_sort = sort_direction_prefix == "-"
+            parsed_sorts.append(UserAdminSort(is_descending_sort, field))
         return parsed_sorts
 
 

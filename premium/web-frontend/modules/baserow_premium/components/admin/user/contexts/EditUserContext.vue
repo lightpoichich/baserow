@@ -1,5 +1,5 @@
 <template>
-  <Context @hide="$emit(hide, $event)">
+  <Context v-if="selectedUser">
     <ul class="context__menu">
       <li>
         <a @click.prevent="showEditModal">
@@ -14,7 +14,7 @@
         </a>
       </li>
       <li>
-        <a v-if="user.is_active" @click.prevent="deactivate">
+        <a v-if="selectedUser.user.is_active" @click.prevent="deactivate">
           <i class="context__menu-icon fas fa-fw fa-times"></i>
           Deactivate
         </a>
@@ -32,17 +32,17 @@
     </ul>
     <DeleteUserModal
       ref="deleteUserModal"
-      :user="user"
+      :user="selectedUser.user"
       @delete-user="$emit('delete-user', $event)"
     ></DeleteUserModal>
     <EditUserModal
       ref="editUserModal"
-      :user="user"
+      :user="selectedUser.user"
       @update="$emit('update', $event)"
       @switch-to-delete="showDeleteModal"
     >
     </EditUserModal>
-    <ChangePasswordModal ref="changePasswordModal" :user="user">
+    <ChangePasswordModal ref="changePasswordModal" :user="selectedUser.user">
     </ChangePasswordModal>
   </Context>
 </template>
@@ -63,9 +63,19 @@ export default {
   },
   mixins: [context],
   props: {
-    user: {
+    selectedUser: {
       required: true,
-      type: Object,
+      validator: (prop) => typeof prop === 'object' || prop === null,
+    },
+  },
+  watch: {
+    selectedUser(selectedUser) {
+      if (selectedUser) {
+        this.$nextTick(function () {
+          this.hide()
+          this.show(selectedUser.contextLink, 'bottom', 'left', 4)
+        })
+      }
     },
   },
   methods: {
@@ -83,7 +93,7 @@ export default {
     },
     async activate() {
       const { data: newUser } = await UserAdminService(this.$client).update(
-        this.user.id,
+        this.selectedUser.user.id,
         { is_active: true }
       )
 
@@ -92,7 +102,7 @@ export default {
     },
     async deactivate() {
       const { data: newUser } = await UserAdminService(this.$client).update(
-        this.user.id,
+        this.selectedUser.user.id,
         { is_active: false }
       )
       this.hide()

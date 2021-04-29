@@ -185,6 +185,154 @@ def test_admin_can_search_users(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_admin_can_sort_users(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    searched_for_user = data_fixture.create_user(
+        email="specific_user@test.nl",
+        password="password",
+        first_name="Test1",
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    url = reverse("api:premium:admin_user:users")
+    response = api_client.get(
+        f"{url}?page=1&search=specific_user",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "date_joined": "2021-04-01T01:00:00Z",
+                "full_name": searched_for_user.first_name,
+                "username": searched_for_user.email,
+                "groups": [],
+                "id": searched_for_user.id,
+                "is_staff": False,
+                "is_active": True,
+                "last_login": None,
+            }
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_throws_error_if_invalid_sort_field_provided(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    url = reverse("api:premium:admin_user:users")
+    response = api_client.get(
+        f"{url}?page=1&sorts=-invalid_field_name",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "INVALID_SORT_ATTRIBUTE"
+
+
+@pytest.mark.django_db
+def test_throws_error_if_sort_direction_not_provided(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    url = reverse("api:premium:admin_user:users")
+    response = api_client.get(
+        f"{url}?page=1&sorts=username",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "INVALID_SORT_DIRECTION"
+
+
+@pytest.mark.django_db
+def test_throws_error_if_invalid_sort_direction_provided(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    url = reverse("api:premium:admin_user:users")
+    response = api_client.get(
+        f"{url}?page=1&sorts=*username",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "INVALID_SORT_DIRECTION"
+
+
+@pytest.mark.django_db
+def test_throws_error_if_invalid_sorts_mixed_with_valid_ones(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    url = reverse("api:premium:admin_user:users")
+    response = api_client.get(
+        f"{url}?page=1&sorts=+username,username,-invalid_field",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "INVALID_SORT_DIRECTION"
+
+
+@pytest.mark.django_db
+def test_throws_error_if_blank_sorts_provided(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    url = reverse("api:premium:admin_user:users")
+    response = api_client.get(
+        f"{url}?page=1&sorts=,,",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "INVALID_SORT_ATTRIBUTE"
+
+
+@pytest.mark.django_db
+def test_throws_error_if_no_sorts_provided(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    url = reverse("api:premium:admin_user:users")
+    response = api_client.get(
+        f"{url}?page=1&sorts=",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "INVALID_SORT_ATTRIBUTE"
+
+
+@pytest.mark.django_db
 def test_non_admin_cannot_delete_user(api_client, data_fixture):
     _, non_admin_token = data_fixture.create_user_and_token(
         email="test@test.nl",

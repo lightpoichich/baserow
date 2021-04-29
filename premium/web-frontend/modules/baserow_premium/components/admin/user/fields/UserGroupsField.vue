@@ -16,26 +16,10 @@
     </div>
     <a
       v-show="overflowing"
-      ref="contextLink"
       class="user-admin-group__expand"
       @click.prevent="showContext"
       >+{{ numHidden }}</a
     >
-    <Context v-if="renderContext" ref="context" @hide="hideContext">
-      <ul class="context__menu">
-        <li
-          v-for="group in hiddenGroups"
-          :key="'hidden-admin-row-group' + userId + '-' + group.id"
-          class="user-admin-group__dropdown-item"
-        >
-          {{ group.name }}
-          <i
-            v-if="group.permissions == 'ADMIN'"
-            class="user-admin-group__icon fas fa-users-cog"
-          ></i>
-        </li>
-      </ul>
-    </Context>
   </div>
 </template>
 <script>
@@ -81,14 +65,12 @@ export default {
     this.updatedOverflow()
   },
   methods: {
-    showContext() {
-      this.renderContext = true
-      this.$nextTick(function () {
-        this.$refs.context.toggle(this.$refs.contextLink, 'bottom', 'left', 4)
+    showContext(event) {
+      this.$emit('show-group', {
+        hiddenGroups: this.hiddenGroups,
+        contextLink: event.target,
+        time: Date.now(),
       })
-    },
-    hideContext() {
-      this.renderContext = false
     },
     updatedOverflow() {
       if (process.server) {

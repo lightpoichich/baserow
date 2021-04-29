@@ -1,4 +1,4 @@
-import EditUserContext from '@baserow_premium/components/admin/user/fields/EditUserContext'
+import EditUserContext from '@baserow_premium/components/admin/user/contexts/EditUserContext'
 import Error from '@baserow/modules/core/components/Error'
 import ChangeUserPasswordModal from '@baserow_premium/components/admin/user/modals/ChangeUserPasswordModal'
 import EditUserModal from '@baserow_premium/components/admin/user/modals/EditUserModal'

@@ -1,7 +1,23 @@
 <template>
-  <CrudTable :columns="columns" :service="service">
-    <template slot="header">
+  <CrudTable
+    :columns="columns"
+    :service="service"
+    @edit-user="editUser"
+    @show-group="displayHiddenGroups"
+  >
+    <template #header>
       <strong>User Settings</strong>
+    </template>
+    <template #menus="slotProps">
+      <EditUserContext
+        :selected-user="selectedUser"
+        @delete-user="slotProps.deleteRow"
+        @update="slotProps.updateRow"
+      >
+      </EditUserContext>
+      <HiddenGroupsContext
+        :selected-group="selectedGroup"
+      ></HiddenGroupsContext>
     </template>
   </CrudTable>
 </template>
@@ -14,11 +30,15 @@ import CrudTable from '@baserow_premium/components/crud_table/CrudTable'
 import SimpleField from '@baserow_premium/components/crud_table/fields/SimpleField'
 import LocalDateField from '@baserow_premium/components/crud_table/fields/LocalDateField'
 import ActiveField from '@baserow_premium/components/admin/user/fields/ActiveField'
+import EditUserContext from '@baserow_premium/components/admin/user/contexts/EditUserContext'
+import HiddenGroupsContext from '@baserow_premium/components/admin/user/contexts/HiddenGroupsContext'
 
 export default {
   name: 'UserAdminTable',
   components: {
+    HiddenGroupsContext,
     CrudTable,
+    EditUserContext,
   },
   data() {
     this.columns = [
@@ -93,7 +113,18 @@ export default {
       },
     ]
     this.service = UserAdminService(this.$client)
-    return {}
+    return {
+      selectedUser: null,
+      selectedGroup: null,
+    }
+  },
+  methods: {
+    editUser(e) {
+      this.selectedUser = e
+    },
+    displayHiddenGroups(e) {
+      this.selectedGroup = e
+    },
   },
 }
 </script>

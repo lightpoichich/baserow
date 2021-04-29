@@ -42,9 +42,9 @@
               'crudtable__cell--sticky': col.isInLeftSection,
               'crudtable__cell--right': col.hasRightBar,
             }"
-            @row-update="onRowUpdate"
-            @row-delete="onRowDelete"
-            @clicked="onClick"
+            v-on="$listeners"
+            @row-update="updateRow"
+            @row-delete="deleteRow"
           />
         </template>
       </template>
@@ -56,6 +56,7 @@
         @change-page="fetchPage"
       ></Paginator>
     </div>
+    <slot name="menus" :updateRow="updateRow" :deleteRow="deleteRow"></slot>
   </div>
 </template>
 
@@ -97,9 +98,6 @@ export default {
     },
   },
   methods: {
-    onClick(e) {
-      console.log(e)
-    },
     toggleSort(column) {
       if (!column.sortable) {
         return
@@ -155,11 +153,11 @@ export default {
 
       this.loading = false
     },
-    onRowUpdate(updatedRow) {
+    updateRow(updatedRow) {
       const i = this.rows.findIndex((u) => u.id === updatedRow.id)
       this.rows.splice(i, 1, updatedRow)
     },
-    onRowDelete(rowId) {
+    deleteRow(rowId) {
       const i = this.rows.findIndex((u) => u.id === rowId)
       this.rows.splice(i, 1)
     },

@@ -3,7 +3,6 @@ from rest_framework import serializers
 from rest_framework.fields import (
     CharField,
     EmailField,
-    DateTimeField,
 )
 from rest_framework.serializers import ModelSerializer
 
@@ -36,7 +35,7 @@ class AdminUserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        read_only_fields = ("id", "last_login", "date_joined" "groups")
+        read_only_fields = ("id", "last_login", "date_joined", "groups")
         fields = (
             "id",
             "username",
@@ -48,4 +47,14 @@ class AdminUserSerializer(ModelSerializer):
             "is_staff",
             "password",
         )
-        extra_kwargs = {"password": {"write_only": True, "required": False}}
+        extra_kwargs = {
+            "password": {"write_only": True, "required": False},
+            "is_active": {
+                "help_text": "Designates whether this user should be treated as active."
+                " Set this to false instead of deleting accounts."
+            },
+            "is_staff": {
+                "help_text": "Designates whether this user is an admin and has access "
+                "to all groups and Baserow's admin areas."
+            },
+        }

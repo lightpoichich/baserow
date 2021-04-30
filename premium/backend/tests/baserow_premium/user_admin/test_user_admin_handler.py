@@ -7,6 +7,7 @@ from baserow_premium.user_admin.exceptions import (
     AdminOnlyOperationException,
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
+    UnknownUserException,
 )
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,
@@ -282,3 +283,33 @@ def test_admin_cant_delete_themselves(data_fixture):
         handler.delete_user(admin_user, admin_user.id)
 
     assert User.objects.filter(id=admin_user.id).exists()
+
+
+@pytest.mark.django_db
+def test_raises_exception_when_deleting_an_unknown_user(data_fixture):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=True,
+    )
+    with pytest.raises(UnknownUserException):
+        handler.delete_user(admin_user, 99999)
+
+
+@pytest.mark.django_db
+def test_raises_exception_when_updating_an_unknown_user(data_fixture):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=True,
+    )
+    with pytest.raises(UnknownUserException):
+        handler.update_user(
+            admin_user, 99999, {EditableUserAdminField.USERNAME: "new_password"}
+        )

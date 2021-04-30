@@ -1,3 +1,4 @@
+from enum import Enum, unique
 from typing import List, Optional, Any, Dict
 
 from django.contrib.auth import get_user_model
@@ -6,9 +7,8 @@ from baserow_premium.user_admin.exceptions import (
     AdminOnlyOperationException,
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
+    UnknownUserException,
 )
-
-from enum import Enum, unique
 
 User = get_user_model()
 
@@ -175,17 +175,21 @@ class UserAdminHandler:
         :param requesting_user: The user who is making the request to update a user, the
                                 user must be a staff member or else an exception will
                                 be raised.
-        :param user_id: The id of the user to update.
+        :param user_id: The id of the user to update, if they do not exist raises a
+        UnknownUserException.
         :param data: The fields and their new values to update.
         :return:
         """
         self._raise_if_not_permitted(requesting_user)
 
-        user = User.objects.get(id=user_id)
-        for field, new_value in data.items():
-            field.edit_user(requesting_user, user, new_value)
-        user.save()
-        return user
+        try:
+            user = User.objects.get(id=user_id)
+            for field, new_value in data.items():
+                field.edit_user(requesting_user, user, new_value)
+            user.save()
+            return user
+        except User.DoesNotExist:
+            raise UnknownUserException()
 
     def delete_user(self, requesting_user: User, user_id: int):
         """
@@ -194,15 +198,19 @@ class UserAdminHandler:
         :param requesting_user: The user who is making the delete request , the
                                 user must be a staff member or else an exception will
                                 be raised.
-        :param user_id: The id of the user to delete.
+        :param user_id: The id of the user to update, if they do not exist raises a
+        UnknownUserException.
         """
         self._raise_if_not_permitted(requesting_user)
 
         if requesting_user.id == user_id:
             raise CannotDeleteYourselfException()
 
-        user = User.objects.get(id=user_id)
-        user.delete()
+        try:
+            user = User.objects.get(id=user_id)
+            user.delete()
+        except User.DoesNotExist:
+            raise UnknownUserException()
 
     @staticmethod
     def _raise_if_not_permitted(requesting_user):

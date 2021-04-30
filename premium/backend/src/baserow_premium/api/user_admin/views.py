@@ -12,19 +12,21 @@ from baserow.api.schemas import get_error_schema
 from baserow_premium.api.user_admin.errors import (
     ERROR_ADMIN_ONLY_OPERATION,
     InvalidSortDirectionException,
-    INVALID_USER_ADMIN_SORT_DIRECTION,
-    INVALID_USER_ADMIN_SORT_ATTRIBUTE,
+    USER_ADMIN_INVALID_SORT_DIRECTION,
+    USER_ADMIN_INVALID_SORT_ATTRIBUTE,
     InvalidSortAttributeException,
     InvalidUserAdminEditField,
-    INVALID_USER_ADMIN_UPDATE,
+    USER_ADMIN_INVALID_UPDATE_ATTRIBUTE,
     USER_ADMIN_CANNOT_DEACTIVATE_SELF,
     USER_ADMIN_CANNOT_DELETE_SELF,
+    USER_ADMIN_UNKNOWN_USER,
 )
 from baserow_premium.api.user_admin.serializers import AdminUserSerializer
 from baserow_premium.user_admin.exceptions import (
     AdminOnlyOperationException,
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
+    UnknownUserException,
 )
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,
@@ -43,7 +45,7 @@ class UsersAdminView(APIView):
 
     @extend_schema(
         tags=["Users"],
-        operation_id="admin_list_users",
+        operation_id="list_users",
         description="Returns all baserow users with detailed information on each user, "
         "if the requesting user has admin permissions.",
         parameters=[
@@ -61,7 +63,9 @@ class UsersAdminView(APIView):
                 description="A comma separated string of user attributes to sort by, "
                 "each attribute must be prefixed with `+` for a descending "
                 "sort or a `-` for an ascending sort. The accepted attribute names "
-                f"are: {_valid_sortable_fields}.",
+                f"are: {_valid_sortable_fields}. "
+                f"For example `sorts=+username,-is_active` will sort the "
+                f"results first by descending username and then ascending is_active.",
             ),
             OpenApiParameter(
                 name="page",
@@ -82,8 +86,8 @@ class UsersAdminView(APIView):
                 [
                     "ERROR_PAGE_SIZE_LIMIT",
                     "ERROR_INVALID_PAGE",
-                    "INVALID_USER_ADMIN_SORT_DIRECTION",
-                    "INVALID_USER_ADMIN_SORT_ATTRIBUTE",
+                    "USER_ADMIN_INVALID_SORT_DIRECTION",
+                    "USER_ADMIN_INVALID_SORT_ATTRIBUTE",
                 ]
             ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
@@ -92,8 +96,8 @@ class UsersAdminView(APIView):
     @map_exceptions(
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
-            InvalidSortDirectionException: INVALID_USER_ADMIN_SORT_DIRECTION,
-            InvalidSortAttributeException: INVALID_USER_ADMIN_SORT_ATTRIBUTE,
+            InvalidSortDirectionException: USER_ADMIN_INVALID_SORT_DIRECTION,
+            InvalidSortAttributeException: USER_ADMIN_INVALID_SORT_ATTRIBUTE,
         }
     )
     def get(self, request):
@@ -161,11 +165,11 @@ class UserAdminView(APIView):
     @extend_schema(
         tags=["Users"],
         request=AdminUserSerializer,
-        operation_id="admin_edit_user",
+        operation_id="edit_user",
         description=f"Updates specified user attributes and returns the updated user if"
         f" the requesting user has admin permissions. The attributes which can be "
         f"edited are: {_valid_editable_fields}. You cannot update yourself to no longer"
-        f"be an admin or active.",
+        f" be an admin or active.",
         parameters=[
             OpenApiParameter(
                 name="user_id",
@@ -179,8 +183,9 @@ class UserAdminView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
-                    "INVALID_USER_ADMIN_UPDATE",
+                    "USER_ADMIN_INVALID_UPDATE_ATTRIBUTE",
                     "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
+                    "USER_ADMIN_UNKNOWN_USER",
                 ]
             ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
@@ -190,8 +195,9 @@ class UserAdminView(APIView):
     @map_exceptions(
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
-            InvalidUserAdminEditField: INVALID_USER_ADMIN_UPDATE,
+            InvalidUserAdminEditField: USER_ADMIN_INVALID_UPDATE_ATTRIBUTE,
             CannotDeactivateYourselfException: USER_ADMIN_CANNOT_DEACTIVATE_SELF,
+            UnknownUserException: USER_ADMIN_UNKNOWN_USER,
         }
     )
     def patch(self, request, user_id, data):
@@ -239,7 +245,7 @@ class UserAdminView(APIView):
 
     @extend_schema(
         tags=["Users"],
-        operation_id="admin_delete_user",
+        operation_id="delete_user",
         description="Deletes the specified user, if the requesting user has admin "
         "permissions. You cannot delete yourself.",
         parameters=[
@@ -255,6 +261,7 @@ class UserAdminView(APIView):
             400: get_error_schema(
                 [
                     "USER_ADMIN_CANNOT_DELETE_SELF",
+                    "USER_ADMIN_UNKNOWN_USER",
                 ]
             ),
             401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
@@ -264,6 +271,7 @@ class UserAdminView(APIView):
         {
             AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
             CannotDeleteYourselfException: USER_ADMIN_CANNOT_DELETE_SELF,
+            UnknownUserException: USER_ADMIN_UNKNOWN_USER,
         }
     )
     def delete(self, request, user_id):

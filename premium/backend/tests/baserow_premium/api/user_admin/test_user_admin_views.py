@@ -1,15 +1,13 @@
 import pytest
+from django.shortcuts import reverse
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
-
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
 )
-
-from django.shortcuts import reverse
 
 from baserow.core.models import (
     GROUP_USER_PERMISSION_MEMBER,
@@ -239,7 +237,7 @@ def test_throws_error_if_invalid_sort_field_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -257,7 +255,7 @@ def test_throws_error_if_sort_direction_not_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_DIRECTION"
+    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -275,7 +273,7 @@ def test_throws_error_if_invalid_sort_direction_provided(api_client, data_fixtur
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_DIRECTION"
+    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -293,7 +291,7 @@ def test_throws_error_if_invalid_sorts_mixed_with_valid_ones(api_client, data_fi
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_DIRECTION"
+    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -311,7 +309,7 @@ def test_throws_error_if_blank_sorts_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -329,7 +327,7 @@ def test_throws_error_if_no_sorts_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_USER_ADMIN_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -460,7 +458,7 @@ def test_error_returned_when_invalid_field_supplied_to_edit(api_client, data_fix
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "INVALID_USER_ADMIN_UPDATE"
+    assert response.json()["error"] == "USER_ADMIN_INVALID_UPDATE_ATTRIBUTE"
 
 
 @pytest.mark.django_db

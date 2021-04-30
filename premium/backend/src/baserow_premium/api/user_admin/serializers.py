@@ -33,7 +33,6 @@ class AdminUserSerializer(ModelSerializer):
     groups = AdminGroupUserSerializer(
         source="groupuser_set", many=True, required=False, read_only=True
     )
-    date_joined = DateTimeField(read_only=True)
 
     class Meta:
         model = User

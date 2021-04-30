@@ -1,7 +1,9 @@
 <template>
   <CrudTable
-    :columns="columns"
+    :left-columns="leftColumns"
+    :right-columns="rightColumns"
     :service="service"
+    row-id-key="id"
     @edit-user="editUser"
     @show-group="displayHiddenGroups"
   >
@@ -32,6 +34,7 @@ import LocalDateField from '@baserow_premium/components/crud_table/fields/LocalD
 import ActiveField from '@baserow_premium/components/admin/user/fields/ActiveField'
 import EditUserContext from '@baserow_premium/components/admin/user/contexts/EditUserContext'
 import HiddenGroupsContext from '@baserow_premium/components/admin/user/contexts/HiddenGroupsContext'
+import CrudTableColumn from '@baserow_premium/components/crud_table/CrudTableColumn'
 
 export default {
   name: 'UserAdminTable',
@@ -41,76 +44,64 @@ export default {
     EditUserContext,
   },
   data() {
-    this.columns = [
-      {
-        key: 'id',
-        header: 'ID',
-        isInLeftSection: true,
-        hasRightBar: false,
-        cellComponent: SimpleField,
-        minWidth: 'min-content',
-        maxWidth: 'max-content',
-        sortable: true,
-      },
-      {
-        key: 'username',
-        header: 'Username',
-        isInLeftSection: true,
-        hasRightBar: true,
-        cellComponent: UsernameField,
-        minWidth: '200px',
-        maxWidth: 'max-content',
-        sortable: true,
-      },
-      {
-        key: 'full_name',
-        header: 'Full Name',
-        isInLeftSection: false,
-        hasRightBar: false,
-        cellComponent: SimpleField,
-        minWidth: '100px',
-        maxWidth: '200px',
-        sortable: true,
-      },
-      {
-        key: 'groups',
-        header: 'Groups',
-        isInLeftSection: false,
-        hasRightBar: false,
-        cellComponent: UserGroupsField,
-        minWidth: '100px',
-        maxWidth: '500px',
-      },
-      {
-        key: 'last_login',
-        header: 'Last Login',
-        isInLeftSection: false,
-        hasRightBar: false,
-        cellComponent: LocalDateField,
-        minWidth: 'min-content',
-        maxWidth: '200px',
-        sortable: true,
-      },
-      {
-        key: 'date_joined',
-        header: 'Signed Up',
-        isInLeftSection: false,
-        hasRightBar: false,
-        cellComponent: LocalDateField,
-        minWidth: 'min-content',
-        maxWidth: '200px',
-        sortable: true,
-      },
-      {
-        key: 'is_active',
-        header: 'Active',
-        isInLeftSection: false,
-        hasRightBar: false,
-        cellComponent: ActiveField,
-        minWidth: 'min-content',
-        maxWidth: '200px',
-        sortable: true,
-      },
+    this.leftColumns = [
+      new CrudTableColumn(
+        'id',
+        'ID',
+        SimpleField,
+        'min-content',
+        'max-content',
+        true
+      ),
+      new CrudTableColumn(
+        'username',
+        'Username',
+        UsernameField,
+        '200px',
+        'max-content',
+        true
+      ),
+    ]
+    this.rightColumns = [
+      new CrudTableColumn(
+        'full_name',
+        'Full Name',
+        SimpleField,
+        '100px',
+        '200px',
+        true
+      ),
+      new CrudTableColumn(
+        'groups',
+        'Groups',
+        UserGroupsField,
+        '100px',
+        '500px'
+      ),
+      new CrudTableColumn(
+        'last_login',
+        'Last Login',
+        LocalDateField,
+        'min-content',
+        '200px',
+        true
+      ),
+      new CrudTableColumn(
+        'date_joined',
+        'Signed Up',
+        LocalDateField,
+        'min-content',
+        '200px',
+        true
+      ),
+      new CrudTableColumn(
+        'is_active',
+        'Active',
+        ActiveField,
+        'min-content',
+        '200px',
+        true
+      ),
     ]
     this.service = UserAdminService(this.$client)
     return {

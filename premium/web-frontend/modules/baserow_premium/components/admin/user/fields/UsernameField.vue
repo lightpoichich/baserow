@@ -3,7 +3,7 @@
     <div class="user-admin-username__initials">
       {{ $options.methods.firstTwoInitials(props.row.full_name) }}
     </div>
-    <div class="user-admin-username__name">
+    <div class="user-admin-username__name" :title="props.row.username">
       {{ props.row.username }}
     </div>
     <i

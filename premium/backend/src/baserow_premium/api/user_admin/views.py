@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Any
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -35,14 +36,16 @@ from baserow_premium.user_admin.handler import (
 
 
 class UsersAdminView(APIView):
+    permission_classes = (IsAdminUser,)
     _valid_sortable_fields = ",".join(
         [f"`{f.value}`" for f in list(SortableUserAdminField)]
     )
 
     @extend_schema(
-        tags=["Premium", "Admin"],
+        tags=["Users"],
         operation_id="admin_list_users",
-        description="Returns all baserow users with detailed information on each user.",
+        description="Returns all baserow users with detailed information on each user, "
+        "if the requesting user has admin permissions.",
         parameters=[
             OpenApiParameter(
                 name="search",
@@ -149,17 +152,20 @@ class UsersAdminView(APIView):
 
 
 class UserAdminView(APIView):
+    permission_classes = (IsAdminUser,)
+
     _valid_editable_fields = ",".join(
         [f"`{f.value}`" for f in list(EditableUserAdminField)]
     )
 
     @extend_schema(
-        tags=["Premium", "Admin"],
+        tags=["Users"],
         request=AdminUserSerializer,
         operation_id="admin_edit_user",
-        description=f"Updates specified user attributes and returns the updated user. "
-        f"The attributes which can be "
-        f"edited are {_valid_editable_fields}.",
+        description=f"Updates specified user attributes and returns the updated user if"
+        f" the requesting user has admin permissions. The attributes which can be "
+        f"edited are: {_valid_editable_fields}. You cannot update yourself to no longer"
+        f"be an admin or active.",
         parameters=[
             OpenApiParameter(
                 name="user_id",
@@ -195,13 +201,14 @@ class UserAdminView(APIView):
         """
         user_id = int(user_id)
 
+        # Password is write only and will be removed by the drf serializer when run in
+        # @validate_body, re-add it here if present
+        if "password" in request.data:
+            data["password"] = request.data["password"]
+
         handler = UserAdminHandler()
-        # the data param is the valid AND serialized form of the request data
-        # as we have write only fields these have been removed from data, but we still
-        # want them hence we use request.data which we know is valid but still contains
-        # the write_only fields.
         user = handler.update_user(
-            request.user, user_id, self.parse_editable_fields(request.data)
+            request.user, user_id, self.parse_editable_fields(data)
         )
 
         return Response(AdminUserSerializer(user).data)
@@ -231,9 +238,10 @@ class UserAdminView(APIView):
         return parsed_edits
 
     @extend_schema(
-        tags=["Admin", "Premium"],
+        tags=["Users"],
         operation_id="admin_delete_user",
-        description="Deletes the specified user.",
+        description="Deletes the specified user, if the requesting user has admin "
+        "permissions. You cannot delete yourself.",
         parameters=[
             OpenApiParameter(
                 name="user_id",

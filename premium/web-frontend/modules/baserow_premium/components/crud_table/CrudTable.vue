@@ -22,12 +22,17 @@
           }"
           @click="toggleSort(col)"
         >
-          {{ col.header }}
+          <span class="crudtable__header-title">
+            {{ col.header }}
+          </span>
           <i
-            v-if="sorted(col)"
+            v-if="sorted(col) >= 0"
             class="crudtable__field-icon fas"
             :class="sortIcon(col)"
           ></i>
+          <span v-if="sorted(col) >= 0" class="crudtable__sortindex">
+            ({{ sorted(col) }})
+          </span>
         </div>
       </template>
       <template v-for="row in rows">
@@ -130,7 +135,7 @@ export default {
         : 'fa-sort-up'
     },
     sorted(column) {
-      return this.columnSorts.find((c) => c.key === column.key) !== undefined
+      return this.columnSorts.findIndex((c) => c.key === column.key)
     },
     async doSearch(searchQuery) {
       this.totalPages = null

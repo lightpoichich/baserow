@@ -6,6 +6,7 @@ from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
 )
 
 from django.shortcuts import reverse
@@ -26,8 +27,7 @@ def test_non_admin_cannot_see_admin_users_endpoint(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "ERROR_ADMIN_ONLY_OPERATION"
+    assert response.status_code == HTTP_403_FORBIDDEN
 
 
 @pytest.mark.django_db
@@ -353,8 +353,7 @@ def test_non_admin_cannot_delete_user(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {non_admin_token}",
     )
-    assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "ERROR_ADMIN_ONLY_OPERATION"
+    assert response.status_code == HTTP_403_FORBIDDEN
 
 
 @pytest.mark.django_db
@@ -406,8 +405,7 @@ def test_non_admin_cannot_patch_user(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {non_admin_user_token}",
     )
-    assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "ERROR_ADMIN_ONLY_OPERATION"
+    assert response.status_code == HTTP_403_FORBIDDEN
 
     non_admin_user.refresh_from_db()
     assert non_admin_user.email == "test@test.nl"
@@ -463,3 +461,41 @@ def test_error_returned_when_invalid_field_supplied_to_edit(api_client, data_fix
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "INVALID_USER_ADMIN_UPDATE"
+
+
+@pytest.mark.django_db
+def test_admin_getting_view_users_only_runs_two_queries_instead_of_n(
+    data_fixture, django_assert_num_queries, api_client
+):
+    _, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    fixed_num_of_queries_unrelated_to_number_of_rows = 5
+
+    for i in range(10):
+        data_fixture.create_user_group()
+
+    with django_assert_num_queries(fixed_num_of_queries_unrelated_to_number_of_rows):
+        response = api_client.get(
+            reverse("api:premium:admin_user:users"),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["count"] == 11
+
+    # Make even more to ensure that more rows don't result in more queries.
+    for i in range(10):
+        data_fixture.create_user_group()
+
+    with django_assert_num_queries(fixed_num_of_queries_unrelated_to_number_of_rows):
+        response = api_client.get(
+            reverse("api:premium:admin_user:users"),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["count"] == 21

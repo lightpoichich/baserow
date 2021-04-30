@@ -38,15 +38,13 @@
               Please enter a valid e-mail address.
             </div>
             <div v-show="formUser.username !== user.username" class="warning">
-              <strong>
-                Changing this users email address means when they sign in they
-                must use the new email address to do so. This must be
-                communicated with that user.
-              </strong>
+              Changing this users email address means when they sign in they
+              must use the new email address to do so. This must be communicated
+              with that user.
             </div>
           </div>
         </div>
-        <label class="control__label">Is Active</label>
+        <label class="control__label">Is active</label>
         <div class="control">
           <div class="control__elements">
             <Checkbox
@@ -55,22 +53,18 @@
             ></Checkbox>
           </div>
           <div v-show="!formUser.isActive" class="warning">
-            <strong>
-              When a user is marked as inactive they are prevented from signing
-              in.
-            </strong>
+            When a user is marked as inactive they are prevented from signing
+            in.
           </div>
         </div>
-        <label class="control__label">Is Staff</label>
+        <label class="control__label">Is staff</label>
         <div class="control">
           <div class="control__elements">
             <Checkbox v-model="formUser.isStaff" :disabled="loading"></Checkbox>
           </div>
           <div v-show="formUser.isStaff" class="warning">
-            <strong>
-              Making the user staff gives them admin access to all users, all
-              groups and the ability to revoke your own staff permissions.
-            </strong>
+            Making the user staff gives them admin access to all users, all
+            groups and the ability to revoke your own staff permissions.
           </div>
         </div>
         <div class="actions">

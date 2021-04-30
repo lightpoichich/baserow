@@ -128,7 +128,9 @@ class UserAdminHandler:
         """
         self._raise_if_not_permitted(requesting_user)
 
-        users = User.objects.all()
+        users = User.objects.prefetch_related(
+            "groupuser_set", "groupuser_set__group"
+        ).all()
         if username_search is not None:
             users = users.filter(username__icontains=username_search)
 

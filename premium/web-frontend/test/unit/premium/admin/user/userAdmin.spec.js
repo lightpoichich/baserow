@@ -2,7 +2,6 @@ import { TestApp } from '@baserow/test/helpers/testApp'
 import UserAdminTable from '@baserow_premium/components/admin/user/UserAdminTable'
 import moment from 'moment'
 import flushPromises from 'flush-promises'
-import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
 import UserAdminUserHelpers from '../../../../fixtures/uiHelpers'
 import MockPremiumServer from '@baserow_premium/../../test/fixtures/mockPremiumServer'
 
@@ -101,10 +100,7 @@ describe('User Admin Component Tests', () => {
 
     mockPremiumServer.expectUserDeleted(user.id)
 
-    await userAdmin
-      .findComponent(DeleteUserModal)
-      .find('button')
-      .trigger('click')
+    await ui.clickConfirmDeleteUserInModal()
 
     await flushPromises()
 

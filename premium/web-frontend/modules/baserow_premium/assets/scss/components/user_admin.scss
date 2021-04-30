@@ -62,6 +62,8 @@
   color: $color-neutral-700;
 }
 
+// The user-admin-group css below uses flexbox wrapping behaviour to hide overflowing
+// groups.
 .user-admin-group__container {
   height: 49px;
   margin-right: 5px;
@@ -72,9 +74,8 @@
   flex-shrink: 3;
 }
 
+// Groups which do not fit in the groups cell will wrap down into new hidden rows below
 .user-admin-group__item {
-  @extend %ellipsis;
-
   @include fixed-height(28px, 12px);
 
   flex: 0 1 auto;
@@ -84,6 +85,19 @@
   margin-top: 11px;
   margin-bottom: 10px;
   background-color: $color-neutral-100;
+  box-sizing: border-box;
+}
+
+// An empty no width item always at the start of the .user-admin-group__container will
+// ensure the first real group will wrap down into a new row if it does not fit.
+// Otherwise this first group will be shown in the cell but overflowing with it's text
+// cut off which is not desired.
+.user-admin-group__empty-item {
+  @include fixed-height(28px, 12px);
+
+  flex: 0 1 auto;
+  margin-top: 11px;
+  margin-bottom: 10px;
   box-sizing: border-box;
 }
 
@@ -109,4 +123,8 @@
     text-decoration: none;
     background-color: $color-neutral-100;
   }
+}
+
+.user-admin-delete__strong {
+  word-break: break-word;
 }

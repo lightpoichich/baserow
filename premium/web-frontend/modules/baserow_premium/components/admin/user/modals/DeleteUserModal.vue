@@ -4,8 +4,8 @@
     <Error :error="error"></Error>
     <div>
       <p>
-        Are you sure you want to delete the user
-        <strong>{{ user.username }}</strong
+        Are you sure you want to delete the user:
+        <strong class="user-admin-delete__strong">{{ user.username }}</strong
         >?
       </p>
       <p>
@@ -21,14 +21,15 @@
       </p>
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large button--error"
+          <a
+            class="button button--large button--error button--overflow"
             :class="{ 'button--loading': loading }"
             :disabled="loading"
-            @click="deleteUser()"
+            :title="user.username"
+            @click.prevent="deleteUser()"
           >
             Delete user {{ user.username }}
-          </button>
+          </a>
         </div>
       </div>
     </div>

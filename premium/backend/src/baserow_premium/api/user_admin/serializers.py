@@ -5,14 +5,14 @@ from rest_framework.fields import (
     EmailField,
     DateTimeField,
 )
-from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
+from rest_framework.serializers import ModelSerializer
 
 from baserow.core.models import GroupUser
 
 User = get_user_model()
 
 
-class AdminGroupUserSerializer(HyperlinkedModelSerializer):
+class AdminGroupUserSerializer(ModelSerializer):
     id = serializers.IntegerField(source="group.id")
     name = serializers.CharField(source="group.name")
 

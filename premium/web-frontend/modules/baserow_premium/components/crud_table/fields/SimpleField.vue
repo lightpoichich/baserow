@@ -1,5 +1,8 @@
 <template functional>
-  <div :class="[data.staticClass, data.class]">
+  <div
+    :class="[data.staticClass, data.class]"
+    :title="props.row[props.column.key]"
+  >
     {{ props.row[props.column.key] }}
   </div>
 </template>

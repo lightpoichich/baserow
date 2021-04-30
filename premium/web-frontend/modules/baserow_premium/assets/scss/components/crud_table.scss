@@ -69,7 +69,7 @@
   @extend %ellipsis;
 
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   background-color: $color-neutral-100;
   border-bottom: 1px solid $color-neutral-200;
@@ -86,6 +86,7 @@
     &:hover {
       text-decoration: none;
       background-color: $color-neutral-200;
+      cursor: pointer;
     }
   }
 
@@ -99,6 +100,14 @@
     left: 0;
     z-index: 1;
   }
+}
+
+.crudtable__header-title {
+  margin-right: auto;
+}
+
+.crudtable__sortindex {
+  @include center-text(20px, 10px);
 }
 
 .crudtable__field-icon {

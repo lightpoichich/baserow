@@ -4,6 +4,7 @@ import ChangeUserPasswordModal from '@baserow_premium/components/admin/user/moda
 import EditUserModal from '@baserow_premium/components/admin/user/modals/EditUserModal'
 import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
 import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
+import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
 
 export default class UserAdminUserHelpers {
   constructor(userAdminComponent) {
@@ -206,5 +207,12 @@ export default class UserAdminUserHelpers {
 
   clickHeaderAt(index) {
     return this.c.findAll('.crudtable__field').at(index).trigger('click')
+  }
+
+  async clickConfirmDeleteUserInModal() {
+    await this.c
+      .findComponent(DeleteUserModal)
+      .find('.button--large')
+      .trigger('click')
   }
 }

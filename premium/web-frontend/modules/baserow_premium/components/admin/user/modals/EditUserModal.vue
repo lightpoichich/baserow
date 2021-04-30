@@ -97,7 +97,7 @@
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import UserAdminService from '@baserow_premium/services/userAdmin'
-import { required, email, minLength, maxLength } from 'vuelidate/lib/validators'
+import { email, maxLength, minLength, required } from 'vuelidate/lib/validators'
 
 export default {
   name: 'EditUserModal',
@@ -121,6 +121,7 @@ export default {
   },
   watch: {
     user(user) {
+      // Reset the form if the user prop changes to a new user.
       this.formUser = {
         username: user.username,
         fullName: user.full_name,

@@ -88,8 +88,7 @@
 }
 
 .button--overflow {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  @extend %ellipsis;
+
   display: block;
 }

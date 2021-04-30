@@ -78,10 +78,10 @@ import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import UserAdminService from '@baserow_premium/services/userAdmin'
 import {
-  required,
-  sameAs,
   maxLength,
   minLength,
+  required,
+  sameAs,
 } from 'vuelidate/lib/validators'
 
 export default {
@@ -103,6 +103,7 @@ export default {
     }
   },
   watch: {
+    // Reset the form if the user prop changes to a new user.
     user() {
       this.account = {
         password: '',

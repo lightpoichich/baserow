@@ -12,6 +12,9 @@
 * Allow providing a `template_id` when registering a new account, which will install
   that template instead of the default database.
 
+## Unreleased Premium Only Features
+* Added user admin area allowing management of baserow users.
+
 ## Released (2021-04-08)
 
 * Added support for importing tables from XML files.

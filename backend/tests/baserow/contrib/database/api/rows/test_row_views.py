@@ -976,7 +976,7 @@ def test_move_row(api_client, data_fixture):
         "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
     )
     response = api_client.patch(
-        f'{url}?before_id=-1',
+        f"{url}?before_id=-1",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -1007,7 +1007,7 @@ def test_move_row(api_client, data_fixture):
         "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
     )
     response = api_client.patch(
-        f'{url}?before_id={row_3.id}',
+        f"{url}?before_id={row_3.id}",
         format="json",
         HTTP_AUTHORIZATION=f"Token {token.key}",
     )

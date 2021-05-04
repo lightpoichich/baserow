@@ -323,7 +323,7 @@ def test_update_row(send_mock, data_fixture):
         )
 
     with patch(
-        'baserow.contrib.database.rows.signals.before_row_update.send'
+        "baserow.contrib.database.rows.signals.before_row_update.send"
     ) as before_send_mock:
         handler.update_row(
             user=user,

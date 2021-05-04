@@ -322,31 +322,43 @@ def test_update_row(send_mock, data_fixture):
             user=user, table=table, row_id=row.id, values={price_field.id: -10.99}
         )
 
-    handler.update_row(
-        user=user,
-        table=table,
-        row_id=row.id,
-        values={
-            name_field.id: "Tesla",
-            speed_field.id: 240,
-            f"field_{price_field.id}": 59999.99,
-        },
-    )
+    with patch(
+        'baserow.contrib.database.rows.signals.before_row_update.send'
+    ) as before_send_mock:
+        handler.update_row(
+            user=user,
+            table=table,
+            row_id=row.id,
+            values={
+                name_field.id: "Tesla",
+                speed_field.id: 240,
+                f"field_{price_field.id}": 59999.99,
+            },
+        )
     row.refresh_from_db()
 
     assert getattr(row, f"field_{name_field.id}") == "Tesla"
     assert getattr(row, f"field_{speed_field.id}") == 240
     assert getattr(row, f"field_{price_field.id}") == Decimal("59999.99")
+
+    before_send_mock.assert_called_once()
+    assert before_send_mock.call_args[1]["row"].id == row.id
+    assert before_send_mock.call_args[1]["user"].id == user.id
+    assert before_send_mock.call_args[1]["table"].id == table.id
+    assert before_send_mock.call_args[1]["model"]._generated_table_model
+
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["row"].id == row.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
+    assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
 
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.row_updated.send")
-def test_move_row(send_mock, data_fixture):
+@patch("baserow.contrib.database.rows.signals.before_row_update.send")
+def test_move_row(before_send_mock, send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
@@ -369,11 +381,19 @@ def test_move_row(send_mock, data_fixture):
     assert row_1.order == Decimal("4.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
     assert row_3.order == Decimal("3.00000000000000000000")
+
+    before_send_mock.assert_called_once()
+    assert before_send_mock.call_args[1]["row"].id == row_1.id
+    assert before_send_mock.call_args[1]["user"].id == user.id
+    assert before_send_mock.call_args[1]["table"].id == table.id
+    assert before_send_mock.call_args[1]["model"]._generated_table_model
+
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["row"].id == row_1.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
+    assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
 
     handler.move_row(user=user, table=table, row_id=row_1.id, before=row_3)
     row_1.refresh_from_db()
@@ -391,7 +411,8 @@ def test_move_row(send_mock, data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.row_deleted.send")
-def test_delete_row(send_mock, data_fixture):
+@patch("baserow.contrib.database.rows.signals.before_row_delete.send")
+def test_delete_row(before_send_mock, send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
@@ -411,9 +432,17 @@ def test_delete_row(send_mock, data_fixture):
     row_id = row.id
     handler.delete_row(user=user, table=table, row_id=row.id)
     assert model.objects.all().count() == 1
+
+    before_send_mock.assert_called_once()
+    assert before_send_mock.call_args[1]["row"]
+    assert before_send_mock.call_args[1]["user"].id == user.id
+    assert before_send_mock.call_args[1]["table"].id == table.id
+    assert before_send_mock.call_args[1]["model"]._generated_table_model
+
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["row_id"] == row_id
     assert send_mock.call_args[1]["row"]
     assert send_mock.call_args[1]["user"].id == user.id
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
+    assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value

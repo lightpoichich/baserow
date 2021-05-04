@@ -10,7 +10,9 @@ from django.conf import settings
 from baserow.contrib.database.fields.models import Field
 
 from .exceptions import RowDoesNotExist
-from .signals import row_created, row_updated, row_deleted
+from .signals import (
+    before_row_update, before_row_delete, row_created, row_updated, row_deleted
+)
 
 
 class RowHandler:
@@ -289,6 +291,9 @@ class RowHandler:
             except model.DoesNotExist:
                 raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
+            before_return = before_row_update.send(self, row=row, user=user,
+                                                   table=table, model=model)
+
             values = self.prepare_values(model._field_objects, values)
             values, manytomany_values = self.extract_manytomany_values(values, model)
 
@@ -300,7 +305,8 @@ class RowHandler:
             for name, value in manytomany_values.items():
                 getattr(row, name).set(value)
 
-        row_updated.send(self, row=row, user=user, table=table, model=model)
+        row_updated.send(self, row=row, user=user, table=table, model=model,
+                         before_return=before_return)
 
         return row
 
@@ -339,10 +345,14 @@ class RowHandler:
             except model.DoesNotExist:
                 raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
+            before_return = before_row_update.send(self, row=row, user=user,
+                                                   table=table, model=model)
+
             row.order = self.get_order_before_row(before, model)
             row.save()
 
-        row_updated.send(self, row=row, user=user, table=table, model=model)
+        row_updated.send(self, row=row, user=user, table=table, model=model,
+                         before_return=before_return)
 
         return row
 
@@ -369,9 +379,13 @@ class RowHandler:
         except model.DoesNotExist:
             raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
+        before_return = before_row_delete.send(self, row=row, user=user, table=table,
+                                               model=model)
+
         row_id = row.id
         row.delete()
 
         row_deleted.send(
-            self, row_id=row_id, row=row, user=user, table=table, model=model
+            self, row_id=row_id, row=row, user=user, table=table, model=model,
+            before_return=before_return
         )

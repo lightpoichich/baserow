@@ -225,13 +225,12 @@ export default {
       const getScrollTop = () => element.scrollTop
 
       try {
-        await this.$store.dispatch(this.storePrefix + 'view/grid/move', {
+        await this.$store.dispatch(this.storePrefix + 'view/grid/moveRow', {
           table: this.table,
           grid: this.view,
           fields: this.fields,
           primary: this.primary,
           getScrollTop,
-          windowHeight: element.clientHeight,
           row: this.row,
           before: this.targetRow,
         })

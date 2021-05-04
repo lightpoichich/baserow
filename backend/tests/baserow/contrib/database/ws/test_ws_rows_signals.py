@@ -53,6 +53,9 @@ def test_row_updated(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][0] == f"table-{table.id}"
     assert args[0][1]["type"] == "row_updated"
     assert args[0][1]["table_id"] == table.id
+    assert args[0][1]["row_before_update"]["id"] == row.id
+    assert args[0][1]["row_before_update"][f"field_{field.id}"] is None
+    assert args[0][1]["row_before_update"][f"field_{field_2.id}"] is None
     assert args[0][1]["row"]["id"] == row.id
     assert args[0][1]["row"][f"field_{field.id}"] == "Test"
     assert args[0][1]["row"][f"field_{field_2.id}"] is None
@@ -88,3 +91,4 @@ def test_row_deleted(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["type"] == "row_deleted"
     assert args[0][1]["row_id"] == row_id
     assert args[0][1]["table_id"] == table.id
+    assert args[0][1]["row"]["id"] == row_id

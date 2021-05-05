@@ -220,7 +220,7 @@ export default {
       this.cancel()
 
       // We don't need to do anything if the row must be placed before or after itself
-      // because that would't change the position.
+      // because that wouldn't change the position.
       if (this.targetRow !== null) {
         // If the row must be placed before itself.
         if (this.row.id === this.targetRow.id) {

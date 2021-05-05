@@ -215,10 +215,23 @@ export default {
       event.preventDefault()
       this.cancel()
 
-      // We don't need to do anything if the row needs to be placed before itself
-      // because that wouldn't change the position.
-      if (this.row.id === (this.targetRow !== null ? this.targetRow.id : 0)) {
-        return
+      // We don't need to do anything if the row must be placed before or after itself
+      // because that would't change the position.
+      if (this.targetRow !== null) {
+        // If the row must be placed before itself.
+        if (this.row.id === this.targetRow.id) {
+          return
+        }
+
+        // If the row needs to be placed after itself.
+        const allRows = this.$store.getters[
+          this.storePrefix + 'view/grid/getAllRows'
+        ]
+        const index = allRows.findIndex((r) => r.id === this.targetRow.id)
+        const after = allRows[index - 1]
+        if (after && this.row.id === after.id) {
+          return
+        }
       }
 
       const element = this.$parent[this.vertical]()

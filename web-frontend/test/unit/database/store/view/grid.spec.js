@@ -538,6 +538,63 @@ describe('Grid view store', () => {
     expect(store.getters['grid/getBufferStartIndex']).toBe(11)
     expect(store.getters['grid/getBufferLimit']).toBe(2)
     expect(store.getters['grid/getCount']).toBe(100)
+
+    store.state.grid.bufferStartIndex = 9
+    store.state.grid.bufferLimit = 6
+    store.state.grid.rows = [
+      { id: 10, order: '14.99999999999999999995', field_1: 'Value 10' },
+      { id: 11, order: '14.99999999999999999996', field_1: 'Value 11' },
+      { id: 12, order: '14.99999999999999999997', field_1: 'Value 12' },
+      { id: 13, order: '14.99999999999999999998', field_1: 'Value 13' },
+      { id: 14, order: '14.99999999999999999999', field_1: 'Value 14' },
+      { id: 15, order: '15.00000000000000000000', field_1: 'Value 15' },
+    ]
+    store.state.grid.count = 100
+
+    // Move the row to an order that already exists, which means all the order lower
+    // than the new order should be decreased by 0.00000000000000000001.
+    await store.dispatch('grid/updatedExistingRow', {
+      view,
+      fields,
+      primary,
+      row: {
+        id: 11,
+        order: '14.99999999999999999996',
+        field_1: 'Value 11',
+      },
+      values: {
+        order: '14.99999999999999999999',
+      },
+      getScrollTop,
+    })
+    expect(store.getters['grid/getAllRows'].length).toBe(6)
+    expect(store.getters['grid/getAllRows'][0].id).toBe(10)
+    expect(store.getters['grid/getAllRows'][0].order).toBe(
+      '14.99999999999999999994'
+    )
+    expect(store.getters['grid/getAllRows'][1].id).toBe(12)
+    expect(store.getters['grid/getAllRows'][1].order).toBe(
+      '14.99999999999999999996'
+    )
+    expect(store.getters['grid/getAllRows'][2].id).toBe(13)
+    expect(store.getters['grid/getAllRows'][2].order).toBe(
+      '14.99999999999999999997'
+    )
+    expect(store.getters['grid/getAllRows'][3].id).toBe(14)
+    expect(store.getters['grid/getAllRows'][3].order).toBe(
+      '14.99999999999999999998'
+    )
+    expect(store.getters['grid/getAllRows'][4].id).toBe(11)
+    expect(store.getters['grid/getAllRows'][4].order).toBe(
+      '14.99999999999999999999'
+    )
+    expect(store.getters['grid/getAllRows'][5].id).toBe(15)
+    expect(store.getters['grid/getAllRows'][5].order).toBe(
+      '15.00000000000000000000'
+    )
+    expect(store.getters['grid/getBufferStartIndex']).toBe(9)
+    expect(store.getters['grid/getBufferLimit']).toBe(6)
+    expect(store.getters['grid/getCount']).toBe(100)
   })
 
   test('deletedExistingRow', async () => {

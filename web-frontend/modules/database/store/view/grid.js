@@ -945,7 +945,6 @@ export const actions = {
       // the row at a calculated index.
       const change = new BigNumber('0.00000000000000000001')
       order = new BigNumber(before.order).minus(change).toString()
-      commit('DECREASE_ORDERS_IN_BUFFER_LOWER_THAN', order)
     }
 
     dispatch('updatedExistingRow', {
@@ -1031,6 +1030,17 @@ export const actions = {
     } else if (!oldRowExists && newRowExists) {
       dispatch('createdNewRow', { view, fields, primary, values: newRow })
     } else if (oldRowExists && newRowExists) {
+      // If the new order already exists in the buffer and is not the row that has
+      // been updated, we need to decrease all the order otherwise we could up with
+      // duplicate orders.
+      if (
+        getters.getAllRows.findIndex(
+          (r) => r.id !== newRow.id && r.order === newRow.order
+        ) > -1
+      ) {
+        commit('DECREASE_ORDERS_IN_BUFFER_LOWER_THAN', newRow.order)
+      }
+
       // Figure out if the row is currently in the buffer.
       const sortFunction = getRowSortFunction(
         this.$registry,

@@ -151,7 +151,7 @@ class RowHandler:
         """
         Calculates a new unique order which will be before the provided before row
         order. This order can be used by an existing or new row. Several other rows
-        could be updated as their order needs to change change.
+        could be updated as their order might need to change.
 
         :param before: The row instance where the before order must be calculated for.
         :type before: Table

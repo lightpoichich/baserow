@@ -871,7 +871,8 @@ export const actions = {
   },
   /**
    * Called after a new row has been created, which could be by by the user or via
-   * another channel.
+   * another channel. It will only add the row if it belongs inside the views and it
+   * also makes sure that row will be inserted at the correct position.
    */
   createdNewRow(
     { commit, getters, dispatch },
@@ -1031,8 +1032,8 @@ export const actions = {
       dispatch('createdNewRow', { view, fields, primary, values: newRow })
     } else if (oldRowExists && newRowExists) {
       // If the new order already exists in the buffer and is not the row that has
-      // been updated, we need to decrease all the order otherwise we could up with
-      // duplicate orders.
+      // been updated, we need to decrease all the other orders, otherwise we could
+      // have duplicate orders.
       if (
         getters.getAllRows.findIndex(
           (r) => r.id !== newRow.id && r.order === newRow.order
@@ -1052,7 +1053,6 @@ export const actions = {
       const index = allRows.findIndex((r) => r.id === row.id)
       const oldIsFirst = index === 0
       const oldIsLast = index === allRows.length - 1
-      // const oldRowInBuffer = index > 0 && index < allRows.length - 1
       const oldRowInBuffer =
         (oldIsFirst && getters.getBufferStartIndex === 0) ||
         (oldIsLast && getters.getBufferEndIndex === getters.getCount) ||
@@ -1114,18 +1114,19 @@ export const actions = {
         commit('SET_BUFFER_LIMIT', getters.getBufferLimit + 1)
       } else if (newRowInBuffer) {
         // If the new row should be in the buffer, but wasn't.
-        // Add the row at the correct index.
         commit('INSERT_EXISTING_ROW_IN_BUFFER_AT_INDEX', {
           row: newRow,
           index: newIndex,
         })
         commit('SET_BUFFER_LIMIT', getters.getBufferLimit + 1)
       } else if (newIsFirst) {
-        // If the new row is before the buffer
+        // If the new row is before the buffer.
         commit('SET_BUFFER_START_INDEX', getters.getBufferStartIndex + 1)
       }
 
-      // @TODO docs
+      // If the row as in the old buffer, but ended up at the first/before or
+      // last/after position. This means that we can't know for sure the row should
+      // be in the buffer, so it is removed from it.
       if (oldRowInBuffer && !newRowInBuffer && (newIsFirst || newIsLast)) {
         commit('DELETE_ROW_IN_BUFFER_WITHOUT_UPDATE', row)
       }

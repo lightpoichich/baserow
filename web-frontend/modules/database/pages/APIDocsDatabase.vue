@@ -544,7 +544,7 @@
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter name="row_id" type="integer">
-                The unique identifier of the row that needs to be moved.
+                Moves the row related to the value.
               </APIDocsParameter>
             </ul>
             <h4 class="api-docs__heading-4">Query parameters</h4>
@@ -554,9 +554,9 @@
                 type="integer"
                 :optional="true"
               >
-                The row related to the `row_id` path parameter will be moved
-                before the row related to the `before_row_id`. If not provided
-                then the row will be moved to the end of the table.
+                Moves the row related to the given `row_id` before the row
+                related to the provided value. If not provided, then the row
+                will be moved to the end.
               </APIDocsParameter>
             </ul>
           </div>

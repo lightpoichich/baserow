@@ -145,21 +145,28 @@ export default {
 
       // This is the vertically scrollable element.
       const element = this.$parent[this.vertical]()
+      const elementRect = element.getBoundingClientRect()
+      const elementHeight = elementRect.bottom - elementRect.top
 
-      // Calculate the position of the row dragging effect.
+      // Calculate the top position of the dragging effect. Note that this effect lays
+      // over the vertically scrollable rows.
       this.draggingTop = Math.max(
         0,
         Math.min(
           this.startRowTop + event.clientY - this.mouseStart,
-          (this.rowsCount - 1) * this.rowHeight
+          elementHeight - this.rowHeight
         )
       )
 
       // Calculate before which row we want to place the row that is currently being
-      // dragged.
-      const mouseTop =
-        event.clientY - element.getBoundingClientRect().top + element.scrollTop
-      const rowIndex = Math.round(mouseTop / this.rowHeight)
+      // dragged. We also calculate target top position which indicates at which
+      // position the row is going to be placed. Note that the target effect lays over
+      // the vertically scrollable rows.
+      const mouseTop = event.clientY - elementRect.top + element.scrollTop
+      const rowIndex = Math.max(
+        0,
+        Math.min(Math.round(mouseTop / this.rowHeight), this.rowsCount)
+      )
       this.targetTop = rowIndex * this.rowHeight - element.scrollTop
       const beforeRow = this.allRows[rowIndex - this.bufferStartIndex]
       this.targetRow = beforeRow === undefined ? null : beforeRow
@@ -168,12 +175,9 @@ export default {
       // moving the element close to the end of the view port at the top or bottom
       // side, we might need to initiate that process.
       if (!this.autoScrolling || !startAutoScroll) {
-        const rect = element.getBoundingClientRect()
-        const height = rect.bottom - rect.top
-        const side = Math.ceil((height / 100) * 10)
-        const autoScrollMouseTop =
-          event.clientY - element.getBoundingClientRect().top
-        const autoScrollMouseBottom = height - autoScrollMouseTop
+        const side = Math.ceil((elementHeight / 100) * 10)
+        const autoScrollMouseTop = event.clientY - elementRect.top
+        const autoScrollMouseBottom = elementHeight - autoScrollMouseTop
         let speed = 0
 
         if (autoScrollMouseTop < side) {

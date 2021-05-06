@@ -24,15 +24,24 @@ class Command(BaseCommand):
         email_prefix = (
             "baserow_prefix_to_ensure_we_never_accidentally_email_a_real_person_"
         )
+
+        clashing_email_counter = 0
         for i in range(limit):
             username = email_prefix + fake.email()
             password = str(uuid.uuid4())
             name = fake.name()
+
+            # The fake email generator often creates the same email over and over,
+            # user a simple counter to ensure username uniqueness so we can insert
+            # the user successfully.
             if User.objects.filter(username=username).exists():
-                continue
+                username = str(clashing_email_counter) + username
+                clashing_email_counter += 1
+
             user = User(first_name=name, email=username, username=username)
             user.set_password(password)
             user.save()
+
             group = Group.objects.create(name=name + "'s Group")
             GroupUser.objects.create(
                 group=group,

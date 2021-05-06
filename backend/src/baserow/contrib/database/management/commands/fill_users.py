@@ -1,9 +1,12 @@
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from faker import Faker
 
-from baserow.core.user.handler import UserHandler
+from baserow.core.models import Group, GroupUser, GROUP_USER_PERMISSION_ADMIN
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -17,14 +20,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         limit = options["limit"]
         fake = Faker()
-        user_handler = UserHandler()
 
         email_prefix = (
             "baserow_prefix_to_ensure_we_never_accidentally_email_a_real_person_"
         )
         for i in range(limit):
-            user_handler.create_user(
-                fake.name(), email_prefix + fake.email(), str(uuid.uuid4())
+            username = email_prefix + fake.email()
+            password = str(uuid.uuid4())
+            name = fake.name()
+            if User.objects.filter(username=username).exists():
+                continue
+            user = User(first_name=name, email=username, username=username)
+            user.set_password(password)
+            user.save()
+            group = Group.objects.create(name=name + "'s Group")
+            GroupUser.objects.create(
+                group=group,
+                user=user,
+                order=0,
+                permissions=GROUP_USER_PERMISSION_ADMIN,
             )
 
         self.stdout.write(self.style.SUCCESS(f"{limit} rows have been inserted."))

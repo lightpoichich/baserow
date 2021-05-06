@@ -374,7 +374,7 @@ class RowHandler:
 
         return row
 
-    def delete_row(self, user, table, row_id):
+    def delete_row(self, user, table, row_id, model=None):
         """
         Deletes an existing row of the given table and with row_id.
 
@@ -384,13 +384,16 @@ class RowHandler:
         :type table: Table
         :param row_id: The id of the row that must be deleted.
         :type row_id: int
+        :param model: If the correct model has already been generated, it can be
+            provided so that it does not have to be generated for a second time.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
         group = table.database.group
         group.has_user(user, raise_error=True)
 
-        model = table.get_model(field_ids=[])
+        if not model:
+            model = table.get_model()
 
         try:
             row = model.objects.get(id=row_id)

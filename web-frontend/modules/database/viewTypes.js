@@ -266,15 +266,22 @@ export class GridViewType extends ViewType {
     )
   }
 
-  rowCreated({ store }, tableId, fields, primary, values, storePrefix = '') {
+  async rowCreated(
+    { store },
+    tableId,
+    fields,
+    primary,
+    values,
+    storePrefix = ''
+  ) {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch(storePrefix + 'view/grid/createdNewRow', {
+      await store.dispatch(storePrefix + 'view/grid/createdNewRow', {
         view: store.getters['view/getSelected'],
         fields,
         primary,
         values,
       })
-      store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
+      await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
         primary,
@@ -282,7 +289,7 @@ export class GridViewType extends ViewType {
     }
   }
 
-  rowUpdated(
+  async rowUpdated(
     { store },
     tableId,
     fields,
@@ -292,14 +299,14 @@ export class GridViewType extends ViewType {
     storePrefix = ''
   ) {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch(storePrefix + 'view/grid/updatedExistingRow', {
+      await store.dispatch(storePrefix + 'view/grid/updatedExistingRow', {
         view: store.getters['view/getSelected'],
         fields,
         primary,
         row,
         values,
       })
-      store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
+      await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
         primary,
@@ -307,15 +314,15 @@ export class GridViewType extends ViewType {
     }
   }
 
-  rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
+  async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch(storePrefix + 'view/grid/deletedExistingRow', {
+      await store.dispatch(storePrefix + 'view/grid/deletedExistingRow', {
         view: store.getters['view/getSelected'],
         fields,
         primary,
         row,
       })
-      store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
+      await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
         primary,

@@ -250,19 +250,25 @@ export const mutations = {
     state.count++
     state.bufferLimit++
 
-    const min = new BigNumber(row.order).integerValue(BigNumber.ROUND_FLOOR)
-    const max = new BigNumber(row.order)
+    // If another row with the same order already exists, then we need to decrease all
+    // the other orders that are within the range by '0.00000000000000000001'.
+    if (
+      state.rows.findIndex((r) => r.id !== row.id && r.order === row.order) > -1
+    ) {
+      const min = new BigNumber(row.order).integerValue(BigNumber.ROUND_FLOOR)
+      const max = new BigNumber(row.order)
 
-    // Decrease all the orders that have already have been inserted before the same
-    // row.
-    state.rows.forEach((row) => {
-      const order = new BigNumber(row.order)
-      if (order.isGreaterThan(min) && order.isLessThanOrEqualTo(max)) {
-        row.order = order
-          .minus(new BigNumber('0.00000000000000000001'))
-          .toString()
-      }
-    })
+      // Decrease all the orders that have already have been inserted before the same
+      // row.
+      state.rows.forEach((row) => {
+        const order = new BigNumber(row.order)
+        if (order.isGreaterThan(min) && order.isLessThanOrEqualTo(max)) {
+          row.order = order
+            .minus(new BigNumber('0.00000000000000000001'))
+            .toString()
+        }
+      })
+    }
 
     state.rows.splice(index, 0, row)
   },
@@ -829,9 +835,13 @@ export const actions = {
       }
     })
 
-    // If not before is provided, then we row is added last, because we don't know
-    // the total amount of rows in the table, we are going to add
-    let order = (getters.getCount + 1).toString() + '.00000000000000000000'
+    // If before is not provided, then the row is added last. Because we don't know
+    // the total amount of rows in the table, we are going to add find the highest
+    // existing order in the buffer and increase that by one.
+    let order = getters.getHighestOrder
+      .integerValue(BigNumber.ROUND_CEIL)
+      .plus('1')
+      .toString()
     let index = getters.getBufferEndIndex
     if (before !== null) {
       // If the row has been placed before another row we can specifically insert to
@@ -938,9 +948,13 @@ export const actions = {
   ) {
     const oldOrder = row.order
 
-    // If not before is provided, then we row is added last, because we don't know
-    // the total amount of rows in the table, we are going to add
-    let order = (getters.getCount + 1).toString() + '.00000000000000000000'
+    // If before is not provided, then the row is added last. Because we don't know
+    // the total amount of rows in the table, we are going to add find the highest
+    // existing order in the buffer and increase that by one.
+    let order = getters.getHighestOrder
+      .integerValue(BigNumber.ROUND_CEIL)
+      .plus('1')
+      .toString()
     if (before !== null) {
       // If the row has been placed before another row we can specifically insert to
       // the row at a calculated index.
@@ -1421,6 +1435,16 @@ export const getters = {
   },
   getServerSearchTerm(state) {
     return state.hideRowsNotMatchingSearch ? state.activeSearchTerm : false
+  },
+  getHighestOrder(state) {
+    let order = new BigNumber('0.00000000000000000000')
+    state.rows.forEach((r) => {
+      const rOrder = new BigNumber(r.order)
+      if (rOrder.isGreaterThan(order)) {
+        order = rOrder
+      }
+    })
+    return order
   },
 }
 

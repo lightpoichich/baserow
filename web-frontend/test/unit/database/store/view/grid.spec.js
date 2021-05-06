@@ -219,7 +219,12 @@ describe('Grid view store', () => {
       bufferLimit: 3,
       rows: [
         { id: 1, order: '1.00000000000000000000', field_1: 'Value 1' },
-        { id: 2, order: '2.00000000000000000000', field_1: 'Value 2' },
+        {
+          id: 2,
+          order: '2.00000000000000000000',
+          field_1: 'Value 2',
+          _: { mustPersist: true },
+        },
         { id: 3, order: '3.00000000000000000000', field_1: 'Value 3' },
       ],
       count: 3,
@@ -264,6 +269,7 @@ describe('Grid view store', () => {
     expect(store.getters['grid/getAllRows'][0].field_1).toBe('Value 1')
     expect(store.getters['grid/getAllRows'][1].id).toBe(2)
     expect(store.getters['grid/getAllRows'][1].field_1).toBe('Value 2 updated')
+    expect(store.getters['grid/getAllRows'][1]._.mustPersist).toBe(true)
     expect(store.getters['grid/getAllRows'][2].id).toBe(3)
     expect(store.getters['grid/getAllRows'][2].field_1).toBe('Value 3')
     expect(store.getters['grid/getBufferStartIndex']).toBe(0)
@@ -564,6 +570,51 @@ describe('Grid view store', () => {
       },
       values: {
         order: '14.99999999999999999999',
+      },
+      getScrollTop,
+    })
+    expect(store.getters['grid/getAllRows'].length).toBe(6)
+    expect(store.getters['grid/getAllRows'][0].id).toBe(10)
+    expect(store.getters['grid/getAllRows'][0].order).toBe(
+      '14.99999999999999999994'
+    )
+    expect(store.getters['grid/getAllRows'][1].id).toBe(12)
+    expect(store.getters['grid/getAllRows'][1].order).toBe(
+      '14.99999999999999999996'
+    )
+    expect(store.getters['grid/getAllRows'][2].id).toBe(13)
+    expect(store.getters['grid/getAllRows'][2].order).toBe(
+      '14.99999999999999999997'
+    )
+    expect(store.getters['grid/getAllRows'][3].id).toBe(14)
+    expect(store.getters['grid/getAllRows'][3].order).toBe(
+      '14.99999999999999999998'
+    )
+    expect(store.getters['grid/getAllRows'][4].id).toBe(11)
+    expect(store.getters['grid/getAllRows'][4].order).toBe(
+      '14.99999999999999999999'
+    )
+    expect(store.getters['grid/getAllRows'][5].id).toBe(15)
+    expect(store.getters['grid/getAllRows'][5].order).toBe(
+      '15.00000000000000000000'
+    )
+    expect(store.getters['grid/getBufferStartIndex']).toBe(9)
+    expect(store.getters['grid/getBufferLimit']).toBe(6)
+    expect(store.getters['grid/getCount']).toBe(100)
+
+    // If only a field value is updated then there the other row order don't have to be
+    // decreased.
+    await store.dispatch('grid/updatedExistingRow', {
+      view,
+      fields,
+      primary,
+      row: {
+        id: 11,
+        order: '14.99999999999999999999',
+        field_1: 'Value 11',
+      },
+      values: {
+        field_1: 'Value 11.1',
       },
       getScrollTop,
     })

@@ -41,9 +41,3 @@ class InvalidSortAttributeException(Exception):
     """
     Raised when a sort is requested for an invalid or non-existent field.
     """
-
-
-class InvalidUserAdminEditField(Exception):
-    """
-    Raised when an edit is attempted on a invalid or un-editable user admin field.
-    """

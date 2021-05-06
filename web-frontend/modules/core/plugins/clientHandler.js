@@ -69,6 +69,10 @@ class ErrorHandler {
         'Action not allowed.',
         'You cannot delete yourself.'
       ),
+      ERROR_MAX_FIELD_COUNT_EXCEEDED: new ResponseErrorMessage(
+        "Couldn't create field.",
+        "The action couldn't be completed because the field count exceeds the limit"
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the

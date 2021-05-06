@@ -57,8 +57,11 @@ class UsersAdminView(APIView):
                 "each attribute must be prefixed with `+` for a descending "
                 "sort or a `-` for an ascending sort. The accepted attribute names "
                 f"are: {_valid_sortable_fields}. "
-                f"For example `sorts=+username,-is_active` will sort the "
-                f"results first by descending username and then ascending is_active.",
+                "For example `sorts=+username,-is_active` will sort the "
+                "results first by descending username and then ascending is_active."
+                "A sort parameter with multiple instances of the same "
+                "sort attribute will respond with the USER_ADMIN_INVALID_SORT_ATTRIBUTE"
+                "error.",
             ),
             OpenApiParameter(
                 name="page",

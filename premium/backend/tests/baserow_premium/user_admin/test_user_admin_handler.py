@@ -4,6 +4,10 @@ from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
 from baserow.core.exceptions import IsNotAdminError
+from baserow_premium.api.user_admin.errors import (
+    InvalidSortDirectionException,
+    InvalidSortAttributeException,
+)
 from baserow_premium.user_admin.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
@@ -332,3 +336,83 @@ def test_raises_exception_when_updating_an_unknown_user(data_fixture):
     )
     with pytest.raises(UserDoesNotExistException):
         handler.update_user(admin_user, 99999, username="new_password")
+
+
+@pytest.mark.django_db
+def test_throws_error_if_sort_direction_not_provided(api_client, data_fixture):
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    handler = UserAdminHandler()
+    with pytest.raises(InvalidSortDirectionException):
+        handler.get_users(admin_user, sorts="username")
+
+
+@pytest.mark.django_db
+def test_throws_error_if_invalid_sort_direction_provided(api_client, data_fixture):
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    handler = UserAdminHandler()
+    with pytest.raises(InvalidSortDirectionException):
+        handler.get_users(admin_user, sorts="*username")
+
+
+@pytest.mark.django_db
+def test_throws_error_if_invalid_sorts_mixed_with_valid_ones(api_client, data_fixture):
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    handler = UserAdminHandler()
+    with pytest.raises(InvalidSortAttributeException):
+        handler.get_users(admin_user, sorts="+username,-idd")
+
+
+@pytest.mark.django_db
+def test_throws_error_if_multiple_of_the_same_sort_attr_are_given(
+    api_client, data_fixture
+):
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    handler = UserAdminHandler()
+    with pytest.raises(InvalidSortAttributeException):
+        handler.get_users(admin_user, sorts="+username,-id,-username")
+
+
+@pytest.mark.django_db
+def test_throws_error_if_blank_sorts_provided(api_client, data_fixture):
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    handler = UserAdminHandler()
+    with pytest.raises(InvalidSortAttributeException):
+        handler.get_users(admin_user, sorts=",,")
+
+
+@pytest.mark.django_db
+def test_throws_error_if_empty_sorts_provided(api_client, data_fixture):
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    handler = UserAdminHandler()
+    with pytest.raises(InvalidSortAttributeException):
+        handler.get_users(admin_user, sorts="")

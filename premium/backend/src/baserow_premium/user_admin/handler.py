@@ -41,14 +41,20 @@ class UserAdminHandler:
         """
         Looks up all users, performs an optional username search and then sorts the
         resulting user queryset and returns it. By default if no sorts are provided
-        sorts by user id ascending.
+        sorts by user id ascending. Raises
 
         :param requesting_user: The user who is making the request to get_users, the
             user must be a staff member or else an exception will
             be raised.
         :param username_search: An optional icontains username search to filter the
             returned users by.
-        :param sorts: A list of sorts to be applied in order over the returned users.
+        :param sorts: A comma separated string like `+username,-id` to be applied as
+            an ordering order over the returned users. Prefix the attribute with +
+            for an ascending sort, - for descending.
+            See `allowed_user_admin_sort_field_names` for the allowed attributes to
+            sort by.
+            Raises InvalidSortAttributeException or InvalidSortAttributeException if
+            an invalid sort string is provided.
         :return: A queryset of users in Baserow, optionally sorted and ordered by the
             specified parameters.
         """
@@ -73,7 +79,7 @@ class UserAdminHandler:
         Raises an InvalidSortDirectionException if an attribute does not begin with `+`
         or `-`.
         Raises an InvalidSortAttributeException if an unknown attribute is supplied to
-        sort by.
+        sort by or multiple of the same attribute are provided.
 
         :param sorts: The list of sorts to apply to the queryset
         :param queryset: The queryset to sort
@@ -84,6 +90,7 @@ class UserAdminHandler:
             return queryset.order_by("id")
 
         parsed_django_order_bys = []
+        already_seen_sorts = set()
         for s in sorts.split(","):
             if len(s) <= 2:
                 raise InvalidSortAttributeException()
@@ -101,6 +108,11 @@ class UserAdminHandler:
                 attribute = sort_field_names_to_user_attributes()[sort_field_name]
             except KeyError:
                 raise InvalidSortAttributeException()
+
+            if attribute in already_seen_sorts:
+                raise InvalidSortAttributeException()
+            else:
+                already_seen_sorts.add(attribute)
 
             parsed_django_order_bys.append(f"{direction}{attribute}")
 

@@ -225,7 +225,9 @@ def test_admin_can_sort_users(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_throws_error_if_invalid_sort_field_provided(api_client, data_fixture):
+def test_returns_error_response_if_invalid_sort_field_provided(
+    api_client, data_fixture
+):
     _, token = data_fixture.create_user_and_token(
         email="test@test.nl",
         password="password",
@@ -243,7 +245,9 @@ def test_throws_error_if_invalid_sort_field_provided(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_throws_error_if_sort_direction_not_provided(api_client, data_fixture):
+def test_returns_error_response_if_sort_direction_not_provided(
+    api_client, data_fixture
+):
     _, token = data_fixture.create_user_and_token(
         email="test@test.nl",
         password="password",
@@ -261,7 +265,9 @@ def test_throws_error_if_sort_direction_not_provided(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_throws_error_if_invalid_sort_direction_provided(api_client, data_fixture):
+def test_returns_error_response_if_invalid_sort_direction_provided(
+    api_client, data_fixture
+):
     _, token = data_fixture.create_user_and_token(
         email="test@test.nl",
         password="password",
@@ -279,7 +285,9 @@ def test_throws_error_if_invalid_sort_direction_provided(api_client, data_fixtur
 
 
 @pytest.mark.django_db
-def test_throws_error_if_invalid_sorts_mixed_with_valid_ones(api_client, data_fixture):
+def test_returns_error_response_if_invalid_sorts_mixed_with_valid_ones(
+    api_client, data_fixture
+):
     _, token = data_fixture.create_user_and_token(
         email="test@test.nl",
         password="password",
@@ -297,7 +305,7 @@ def test_throws_error_if_invalid_sorts_mixed_with_valid_ones(api_client, data_fi
 
 
 @pytest.mark.django_db
-def test_throws_error_if_blank_sorts_provided(api_client, data_fixture):
+def test_returns_error_response_if_blank_sorts_provided(api_client, data_fixture):
     _, token = data_fixture.create_user_and_token(
         email="test@test.nl",
         password="password",
@@ -315,7 +323,7 @@ def test_throws_error_if_blank_sorts_provided(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_throws_error_if_no_sorts_provided(api_client, data_fixture):
+def test_returns_error_response_if_no_sorts_provided(api_client, data_fixture):
     _, token = data_fixture.create_user_and_token(
         email="test@test.nl",
         password="password",
@@ -454,9 +462,38 @@ def test_error_returned_when_invalid_field_supplied_to_edit(api_client, data_fix
     )
     url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
 
+    # We have to provide a str as otherwise the test api client will "helpfully" try
+    # to serialize the dict using the endpoints serializer, which will fail before
+    # actually running the endpoint.
     response = api_client.patch(
         url,
         json.dumps({"date_joined": "2021-04-01T01:00:00Z"}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_error_returned_when_valid_and_invalid_fields_supplied_to_edit(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+
+    # We have to provide a str as otherwise the test api client will "helpfully" try
+    # to serialize the dict using the endpoints serializer, which will fail before
+    # actually running the endpoint.
+    response = api_client.patch(
+        url,
+        json.dumps({"is_active": False, "date_joined": "2021-04-01T01:00:00Z"}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

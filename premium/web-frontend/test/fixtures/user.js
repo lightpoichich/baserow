@@ -1,7 +1,7 @@
 export function aUser({
   id = 1,
   username = 'user@baserow.io',
-  fullName = 'user_name',
+  name = 'user_name',
   groups = [
     {
       id: 1,
@@ -17,7 +17,7 @@ export function aUser({
   return {
     id,
     username,
-    full_name: fullName,
+    name,
     groups,
     last_login: lastLogin,
     date_joined: dateJoined,
@@ -39,22 +39,22 @@ export function createUsersForAdmin(
   if (sorts !== null) {
     params.sorts = sorts
   }
-  mock.onGet(`/premium/admin/user/`, { params }).reply(200, {
+  mock.onGet(`/admin/user/`, { params }).reply(200, {
     count: count === null ? users.length : count,
     results: users,
   })
 }
 
 export function expectUserDeleted(mock, userId) {
-  mock.onDelete(`/premium/admin/user/${userId}/`).reply(200)
+  mock.onDelete(`/admin/user/${userId}/`).reply(200)
 }
 
 export function expectUserUpdated(mock, user, changes) {
   mock
-    .onPatch(`/premium/admin/user/${user.id}/`, changes)
+    .onPatch(`/admin/user/${user.id}/`, changes)
     .reply(200, Object.assign({}, user, changes))
 }
 
 export function expectUserUpdatedRespondsWithError(mock, user, error) {
-  mock.onPatch(`/premium/admin/user/${user.id}/`).reply(500, error)
+  mock.onPatch(`/admin/user/${user.id}/`).reply(500, error)
 }

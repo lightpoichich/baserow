@@ -56,11 +56,6 @@ class ErrorHandler {
         'Invalid URL',
         'The provided file URL is invalid or not allowed.'
       ),
-      ERROR_ADMIN_ONLY_OPERATION: new ResponseErrorMessage(
-        'Action not allowed.',
-        "The action couldn't be completed because you don't have the right " +
-          'permissions.'
-      ),
       USER_ADMIN_CANNOT_DEACTIVATE_SELF: new ResponseErrorMessage(
         'Action not allowed.',
         'You cannot de-activate or un-staff yourself.'

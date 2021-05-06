@@ -37,7 +37,7 @@ export default class UserAdminUserHelpers {
     return {
       userIdCell: cells.at(offset),
       usernameCell: cells.at(offset + 1),
-      fullNameCell: cells.at(offset + 2),
+      nameCell: cells.at(offset + 2),
       groupsCell: cells.at(offset + 3),
       lastLoginCell: cells.at(offset + 4),
       signedUpCell: cells.at(offset + 5),

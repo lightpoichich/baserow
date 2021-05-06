@@ -1,5 +1,4 @@
-from typing import List, Optional, Dict, Any
-
+from django.db import transaction
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.permissions import IsAdminUser
@@ -10,38 +9,32 @@ from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow_premium.api.user_admin.errors import (
-    ERROR_ADMIN_ONLY_OPERATION,
     InvalidSortDirectionException,
     USER_ADMIN_INVALID_SORT_DIRECTION,
     USER_ADMIN_INVALID_SORT_ATTRIBUTE,
     InvalidSortAttributeException,
-    InvalidUserAdminEditField,
-    USER_ADMIN_INVALID_UPDATE_ATTRIBUTE,
     USER_ADMIN_CANNOT_DEACTIVATE_SELF,
     USER_ADMIN_CANNOT_DELETE_SELF,
     USER_ADMIN_UNKNOWN_USER,
 )
-from baserow_premium.api.user_admin.serializers import AdminUserSerializer
+from baserow_premium.api.user_admin.serializers import (
+    UserAdminUpdateSerializer,
+    UserAdminReadSerializer,
+)
 from baserow_premium.user_admin.exceptions import (
-    AdminOnlyOperationException,
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
-    UnknownUserException,
+    UserDoesNotExistException,
 )
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,
-    UserAdminSort,
-    SortableUserAdminField,
-    EditableUserAdminField,
-    UserAdminSortDirection,
+    allowed_user_admin_sort_field_names,
 )
 
 
 class UsersAdminView(APIView):
     permission_classes = (IsAdminUser,)
-    _valid_sortable_fields = ",".join(
-        [f"`{f.value}`" for f in list(SortableUserAdminField)]
-    )
+    _valid_sortable_fields = ",".join(allowed_user_admin_sort_field_names())
 
     @extend_schema(
         tags=["Users"],
@@ -81,7 +74,7 @@ class UsersAdminView(APIView):
             ),
         ],
         responses={
-            200: AdminUserSerializer(many=True),
+            200: UserAdminReadSerializer(many=True),
             400: get_error_schema(
                 [
                     "ERROR_PAGE_SIZE_LIMIT",
@@ -90,12 +83,11 @@ class UsersAdminView(APIView):
                     "USER_ADMIN_INVALID_SORT_ATTRIBUTE",
                 ]
             ),
-            401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
+            401: None,
         },
     )
     @map_exceptions(
         {
-            AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
             InvalidSortDirectionException: USER_ADMIN_INVALID_SORT_DIRECTION,
             InvalidSortAttributeException: USER_ADMIN_INVALID_SORT_ATTRIBUTE,
         }
@@ -107,69 +99,28 @@ class UsersAdminView(APIView):
         """
 
         search = request.GET.get("search")
-        sorts_param = request.GET.get("sorts")
+        sorts = request.GET.get("sorts")
 
         handler = UserAdminHandler()
-        sorts = self.parse_sorts(sorts_param)
         users = handler.get_users(request.user, search, sorts)
 
         paginator = PageNumberPagination(limit_page_size=100)
         page = paginator.paginate_queryset(users, request, self)
-        serializer = AdminUserSerializer(page, many=True)
+        serializer = UserAdminReadSerializer(page, many=True)
 
         return paginator.get_paginated_response(serializer.data)
-
-    @staticmethod
-    def parse_sorts(sorts: Optional[str]) -> List[UserAdminSort]:
-        """
-        Parses an optional comma separated string into a list of user sorts. Each item
-        in the string must either begin with a + for a ascending sort or a - for a
-        descending sort. Following the + or - a valid field name to sort must be
-        provided. The valid field names are the values of the baserow_premium.user_admin
-        .handler.SortableUserField enum.
-
-        :param sorts: An optional comma separated string of user sorts.
-        :return: A list of valid user sorts.
-        """
-        if sorts is None:
-            return []
-        parsed_sorts = []
-        for s in sorts.split(","):
-            if len(s) <= 2:
-                raise InvalidSortAttributeException()
-
-            sort_direction_prefix = s[0]
-            sort_field_name = s[1:]
-
-            try:
-                direction = UserAdminSortDirection(sort_direction_prefix)
-            except ValueError:
-                raise InvalidSortDirectionException()
-
-            try:
-                field = SortableUserAdminField(sort_field_name)
-            except ValueError:
-                raise InvalidSortAttributeException()
-
-            parsed_sorts.append(UserAdminSort(direction, field))
-        return parsed_sorts
 
 
 class UserAdminView(APIView):
     permission_classes = (IsAdminUser,)
 
-    _valid_editable_fields = ",".join(
-        [f"`{f.value}`" for f in list(EditableUserAdminField)]
-    )
-
     @extend_schema(
         tags=["Users"],
-        request=AdminUserSerializer,
+        request=UserAdminUpdateSerializer,
         operation_id="edit_user",
         description=f"Updates specified user attributes and returns the updated user if"
-        f" the requesting user has admin permissions. The attributes which can be "
-        f"edited are: {_valid_editable_fields}. You cannot update yourself to no longer"
-        f" be an admin or active.",
+        f" the requesting user has admin permissions. You cannot update yourself to no "
+        f"longer be an admin or active.",
         parameters=[
             OpenApiParameter(
                 name="user_id",
@@ -179,27 +130,25 @@ class UserAdminView(APIView):
             ),
         ],
         responses={
-            200: AdminUserSerializer(many=True),
+            200: UserAdminReadSerializer(),
             400: get_error_schema(
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
-                    "USER_ADMIN_INVALID_UPDATE_ATTRIBUTE",
                     "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
                 ]
             ),
-            401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
+            401: None,
         },
     )
-    @validate_body(AdminUserSerializer, partial=True)
+    @validate_body(UserAdminUpdateSerializer, partial=True)
     @map_exceptions(
         {
-            AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
-            InvalidUserAdminEditField: USER_ADMIN_INVALID_UPDATE_ATTRIBUTE,
             CannotDeactivateYourselfException: USER_ADMIN_CANNOT_DEACTIVATE_SELF,
-            UnknownUserException: USER_ADMIN_UNKNOWN_USER,
+            UserDoesNotExistException: USER_ADMIN_UNKNOWN_USER,
         }
     )
+    @transaction.atomic
     def patch(self, request, user_id, data):
         """
         Updates the specified user with the supplied attributes. Will raise an exception
@@ -207,41 +156,10 @@ class UserAdminView(APIView):
         """
         user_id = int(user_id)
 
-        # Password is write only and will be removed by the drf serializer when run in
-        # @validate_body, re-add it here if present
-        if "password" in request.data:
-            data["password"] = request.data["password"]
-
         handler = UserAdminHandler()
-        user = handler.update_user(
-            request.user, user_id, self.parse_editable_fields(data)
-        )
+        user = handler.update_user(request.user, user_id, **data)
 
-        return Response(AdminUserSerializer(user).data)
-
-    @staticmethod
-    def parse_editable_fields(
-        data: Dict[str, Any]
-    ) -> Dict[EditableUserAdminField, Any]:
-        """
-        Maps a raw string to value dictionary to the enum to value dictionary expected
-        by the user admin handler. Will raise exceptions if unknown fields are found
-        or none are given.
-
-        :param data: A dictionary of editable user admin field attribute names to values
-        :return: The input data dictionary but with its keys mapped to the correct enum
-        values.
-        """
-        parsed_edits: Dict[EditableUserAdminField, Any] = {}
-        if not data:
-            raise InvalidUserAdminEditField()
-        for field_name, value in data.items():
-            try:
-                parsed_edits[EditableUserAdminField(field_name)] = value
-            except ValueError:
-                raise InvalidUserAdminEditField()
-
-        return parsed_edits
+        return Response(UserAdminReadSerializer(user).data)
 
     @extend_schema(
         tags=["Users"],
@@ -264,14 +182,13 @@ class UserAdminView(APIView):
                     "USER_ADMIN_UNKNOWN_USER",
                 ]
             ),
-            401: get_error_schema(["ERROR_ADMIN_ONLY_OPERATION"]),
+            401: None,
         },
     )
     @map_exceptions(
         {
-            AdminOnlyOperationException: ERROR_ADMIN_ONLY_OPERATION,
             CannotDeleteYourselfException: USER_ADMIN_CANNOT_DELETE_SELF,
-            UnknownUserException: USER_ADMIN_UNKNOWN_USER,
+            UserDoesNotExistException: USER_ADMIN_UNKNOWN_USER,
         }
     )
     def delete(self, request, user_id):

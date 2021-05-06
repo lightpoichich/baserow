@@ -1,16 +1,4 @@
-from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST
-
-ERROR_ADMIN_ONLY_OPERATION = (
-    "ERROR_ADMIN_ONLY_OPERATION",
-    HTTP_401_UNAUTHORIZED,
-    "You do not have permission to perform this operation.",
-)
-
-USER_ADMIN_INVALID_UPDATE_ATTRIBUTE = (
-    "USER_ADMIN_INVALID_UPDATE_ATTRIBUTE",
-    HTTP_400_BAD_REQUEST,
-    "An invalid or un-editable field was provided to update.",
-)
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 USER_ADMIN_INVALID_SORT_DIRECTION = (
     "USER_ADMIN_INVALID_SORT_DIRECTION",

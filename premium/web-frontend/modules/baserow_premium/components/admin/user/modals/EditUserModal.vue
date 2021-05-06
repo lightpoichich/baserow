@@ -8,15 +8,15 @@
           <label class="control__label">Full name</label>
           <div class="control__elements">
             <input
-              ref="fullName"
-              v-model="formUser.fullName"
-              :class="{ 'input--error': $v.formUser.fullName.$error }"
+              ref="name"
+              v-model="formUser.name"
+              :class="{ 'input--error': $v.formUser.name.$error }"
               type="text"
               class="input input--large"
               :disabled="loading"
-              @blur="$v.formUser.fullName.$touch()"
+              @blur="$v.formUser.name.$touch()"
             />
-            <div v-if="$v.formUser.fullName.$error" class="error">
+            <div v-if="$v.formUser.name.$error" class="error">
               Please enter a valid full name, it must be longer than 2 letters
               and less than 30.
             </div>
@@ -108,7 +108,7 @@ export default {
       loading: false,
       formUser: {
         username: this.editUserEvent.user.username,
-        fullName: this.editUserEvent.user.full_name,
+        name: this.editUserEvent.user.name,
         isActive: this.editUserEvent.user.is_active,
         isStaff: this.editUserEvent.user.is_staff,
       },
@@ -123,7 +123,7 @@ export default {
     editUserEvent(editUserEvent) {
       // Reset the form if the user prop changes to a new user.
       this.formUser.username = editUserEvent.user.username
-      this.formUser.fullName = editUserEvent.user.full_name
+      this.formUser.name = editUserEvent.user.name
       this.formUser.isActive = editUserEvent.user.is_active
       this.formUser.isStaff = editUserEvent.user.is_staff
     },
@@ -147,7 +147,7 @@ export default {
             is_staff: this.formUser.isStaff,
             is_active: this.formUser.isActive,
             username: this.formUser.username,
-            full_name: this.formUser.fullName,
+            name: this.formUser.name,
           }
         )
         this.$emit('update', userData)
@@ -161,7 +161,7 @@ export default {
   },
   validations: {
     formUser: {
-      fullName: { required, minLength: minLength(2), maxLength: maxLength(30) },
+      name: { required, minLength: minLength(2), maxLength: maxLength(30) },
       username: { required, email },
     },
   },

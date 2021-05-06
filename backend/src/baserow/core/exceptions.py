@@ -105,3 +105,9 @@ class TemplateFileDoesNotExist(Exception):
     Raised when the JSON template file does not exist in the
     APPLICATION_TEMPLATE_DIRS directory.
     """
+
+
+class UnknownFieldProvided(Exception):
+    """
+    Raised when an unknown field is provided to an API endpoint.
+    """

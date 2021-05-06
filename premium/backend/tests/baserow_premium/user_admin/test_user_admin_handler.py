@@ -3,18 +3,14 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
+from baserow.core.exceptions import IsNotAdminError
 from baserow_premium.user_admin.exceptions import (
-    AdminOnlyOperationException,
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
-    UnknownUserException,
+    UserDoesNotExistException,
 )
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,
-    EditableUserAdminField,
-    UserAdminSort,
-    SortableUserAdminField,
-    UserAdminSortDirection,
 )
 
 User = get_user_model()
@@ -41,7 +37,7 @@ def test_non_admin_cant_get_users(data_fixture):
         first_name="Test1",
         is_staff=False,
     )
-    with pytest.raises(AdminOnlyOperationException):
+    with pytest.raises(IsNotAdminError):
         handler.get_users(non_admin_user)
 
 
@@ -94,15 +90,7 @@ def test_admin_can_sort_by_multiple_fields_in_specified_order_and_directions(
         is_active=True,
         date_joined=datetime(2022, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
-    results = handler.get_users(
-        admin_user,
-        sorts=[
-            UserAdminSort(UserAdminSortDirection.ASC, SortableUserAdminField.IS_ACTIVE),
-            UserAdminSort(
-                UserAdminSortDirection.DESC, SortableUserAdminField.DATE_JOINED
-            ),
-        ],
-    )
+    results = handler.get_users(admin_user, sorts="-is_active,+date_joined")
     assert results.count() == 3
     assert results[0].first_name == "Test2"
     assert results[1].first_name == "Test3"
@@ -137,7 +125,7 @@ def test_non_admin_cant_delete_user(data_fixture):
         first_name="Test1",
         is_staff=False,
     )
-    with pytest.raises(AdminOnlyOperationException):
+    with pytest.raises(IsNotAdminError):
         handler.delete_user(non_admin_user, non_admin_user.id)
 
 
@@ -161,12 +149,12 @@ def test_admin_can_modify_allowed_user_attributes(data_fixture):
     handler.update_user(
         admin_user,
         user_to_modify.id,
-        {
-            EditableUserAdminField.USERNAME: "new_email@example.com",
-            EditableUserAdminField.FULL_NAME: "new full name",
-            EditableUserAdminField.IS_ACTIVE: True,
-            EditableUserAdminField.IS_STAFF: True,
-            EditableUserAdminField.PASSWORD: "new_password",
+        **{
+            "username": "new_email@example.com",
+            "name": "new full name",
+            "is_active": True,
+            "is_staff": True,
+            "password": "new_password",
         },
     )
     user_to_modify.refresh_from_db()
@@ -176,6 +164,45 @@ def test_admin_can_modify_allowed_user_attributes(data_fixture):
     assert user_to_modify.is_staff
     assert user_to_modify.is_active
     assert old_password != user_to_modify.password
+
+
+@pytest.mark.django_db
+def test_admin_can_deactive_and_unstaff_other_users(data_fixture):
+    handler = UserAdminHandler()
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    staff_user = data_fixture.create_user(
+        email="staff@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    active_user = data_fixture.create_user(
+        email="active@test.nl",
+        password="password",
+        first_name="Test1",
+        is_active=True,
+    )
+
+    handler.update_user(
+        admin_user,
+        staff_user.id,
+        is_staff=False,
+    )
+    staff_user.refresh_from_db()
+    assert not staff_user.is_staff
+
+    handler.update_user(
+        admin_user,
+        active_user.id,
+        is_active=False,
+    )
+    active_user.refresh_from_db()
+    assert not active_user.is_active
 
 
 @pytest.mark.django_db
@@ -201,9 +228,7 @@ def test_updating_a_users_password_uses_djangos_built_in_smart_set_password(
     updated_user = handler.update_user(
         admin_user,
         user_to_modify.id,
-        {
-            EditableUserAdminField.PASSWORD: "new_password",
-        },
+        password="new_password",
     )
     assert updated_user.password != "new_password"
     assert updated_user.password != old_password_hash
@@ -219,12 +244,8 @@ def test_non_admin_cant_edit_user(data_fixture):
         first_name="Test1",
         is_staff=False,
     )
-    with pytest.raises(AdminOnlyOperationException):
-        handler.update_user(
-            non_admin_user,
-            non_admin_user.id,
-            {EditableUserAdminField.USERNAME: "new_email@example.com"},
-        )
+    with pytest.raises(IsNotAdminError):
+        handler.update_user(non_admin_user, non_admin_user.id, "new_email@example.com")
     non_admin_user.refresh_from_db()
     assert non_admin_user.username == "test@test.nl"
 
@@ -243,7 +264,7 @@ def test_admin_cant_deactivate_themselves(data_fixture):
         handler.update_user(
             admin_user,
             admin_user.id,
-            {EditableUserAdminField.IS_ACTIVE: False},
+            is_active=False,
         )
     admin_user.refresh_from_db()
     assert admin_user.is_active
@@ -263,7 +284,7 @@ def test_admin_cant_destaff_themselves(data_fixture):
         handler.update_user(
             admin_user,
             admin_user.id,
-            {EditableUserAdminField.IS_STAFF: False},
+            is_staff=False,
         )
     admin_user.refresh_from_db()
     assert admin_user.is_staff
@@ -295,7 +316,7 @@ def test_raises_exception_when_deleting_an_unknown_user(data_fixture):
         is_staff=True,
         is_active=True,
     )
-    with pytest.raises(UnknownUserException):
+    with pytest.raises(UserDoesNotExistException):
         handler.delete_user(admin_user, 99999)
 
 
@@ -309,7 +330,5 @@ def test_raises_exception_when_updating_an_unknown_user(data_fixture):
         is_staff=True,
         is_active=True,
     )
-    with pytest.raises(UnknownUserException):
-        handler.update_user(
-            admin_user, 99999, {EditableUserAdminField.USERNAME: "new_password"}
-        )
+    with pytest.raises(UserDoesNotExistException):
+        handler.update_user(admin_user, 99999, username="new_password")

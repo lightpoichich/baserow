@@ -1,7 +1,7 @@
 <template functional>
   <div class="user-admin-username" :class="[data.staticClass, data.class]">
     <div class="user-admin-username__initials">
-      {{ $options.methods.firstTwoInitials(props.row.full_name) }}
+      {{ $options.methods.firstTwoInitials(props.row.name) }}
     </div>
     <div class="user-admin-username__name" :title="props.row.username">
       {{ props.row.username }}
@@ -38,8 +38,8 @@ export default {
     },
   },
   methods: {
-    firstTwoInitials(fullName) {
-      return fullName
+    firstTwoInitials(name) {
+      return name
         .split(' ')
         .map((s) => s.slice(0, 1))
         .join('')

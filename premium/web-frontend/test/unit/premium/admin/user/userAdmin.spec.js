@@ -24,7 +24,7 @@ describe('User Admin Component Tests', () => {
     const userSetup = {
       id: 1,
       username: 'user@baserow.io',
-      fullName: 'user name',
+      name: 'user name',
       groups: [
         {
           id: 4,
@@ -48,7 +48,7 @@ describe('User Admin Component Tests', () => {
     const {
       userIdCell,
       usernameCell,
-      fullNameCell,
+      nameCell,
       groupsCell,
       lastLoginCell,
       signedUpCell,
@@ -63,7 +63,7 @@ describe('User Admin Component Tests', () => {
     expect(ui.getUsernameInitials(usernameCell)).toBe('UN')
 
     // First name matches
-    expect(fullNameCell.text()).toBe(userSetup.fullName)
+    expect(nameCell.text()).toBe(userSetup.name)
 
     // Has two groups
     const groups = ui.getGroups(groupsCell)
@@ -220,8 +220,8 @@ describe('User Admin Component Tests', () => {
     testApp.dontFailOnErrorResponses()
 
     mockPremiumServer.expectUserUpdatedRespondsWithError(user, {
-      error: 'ERROR_ADMIN_ONLY_OPERATION',
-      detail: 'You do not have permission to perform this operation.',
+      error: 'SOME_ERROR',
+      detail: 'Some error text',
     })
 
     const modal = await ui.changePassword(validPassword, validPassword)
@@ -229,18 +229,18 @@ describe('User Admin Component Tests', () => {
     await flushPromises()
 
     expect(ui.getErrorText(modal)).toBe(
-      "The action couldn't be completed because you don't have the right permissions."
+      "The action couldn't be completed because an unknown error has occured."
     )
   })
 
   test('a users full name can be changed', async () => {
     const { user, ui } = await whenThereIsAUserAndYouOpenUserAdmin({
-      fullName: 'Old Full Name',
+      name: 'Old Full Name',
     })
 
     const newFullName = 'New Full Name'
     mockPremiumServer.expectUserUpdated(user, {
-      full_name: newFullName,
+      name: newFullName,
       // Expect the other edit modal fields will be sent, just with no changes.
       is_staff: user.is_staff,
       is_active: user.is_active,
@@ -252,8 +252,8 @@ describe('User Admin Component Tests', () => {
     await flushPromises()
 
     const cells = ui.findCells()
-    const { fullNameCell } = ui.getRow(cells, 0)
-    expect(fullNameCell.text()).toContain(newFullName)
+    const { nameCell } = ui.getRow(cells, 0)
+    expect(nameCell.text()).toContain(newFullName)
   })
 
   test('when an server error is returned when editing a user it is shown', async () => {
@@ -262,8 +262,8 @@ describe('User Admin Component Tests', () => {
     testApp.dontFailOnErrorResponses()
 
     mockPremiumServer.expectUserUpdatedRespondsWithError(user, {
-      error: 'ERROR_ADMIN_ONLY_OPERATION',
-      detail: 'You do not have permission to perform this operation.',
+      error: 'SOME_ERROR',
+      detail: 'Some error text',
     })
 
     const modal = await ui.changeFullName('some terrible value')
@@ -271,7 +271,7 @@ describe('User Admin Component Tests', () => {
     await flushPromises()
 
     expect(ui.getErrorText(modal)).toBe(
-      "The action couldn't be completed because you don't have the right permissions."
+      "The action couldn't be completed because an unknown error has occured."
     )
   })
 
@@ -310,7 +310,7 @@ describe('User Admin Component Tests', () => {
     mockPremiumServer.expectUserUpdated(user, {
       username: newUserName,
       // Expect the other edit modal fields will be sent, just with no changes.
-      full_name: user.full_name,
+      name: user.name,
       is_staff: user.is_staff,
       is_active: user.is_active,
     })
@@ -505,7 +505,7 @@ describe('User Admin Component Tests', () => {
 
     // Can click multiple columns resulting in an ordered sort
     mockPremiumServer.thereAreUsers([firstUser, thirdUser, secondUser], 1, {
-      sorts: '-username,+full_name',
+      sorts: '-username,+name',
     })
     await ui.clickUsernameHeader()
     await ui.clickUsernameHeader()
@@ -528,7 +528,7 @@ describe('User Admin Component Tests', () => {
       is_staff: !startingIsStaff,
       // Expect the other edit modal fields will be sent, just with no changes.
       username: user.username,
-      full_name: user.full_name,
+      name: user.name,
       is_active: user.is_active,
     })
 
@@ -558,7 +558,7 @@ describe('User Admin Component Tests', () => {
       is_active: !startingIsActive,
       // Expect the other edit modal fields will be sent, just with no changes.
       username: user.username,
-      full_name: user.full_name,
+      name: user.name,
       is_staff: user.is_staff,
     })
 

@@ -64,14 +64,7 @@ export default {
       ),
     ]
     this.rightColumns = [
-      new CrudTableColumn(
-        'full_name',
-        'Full Name',
-        SimpleField,
-        '100px',
-        '200px',
-        true
-      ),
+      new CrudTableColumn('name', 'Name', SimpleField, '100px', '200px', true),
       new CrudTableColumn(
         'groups',
         'Groups',

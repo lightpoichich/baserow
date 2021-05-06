@@ -6,7 +6,19 @@ from rest_framework.fields import (
 )
 from rest_framework.serializers import ModelSerializer
 
+from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.core.models import GroupUser
+
+_USER_ADMIN_SERIALIZER_API_DOC_KWARGS = {
+    "is_active": {
+        "help_text": "Designates whether this user should be treated as active."
+        " Set this to false instead of deleting accounts."
+    },
+    "is_staff": {
+        "help_text": "Designates whether this user is an admin and has access to all "
+        "groups and Baserow's admin areas. "
+    },
+}
 
 User = get_user_model()
 
@@ -25,36 +37,53 @@ class AdminGroupUserSerializer(ModelSerializer):
         )
 
 
-class AdminUserSerializer(ModelSerializer):
+class UserAdminReadSerializer(ModelSerializer):
+    """
+    Serializes the safe user attributes to expose for a response back to the user.
+    """
+
     # Max length set to match django user models first_name fields max length
-    full_name = CharField(source="first_name", max_length=30, required=False)
-    username = EmailField(required=False)
-    groups = AdminGroupUserSerializer(
-        source="groupuser_set", many=True, required=False, read_only=True
-    )
+    name = CharField(source="first_name", max_length=30)
+    username = EmailField()
+    groups = AdminGroupUserSerializer(source="groupuser_set", many=True)
 
     class Meta:
         model = User
-        read_only_fields = ("id", "last_login", "date_joined", "groups")
         fields = (
             "id",
             "username",
-            "full_name",
+            "name",
             "groups",
             "last_login",
             "date_joined",
             "is_active",
             "is_staff",
+        )
+        extra_kwargs = _USER_ADMIN_SERIALIZER_API_DOC_KWARGS
+
+
+class UserAdminUpdateSerializer(
+    UnknownFieldRaisesExceptionSerializerMixin, ModelSerializer
+):
+    """
+    Serializes a request body for updating a given user. Do not use for returning user
+    data as the password will be returned also.
+    """
+
+    # Max length set to match django user models first_name fields max length
+    name = CharField(source="first_name", max_length=30, required=False)
+    username = EmailField(required=False)
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "name",
+            "is_active",
+            "is_staff",
             "password",
         )
         extra_kwargs = {
-            "password": {"write_only": True, "required": False},
-            "is_active": {
-                "help_text": "Designates whether this user should be treated as active."
-                " Set this to false instead of deleting accounts."
-            },
-            "is_staff": {
-                "help_text": "Designates whether this user is an admin and has access "
-                "to all groups and Baserow's admin areas."
-            },
+            **_USER_ADMIN_SERIALIZER_API_DOC_KWARGS,
+            "password": {"required": False},
         }

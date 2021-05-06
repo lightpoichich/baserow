@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.shortcuts import reverse
 from django.utils import timezone
@@ -62,7 +64,7 @@ def test_admin_can_see_admin_users_endpoint(api_client, data_fixture):
         "results": [
             {
                 "date_joined": "2021-04-01T01:00:00Z",
-                "full_name": staff_user.first_name,
+                "name": staff_user.first_name,
                 "username": staff_user.email,
                 "groups": [
                     {
@@ -170,7 +172,7 @@ def test_admin_can_search_users(api_client, data_fixture):
         "results": [
             {
                 "date_joined": "2021-04-01T01:00:00Z",
-                "full_name": searched_for_user.first_name,
+                "name": searched_for_user.first_name,
                 "username": searched_for_user.email,
                 "groups": [],
                 "id": searched_for_user.id,
@@ -210,7 +212,7 @@ def test_admin_can_sort_users(api_client, data_fixture):
         "results": [
             {
                 "date_joined": "2021-04-01T01:00:00Z",
-                "full_name": searched_for_user.first_name,
+                "name": searched_for_user.first_name,
                 "username": searched_for_user.email,
                 "groups": [],
                 "id": searched_for_user.id,
@@ -431,7 +433,7 @@ def test_admin_can_patch_user(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "date_joined": "2021-04-01T01:00:00Z",
-        "full_name": user.first_name,
+        "name": user.first_name,
         "username": "some_other_email@test.nl",
         "groups": [],
         "id": user.id,
@@ -451,14 +453,15 @@ def test_error_returned_when_invalid_field_supplied_to_edit(api_client, data_fix
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
     url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+
     response = api_client.patch(
         url,
-        {"date_joined": "2021-04-01T01:00:00Z"},
+        json.dumps({"date_joined": "2021-04-01T01:00:00Z"}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "USER_ADMIN_INVALID_UPDATE_ATTRIBUTE"
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
 
 @pytest.mark.django_db

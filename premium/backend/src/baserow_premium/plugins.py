@@ -9,5 +9,5 @@ class PremiumPlugin(Plugin):
 
     def get_api_urls(self):
         return [
-            path("premium/", include(api_urls, namespace=self.type)),
+            path("", include(api_urls, namespace=self.type)),
         ]

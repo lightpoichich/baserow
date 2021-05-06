@@ -2,6 +2,11 @@ from baserow.core.exceptions import UnknownFieldProvided
 
 
 class UnknownFieldRaisesExceptionSerializerMixin:
+    """
+    Mixin to a DRF serializer class to raise an exception if data with unknown fields
+    is provided to the serializer.
+    """
+
     def validate(self, data):
         if hasattr(self, "initial_data"):
             unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())

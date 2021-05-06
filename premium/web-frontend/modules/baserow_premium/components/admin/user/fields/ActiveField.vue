@@ -1,5 +1,5 @@
 <template functional>
-  <div :class="[data.staticClass, data.class]">
+  <div :class="[data.staticClass, data.class]" v-on="listeners">
     <div v-if="props.row[props.column.key]">
       <i
         class="fas fa-fw fa-check user-admin-active__icon user-admin-active__icon--activated"

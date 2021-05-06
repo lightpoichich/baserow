@@ -69,12 +69,7 @@
         </div>
         <div class="actions">
           <div class="align-left">
-            <a
-              class="button button--large button--error"
-              :class="{ 'button--loading': loading }"
-              :disabled="loading"
-              @click="deleteUser()"
-            >
+            <a class="button button--large button--error" @click="deleteUser()">
               Delete User
             </a>
           </div>
@@ -103,7 +98,7 @@ export default {
   name: 'EditUserModal',
   mixins: [modal, error],
   props: {
-    user: {
+    editUserEvent: {
       type: Object,
       required: true,
     },
@@ -112,22 +107,25 @@ export default {
     return {
       loading: false,
       formUser: {
-        username: this.user.username,
-        fullName: this.user.full_name,
-        isActive: this.user.is_active,
-        isStaff: this.user.is_staff,
+        username: this.editUserEvent.user.username,
+        fullName: this.editUserEvent.user.full_name,
+        isActive: this.editUserEvent.user.is_active,
+        isStaff: this.editUserEvent.user.is_staff,
       },
     }
   },
+  computed: {
+    user() {
+      return this.editUserEvent.user
+    },
+  },
   watch: {
-    user(user) {
+    editUserEvent(editUserEvent) {
       // Reset the form if the user prop changes to a new user.
-      this.formUser = {
-        username: user.username,
-        fullName: user.full_name,
-        isActive: user.is_active,
-        isStaff: user.is_staff,
-      }
+      this.formUser.username = editUserEvent.user.username
+      this.formUser.fullName = editUserEvent.user.full_name
+      this.formUser.isActive = editUserEvent.user.is_active
+      this.formUser.isStaff = editUserEvent.user.is_staff
     },
   },
   methods: {

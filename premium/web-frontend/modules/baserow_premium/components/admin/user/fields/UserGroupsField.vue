@@ -1,5 +1,5 @@
 <template>
-  <div class="user-admin-group">
+  <div class="user-admin-group" v-on="$listeners">
     <div class="user-admin-group__container">
       <span ref="empty" class="user-admin-group__empty-item"></span>
       <span
@@ -75,7 +75,7 @@ export default {
     showContext(event) {
       this.$emit('show-group', {
         hiddenGroups: this.hiddenGroups,
-        contextLink: event.target,
+        target: event.target,
         time: Date.now(),
       })
     },

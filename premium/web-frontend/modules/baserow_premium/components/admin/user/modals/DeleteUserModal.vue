@@ -10,9 +10,9 @@
       </p>
       <p>
         The user account will be deleted, however the groups that user is a
-        member of will continue existing. If the user is the only member of the
-        group said group will still not be deleted. Deleting the last user in a
-        group prevents anyone being able to access that group.
+        member of will continue existing. The users group will not be deleted,
+        even if this user is the last user in the group. Deleting the last user
+        in a group prevents anyone being able to access that group.
       </p>
       <p>
         After deleting a user it is possible for a new user to sign up again
@@ -45,7 +45,7 @@ export default {
   name: 'DeleteUserModal',
   mixins: [modal, error],
   props: {
-    user: {
+    editUserEvent: {
       type: Object,
       required: true,
     },
@@ -54,6 +54,11 @@ export default {
     return {
       loading: false,
     }
+  },
+  computed: {
+    user() {
+      return this.editUserEvent.user
+    },
   },
   methods: {
     async deleteUser() {

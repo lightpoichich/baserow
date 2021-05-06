@@ -27,7 +27,7 @@
           </span>
           <template v-if="sorted(col)">
             <i class="crudtable__field-icon fas" :class="sortIcon(col)"></i>
-            <span class="crudtable__sortindex"> ({{ sortIndex(col) }}) </span>
+            <span class="crudtable__sortindex"> {{ sortIndex(col) }} </span>
           </template>
         </div>
       </template>
@@ -43,6 +43,9 @@
               'crudtable__cell--sticky': col.isInLeftSection,
               'crudtable__cell--right': col.hasRightBar,
             }"
+            @contextmenu.prevent="
+              $emit('row-context', { col, row, event: $event })
+            "
             v-on="$listeners"
             @row-update="updateRow"
             @row-delete="deleteRow"
@@ -203,7 +206,7 @@ export default {
           this.columnSorts.splice(i, 1)
         }
       }
-      this.fetchPage(this.page)
+      this.fetchPage(1)
     },
     sortIcon(column) {
       const i = this.sortIndex(column)

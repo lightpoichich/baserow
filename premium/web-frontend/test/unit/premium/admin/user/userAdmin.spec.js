@@ -334,6 +334,22 @@ describe('User Admin Component Tests', () => {
 
     expect(error).toContain('Please enter a valid e-mail address.')
   })
+  test('changing a users username and closing without saving resets the modals form', async () => {
+    const initialUsername = 'initial_username@gmail.com'
+    const { ui } = await whenThereIsAUserAndYouOpenUserAdmin({
+      username: initialUsername,
+    })
+
+    const usernameEnteredButNotSaved = '1'
+
+    const modal = await ui.changeEmail(usernameEnteredButNotSaved, {
+      clickSave: false,
+      exit: true,
+    })
+    const emailField = await ui.getUserEditModalEmailField(modal)
+
+    expect(emailField.element.value).toBe(initialUsername)
+  })
   test('a user can be set as staff ', async () => {
     await testToggleStaff(false)
   })
@@ -384,6 +400,30 @@ describe('User Admin Component Tests', () => {
 
     await ui.clickPrevPage()
     await flushPromises()
+
+    expect(ui.getSingleRowUsernameText()).toContain(firstPageUser.username)
+  })
+  test('when not on the first page a sort will send the user back to the first page', async () => {
+    const firstPageUser = mockPremiumServer.aUser({
+      username: 'firstPageUser@example.com',
+    })
+    const secondPageUser = mockPremiumServer.aUser({
+      username: 'secondPageUser@example.com',
+    })
+    mockPremiumServer.thereAreUsers([firstPageUser], 1, { count: 150 })
+    mockPremiumServer.thereAreUsers([firstPageUser], 1, {
+      count: 150,
+      sorts: '+username',
+    })
+    mockPremiumServer.thereAreUsers([secondPageUser], 2, { count: 150 })
+
+    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const ui = new UserAdminUserHelpers(userAdmin)
+
+    expect(ui.getSingleRowUsernameText()).toContain(firstPageUser.username)
+
+    await ui.clickNextPage()
+    await ui.clickUsernameHeader()
 
     expect(ui.getSingleRowUsernameText()).toContain(firstPageUser.username)
   })

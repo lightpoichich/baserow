@@ -6,19 +6,20 @@
     row-id-key="id"
     @edit-user="editUser"
     @show-group="displayHiddenGroups"
+    @row-context="onRowContext"
   >
     <template #header>
       <strong>User Settings</strong>
     </template>
     <template #menus="slotProps">
       <EditUserContext
-        :selected-user="selectedUser"
+        :edit-user-event="editUserEvent"
         @delete-user="slotProps.deleteRow"
         @update="slotProps.updateRow"
       >
       </EditUserContext>
       <HiddenGroupsContext
-        :selected-group="selectedGroup"
+        :show-groups-event="showGroupsEvent"
       ></HiddenGroupsContext>
     </template>
   </CrudTable>
@@ -105,16 +106,25 @@ export default {
     ]
     this.service = UserAdminService(this.$client)
     return {
-      selectedUser: null,
-      selectedGroup: null,
+      editUserEvent: null,
+      showGroupsEvent: null,
     }
   },
   methods: {
     editUser(e) {
-      this.selectedUser = e
+      this.editUserEvent = e
+    },
+    onRowContext({ row, event }) {
+      this.editUserEvent = {
+        user: row,
+        target: {
+          left: event.clientX,
+          top: event.clientY,
+        },
+      }
     },
     displayHiddenGroups(e) {
-      this.selectedGroup = e
+      this.showGroupsEvent = e
     },
   },
 }

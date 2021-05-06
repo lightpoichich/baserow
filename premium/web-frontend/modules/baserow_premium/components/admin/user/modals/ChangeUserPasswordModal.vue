@@ -88,7 +88,7 @@ export default {
   name: 'ChangePasswordModal',
   mixins: [modal, error],
   props: {
-    user: {
+    editUserEvent: {
       type: Object,
       required: true,
     },
@@ -102,13 +102,16 @@ export default {
       },
     }
   },
+  computed: {
+    user() {
+      return this.editUserEvent.user
+    },
+  },
   watch: {
     // Reset the form if the user prop changes to a new user.
-    user() {
-      this.account = {
-        password: '',
-        passwordConfirm: '',
-      }
+    editUserEvent() {
+      this.account.password = ''
+      this.account.passwordConfirm = ''
     },
   },
   methods: {

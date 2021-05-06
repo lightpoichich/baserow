@@ -79,7 +79,7 @@
             </div>
             <ul v-show="isAdminPage" class="tree sidebar__tree">
               <li
-                v-for="adminType in adminTypes"
+                v-for="adminType in sortedAdminTypes"
                 :key="adminType.type"
                 class="tree__item"
                 :class="{
@@ -103,7 +103,7 @@
               </li>
             </ul>
           </li>
-          <template v-if="hasSelectedGroup && !isCollapsed">
+          <template v-if="hasshowGroupsEvent && !isCollapsed">
             <li class="tree__item margin-top-2">
               <div class="tree__action">
                 <a
@@ -117,12 +117,15 @@
                       0
                     )
                   "
-                  >{{ selectedGroup.name }}</a
+                  >{{ showGroupsEvent.name }}</a
                 >
                 <GroupsContext ref="groupSelect"></GroupsContext>
               </div>
             </li>
-            <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
+            <li
+              v-if="showGroupsEvent.permissions === 'ADMIN'"
+              class="tree__item"
+            >
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.groupMembersModal.show()">
                   <i class="tree__icon tree__icon--type fas fa-users"></i>
@@ -130,7 +133,7 @@
                 </a>
                 <GroupMembersModal
                   ref="groupMembersModal"
-                  :group="selectedGroup"
+                  :group="showGroupsEvent"
                 ></GroupMembersModal>
               </div>
             </li>
@@ -158,10 +161,10 @@
             </li>
             <CreateApplicationContext
               ref="createApplicationContext"
-              :group="selectedGroup"
+              :group="showGroupsEvent"
             ></CreateApplicationContext>
           </template>
-          <template v-else-if="!hasSelectedGroup && !isCollapsed">
+          <template v-else-if="!hasshowGroupsEvent && !isCollapsed">
             <li v-if="groups.length === 0" class="tree_item margin-top-2">
               <p>You don’t have any groups.</p>
             </li>
@@ -242,11 +245,16 @@ export default {
      */
     applications() {
       return this.$store.getters['application/getAllOfGroup'](
-        this.selectedGroup
+        this.showGroupsEvent
       )
     },
     adminTypes() {
       return this.$registry.getAll('admin')
+    },
+    sortedAdminTypes() {
+      return Object.values(this.adminTypes)
+        .slice()
+        .sort((x) => x.getOrder())
     },
     /**
      * Indicates whether the current user is visiting an admin page.
@@ -261,13 +269,13 @@ export default {
     ...mapState({
       allApplications: (state) => state.application.items,
       groups: (state) => state.group.items,
-      selectedGroup: (state) => state.group.selected,
+      showGroupsEvent: (state) => state.group.selected,
     }),
     ...mapGetters({
       isStaff: 'auth/isStaff',
       name: 'auth/getName',
       email: 'auth/getUsername',
-      hasSelectedGroup: 'group/hasSelected',
+      hasshowGroupsEvent: 'group/hasSelected',
       isCollapsed: 'sidebar/isCollapsed',
     }),
   },
@@ -293,10 +301,8 @@ export default {
         return
       }
 
-      const types = Object.values(this.adminTypes)
-
-      if (types.length > 0) {
-        this.$nuxt.$router.push({ name: types[0].routeName })
+      if (this.sortedAdminTypes.length > 0) {
+        this.$nuxt.$router.push({ name: this.sortedAdminTypes[0].routeName })
       }
     },
   },

@@ -132,11 +132,26 @@ export default class UserAdminUserHelpers {
     return component.findComponent(Error).find('.alert__content').text()
   }
 
-  changeFullName(newFullName) {
-    return this.changeUserEditField(newFullName, 0)
+  changeFullName(newFullName, options = {}) {
+    return this.changeUserEditField(newFullName, 0, options)
   }
 
-  async changeUserEditField(newValue, inputIndex) {
+  async getUserEditModalEmailField() {
+    const editUserContext = await this.openFirstUserActionsMenu()
+
+    await this.clickEditUser(editUserContext)
+
+    const editUserModal = this.c.findComponent(EditUserModal)
+    const userEditInputs = editUserModal.findAll('input')
+
+    return userEditInputs.at(1)
+  }
+
+  async changeUserEditField(
+    newValue,
+    inputIndex,
+    { clickSave = true, exit = false } = {}
+  ) {
     const editUserContext = await this.openFirstUserActionsMenu()
 
     await this.clickEditUser(editUserContext)
@@ -148,6 +163,10 @@ export default class UserAdminUserHelpers {
     userEditInputs.at(inputIndex).trigger('input')
 
     await editUserModal.find('.button--primary').trigger('click')
+
+    if (exit) {
+      await editUserModal.find('.modal__close').trigger('click')
+    }
 
     return editUserModal
   }
@@ -167,8 +186,8 @@ export default class UserAdminUserHelpers {
     return editUserModal
   }
 
-  changeEmail(newEmail) {
-    return this.changeUserEditField(newEmail, 1)
+  changeEmail(newEmail, options) {
+    return this.changeUserEditField(newEmail, 1, options)
   }
 
   toggleIsStaff() {

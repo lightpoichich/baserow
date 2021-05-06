@@ -1,5 +1,5 @@
 <template functional>
-  <div :class="[data.staticClass, data.class]">
+  <div :class="[data.staticClass, data.class]" v-on="listeners">
     {{ $options.methods.localDate(props.row[props.column.key]) }}
   </div>
 </template>

@@ -213,6 +213,7 @@ export default {
       password: {
         required,
         maxLength: maxLength(256),
+        minLength: minLength(8),
       },
       passwordConfirm: {
         sameAsPassword: sameAs('password'),

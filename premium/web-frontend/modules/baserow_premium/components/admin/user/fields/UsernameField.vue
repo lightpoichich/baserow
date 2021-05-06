@@ -12,13 +12,12 @@
       class="user-admin-username__icon fas fa-users"
     ></i>
     <a
-      ref="contextLink"
       class="user-admin-username__menu"
       @click.prevent="
         listeners['edit-user'] &&
           listeners['edit-user']({
             user: props.row,
-            contextLink: $event.target,
+            target: $event.target,
             time: Date.now(),
           })
       "

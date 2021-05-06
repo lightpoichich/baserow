@@ -2,6 +2,7 @@
   <div
     :class="[data.staticClass, data.class]"
     :title="props.row[props.column.key]"
+    v-on="listeners"
   >
     {{ props.row[props.column.key] }}
   </div>

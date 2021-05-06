@@ -1,8 +1,8 @@
 <template>
-  <Context v-if="selectedGroup">
+  <Context v-if="showGroupsEvent">
     <ul class="context__menu">
       <li
-        v-for="group in selectedGroup.hiddenGroups"
+        v-for="group in showGroupsEvent.hiddenGroups"
         :key="'hidden-admin-row-group' + group.id"
         class="user-admin-group__dropdown-item"
       >
@@ -24,17 +24,17 @@ export default {
   name: 'HiddenGroupsContext',
   mixins: [context],
   props: {
-    selectedGroup: {
+    showGroupsEvent: {
       required: true,
       validator: (prop) => typeof prop === 'object' || prop === null,
     },
   },
   watch: {
-    selectedGroup(selectedGroup) {
-      if (selectedGroup) {
+    showGroupsEvent(showGroupsEvent) {
+      if (showGroupsEvent) {
         this.$nextTick(function () {
           this.hide()
-          this.show(selectedGroup.contextLink, 'bottom', 'left', 4)
+          this.show(showGroupsEvent.target, 'bottom', 'left', 4)
         })
       }
     },

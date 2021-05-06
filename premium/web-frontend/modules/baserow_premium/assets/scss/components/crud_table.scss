@@ -103,6 +103,8 @@
 }
 
 .crudtable__header-title {
+  @extend %ellipsis;
+
   margin-right: auto;
 }
 

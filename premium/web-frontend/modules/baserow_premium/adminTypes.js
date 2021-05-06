@@ -16,4 +16,8 @@ export class UsersAdminType extends AdminType {
   getRouteName() {
     return 'admin-users'
   }
+
+  getOrder() {
+    return 0
+  }
 }

@@ -3,14 +3,12 @@ from typing import Optional
 from django.contrib.auth import get_user_model
 
 from baserow.core.exceptions import IsNotAdminError
-from baserow_premium.api.user_admin.errors import (
-    InvalidSortAttributeException,
-    InvalidSortDirectionException,
-)
 from baserow_premium.user_admin.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
     UserDoesNotExistException,
+    InvalidSortDirectionException,
+    InvalidSortAttributeException,
 )
 
 User = get_user_model()
@@ -41,7 +39,7 @@ class UserAdminHandler:
         """
         Looks up all users, performs an optional username search and then sorts the
         resulting user queryset and returns it. By default if no sorts are provided
-        sorts by user id ascending. Raises
+        sorts by user id ascending.
 
         :param requesting_user: The user who is making the request to get_users, the
             user must be a staff member or else an exception will
@@ -81,9 +79,9 @@ class UserAdminHandler:
         Raises an InvalidSortAttributeException if an unknown attribute is supplied to
         sort by or multiple of the same attribute are provided.
 
-        :param sorts: The list of sorts to apply to the queryset
-        :param queryset: The queryset to sort
-        :return:
+        :param sorts: The list of sorts to apply to the queryset.
+        :param queryset: The queryset to sort.
+        :return: The sorted queryset.
         """
 
         if sorts is None:
@@ -137,11 +135,11 @@ class UserAdminHandler:
             be raised.
         :param user_id: The id of the user to update, if they do not exist raises a
             UserDoesNotExistException.
-        :param is_staff: Optional value used to set if the user is an admin or not
-        :param is_active: Optional value to disable or enable login for the user
-        :param password: Optional new password to securely set for the user
-        :param name: Optional new name to set on the user
-        :param username: Optional new username/email to set for the user
+        :param is_staff: Optional value used to set if the user is an admin or not.
+        :param is_active: Optional value to disable or enable login for the user.
+        :param password: Optional new password to securely set for the user.
+        :param name: Optional new name to set on the user.
+        :param username: Optional new username/email to set for the user.
         """
         self._raise_if_not_permitted(requesting_user)
 

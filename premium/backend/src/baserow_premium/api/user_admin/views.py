@@ -9,22 +9,22 @@ from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow_premium.api.user_admin.errors import (
-    InvalidSortDirectionException,
     USER_ADMIN_INVALID_SORT_DIRECTION,
     USER_ADMIN_INVALID_SORT_ATTRIBUTE,
-    InvalidSortAttributeException,
     USER_ADMIN_CANNOT_DEACTIVATE_SELF,
     USER_ADMIN_CANNOT_DELETE_SELF,
     USER_ADMIN_UNKNOWN_USER,
 )
 from baserow_premium.api.user_admin.serializers import (
     UserAdminUpdateSerializer,
-    UserAdminReadSerializer,
+    UserAdminResponseSerializer,
 )
 from baserow_premium.user_admin.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
     UserDoesNotExistException,
+    InvalidSortDirectionException,
+    InvalidSortAttributeException,
 )
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,
@@ -57,7 +57,7 @@ class UsersAdminView(APIView):
                 "each attribute must be prefixed with `+` for a descending "
                 "sort or a `-` for an ascending sort. The accepted attribute names "
                 f"are: {_valid_sortable_fields}. "
-                "For example `sorts=+username,-is_active` will sort the "
+                "For example `sorts=-username,+is_active` will sort the "
                 "results first by descending username and then ascending is_active."
                 "A sort parameter with multiple instances of the same "
                 "sort attribute will respond with the USER_ADMIN_INVALID_SORT_ATTRIBUTE"
@@ -77,7 +77,7 @@ class UsersAdminView(APIView):
             ),
         ],
         responses={
-            200: UserAdminReadSerializer(many=True),
+            200: UserAdminResponseSerializer(many=True),
             400: get_error_schema(
                 [
                     "ERROR_PAGE_SIZE_LIMIT",
@@ -109,7 +109,7 @@ class UsersAdminView(APIView):
 
         paginator = PageNumberPagination(limit_page_size=100)
         page = paginator.paginate_queryset(users, request, self)
-        serializer = UserAdminReadSerializer(page, many=True)
+        serializer = UserAdminResponseSerializer(page, many=True)
 
         return paginator.get_paginated_response(serializer.data)
 
@@ -133,7 +133,7 @@ class UserAdminView(APIView):
             ),
         ],
         responses={
-            200: UserAdminReadSerializer(),
+            200: UserAdminResponseSerializer(),
             400: get_error_schema(
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
@@ -162,7 +162,7 @@ class UserAdminView(APIView):
         handler = UserAdminHandler()
         user = handler.update_user(request.user, user_id, **data)
 
-        return Response(UserAdminReadSerializer(user).data)
+        return Response(UserAdminResponseSerializer(user).data)
 
     @extend_schema(
         tags=["Users"],

@@ -9,6 +9,9 @@ from rest_framework.serializers import ModelSerializer
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.core.models import GroupUser
 
+User = get_user_model()
+
+
 _USER_ADMIN_SERIALIZER_API_DOC_KWARGS = {
     "is_active": {
         "help_text": "Designates whether this user should be treated as active."
@@ -19,8 +22,6 @@ _USER_ADMIN_SERIALIZER_API_DOC_KWARGS = {
         "groups and Baserow's admin areas. "
     },
 }
-
-User = get_user_model()
 
 
 class AdminGroupUserSerializer(ModelSerializer):
@@ -37,7 +38,7 @@ class AdminGroupUserSerializer(ModelSerializer):
         )
 
 
-class UserAdminReadSerializer(ModelSerializer):
+class UserAdminResponseSerializer(ModelSerializer):
     """
     Serializes the safe user attributes to expose for a response back to the user.
     """

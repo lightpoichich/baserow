@@ -14,3 +14,15 @@ class UserDoesNotExistException(Exception):
     """
     Raised when a delete or update operation is attempted on an unknown user.
     """
+
+
+class InvalidSortDirectionException(Exception):
+    """
+    Raised when an invalid sort direction is provided.
+    """
+
+
+class InvalidSortAttributeException(Exception):
+    """
+    Raised when a sort is requested for an invalid or non-existent field.
+    """

@@ -4,14 +4,12 @@ from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
 from baserow.core.exceptions import IsNotAdminError
-from baserow_premium.api.user_admin.errors import (
-    InvalidSortDirectionException,
-    InvalidSortAttributeException,
-)
 from baserow_premium.user_admin.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
     UserDoesNotExistException,
+    InvalidSortDirectionException,
+    InvalidSortAttributeException,
 )
 from baserow_premium.user_admin.handler import (
     UserAdminHandler,

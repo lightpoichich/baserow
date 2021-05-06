@@ -29,15 +29,3 @@ USER_ADMIN_UNKNOWN_USER = (
     HTTP_400_BAD_REQUEST,
     "Unknown user supplied.",
 )
-
-
-class InvalidSortDirectionException(Exception):
-    """
-    Raised when an invalid sort direction is provided.
-    """
-
-
-class InvalidSortAttributeException(Exception):
-    """
-    Raised when a sort is requested for an invalid or non-existent field.
-    """

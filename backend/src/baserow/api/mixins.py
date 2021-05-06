@@ -1,4 +1,4 @@
-from baserow.core.exceptions import UnknownFieldProvided
+from baserow.api.exceptions import UnknownFieldProvided
 
 
 class UnknownFieldRaisesExceptionSerializerMixin:

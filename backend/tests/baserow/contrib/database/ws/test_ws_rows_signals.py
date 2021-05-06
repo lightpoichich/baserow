@@ -81,8 +81,9 @@ def test_row_updated(mock_broadcast_to_channel_group, data_fixture):
 def test_row_deleted(mock_broadcast_to_channel_group, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    field = data_fixture.create_text_field(table=table, name="Name",
-                                           text_default="Test")
+    field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
     row = table.get_model().objects.create(**{f"field_{field.id}": "Value"})
     row_id = row.id
     RowHandler().delete_row(user=user, table=table, row_id=row_id)

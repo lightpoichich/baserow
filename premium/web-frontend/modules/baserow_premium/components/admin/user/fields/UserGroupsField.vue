@@ -75,7 +75,7 @@ export default {
     showContext(event) {
       this.$emit('show-group', {
         hiddenGroups: this.hiddenGroups,
-        target: event.target,
+        target: event.currentTarget,
         time: Date.now(),
       })
     },

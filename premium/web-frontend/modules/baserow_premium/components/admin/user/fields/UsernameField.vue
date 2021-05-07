@@ -17,7 +17,7 @@
         listeners['edit-user'] &&
           listeners['edit-user']({
             user: props.row,
-            target: $event.target,
+            target: $event.currentTarget,
             time: Date.now(),
           })
       "

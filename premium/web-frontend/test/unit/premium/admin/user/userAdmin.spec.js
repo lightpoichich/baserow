@@ -334,6 +334,7 @@ describe('User Admin Component Tests', () => {
 
     expect(error).toContain('Please enter a valid e-mail address.')
   })
+
   test('changing a users username and closing without saving resets the modals form', async () => {
     const initialUsername = 'initial_username@gmail.com'
     const { ui } = await whenThereIsAUserAndYouOpenUserAdmin({
@@ -403,6 +404,7 @@ describe('User Admin Component Tests', () => {
 
     expect(ui.getSingleRowUsernameText()).toContain(firstPageUser.username)
   })
+
   test('when not on the first page a sort will send the user back to the first page', async () => {
     const firstPageUser = mockPremiumServer.aUser({
       username: 'firstPageUser@example.com',

@@ -8,11 +8,13 @@
 * Switch to using a celery based email backend by default.
 * Added `--add-columns` flag to the `fill_table` management command. It creates all the
   field types before filling the table with random data.
-* Added `fill_users` admin management command which fills baserow with fake users.
 * Reworked Baserow's Docker setup to be easier to use, faster to build and more secure.
 * Make the view header more compact when the content doesn't fit anymore.
 * Allow providing a `template_id` when registering a new account, which will install
   that template instead of the default database.
+* Made it possible to drag and drop rows in the desired order.
+* Fixed bug where the rows could get out of sync during real time collaboration.
+* Added `fill_users` admin management command which fills baserow with fake users.
 * Premium Only: Added user admin area allowing management of baserow users.
 
 ## Released (2021-04-08)
@@ -36,9 +38,11 @@
 * Fixed 100X backend web socket errors when refreshing the page.
 * Fixed SSRF bug in the file upload by URL by blocking urls to the private network.
 * Fixed bug where an invalid date could be converted to 0001-01-01.
-* The list_database_table_rows search query parameter now searches all possible field types.
+* The list_database_table_rows search query parameter now searches all possible field
+  types.
 * Add Phone Number field.
-* Add support for Date, Number and Single Select fields to the Contains and Not Contains view 
+* Add support for Date, Number and Single Select fields to the Contains and Not Contains
+  view 
   filters.
 * Searching all rows can now be done by clicking the new search icon in the top right.
 

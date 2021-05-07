@@ -103,7 +103,7 @@
               </li>
             </ul>
           </li>
-          <template v-if="hasshowGroupsEvent && !isCollapsed">
+          <template v-if="hasSelectedGroup && !isCollapsed">
             <li class="tree__item margin-top-2">
               <div class="tree__action">
                 <a
@@ -117,15 +117,12 @@
                       0
                     )
                   "
-                  >{{ showGroupsEvent.name }}</a
+                  >{{ selectedGroup.name }}</a
                 >
                 <GroupsContext ref="groupSelect"></GroupsContext>
               </div>
             </li>
-            <li
-              v-if="showGroupsEvent.permissions === 'ADMIN'"
-              class="tree__item"
-            >
+            <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.groupMembersModal.show()">
                   <i class="tree__icon tree__icon--type fas fa-users"></i>
@@ -133,7 +130,7 @@
                 </a>
                 <GroupMembersModal
                   ref="groupMembersModal"
-                  :group="showGroupsEvent"
+                  :group="selectedGroup"
                 ></GroupMembersModal>
               </div>
             </li>
@@ -161,10 +158,10 @@
             </li>
             <CreateApplicationContext
               ref="createApplicationContext"
-              :group="showGroupsEvent"
+              :group="selectedGroup"
             ></CreateApplicationContext>
           </template>
-          <template v-else-if="!hasshowGroupsEvent && !isCollapsed">
+          <template v-else-if="!hasSelectedGroup && !isCollapsed">
             <li v-if="groups.length === 0" class="tree_item margin-top-2">
               <p>You don’t have any groups.</p>
             </li>
@@ -245,7 +242,7 @@ export default {
      */
     applications() {
       return this.$store.getters['application/getAllOfGroup'](
-        this.showGroupsEvent
+        this.selectedGroup
       )
     },
     adminTypes() {
@@ -269,13 +266,13 @@ export default {
     ...mapState({
       allApplications: (state) => state.application.items,
       groups: (state) => state.group.items,
-      showGroupsEvent: (state) => state.group.selected,
+      selectedGroup: (state) => state.group.selected,
     }),
     ...mapGetters({
       isStaff: 'auth/isStaff',
       name: 'auth/getName',
       email: 'auth/getUsername',
-      hasshowGroupsEvent: 'group/hasSelected',
+      hasSelectedGroup: 'group/hasSelected',
       isCollapsed: 'sidebar/isCollapsed',
     }),
   },

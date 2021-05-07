@@ -23,6 +23,17 @@
 import debounce from 'lodash/debounce'
 import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
 
+/**
+ * A search component which shows a search modal when the user clicks on this
+ * components search icon. Will emit a `search-changed` event with the event object
+ * being the string of the users search term. Takes a `loading` prop which will cause
+ * the search to display in a loading state, it is upto the parent to set this when
+ * reacting to the `searched-changed` event.
+ *
+ * This event is debounced internally so it will only be emitted after the user has
+ * stopped typing for a short period of time, this way the component reacting to search
+ * will not be spammed by an event for every single key press.
+ */
 export default {
   name: 'CrudTableSearch',
   components: { CrudTableSearchContext },

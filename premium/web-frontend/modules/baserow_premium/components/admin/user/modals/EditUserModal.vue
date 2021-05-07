@@ -69,7 +69,7 @@
         </div>
         <div class="actions">
           <div class="align-left">
-            <a class="button button--large button--error" @click="deleteUser()">
+            <a class="user-admin-edit__delete" @click="deleteUser()">
               Delete User
             </a>
           </div>
@@ -84,6 +84,11 @@
           </div>
         </div>
       </form>
+      <DeleteUserModal
+        ref="deleteUserModal"
+        :delete-user-event="deleteUserEvent"
+        @delete-user="$emit('delete-user', $event)"
+      ></DeleteUserModal>
     </div>
   </Modal>
 </template>
@@ -93,9 +98,11 @@ import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import UserAdminService from '@baserow_premium/services/userAdmin'
 import { email, maxLength, minLength, required } from 'vuelidate/lib/validators'
+import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
 
 export default {
   name: 'EditUserModal',
+  components: { DeleteUserModal },
   mixins: [modal, error],
   props: {
     editUserEvent: {
@@ -106,6 +113,7 @@ export default {
   data() {
     return {
       loading: false,
+      deleteUserEvent: this.editUserEvent,
       formUser: {
         username: this.editUserEvent.user.username,
         name: this.editUserEvent.user.name,
@@ -122,6 +130,7 @@ export default {
   watch: {
     editUserEvent(editUserEvent) {
       // Reset the form if the user prop changes to a new user.
+      this.hideError()
       this.formUser.username = editUserEvent.user.username
       this.formUser.name = editUserEvent.user.name
       this.formUser.isActive = editUserEvent.user.is_active
@@ -130,7 +139,12 @@ export default {
   },
   methods: {
     deleteUser() {
-      this.$emit('switch-to-delete')
+      this.$refs.deleteUserModal.show()
+      // Update the event time to ensure the delete modal updates correctly to this new
+      // modal event.
+      this.deleteUserEvent = Object.assign({}, this.editUserEvent, {
+        time: Date.now(),
+      })
     },
     async editUser() {
       this.$v.$touch()

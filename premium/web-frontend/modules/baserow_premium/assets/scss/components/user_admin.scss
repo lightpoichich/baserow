@@ -128,3 +128,8 @@
 .user-admin-delete__strong {
   word-break: break-word;
 }
+
+.user-admin-edit__delete {
+  color: $color-error-500;
+  font-size: 14px;
+}

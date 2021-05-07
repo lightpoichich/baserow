@@ -110,6 +110,7 @@ export default {
   watch: {
     // Reset the form if the user prop changes to a new user.
     editUserEvent() {
+      this.hideError()
       this.account.password = ''
       this.account.passwordConfirm = ''
     },

@@ -44,14 +44,14 @@
     </ul>
     <DeleteUserModal
       ref="deleteUserModal"
-      :edit-user-event="editUserEvent"
-      @delete-user="$emit('delete-user', $event)"
+      :delete-user-event="editUserEvent"
+      @delete-user="onDeleteUser"
     ></DeleteUserModal>
     <EditUserModal
       ref="editUserModal"
       :edit-user-event="editUserEvent"
       @update="$emit('update', $event)"
-      @switch-to-delete="showDeleteModal"
+      @delete-user="onDeleteUser"
     >
     </EditUserModal>
     <ChangePasswordModal
@@ -111,6 +111,10 @@ export default {
     showEditModal() {
       this.hide()
       this.$refs.editUserModal.show()
+    },
+    onDeleteUser(event) {
+      this.$emit('delete-user', event)
+      this.$refs.editUserModal.hide()
     },
     async changeIsActive(isActive) {
       try {

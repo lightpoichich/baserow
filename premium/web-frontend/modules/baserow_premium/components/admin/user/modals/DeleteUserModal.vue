@@ -45,7 +45,7 @@ export default {
   name: 'DeleteUserModal',
   mixins: [modal, error],
   props: {
-    editUserEvent: {
+    deleteUserEvent: {
       type: Object,
       required: true,
     },
@@ -57,7 +57,12 @@ export default {
   },
   computed: {
     user() {
-      return this.editUserEvent.user
+      return this.deleteUserEvent.user
+    },
+  },
+  watch: {
+    deleteUserEvent() {
+      this.hideError()
     },
   },
   methods: {

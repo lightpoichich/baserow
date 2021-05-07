@@ -971,11 +971,17 @@ export const actions = {
     })
 
     try {
-      await RowService(this.$client).move(
+      const { data } = await RowService(this.$client).move(
         table.id,
         row.id,
         before !== null ? before.id : null
       )
+      if (before === null) {
+        // Not having a before means that the row was moved to the end and because
+        // that order was just an estimation, we want to update it with the real
+        // order, otherwise there could be order conflicts in the future.
+        commit('UPDATE_ROW_IN_BUFFER', { row, values: { order: data.order } })
+      }
       dispatch('fetchByScrollTopDelayed', {
         scrollTop: getScrollTop(),
         fields,

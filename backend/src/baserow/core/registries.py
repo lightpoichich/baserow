@@ -168,13 +168,17 @@ class ApplicationType(
         :type application: Application
         """
 
-    def export_serialized(self, application):
+    def export_serialized(self, application, files_zip, storage):
         """
         Exports the application to a serialized dict that can be imported by the
         `import_serialized` method. The dict is JSON serializable.
 
         :param application: The application that must be exported.
         :type application: Application
+        :param files_zip:
+        :type files_zip:
+        :param storage:
+        :type storage:
         :return: The exported and serialized application.
         :rtype: dict
         """
@@ -186,7 +190,9 @@ class ApplicationType(
             "type": self.type,
         }
 
-    def import_serialized(self, group, serialized_values, id_mapping):
+    def import_serialized(
+        self, group, serialized_values, id_mapping, files_zip, storage
+    ):
         """
         Imports the exported serialized application by the `export_serialized` as a new
         application to a group.
@@ -199,6 +205,10 @@ class ApplicationType(
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
         :type id_mapping: dict
+        :param files_zip:
+        :type files_zip:
+        :param storage:
+        :type storage:
         :return: The newly created application.
         :rtype: Application
         """

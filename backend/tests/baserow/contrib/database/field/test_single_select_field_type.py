@@ -698,7 +698,7 @@ def test_get_set_export_serialized_value_single_select_field(data_fixture):
 
     exported_applications = core_handler.export_group_applications(group)
     imported_applications, id_mapping = core_handler.import_application_to_group(
-        imported_group, exported_applications
+        imported_group, exported_applications, None, None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]

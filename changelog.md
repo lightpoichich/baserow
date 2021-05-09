@@ -1,4 +1,3 @@
-
 # Changelog
 
 ## Unreleased
@@ -14,6 +13,7 @@
   that template instead of the default database.
 * Made it possible to drag and drop rows in the desired order.
 * Fixed bug where the rows could get out of sync during real time collaboration.
+* Made it possible to export and import the file field.
 
 ## Released (2021-04-08)
 

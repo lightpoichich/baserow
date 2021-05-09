@@ -556,7 +556,7 @@ class FieldType(
 
         return field
 
-    def get_export_serialized_value(self, row, field_name, cache):
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         """
         Exports the value to a the value of a row to serialized value that is also JSON
         serializable.
@@ -569,13 +569,19 @@ class FieldType(
             exporting the table. This is for example used by the link row field type
             to prefetch all relations.
         :type cache: dict
+        :param files_zip:
+        :type files_zip:
+        :param storage:
+        :type storage:
         :return: The exported value.
         :rtype: Object
         """
 
         return getattr(row, field_name)
 
-    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
         """
         Sets an imported and serialized value on a row instance.
 
@@ -585,6 +591,10 @@ class FieldType(
         :type field_name: str
         :param value: The value that must be set.
         :type value: Object
+        :param files_zip:
+        :type files_zip:
+        :param storage:
+        :type storage:
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
         :type id_mapping: dict

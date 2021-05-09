@@ -761,7 +761,7 @@ def test_import_export_link_row_field(data_fixture, user_tables_in_separate_db):
 
     exported_applications = core_handler.export_group_applications(database.group)
     imported_applications, id_mapping = core_handler.import_application_to_group(
-        imported_group, exported_applications
+        imported_group, exported_applications, None, None
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()

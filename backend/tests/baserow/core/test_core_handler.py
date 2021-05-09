@@ -750,7 +750,7 @@ def test_export_import_group_application(data_fixture):
     handler = CoreHandler()
     exported_applications = handler.export_group_applications(group)
     imported_applications, id_mapping = handler.import_application_to_group(
-        imported_group, exported_applications
+        imported_group, exported_applications, None, None
     )
 
     assert len(imported_applications) == 1

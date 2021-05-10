@@ -30,7 +30,8 @@ class Command(BaseCommand):
             "--name",
             type=str,
             help="The JSON and ZIP files are going to be named `group_ID.json` and "
-            "`group_ID.zip`, but can optionally be named differently.",
+            "`group_ID.zip` by default, but can optionally be named differently by "
+            "proving this argument.",
         )
 
     def handle(self, *args, **options):

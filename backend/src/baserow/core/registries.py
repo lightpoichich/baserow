@@ -175,10 +175,11 @@ class ApplicationType(
 
         :param application: The application that must be exported.
         :type application: Application
-        :param files_zip:
-        :type files_zip:
-        :param storage:
-        :type storage:
+        :param files_zip: A zip file buffer where the files related to the template
+            must be copied into.
+        :type files_zip: ZipFile
+        :param storage: The storage where the files can be loaded from.
+        :type storage: Storage or None
         :return: The exported and serialized application.
         :rtype: dict
         """
@@ -205,10 +206,11 @@ class ApplicationType(
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
         :type id_mapping: dict
-        :param files_zip:
-        :type files_zip:
-        :param storage:
-        :type storage:
+        :param files_zip: A zip file buffer where files related to the template can
+            be extracted from.
+        :type files_zip: ZipFile
+        :param storage: The storage where the files can be copied to.
+        :type storage: Storage or None
         :return: The newly created application.
         :rtype: Application
         """

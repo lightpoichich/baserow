@@ -71,10 +71,10 @@ $ baserow export_group_applications YOUR_GROUP_ID --indent
 
 ### The export
 
-After running the management command, you will that two files have created in your
-working directory, `group_YOUR_GROUP_ID.json` and `group_YOUR_GROUP_ID.zip`. The JSON
-file contains the structure of your export, which are the databases, tables, fields,
-views and rows. The ZIP file has all uploaded files related to the exported
+After running the management command, you will notice that two files have created in
+your working directory, `group_YOUR_GROUP_ID.json` and `group_YOUR_GROUP_ID.zip`. The
+JSON file contains the structure of your export, which are the databases, tables,
+fields, views and rows. The ZIP file has all uploaded files related to the exported
 applications. A file could for example be included in the ZIP file if a table contains
 a file field and files have been uploaded.
 

@@ -14,6 +14,7 @@
 * Made it possible to drag and drop rows in the desired order.
 * Fixed bug where the rows could get out of sync during real time collaboration.
 * Added `fill_users` admin management command which fills baserow with fake users.
+* Made it possible to drag and drop the views in the desired order.
 * **Premium**: Added user admin area allowing management of all baserow users.
 
 ## Released (2021-04-08)

@@ -343,11 +343,12 @@ describe('User Admin Component Tests', () => {
 
     const usernameEnteredButNotSaved = '1'
 
-    const modal = await ui.changeEmail(usernameEnteredButNotSaved, {
+    await ui.changeEmail(usernameEnteredButNotSaved, {
       clickSave: false,
       exit: true,
     })
-    const emailField = await ui.getUserEditModalEmailField(modal)
+    await flushPromises()
+    const emailField = await ui.getUserEditModalEmailField()
 
     expect(emailField.element.value).toBe(initialUsername)
   })

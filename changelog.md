@@ -1,4 +1,3 @@
-
 # Changelog
 
 ## Unreleased
@@ -15,7 +14,7 @@
 * Made it possible to drag and drop rows in the desired order.
 * Fixed bug where the rows could get out of sync during real time collaboration.
 * Added `fill_users` admin management command which fills baserow with fake users.
-* Premium Only: Added user admin area allowing management of baserow users.
+* **Premium**: Added user admin area allowing management of all baserow users.
 
 ## Released (2021-04-08)
 

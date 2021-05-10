@@ -157,6 +157,7 @@ class UserAdminView(APIView):
         Updates the specified user with the supplied attributes. Will raise an exception
         if you attempt un-staff or de-activate yourself.
         """
+
         user_id = int(user_id)
 
         handler = UserAdminHandler()
@@ -199,6 +200,7 @@ class UserAdminView(APIView):
         Deletes the specified user. Raises an exception if you attempt to delete
         yourself.
         """
+
         user_id = int(user_id)
 
         handler = UserAdminHandler()

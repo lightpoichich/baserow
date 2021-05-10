@@ -105,7 +105,7 @@ export default {
         /*
          The starting empty element never flex-wraps down into a new row as it has 0
          width.
-         If a element after it has the same top value then it must not have wrapped
+         If an element after it has the same top value then it must not have wrapped
          down and hence must fit and be visible. If the elements top value is greater
          then it must have overflowed and wrapped into a row below, causing it to
          become invisible.

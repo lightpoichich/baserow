@@ -56,6 +56,7 @@ class UserAdminHandler:
         :return: A queryset of users in Baserow, optionally sorted and ordered by the
             specified parameters.
         """
+
         self._raise_if_not_permitted(requesting_user)
 
         users = User.objects.prefetch_related(
@@ -141,8 +142,8 @@ class UserAdminHandler:
         :param name: Optional new name to set on the user.
         :param username: Optional new username/email to set for the user.
         """
-        self._raise_if_not_permitted(requesting_user)
 
+        self._raise_if_not_permitted(requesting_user)
         self._raise_if_locking_self_out_of_admin(
             is_active, is_staff, requesting_user, user_id
         )
@@ -176,6 +177,7 @@ class UserAdminHandler:
         the admin area of Baserow by either turning off their staff status or disabling
         their account.
         """
+
         is_setting_staff_to_false = is_staff is not None and not is_staff
         is_setting_active_to_false = is_active is not None and not is_active
         if user_id == requesting_user.id and (
@@ -193,6 +195,7 @@ class UserAdminHandler:
         :param user_id: The id of the user to update, if they do not exist raises a
             UnknownUserException.
         """
+
         self._raise_if_not_permitted(requesting_user)
 
         if requesting_user.id == user_id:

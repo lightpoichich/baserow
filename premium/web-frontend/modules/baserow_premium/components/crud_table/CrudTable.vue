@@ -22,7 +22,7 @@
           }"
           @click="toggleSort(col)"
         >
-          <span class="crudtable__header-title">
+          <span class="crudtable__field-header-title">
             {{ col.header }}
           </span>
           <template v-if="sorted(col)">
@@ -32,7 +32,7 @@
         </div>
       </template>
       <template v-for="row in rows">
-        <template v-for="col in allColumns">
+        <template v-for="(col, index) in allColumns">
           <component
             :is="col.cellComponent"
             :key="col.key + '-' + row.id"
@@ -42,6 +42,8 @@
             :class="{
               'crudtable__cell--sticky': col.isInLeftSection,
               'crudtable__cell--right': col.hasRightBar,
+              'crudtable__cell--last':
+                index === Object.keys(allColumns).length - 1,
             }"
             @contextmenu.prevent="
               $emit('row-context', { col, row, event: $event })

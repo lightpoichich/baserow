@@ -9,7 +9,7 @@
     @row-context="onRowContext"
   >
     <template #header>
-      <strong>User Settings</strong>
+      <div class="crudtable__header-title">User Settings</div>
     </template>
     <template #menus="slotProps">
       <EditUserContext

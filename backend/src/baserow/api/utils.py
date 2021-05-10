@@ -71,7 +71,7 @@ def validate_data(serializer_class, data, partial=False):
     :type serializer_class: Serializer
     :param data: The data that needs to be validated.
     :type data: dict
-    :param partial: Whether the data is a partial update
+    :param partial: Whether the data is a partial update.
     :type partial: bool
     :return: The data after being validated by the serializer.
     :rtype: dict

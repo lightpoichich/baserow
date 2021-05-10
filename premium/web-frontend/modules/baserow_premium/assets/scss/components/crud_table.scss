@@ -16,6 +16,10 @@
   border-bottom: 2px solid $color-neutral-200;
 }
 
+.crudtable__header-title {
+  font-weight: 600;
+}
+
 .crudtable__header-link {
   font-weight: 600;
   color: $color-primary-900;
@@ -102,7 +106,7 @@
   }
 }
 
-.crudtable__header-title {
+.crudtable__field-header-title {
   @extend %ellipsis;
 
   margin-right: auto;
@@ -134,6 +138,10 @@
   &.crudtable__cell--sticky {
     position: sticky;
     left: 0;
+  }
+
+  &.crudtable__cell--last {
+    border-right: 1px solid $color-neutral-200;
   }
 }
 

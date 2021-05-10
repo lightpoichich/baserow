@@ -123,10 +123,10 @@ export default {
               numHiddenGroups === 1
             ) {
               // However first check, if this group which has been wrapped down would
-              // actually fit on the first row (with some room for error) then the
-              // expand button itself is causing it to wrap down. If there is only one
-              // hidden group then we can move the expand button so it does actually
-              // fit on the first row there is then no need to show the expand button.
+              // fit on the first row (with some room for error) if the expand button
+              // was not also on the first row. If that is so AND there is only one
+              // hidden group we can safely hide the expand button and let the
+              // group wrap back into fitting on the first row.
               expandOrder = i
               numHiddenGroups--
             } else if (

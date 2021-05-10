@@ -697,7 +697,7 @@ def test_get_set_export_serialized_value_single_select_field(data_fixture):
     model.objects.create(**{f"field_{field.id}_id": option_b.id})
 
     exported_applications = core_handler.export_group_applications(group)
-    imported_applications, id_mapping = core_handler.import_application_to_group(
+    imported_applications, id_mapping = core_handler.import_applications_to_group(
         imported_group, exported_applications, None, None
     )
     imported_database = imported_applications[0]

@@ -211,7 +211,9 @@ def test_import_export_file_field(data_fixture, tmpdir, user_tables_in_separate_
     row_1 = row_handler.create_row(
         user=user,
         table=table,
-        values={f"field_{field.id}": [{"name": user_file.name}]},
+        values={
+            f"field_{field.id}": [{"name": user_file.name, "visible_name": "a.txt"}]
+        },
         model=model,
     )
     row_2 = row_handler.create_row(
@@ -261,7 +263,7 @@ def test_import_export_file_field(data_fixture, tmpdir, user_tables_in_separate_
         "original_name"
     ] = "test2.txt"
 
-    imported_applications, id_mapping = core_handler.import_application_to_group(
+    imported_applications, id_mapping = core_handler.import_applications_to_group(
         imported_group, exported_applications, files_buffer, storage
     )
     imported_database = imported_applications[0]
@@ -279,11 +281,19 @@ def test_import_export_file_field(data_fixture, tmpdir, user_tables_in_separate_
         getattr(import_row_1, f"field_{imported_field.id}")[0]["name"]
         == imported_user_file.name
     )
+    assert (
+        getattr(import_row_1, f"field_{imported_field.id}")[0]["visible_name"]
+        == "a.txt"
+    )
     assert len(getattr(import_row_2, f"field_{imported_field.id}")) == 0
     assert len(getattr(import_row_3, f"field_{imported_field.id}")) == 1
     assert (
         getattr(import_row_3, f"field_{imported_field.id}")[0]["name"]
         == imported_user_file.name
+    )
+    assert (
+        getattr(import_row_3, f"field_{imported_field.id}")[0]["visible_name"]
+        == "test.txt"
     )
 
     assert UserFile.objects.all().count() == 2

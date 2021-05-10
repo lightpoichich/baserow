@@ -994,6 +994,7 @@ class FileFieldType(FieldType):
             file_names.append(
                 {
                     "name": file["name"],
+                    "visible_name": file["visible_name"],
                     "original_name": cache[cache_entry].original_name,
                 }
             )
@@ -1013,7 +1014,9 @@ class FileFieldType(FieldType):
                     None, file["original_name"], stream, storage=storage
                 )
 
-            files.append(user_file.serialize())
+            value = user_file.serialize()
+            value["visible_name"] = file["visible_name"]
+            files.append(value)
 
         setattr(row, field_name, files)
 

@@ -2,8 +2,6 @@ import sys
 import os
 import json
 
-from io import BytesIO
-
 from django.db import transaction
 from django.core.management.base import BaseCommand
 
@@ -65,7 +63,7 @@ class Command(BaseCommand):
                     f"files."
                 )
 
-            applications, _ = handler.import_application_to_group(
+            applications, _ = handler.import_applications_to_group(
                 group, content, files_buffer
             )
 

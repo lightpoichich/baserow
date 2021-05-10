@@ -692,7 +692,7 @@ class CoreHandler:
     def export_group_applications(self, group, files_buffer=None, storage=None):
         """
         Exports the applications of a group to a list. They can later be imported via
-        the `import_application_to_group` method. The result can be serialized to JSON.
+        the `import_applications_to_group` method. The result can be serialized to JSON.
 
         @TODO look into speed optimizations by streaming to a JSON file instead of
             generating the entire file in memory.
@@ -726,7 +726,7 @@ class CoreHandler:
 
         return exported_applications
 
-    def import_application_to_group(
+    def import_applications_to_group(
         self, group, exported_applications, files_buffer=None, storage=None
     ):
         """
@@ -795,7 +795,7 @@ class CoreHandler:
 
         return template
 
-    def sync_templates(self):
+    def sync_templates(self, storage=None):
         """
         Synchronizes the JSON template files with the templates stored in the database.
         We need to have a copy in the database so that the user can live preview a
@@ -807,6 +807,9 @@ class CoreHandler:
         `export_hash` has changed, if so it means the export has changed. Because we
         don't have updating capability, we delete the old group and create a new one
         where we can import the export into.
+
+        :param storage:
+        :type storage:
         """
 
         installed_templates = (
@@ -850,8 +853,25 @@ class CoreHandler:
             # hash mismatch, which means the group has already been deleted, we can
             # create a new group and import the exported applications into that group.
             if not installed_template or installed_template.export_hash != export_hash:
+                # It is optionally possible for a template to have additional files.
+                # They are stored in a ZIP file and are generated when the template
+                # is exported. They for example contain file field files.
+                try:
+                    files_file_path = f"{os.path.splitext(template_file_path)[0]}.zip"
+                    files_buffer = open(files_file_path, "rb")
+                except FileNotFoundError:
+                    files_buffer = None
+
                 group = Group.objects.create(name=parsed_json["name"])
-                self.import_application_to_group(group, parsed_json["export"])
+                self.import_applications_to_group(
+                    group,
+                    parsed_json["export"],
+                    files_buffer=files_buffer,
+                    storage=storage,
+                )
+
+                if files_buffer:
+                    files_buffer.close()
             else:
                 group = installed_template.group
                 group.name = parsed_json["name"]
@@ -906,7 +926,7 @@ class CoreHandler:
             num_templates=0
         ).delete()
 
-    def install_template(self, user, group, template):
+    def install_template(self, user, group, template, storage=None):
         """
         Installs the exported applications of a template into the given group if the
         provided user has access to that group.
@@ -917,6 +937,8 @@ class CoreHandler:
         :type group: Group
         :param template: The template that must be installed.
         :type template: Template
+        :param storage:
+        :type storage:
         :return: The imported applications.
         :rtype: list
         """
@@ -936,9 +958,22 @@ class CoreHandler:
 
         content = template_path.read_text()
         parsed_json = json.loads(content)
-        applications, id_mapping = self.import_application_to_group(
-            group, parsed_json["export"]
+
+        # It is optionally possible for a template to have additional files. They are
+        # stored in a ZIP file and are generated when the template is exported. They
+        # for example contain file field files.
+        try:
+            files_path = f"{os.path.splitext(template_path)[0]}.zip"
+            files_buffer = open(files_path, "rb")
+        except FileNotFoundError:
+            files_buffer = None
+
+        applications, id_mapping = self.import_applications_to_group(
+            group, parsed_json["export"], files_buffer=files_buffer, storage=storage
         )
+
+        if files_buffer:
+            files_buffer.close()
 
         # Because a user has initiated the creation of applications, we need to
         # call the `application_created` signal for each created application.

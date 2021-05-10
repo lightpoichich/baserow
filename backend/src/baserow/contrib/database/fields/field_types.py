@@ -981,19 +981,22 @@ class FileFieldType(FieldType):
                 except UserFile.DoesNotExist:
                     continue
 
-                # Load the user file from the content and write it to the zip file
-                # because it might not exist the environment that it is going to be
-                # imported in.
-                file_path = user_file_handler.user_file_path(user_file.name)
-                with storage.open(file_path, mode="rb") as storage_file:
-                    files_zip.writestr(file["name"], storage_file.read())
+                if file["name"] not in files_zip.namelist():
+                    # Load the user file from the content and write it to the zip file
+                    # because it might not exist in the environment that it is going
+                    # to be imported in.
+                    file_path = user_file_handler.user_file_path(user_file.name)
+                    with storage.open(file_path, mode="rb") as storage_file:
+                        files_zip.writestr(file["name"], storage_file.read())
 
                 cache[cache_entry] = user_file
 
-            file_names.append({
-                "name": file["name"],
-                "original_name": cache[cache_entry].original_name
-            })
+            file_names.append(
+                {
+                    "name": file["name"],
+                    "original_name": cache[cache_entry].original_name,
+                }
+            )
         return file_names
 
     def set_import_serialized_value(
@@ -1007,10 +1010,7 @@ class FileFieldType(FieldType):
                 # Try to upload the user file with the original name to make sure
                 # that if the was already uploaded, it will not be uploaded again.
                 user_file = user_file_handler.upload_user_file(
-                    None,
-                    file["original_name"],
-                    stream,
-                    storage=storage
+                    None, file["original_name"], stream, storage=storage
                 )
 
             files.append(user_file.serialize())

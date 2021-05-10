@@ -457,6 +457,42 @@ describe('User Admin Component Tests', () => {
     expect(ui.getSingleRowUsernameText()).toContain(firstUser.username)
   })
 
+  test('searching and then sorting will preserve the search', async () => {
+    const firstUser = mockPremiumServer.aUser({
+      id: 1,
+      username: 'firstUser@example.com',
+    })
+    const secondUser = mockPremiumServer.aUser({
+      id: 2,
+      username: 'secondUser@example.com',
+    })
+    mockPremiumServer.thereAreUsers([firstUser, secondUser], 1)
+    mockPremiumServer.thereAreUsers([firstUser], 1, { search: 'firstUser' })
+    mockPremiumServer.thereAreUsers([firstUser], 1, {
+      search: 'firstUser',
+      sorts: '+username',
+    })
+
+    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const ui = new UserAdminUserHelpers(userAdmin)
+
+    const cells = ui.findCells(14)
+    const { usernameCell: firstUsernameCell } = ui.getRow(cells, 0)
+    expect(firstUsernameCell.text()).toContain('firstUser@example.com')
+    const { usernameCell: secondUsernameCell } = ui.getRow(cells, 1)
+    expect(secondUsernameCell.text()).toContain('secondUser@example.com')
+
+    await ui.typeIntoSearchBox('firstUser')
+    await flushPromises()
+
+    expect(ui.getSingleRowUsernameText()).toContain(firstUser.username)
+
+    await ui.clickUsernameHeader()
+    await flushPromises()
+
+    expect(ui.getSingleRowUsernameText()).toContain(firstUser.username)
+  })
+
   test('you can sort by multiple columns which will pass the sorts to the server', async () => {
     const first = 'firstUser@example.com'
     const second = 'secondUser@example.com'

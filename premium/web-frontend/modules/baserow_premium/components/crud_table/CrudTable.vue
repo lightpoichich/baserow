@@ -160,6 +160,7 @@ export default {
       loading: false,
       page: 1,
       totalPages: null,
+      searchQuery: false,
       rows: [],
       columnSorts: [],
     }
@@ -222,18 +223,19 @@ export default {
     },
     async doSearch(searchQuery) {
       this.totalPages = null
-      await this.fetchPage(1, { searchQuery })
+      this.searchQuery = searchQuery
+      await this.fetchPage(1)
     },
     /**
      * Fetches the rows of a given page and adds them to the state.
      */
-    async fetchPage(page, { searchQuery = '' } = {}) {
+    async fetchPage(page) {
       this.loading = true
 
       try {
         const { data } = await this.service.fetchPage(
           page,
-          searchQuery,
+          this.searchQuery,
           this.columnSorts
         )
         this.page = page

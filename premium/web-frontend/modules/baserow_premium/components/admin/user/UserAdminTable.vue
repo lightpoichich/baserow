@@ -4,7 +4,7 @@
     :right-columns="rightColumns"
     :service="service"
     row-id-key="id"
-    @edit-user="editUser"
+    @edit-user="displayEditUserContext"
     @show-group="displayHiddenGroups"
     @row-context="onRowContext"
   >
@@ -13,12 +13,14 @@
     </template>
     <template #menus="slotProps">
       <EditUserContext
+        ref="editUserContext"
         :edit-user-event="editUserEvent"
         @delete-user="slotProps.deleteRow"
         @update="slotProps.updateRow"
       >
       </EditUserContext>
       <HiddenGroupsContext
+        ref="hiddenGroupsContext"
         :show-groups-event="showGroupsEvent"
       ></HiddenGroupsContext>
     </template>
@@ -104,20 +106,26 @@ export default {
     }
   },
   methods: {
-    editUser(e) {
+    displayEditUserContext(e) {
       this.editUserEvent = e
+      this.$nextTick(function () {
+        this.$refs.editUserContext.show(e.target, 'bottom', 'left', 4)
+      })
     },
     onRowContext({ row, event }) {
-      this.editUserEvent = {
+      this.displayEditUserContext({
         user: row,
         target: {
           left: event.clientX,
           top: event.clientY,
         },
-      }
+      })
     },
     displayHiddenGroups(e) {
       this.showGroupsEvent = e
+      this.$nextTick(function () {
+        this.$refs.hiddenGroupsContext.show(e.target, 'bottom', 'left', 4)
+      })
     },
   },
 }

@@ -29,15 +29,5 @@ export default {
       validator: (prop) => typeof prop === 'object' || prop === null,
     },
   },
-  watch: {
-    showGroupsEvent(showGroupsEvent) {
-      if (showGroupsEvent) {
-        this.$nextTick(function () {
-          this.hide()
-          this.show(showGroupsEvent.target, 'bottom', 'left', 4)
-        })
-      }
-    },
-  },
 }
 </script>

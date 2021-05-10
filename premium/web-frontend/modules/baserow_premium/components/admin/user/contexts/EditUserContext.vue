@@ -89,16 +89,6 @@ export default {
       loading: false,
     }
   },
-  watch: {
-    editUserEvent(editUserEvent) {
-      if (editUserEvent) {
-        this.$nextTick(function () {
-          this.hide()
-          this.show(editUserEvent.target, 'bottom', 'left', 4)
-        })
-      }
-    },
-  },
   methods: {
     showChangePasswordModal() {
       this.hide()

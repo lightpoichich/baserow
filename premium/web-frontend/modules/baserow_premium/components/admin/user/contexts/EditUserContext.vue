@@ -1,64 +1,65 @@
 <template>
-  <Context v-if="editUserEvent">
-    <ul class="context__menu">
-      <li>
-        <a @click.prevent="showEditModal">
-          <i class="context__menu-icon fas fa-fw fa-pen"></i>
-          Edit
-        </a>
-      </li>
-      <li>
-        <a @click.prevent="showChangePasswordModal">
-          <i class="context__menu-icon fas fa-fw fa-key"></i>
-          Change password
-        </a>
-      </li>
-      <li>
-        <a
-          v-if="editUserEvent.user.is_active"
-          :class="{
-            'context__menu-item--loading': loading,
-          }"
-          @click.prevent="deactivate"
-        >
-          <i class="context__menu-icon fas fa-fw fa-times"></i>
-          Deactivate
-        </a>
-        <a
-          v-else
-          :class="{
-            'context__menu-item--loading': loading,
-          }"
-          @click.prevent="activate"
-        >
-          <i class="context__menu-icon fas fa-fw fa-check"></i>
-          Activate
-        </a>
-      </li>
-      <li>
-        <a @click.prevent="showDeleteModal">
-          <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
-          Permanently delete
-        </a>
-      </li>
-    </ul>
-    <DeleteUserModal
-      ref="deleteUserModal"
-      :delete-user-event="editUserEvent"
-      @delete-user="onDeleteUser"
-    ></DeleteUserModal>
-    <EditUserModal
-      ref="editUserModal"
-      :edit-user-event="editUserEvent"
-      @update="$emit('update', $event)"
-      @delete-user="onDeleteUser"
-    >
-    </EditUserModal>
-    <ChangePasswordModal
-      ref="changePasswordModal"
-      :edit-user-event="editUserEvent"
-    >
-    </ChangePasswordModal>
+  <Context>
+    <template v-if="Object.keys(user).length > 0">
+      <ul class="context__menu">
+        <li>
+          <a @click.prevent="showEditModal">
+            <i class="context__menu-icon fas fa-fw fa-pen"></i>
+            Edit
+          </a>
+        </li>
+        <li>
+          <a @click.prevent="showChangePasswordModal">
+            <i class="context__menu-icon fas fa-fw fa-key"></i>
+            Change password
+          </a>
+        </li>
+        <li>
+          <a
+            v-if="user.is_active"
+            :class="{
+              'context__menu-item--loading': loading,
+            }"
+            @click.prevent="deactivate"
+          >
+            <i class="context__menu-icon fas fa-fw fa-times"></i>
+            Deactivate
+          </a>
+          <a
+            v-else
+            :class="{
+              'context__menu-item--loading': loading,
+            }"
+            @click.prevent="activate"
+          >
+            <i class="context__menu-icon fas fa-fw fa-check"></i>
+            Activate
+          </a>
+        </li>
+        <li>
+          <a @click.prevent="showDeleteModal">
+            <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
+            Permanently delete
+          </a>
+        </li>
+      </ul>
+      <DeleteUserModal
+        ref="deleteUserModal"
+        :user="user"
+        @delete-user="onDeleteUser"
+      ></DeleteUserModal>
+      <EditUserModal
+        ref="editUserModal"
+        :user="user"
+        @update="$emit('update', $event)"
+        @delete-user="onDeleteUser"
+      >
+      </EditUserModal>
+      <ChangePasswordModal
+        ref="changePasswordModal"
+        :user="user"
+      ></ChangePasswordModal>
+    </template>
   </Context>
 </template>
 
@@ -79,9 +80,9 @@ export default {
   },
   mixins: [context],
   props: {
-    editUserEvent: {
+    user: {
       required: true,
-      validator: (prop) => typeof prop === 'object' || prop === null,
+      type: Object,
     },
   },
   data() {
@@ -111,7 +112,7 @@ export default {
         this.loading = true
         const { data: newUser } = await UserAdminService(
           this.$client
-        ).update(this.editUserEvent.user.id, { is_active: isActive })
+        ).update(this.user.id, { is_active: isActive })
 
         this.hide()
         this.$emit('update', newUser)

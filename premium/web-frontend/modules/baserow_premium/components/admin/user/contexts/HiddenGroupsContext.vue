@@ -1,8 +1,8 @@
 <template>
-  <Context v-if="showGroupsEvent">
+  <Context>
     <ul class="context__menu">
       <li
-        v-for="group in showGroupsEvent.hiddenGroups"
+        v-for="group in hiddenGroups"
         :key="'hidden-admin-row-group' + group.id"
         class="user-admin-group__dropdown-item"
       >
@@ -24,9 +24,9 @@ export default {
   name: 'HiddenGroupsContext',
   mixins: [context],
   props: {
-    showGroupsEvent: {
+    hiddenGroups: {
       required: true,
-      validator: (prop) => typeof prop === 'object' || prop === null,
+      type: Array,
     },
   },
 }

@@ -14,14 +14,14 @@
     <template #menus="slotProps">
       <EditUserContext
         ref="editUserContext"
-        :edit-user-event="editUserEvent"
+        :user="editUser"
         @delete-user="slotProps.deleteRow"
         @update="slotProps.updateRow"
       >
       </EditUserContext>
       <HiddenGroupsContext
         ref="hiddenGroupsContext"
-        :show-groups-event="showGroupsEvent"
+        :hidden-groups="hiddenGroups"
       ></HiddenGroupsContext>
     </template>
   </CrudTable>
@@ -101,16 +101,14 @@ export default {
     ]
     this.service = UserAdminService(this.$client)
     return {
-      editUserEvent: null,
-      showGroupsEvent: null,
+      editUser: {},
+      hiddenGroups: [],
     }
   },
   methods: {
-    displayEditUserContext(e) {
-      this.editUserEvent = e
-      this.$nextTick(function () {
-        this.$refs.editUserContext.show(e.target, 'bottom', 'left', 4)
-      })
+    displayEditUserContext(event) {
+      this.editUser = event.user
+      this.$refs.editUserContext.show(event.target, 'bottom', 'left', 4)
     },
     onRowContext({ row, event }) {
       this.displayEditUserContext({
@@ -121,11 +119,9 @@ export default {
         },
       })
     },
-    displayHiddenGroups(e) {
-      this.showGroupsEvent = e
-      this.$nextTick(function () {
-        this.$refs.hiddenGroupsContext.show(e.target, 'bottom', 'left', 4)
-      })
+    displayHiddenGroups(event) {
+      this.hiddenGroups = event.hiddenGroups
+      this.$refs.hiddenGroupsContext.show(event.target, 'bottom', 'left', 4)
     },
   },
 }

@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+from io import BytesIO
+
 import pytest
 from django.conf import settings
 from django.db import connection
@@ -750,9 +752,9 @@ def test_export_import_group_application(data_fixture):
     data_fixture.create_database_table(database=database)
 
     handler = CoreHandler()
-    exported_applications = handler.export_group_applications(group)
+    exported_applications = handler.export_group_applications(group, BytesIO())
     imported_applications, id_mapping = handler.import_applications_to_group(
-        imported_group, exported_applications, None, None
+        imported_group, exported_applications, BytesIO(), None
     )
 
     assert len(imported_applications) == 1

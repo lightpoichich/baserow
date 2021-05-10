@@ -48,11 +48,11 @@ class Command(BaseCommand):
 
         current_path = os.path.abspath(os.getcwd())
         files_path = os.path.join(current_path, f"{name}.zip")
-        export_path = os.path.join(current_path, f"{name}.json")
+        import_path = os.path.join(current_path, f"{name}.json")
         handler = CoreHandler()
 
-        with open(export_path, "r") as export_buffer:
-            content = json.load(export_buffer)
+        with open(import_path, "r") as import_buffer:
+            content = json.load(import_buffer)
             files_buffer = None
 
             try:

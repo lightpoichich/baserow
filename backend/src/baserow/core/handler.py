@@ -689,7 +689,7 @@ class CoreHandler:
         application.delete()
         return application
 
-    def export_group_applications(self, group, files_buffer=None, storage=None):
+    def export_group_applications(self, group, files_buffer, storage=None):
         """
         Exports the applications of a group to a list. They can later be imported via
         the `import_applications_to_group` method. The result can be serialized to JSON.
@@ -708,9 +708,6 @@ class CoreHandler:
         :rtype: list
         """
 
-        if not files_buffer:
-            files_buffer = BytesIO()
-
         if not storage:
             storage = default_storage
 
@@ -728,7 +725,7 @@ class CoreHandler:
         return exported_applications
 
     def import_applications_to_group(
-        self, group, exported_applications, files_buffer=None, storage=None
+        self, group, exported_applications, files_buffer, storage=None
     ):
         """
         Imports multiple exported applications into the given group. It is compatible
@@ -750,9 +747,6 @@ class CoreHandler:
             containing a mapping of old ids to new ids.
         :rtype: list, dict
         """
-
-        if not files_buffer:
-            files_buffer = BytesIO()
 
         if not storage:
             storage = default_storage
@@ -861,7 +855,9 @@ class CoreHandler:
                     files_file_path = f"{os.path.splitext(template_file_path)[0]}.zip"
                     files_buffer = open(files_file_path, "rb")
                 except FileNotFoundError:
-                    files_buffer = None
+                    # If the file is not found, we provide a BytesIO buffer to
+                    # maintain backward compatibility and to not brake anything.
+                    files_buffer = BytesIO()
 
                 group = Group.objects.create(name=parsed_json["name"])
                 self.import_applications_to_group(
@@ -967,7 +963,9 @@ class CoreHandler:
             files_path = f"{os.path.splitext(template_path)[0]}.zip"
             files_buffer = open(files_path, "rb")
         except FileNotFoundError:
-            files_buffer = None
+            # If the file is not found, we provide a BytesIO buffer to
+            # maintain backward compatibility and to not brake anything.
+            files_buffer = BytesIO()
 
         applications, id_mapping = self.import_applications_to_group(
             group, parsed_json["export"], files_buffer=files_buffer, storage=storage

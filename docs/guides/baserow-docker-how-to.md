@@ -59,8 +59,9 @@ $ POSTGRES_PORT=5555 REDIS_PORT=6666 MJML_PORT=7777 ./dev.sh
 ### Configure an external email server
 
 See [the introduction](../getting-started/introduction.md) for the all the of email
-environment variables available to configure Baserow. For a simple example you can
-start up Baserow locally and have it connect to an external SMTP server like so:
+environment variables available to configure Baserow. For a simple example you can start
+up Baserow locally and have it connect to an external SMTP server like so:
+
 ```bash
 EMAIL_SMTP_HOST=TODO EMAIL_SMTP_PORT=TODO EMAIL_SMTP=True docker-compose up
 ```
@@ -130,9 +131,9 @@ $ ./dev.sh run backend manage sync_templates
 
 ### Build Error - Service 'backend' failed to build: unable to convert uid/gid chown
 
-This error when attempting to build Baserow's docker images with a version of Docker 
-before 20.10.0. You can check your local docker version by running `docker -v` and 
-fix the error by installing the latest version of Docker from 
+This error occurs when attempting to build Baserow's docker images with a version of
+Docker earlier than 20.10.0. You can check your local docker version by
+running `docker -v` and fix the error by installing the latest version of Docker from
 https://docs.docker.com/get-docker/.
 
 ### Permission denied errors
@@ -140,7 +141,7 @@ https://docs.docker.com/get-docker/.
 If you used Baserow's dev env prior to April 2021 with the provided docker files you
 might encounter permission errors in the containers when upgrading. With the old docker
 files build output could end up being owned by root. These root owned files if they
-still exist in your repo will cause a problem starting the new dev env as Baserow's 
+still exist in your repo will cause a problem starting the new dev env as Baserow's
 containers now run as a non-root user.
 
 To fix simply ensure all files in your baserow git repo are owned by your current user

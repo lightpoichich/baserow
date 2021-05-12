@@ -36,9 +36,9 @@ the following commands in your terminal.
 
 ```
 $ docker -v
-Docker version 19.03.8, build afacb8b
+Docker version 20.10.6, build 370c289
 $ docker-compose -v
-docker-compose version 1.25.5, build 8a1c60f6
+docker-compose version 1.26.2, build eefe0d31
 $ git --version
 git version 2.24.3 (Apple Git-128)
 ```

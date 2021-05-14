@@ -6,8 +6,12 @@
  * calculates the new order of the items. The actual updating has to be done in the
  * update function.
  *
+ * Optionally a handle selector can be provided by doing
+ * `v-sortable="{ id: item.id, update: order, handle: '.child-element' }"`.
+ *
  * Example:
  *
+ * ```
  * <div
  *   v-for="item in items"
  *   :key="item.id"
@@ -26,6 +30,7 @@
  *     },
  *   },
  * }
+ * ```
  */
 export default {
   /**
@@ -35,6 +40,7 @@ export default {
    */
   bind(el, binding) {
     el.sortableId = binding.value.id
+    el.sortableAutoScrolling = false
 
     const mousedownElement = binding.value.handle
       ? el.querySelector(binding.value.handle)
@@ -88,7 +94,13 @@ export default {
    * started. It will calculate the target indicator position and saves before which
    * element it must be placed.
    */
-  move(el, binding, event) {
+  move(el, binding, event = null, startAutoScroll = true) {
+    if (event !== null) {
+      event.preventDefault()
+      el.sortableLastMoveEvent = event
+    } else {
+      event = el.sortableLastMoveEvent
+    }
     el.sortableMoved = true
 
     // Set pointer events to none because that will prevent hover and click
@@ -142,6 +154,38 @@ export default {
     indicator.style.left = left + 'px'
     indicator.style.width = elementRect.width + 'px'
     indicator.style.top = top + 'px'
+
+    // If the user is not already auto scrolling, which happens while dragging and
+    // moving the element close to the end of the view port at the top or bottom
+    // side, we might need to initiate that process.
+    if (
+      parent.scrollHeight > parent.clientHeight &&
+      (!el.sortableAutoScrolling || !startAutoScroll)
+    ) {
+      const parentHeight = parentRect.bottom - parentRect.top
+      const side = Math.ceil((parentHeight / 100) * 10)
+      const autoScrollMouseTop = event.clientY - parentRect.top
+      const autoScrollMouseBottom = parentHeight - autoScrollMouseTop
+      let speed = 0
+
+      if (autoScrollMouseTop < side) {
+        speed = -(3 - Math.ceil((Math.max(0, autoScrollMouseTop) / side) * 3))
+      } else if (autoScrollMouseBottom < side) {
+        speed = 3 - Math.ceil((Math.max(0, autoScrollMouseBottom) / side) * 3)
+      }
+
+      // If the speed is either a position or negative, so not 0, we know that we
+      // need to start auto scrolling.
+      if (speed !== 0) {
+        el.sortableAutoScrolling = true
+        parent.scrollTop += speed
+        el.sortableScrollTimeout = setTimeout(() => {
+          binding.def.move(el, binding, null, false)
+        }, 10)
+      } else {
+        el.sortableAutoScrolling = false
+      }
+    }
   },
   /**
    * Called when the user releases the mouse after the dragging of the element has
@@ -180,6 +224,7 @@ export default {
    * listeners.
    */
   cancel(el) {
+    clearTimeout(el.sortableScrollTimeout)
     el.sortableIndicatorElement.parentNode.removeChild(
       el.sortableIndicatorElement
     )

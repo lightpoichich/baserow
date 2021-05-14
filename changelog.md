@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Fixed bug where the grid view would fail hard if a cell is selected and the component
+  is destroyed.
+
+## Released (2021-05-11)
+
 * Added configurable field limit.
 * Fixed memory leak in the `link_row` field.
 * Switch to using a celery based email backend by default.
@@ -13,6 +18,7 @@
   that template instead of the default database.
 * Made it possible to drag and drop rows in the desired order.
 * Fixed bug where the rows could get out of sync during real time collaboration.
+* Made it possible to export and import the file field including contents.
 * Added `fill_users` admin management command which fills baserow with fake users.
 * Made it possible to drag and drop the views in the desired order.
 * **Premium**: Added user admin area allowing management of all baserow users.

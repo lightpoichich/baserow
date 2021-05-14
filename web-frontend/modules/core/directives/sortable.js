@@ -1,10 +1,9 @@
 /**
  * This directive can by used to enable vertical drag and drop sorting of an array of
  * items. When the dragging starts, it simply shows a target position and will call a
- * function when the the item has been dropped. It will not actually change the
- * order of the items, but it will only show the effect drag and drop effect and
- * calculates the new order of the items. The actual updating has to be done in the
- * update function.
+ * function when the item has been dropped. It will not actually change the order of
+ * the items, but it will only show the drag and drop effect and calculates the new
+ * order of the items. The actual updating has to happen in the update function.
  *
  * Optionally a handle selector can be provided by doing
  * `v-sortable="{ id: item.id, update: order, handle: '.child-element' }"`.
@@ -34,8 +33,8 @@
  */
 export default {
   /**
-   * Called when the directive has been can be bind to the element. It will register
-   * the mousedown event on the element, which is used to start the drag and drop
+   * Called when the directive must bind to the element. It will register the
+   * mousedown event on the element, which is used to start the drag and drop
    * process.
    */
   bind(el, binding) {
@@ -109,10 +108,10 @@ export default {
       (e) => e !== el.sortableIndicatorElement
     )
 
-    // Add the `sortable-sorting-item` which makes sure to disables the pointer
-    // events and user select of all the sortable items. This will give a smoother
-    // user experience as the user can't accidentally click the item and can't select
-    // the text while dragging.
+    // Add the `sortable-sorting-item` which disables the pointer events and user
+    // select of all the sortable items. This will give a smoother user experience
+    // as the user can't accidentally click the item and can't select the text while
+    // dragging.
     all.forEach((s) => {
       s.classList.add('sortable-sorting-item')
     })

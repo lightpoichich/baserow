@@ -404,6 +404,10 @@ class OrderViewsView(APIView):
         request=OrderViewsSerializer,
         responses={
             204: None,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_VIEW_NOT_IN_TABLE"]
+            ),
+            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
         },
     )
     @validate_body(OrderViewsSerializer)

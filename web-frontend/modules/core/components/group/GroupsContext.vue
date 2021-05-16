@@ -97,7 +97,7 @@ export default {
           oldOrder,
         })
       } catch (error) {
-        notifyIf(error, 'view')
+        notifyIf(error, 'group')
       }
     },
   },

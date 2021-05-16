@@ -38,7 +38,7 @@ export default {
    * process.
    */
   bind(el, binding) {
-    el.sortableId = binding.value.id
+    binding.def.update(el, binding)
     el.sortableAutoScrolling = false
 
     const mousedownElement = binding.value.handle
@@ -87,6 +87,8 @@ export default {
   },
   update(el, binding) {
     el.sortableId = binding.value.id
+    el.sortableMarginLeft = binding.value.marginLeft
+    el.sortableMarginRight = binding.value.marginRight
   },
   /**
    * Called when the user moves the mouse when the dragging of the element has
@@ -150,8 +152,12 @@ export default {
       parentRect.top +
       parent.scrollTop
     const left = elementRect.left - parentRect.left
-    indicator.style.left = left + 'px'
-    indicator.style.width = elementRect.width + 'px'
+    indicator.style.left = left + (el.sortableMarginLeft || 0) + 'px'
+    indicator.style.width =
+      elementRect.width -
+      (el.sortableMarginLeft || 0) -
+      (el.sortableMarginRight || 0) +
+      'px'
     indicator.style.top = top + 'px'
 
     // If the user is not already auto scrolling, which happens while dragging and

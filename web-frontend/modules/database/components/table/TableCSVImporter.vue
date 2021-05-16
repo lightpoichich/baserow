@@ -299,7 +299,6 @@ export default {
         this.values.data = ''
         this.error = `It is not possible to import more than ${limit} rows.`
         this.preview = {}
-        this.$emit('input', this.value)
         return
       }
 
@@ -323,8 +322,6 @@ export default {
               this.values.firstRowHeader
             )
           }
-
-          this.$emit('input', this.value)
         },
         error(error) {
           // Papa parse has resulted in an error which we need to display to the user.
@@ -332,7 +329,6 @@ export default {
           this.values.data = ''
           this.error = error.errors[0].message
           this.preview = {}
-          this.$emit('input', this.value)
         },
       })
     },

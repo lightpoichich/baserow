@@ -4,6 +4,7 @@
 
 * Fixed bug where the grid view would fail hard if a cell is selected and the component
   is destroyed.
+* Made it possible to import a JSON file when creating a table.
 
 ## Released (2021-05-11)
 

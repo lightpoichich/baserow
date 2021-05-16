@@ -69,7 +69,7 @@ import importer from '@baserow/modules/database/mixins/importer'
 import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
 
 export default {
-  name: 'TableXMLImporter',
+  name: 'TableCSVImporter',
   components: { TableImporterPreview },
   mixins: [form, importer],
   data() {
@@ -92,7 +92,11 @@ export default {
   },
   methods: {
     /**
-     * @TODO docs
+     * Method that is called when a file has been chosen. It will check if the file is
+     * not larger than 15MB. Otherwise it will take a long time and possibly a crash
+     * if so many entries have to be loaded into memory. If the file is valid, the
+     * contents will be loaded into memory and the reload method will be called which
+     * parses the content.
      */
     select(event) {
       if (event.target.files.length === 0) {

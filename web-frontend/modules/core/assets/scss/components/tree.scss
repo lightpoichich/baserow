@@ -132,12 +132,12 @@
 
 .tree__sub-link {
   @extend %tree_sub-size;
-  @extend %ellipsis;
 
   color: $color-primary-900;
   display: block;
 
   &:hover {
+    cursor: pointer;
     text-decoration: none;
     color: $color-primary-500;
   }

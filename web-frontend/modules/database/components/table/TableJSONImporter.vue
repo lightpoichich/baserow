@@ -3,8 +3,8 @@
     <div class="control">
       <label class="control__label">Choose JSON file</label>
       <div class="control__description">
-        You can import an existing JSON by uploading the .json file with tabular
-        data, i.e.:
+        You can import an existing JSON file by uploading the .json file with
+        tabular data, i.e.:
         <pre>
 [
   {

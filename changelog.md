@@ -5,6 +5,7 @@
 * Fixed bug where the grid view would fail hard if a cell is selected and the component
   is destroyed.
 * Made it possible to order the views by drag and drop.
+* Made it possible to order the groups by drag and drop.
 * Made it possible to order the applications by drag and drop.
 
 ## Released (2021-05-11)

@@ -31,6 +31,9 @@
  * }
  * ```
  */
+let parent
+let indicator
+
 export default {
   /**
    * Called when the directive must bind to the element. It will register the
@@ -62,12 +65,10 @@ export default {
       }
       document.body.addEventListener('keydown', el.keydownEvent)
 
-      el.sortableIndicatorElement = document.createElement('div')
-      el.sortableIndicatorElement.classList.add('sortable-position-indicator')
-      el.parentNode.insertBefore(
-        el.sortableIndicatorElement,
-        el.parentNode.firstChild
-      )
+      parent = el.parentNode
+      indicator = document.createElement('div')
+      indicator.classList.add('sortable-position-indicator')
+      parent.insertBefore(indicator, parent.firstChild)
     }
     mousedownElement.addEventListener('mousedown', el.mousedownEvent)
   },
@@ -76,9 +77,9 @@ export default {
    * that could have been added.
    */
   unbind(el, binding) {
-    window.removeEventListener('mouseup', el.mouseUpEvent)
-    window.removeEventListener('mousemove', el.mouseMoveEvent)
-    document.body.addEventListener('keydown', el.keydownEvent)
+    if (el.sortableMoved) {
+      binding.def.cancel(el)
+    }
 
     const mousedownElement = binding.value.handle
       ? el.querySelector(binding.value.handle)
@@ -106,9 +107,7 @@ export default {
 
     // Set pointer events to none because that will prevent hover and click
     // effects.
-    const all = [...el.parentNode.childNodes].filter(
-      (e) => e !== el.sortableIndicatorElement
-    )
+    const all = [...parent.childNodes].filter((e) => e !== indicator)
 
     // Add the `sortable-sorting-item` which disables the pointer events and user
     // select of all the sortable items. This will give a smoother user experience
@@ -118,7 +117,6 @@ export default {
       s.classList.add('sortable-sorting-item')
     })
 
-    const parent = el.parentElement
     const parentRect = parent.getBoundingClientRect()
 
     // Using the mouse position and the position of the items we can calculate
@@ -144,7 +142,6 @@ export default {
     // element must be moved to the end.
     const elementRect = el.getBoundingClientRect()
     const afterRect = all[all.length - 1].getBoundingClientRect()
-    const indicator = el.sortableIndicatorElement
     const top =
       (before
         ? beforeRect.top - indicator.clientHeight
@@ -206,7 +203,9 @@ export default {
       return
     }
 
-    const oldOrder = [...el.parentNode.childNodes].map((e) => e.sortableId)
+    el.sortableMoved = false
+
+    const oldOrder = [...parent.childNodes].map((e) => e.sortableId)
     const newOrder = oldOrder.filter((id) => id !== el.sortableId)
     const targetIndex = el.sortableBeforeElement
       ? newOrder.findIndex((id) => id === el.sortableBeforeElement.sortableId)
@@ -230,17 +229,18 @@ export default {
    */
   cancel(el) {
     clearTimeout(el.sortableScrollTimeout)
-    el.sortableIndicatorElement.parentNode.removeChild(
-      el.sortableIndicatorElement
-    )
 
-    const all = el.parentNode.childNodes
+    if (indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator)
+    }
+
+    const all = parent.childNodes
     all.forEach((s) => {
       s.classList.remove('sortable-sorting-item')
     })
 
     window.removeEventListener('mouseup', el.mouseUpEvent)
     window.removeEventListener('mousemove', el.mouseMoveEvent)
-    document.body.addEventListener('keydown', el.keydownEvent)
+    document.body.removeEventListener('keydown', el.keydownEvent)
   },
 }

@@ -161,7 +161,7 @@ class ViewHandler:
         group.has_user(user, raise_error=True)
 
         queryset = View.objects.filter(table_id=table.id)
-        view_ids = [view["id"] for view in queryset.values("id")]
+        view_ids = queryset.values_list("id", flat=True)
 
         for view_id in order:
             if view_id not in view_ids:

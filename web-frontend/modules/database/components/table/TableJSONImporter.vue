@@ -45,6 +45,12 @@
         </div>
       </div>
     </div>
+    <div v-if="filename !== ''" class="control">
+      <label class="control__label">Encoding</label>
+      <div class="control__elements">
+        <CharsetDropdown v-model="encoding" @input="reload()"></CharsetDropdown>
+      </div>
+    </div>
     <div v-if="error !== ''" class="alert alert--error alert--has-icon">
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
@@ -65,12 +71,13 @@
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import CharsetDropdown from '@baserow/modules/core/components/helpers/CharsetDropdown'
 import importer from '@baserow/modules/database/mixins/importer'
 import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
 
 export default {
   name: 'TableCSVImporter',
-  components: { TableImporterPreview },
+  components: { TableImporterPreview, CharsetDropdown },
   mixins: [form, importer],
   data() {
     return {
@@ -78,6 +85,7 @@ export default {
         data: '',
         firstRowHeader: true,
       },
+      encoding: 'utf-8',
       filename: '',
       error: '',
       rawData: null,
@@ -119,14 +127,16 @@ export default {
           this.rawData = event.target.result
           this.reload()
         })
-        reader.readAsBinaryString(event.target.files[0])
+        reader.readAsArrayBuffer(event.target.files[0])
       }
     },
     reload() {
       let json
 
       try {
-        json = JSON.parse(this.rawData)
+        const decoder = new TextDecoder(this.encoding)
+        const decoded = decoder.decode(this.rawData)
+        json = JSON.parse(decoded)
       } catch (error) {
         this.values.data = ''
         this.error = `Error occured while parsing JSON: ${error.message}`

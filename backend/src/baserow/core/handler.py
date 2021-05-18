@@ -676,7 +676,7 @@ class CoreHandler:
         group.has_user(user, raise_error=True)
 
         queryset = Application.objects.filter(group_id=group.id)
-        application_ids = [application["id"] for application in queryset.values("id")]
+        application_ids = queryset.values_list("id", flat=True)
 
         for application_id in order:
             if application_id not in application_ids:

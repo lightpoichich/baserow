@@ -20,7 +20,7 @@
     <template v-if="application._.selected">
       <ul class="tree__subs">
         <li
-          v-for="table in application.tables"
+          v-for="table in orderedTables"
           :key="table.id"
           class="tree__sub"
           :class="{ active: isTableActive(table) }"
@@ -49,6 +49,13 @@ export default {
     page: {
       required: true,
       validator: (prop) => typeof prop === 'object' || prop === null,
+    },
+  },
+  computed: {
+    orderedTables() {
+      return this.application.tables
+        .map((table) => table)
+        .sort((a, b) => a.order - b.order)
     },
   },
   methods: {

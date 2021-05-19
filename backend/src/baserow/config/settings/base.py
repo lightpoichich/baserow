@@ -248,14 +248,16 @@ if os.getenv("EMAIL_SMTP", ""):
     # EMAIL_SMTP_USE_TLS OR EMAIL_SMTP_USE_TLS for backwards compatibilty after
     # fixing #448.
     EMAIL_USE_TLS = bool(os.getenv("EMAIL_SMTP_USE_TLS", "")) or bool(
-        os.getenv("EMAIL_SMTP_USE_TLS", "")
+        os.getenv("EMAIL_SMPT_USE_TLS", "")
     )
     EMAIL_HOST = os.getenv("EMAIL_SMTP_HOST", "localhost")
     EMAIL_PORT = os.getenv("EMAIL_SMTP_PORT", "25")
     EMAIL_HOST_USER = os.getenv("EMAIL_SMTP_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SMTP_PASSWORD", "")
+    print(EMAIL_USE_TLS)
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    print("no")
 
 
 # Configurable thumbnails that are going to be generated when a user uploads an image

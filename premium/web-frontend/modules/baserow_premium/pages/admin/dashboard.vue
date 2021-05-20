@@ -193,10 +193,6 @@ export default {
         value = `${value > 0 ? '+ ' : '- '}${Math.abs(value)}%`
         return value
       }
-      console.log(
-        this.active_users_last_24_hours,
-        this.previous_active_users_last_24_hours
-      )
       return {
         new_users_last_24_hours: percentage(
           this.new_users_last_24_hours,

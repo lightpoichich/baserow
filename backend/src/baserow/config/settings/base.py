@@ -257,7 +257,6 @@ if os.getenv("EMAIL_SMTP", ""):
 else:
     CELERY_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
 USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48]}

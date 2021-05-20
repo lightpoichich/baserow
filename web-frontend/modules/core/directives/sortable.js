@@ -1,3 +1,5 @@
+// import Vue from 'vue'
+
 /**
  * This directive can by used to enable vertical drag and drop sorting of an array of
  * items. When the dragging starts, it simply shows a target position and will call a
@@ -215,6 +217,11 @@ export default {
       window.removeEventListener('click', preventOtherClickEvent, true)
     }
     window.addEventListener('click', preventOtherClickEvent, true)
+    // Remove the event because it could be that the user wants to click on the
+    // element right after it has been moved.
+    setTimeout(() => {
+      window.removeEventListener('click', preventOtherClickEvent, true)
+    })
 
     const oldOrder = [...parent.childNodes].map((e) => e.sortableId)
     const newOrder = oldOrder.filter((id) => id !== el.sortableId)

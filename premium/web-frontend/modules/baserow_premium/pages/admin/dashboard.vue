@@ -8,14 +8,18 @@
             <div class="admin-dashboard__box-title">Totals</div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">Total users</div>
-              <div class="admin-dashboard__numbers-value">6336</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ total_users }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
-                <a href="#">view all</a>
+                <nuxt-link :to="{ name: 'admin-users' }">view all</nuxt-link>
               </div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">Total groups</div>
-              <div class="admin-dashboard__numbers-value">8762</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ total_groups }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
                 <a href="#">view all</a>
               </div>
@@ -24,7 +28,9 @@
               <div class="admin-dashboard__numbers-name">
                 Total applications
               </div>
-              <div class="admin-dashboard__numbers-value">6336</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ total_applications }}
+              </div>
             </div>
           </div>
         </div>
@@ -35,10 +41,18 @@
               <div class="admin-dashboard__numbers-name">
                 New users last 24 hours
               </div>
-              <div class="admin-dashboard__numbers-value">8</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ new_users_last_24_hours }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
-                <span class="admin-dashboard__numbers-percentage-value"
-                  >+ 10.23%</span
+                <span
+                  class="admin-dashboard__numbers-percentage-value"
+                  :class="{
+                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
+                      percentages.new_users_last_24_hours
+                    ),
+                  }"
+                  >{{ percentages.new_users_last_24_hours }}</span
                 >
               </div>
             </div>
@@ -46,22 +60,37 @@
               <div class="admin-dashboard__numbers-name">
                 New users last 7 days
               </div>
-              <div class="admin-dashboard__numbers-value">8</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ new_users_last_7_days }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
-                <span class="admin-dashboard__numbers-percentage-value"
-                  >+ 10.23%</span
+                <span
+                  class="admin-dashboard__numbers-percentage-value"
+                  :class="{
+                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
+                      percentages.new_users_last_7_days
+                    ),
+                  }"
+                  >{{ percentages.new_users_last_7_days }}</span
                 >
               </div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                New users last 24 hours
+                New users last 30 days
               </div>
-              <div class="admin-dashboard__numbers-value">8</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ new_users_last_30_days }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
                 <span
-                  class="admin-dashboard__numbers-percentage-value admin-dashboard__numbers-percentage-value--negative"
-                  >- 10.23%</span
+                  class="admin-dashboard__numbers-percentage-value"
+                  :class="{
+                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
+                      percentages.new_users_last_30_days
+                    ),
+                  }"
+                  >{{ percentages.new_users_last_30_days }}</span
                 >
               </div>
             </div>
@@ -74,10 +103,18 @@
               <div class="admin-dashboard__numbers-name">
                 Active users last 24 hours
               </div>
-              <div class="admin-dashboard__numbers-value">8</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ active_users_last_24_hours }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
-                <span class="admin-dashboard__numbers-percentage-value"
-                  >+ 10.23%</span
+                <span
+                  class="admin-dashboard__numbers-percentage-value"
+                  :class="{
+                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
+                      percentages.new_users_last_30_days
+                    ),
+                  }"
+                  >{{ percentages.active_users_last_24_hours }}</span
                 >
               </div>
             </div>
@@ -85,22 +122,37 @@
               <div class="admin-dashboard__numbers-name">
                 Active users last 7 days
               </div>
-              <div class="admin-dashboard__numbers-value">8</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ active_users_last_7_days }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
-                <span class="admin-dashboard__numbers-percentage-value"
-                  >+ 10.23%</span
+                <span
+                  class="admin-dashboard__numbers-percentage-value"
+                  :class="{
+                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
+                      percentages.active_users_last_7_days
+                    ),
+                  }"
+                  >{{ percentages.active_users_last_7_days }}</span
                 >
               </div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                Active users last 24 hours
+                Active users last 30 days
               </div>
-              <div class="admin-dashboard__numbers-value">8</div>
+              <div class="admin-dashboard__numbers-value">
+                {{ active_users_last_30_days }}
+              </div>
               <div class="admin-dashboard__numbers-percentage">
                 <span
-                  class="admin-dashboard__numbers-percentage-value admin-dashboard__numbers-percentage-value--negative"
-                  >- 10.23%</span
+                  class="admin-dashboard__numbers-percentage-value"
+                  :class="{
+                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
+                      percentages.active_users_last_30_days
+                    ),
+                  }"
+                  >{{ percentages.active_users_last_30_days }}</span
                 >
               </div>
             </div>
@@ -108,19 +160,10 @@
         </div>
       </div>
       <div class="admin-dashboard__box">
-        <div class="admin-dashboard__box-dropdown">
-          <Dropdown :value="'active_users_per_day'" :show-search="false">
-            <DropdownItem
-              name="Active users per day"
-              value="active_users_per_day"
-            ></DropdownItem>
-            <DropdownItem
-              name="New users per day"
-              value="new_users_per_day"
-            ></DropdownItem>
-          </Dropdown>
-        </div>
-        <ActiveUsers></ActiveUsers>
+        <ActiveUsers
+          :new-users="new_users_per_day"
+          :active-users="active_users_per_day"
+        ></ActiveUsers>
       </div>
     </div>
   </div>
@@ -128,10 +171,64 @@
 
 <script>
 import ActiveUsers from '@baserow_premium/components/admin/dashboard/chars/ActiveUsers'
+import AdminDashboardService from '@baserow_premium/services/adminDashboard'
 
 export default {
   components: { ActiveUsers },
   layout: 'app',
   middleware: 'staff',
+  async asyncData({ app }) {
+    const { data } = await AdminDashboardService(app.$client).dashboard()
+    return data
+  },
+  computed: {
+    percentages() {
+      const percentage = (value1, value2) => {
+        if (value1 === 0 || value2 === 0) {
+          return ''
+        }
+
+        let value = value1 / value2 - 1
+        value = Math.round(value * 100 * 100) / 100
+        value = `${value > 0 ? '+ ' : '- '}${Math.abs(value)}%`
+        return value
+      }
+      console.log(
+        this.active_users_last_24_hours,
+        this.previous_active_users_last_24_hours
+      )
+      return {
+        new_users_last_24_hours: percentage(
+          this.new_users_last_24_hours,
+          this.previous_new_users_last_24_hours
+        ),
+        new_users_last_7_days: percentage(
+          this.new_users_last_7_days,
+          this.previous_new_users_last_7_days
+        ),
+        new_users_last_30_days: percentage(
+          this.new_users_last_30_days,
+          this.previous_new_users_last_30_days
+        ),
+        active_users_last_24_hours: percentage(
+          this.active_users_last_24_hours,
+          this.previous_active_users_last_24_hours
+        ),
+        active_users_last_7_days: percentage(
+          this.active_users_last_7_days,
+          this.previous_active_users_last_7_days
+        ),
+        active_users_last_30_days: percentage(
+          this.active_users_last_30_days,
+          this.previous_active_users_last_30_days
+        ),
+      }
+    },
+  },
+  methods: {
+    isNegative(value) {
+      return value.substr(0, 1) === '-'
+    },
+  },
 }
 </script>

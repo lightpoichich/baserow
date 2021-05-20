@@ -3,79 +3,43 @@ import { Line } from 'vue-chartjs'
 
 export default {
   extends: Line,
+  props: {
+    newUsers: {
+      type: Array,
+      required: true,
+    },
+    activeUsers: {
+      type: Array,
+      required: true,
+    },
+  },
   mounted() {
+    const labels = []
+    const day = 24 * 60 * 60 * 1000
+    for (let i = 0; i < 30; i++) {
+      labels.unshift(new Date(new Date().getTime() - day * i))
+    }
+
+    const newUserData = this.mapCount(labels, this.newUsers)
+    const activeUserData = this.mapCount(labels, this.activeUsers)
+
     this.renderChart(
       {
-        labels: [
-          new Date(2021, 0, 1),
-          new Date(2021, 0, 2),
-          new Date(2021, 0, 3),
-          new Date(2021, 0, 4),
-          new Date(2021, 0, 5),
-          new Date(2021, 0, 6),
-          new Date(2021, 0, 7),
-          new Date(2021, 0, 8),
-          new Date(2021, 0, 9),
-          new Date(2021, 0, 10),
-          new Date(2021, 0, 11),
-          new Date(2021, 0, 12),
-          new Date(2021, 0, 13),
-          new Date(2021, 0, 14),
-          new Date(2021, 0, 15),
-          new Date(2021, 0, 16),
-          new Date(2021, 0, 17),
-          new Date(2021, 0, 18),
-          new Date(2021, 0, 19),
-          new Date(2021, 0, 20),
-          new Date(2021, 0, 21),
-          new Date(2021, 0, 22),
-          new Date(2021, 0, 23),
-          new Date(2021, 0, 24),
-          new Date(2021, 0, 25),
-          new Date(2021, 0, 26),
-          new Date(2021, 0, 27),
-          new Date(2021, 0, 28),
-          new Date(2021, 0, 29),
-          new Date(2021, 0, 30),
-        ],
+        labels,
         datasets: [
           {
-            label: '',
+            label: 'New users',
+            borderColor: '#59cd90',
+            backgroundColor: 'transparent',
+            color: '#9bf2c4',
+            data: newUserData,
+          },
+          {
+            label: 'Active users',
             borderColor: '#198dd6',
-            backgroundColor: '#ebf7ff',
+            backgroundColor: 'transparent',
             color: '#b4bac2',
-            data: [
-              40,
-              39,
-              10,
-              40,
-              39,
-              80,
-              40,
-              40,
-              39,
-              10,
-              40,
-              39,
-              80,
-              40,
-              40,
-              39,
-              10,
-              40,
-              39,
-              80,
-              40,
-              40,
-              39,
-              10,
-              40,
-              39,
-              80,
-              40,
-              10,
-              20,
-            ],
+            data: activeUserData,
           },
         ],
       },
@@ -83,7 +47,8 @@ export default {
         responsive: true,
         maintainAspectRatio: false,
         legend: {
-          display: false,
+          align: 'start',
+          position: 'bottom',
         },
         scales: {
           xAxes: [
@@ -91,14 +56,35 @@ export default {
               type: 'time',
               time: {
                 displayFormats: {
-                  quarter: 'MMM D',
+                  day: 'MMM D',
                 },
+                tooltipFormat: 'MMM D',
               },
             },
           ],
         },
       }
     )
+  },
+  methods: {
+    dateEquals(date1, date2) {
+      return (
+        date1.getDate() === date2.getDate() &&
+        date1.getMonth() === date2.getMonth() &&
+        date1.getFullYear() === date2.getFullYear()
+      )
+    },
+    mapCount(labels, values) {
+      return labels.map((date1) => {
+        for (let i = 0; i < values.length; i++) {
+          const date2 = new Date(values[i].date)
+          if (this.dateEquals(date1, date2)) {
+            return values[i].count
+          }
+        }
+        return 0
+      })
+    },
   },
 }
 </script>

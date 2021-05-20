@@ -1,5 +1,3 @@
-// import Vue from 'vue'
-
 /**
  * This directive can by used to enable vertical drag and drop sorting of an array of
  * items. When the dragging starts, it simply shows a target position and will call a

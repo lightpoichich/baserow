@@ -1,0 +1,601 @@
+{
+    "baserow_template_version": 1,
+    "name": "Agile development",
+    "icon": "file-code",
+    "keywords": ["project", "agile", "scrum", "management", "tracker", "tasks", "clients", "sprint"],
+    "categories": ["Project Management", "Software Development"],
+    "export": [
+        {
+            "id": 7,
+            "name": "Sprint board",
+            "order": 1,
+            "type": "database",
+            "tables": [
+                {
+                    "id": 20,
+                    "name": "Sprint board",
+                    "order": 1,
+                    "fields": [
+                        {
+                            "id": 118,
+                            "type": "text",
+                            "name": "Task name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 119,
+                            "type": "long_text",
+                            "name": "Notes",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 121,
+                            "type": "url",
+                            "name": "Branch/Repo",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 128,
+                            "type": "link_row",
+                            "name": "Assignee",
+                            "order": 3,
+                            "primary": false,
+                            "link_row_table_id": 21,
+                            "link_row_related_field_id": 129
+                        },
+                        {
+                            "id": 130,
+                            "type": "link_row",
+                            "name": "Customer",
+                            "order": 4,
+                            "primary": false,
+                            "link_row_table_id": 22,
+                            "link_row_related_field_id": 131
+                        },
+                        {
+                            "id": 133,
+                            "type": "single_select",
+                            "name": "Status",
+                            "order": 5,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 62,
+                                    "value": "To do",
+                                    "color": "dark-orange",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 63,
+                                    "value": "Doing",
+                                    "color": "dark-red",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 64,
+                                    "value": "In review",
+                                    "color": "dark-blue",
+                                    "order": 2
+                                },
+                                {
+                                    "id": 65,
+                                    "value": "Done",
+                                    "color": "dark-green",
+                                    "order": 3
+                                }
+                            ]
+                        },
+                        {
+                            "id": 134,
+                            "type": "date",
+                            "name": "Deadline",
+                            "order": 6,
+                            "primary": false,
+                            "date_format": "EU",
+                            "date_include_time": false,
+                            "date_time_format": "24"
+                        },
+                        {
+                            "id": 135,
+                            "type": "single_select",
+                            "name": "Type",
+                            "order": 7,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 66,
+                                    "value": "Frontend",
+                                    "color": "dark-gray",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 67,
+                                    "value": "Backend",
+                                    "color": "orange",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 170,
+                                    "value": "Miscellaneous",
+                                    "color": "dark-orange",
+                                    "order": 2
+                                },
+                                {
+                                    "id": 171,
+                                    "value": "DevOps",
+                                    "color": "dark-red",
+                                    "order": 3
+                                },
+                                {
+                                    "id": 172,
+                                    "value": "Product",
+                                    "color": "light-blue",
+                                    "order": 4
+                                }
+                            ]
+                        },
+                        {
+                            "id": 282,
+                            "type": "single_select",
+                            "name": "Sprint state",
+                            "order": 8,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 173,
+                                    "value": "Backlog",
+                                    "color": "dark-orange",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 174,
+                                    "value": "Sprint",
+                                    "color": "light-green",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 176,
+                                    "value": "Old sprint",
+                                    "color": "dark-red",
+                                    "order": 2
+                                }
+                            ]
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 30,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "field_options": [
+                                {
+                                    "id": 205,
+                                    "field_id": 118,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 203,
+                                    "field_id": 119,
+                                    "width": 400,
+                                    "hidden": false,
+                                    "order": 0
+                                },
+                                {
+                                    "id": 209,
+                                    "field_id": 121,
+                                    "width": 251,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 215,
+                                    "field_id": 128,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 216,
+                                    "field_id": 130,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 218,
+                                    "field_id": 133,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 219,
+                                    "field_id": 134,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 220,
+                                    "field_id": 135,
+                                    "width": 143,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 469,
+                                    "field_id": 282,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_118": "Update README.md",
+                            "field_119": "Write a meaningful description for this project",
+                            "field_121": "https://aremoterepo.org/branch/1",
+                            "field_128": [
+                                1
+                            ],
+                            "field_130": [
+                                1
+                            ],
+                            "field_133": 62,
+                            "field_134": "2021-09-23",
+                            "field_135": 66,
+                            "field_282": 173
+                        },
+                        {
+                            "id": 4,
+                            "order": "1.99999999999999999999",
+                            "field_118": "Add API endpoint for headless dev",
+                            "field_119": "Add API endpoint in order to ensure that developers can read and change templates with local scripts",
+                            "field_121": "https://aremoterepo.org/branch/2",
+                            "field_128": [
+                                1
+                            ],
+                            "field_130": [
+                                1
+                            ],
+                            "field_133": 65,
+                            "field_134": "2021-05-22",
+                            "field_135": 67,
+                            "field_282": 176
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_118": "Add CI",
+                            "field_119": "Set a continuous deployment to deploy the project automatically",
+                            "field_121": "https://anotherrepo.org/branch/34",
+                            "field_128": [
+                                2
+                            ],
+                            "field_130": [
+                                2,
+                                3
+                            ],
+                            "field_133": 63,
+                            "field_134": "2022-01-28",
+                            "field_135": 67,
+                            "field_282": 174
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_118": "Welcome page",
+                            "field_119": "Create a main page for the project",
+                            "field_121": "https://anotherrepo.org/branch/35",
+                            "field_128": [
+                                1,
+                                2
+                            ],
+                            "field_130": [
+                                2,
+                                3
+                            ],
+                            "field_133": 65,
+                            "field_134": "2022-02-15",
+                            "field_135": 66,
+                            "field_282": 176
+                        },
+                        {
+                            "id": 5,
+                            "order": "4.00000000000000000000",
+                            "field_118": "Minimal tests",
+                            "field_119": "Setup basic framework for tests : dependencies, folders, completing README.md etc.",
+                            "field_121": "https://anotherrepo.org/branch/23",
+                            "field_128": [
+                                3
+                            ],
+                            "field_130": [
+                                4
+                            ],
+                            "field_133": 62,
+                            "field_134": "2021-06-30",
+                            "field_135": 170,
+                            "field_282": 173
+                        },
+                        {
+                            "id": 6,
+                            "order": "5.00000000000000000000",
+                            "field_118": "Decidim deployment",
+                            "field_119": "Write howto to deploy Decidim on an Heroku platform :\n- set secrets\n- set NGINX\n- set Let's Encrypt",
+                            "field_121": "https://github.com/decidim/decidim",
+                            "field_128": [
+                                3
+                            ],
+                            "field_130": [
+                                4
+                            ],
+                            "field_133": 64,
+                            "field_134": "2021-05-13",
+                            "field_135": 171,
+                            "field_282": 174
+                        },
+                        {
+                            "id": 7,
+                            "order": "6.00000000000000000000",
+                            "field_118": "User review",
+                            "field_119": "Sum up new features for release",
+                            "field_121": "https://baserow.io",
+                            "field_128": [
+                                4
+                            ],
+                            "field_130": [
+                                1
+                            ],
+                            "field_133": 63,
+                            "field_134": "2021-09-01",
+                            "field_135": 172,
+                            "field_282": 174
+                        }
+                    ]
+                },
+                {
+                    "id": 21,
+                    "name": "Staff",
+                    "order": 2,
+                    "fields": [
+                        {
+                            "id": 122,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 123,
+                            "type": "email",
+                            "name": "Notes",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 129,
+                            "type": "link_row",
+                            "name": "Sprint board",
+                            "order": 2,
+                            "primary": false,
+                            "link_row_table_id": 20,
+                            "link_row_related_field_id": 128
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 31,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "field_options": [
+                                {
+                                    "id": 208,
+                                    "field_id": 122,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 206,
+                                    "field_id": 123,
+                                    "width": 400,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 214,
+                                    "field_id": 129,
+                                    "width": 275,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_122": "John Doe",
+                            "field_123": "john.doe@example.com",
+                            "field_129": [
+                                1,
+                                3,
+                                4
+                            ]
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_122": "Alice Smith",
+                            "field_123": "alice.smith@example.com",
+                            "field_129": [
+                                2,
+                                3
+                            ]
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_122": "Bob McCain",
+                            "field_123": "bob.woodward@example.com",
+                            "field_129": [
+                                5,
+                                6
+                            ]
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "field_122": "Sophia Klein",
+                            "field_123": "sophia.klein@example.com",
+                            "field_129": [
+                                7
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 22,
+                    "name": "Customers",
+                    "order": 3,
+                    "fields": [
+                        {
+                            "id": 125,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 131,
+                            "type": "link_row",
+                            "name": "Sprint board",
+                            "order": 1,
+                            "primary": false,
+                            "link_row_table_id": 20,
+                            "link_row_related_field_id": 130
+                        },
+                        {
+                            "id": 132,
+                            "type": "url",
+                            "name": "Website",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 283,
+                            "type": "phone_number",
+                            "name": "Contact",
+                            "order": 3,
+                            "primary": false
+                        },
+                        {
+                            "id": 284,
+                            "type": "email",
+                            "name": "Email",
+                            "order": 4,
+                            "primary": false
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 32,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "field_options": [
+                                {
+                                    "id": 212,
+                                    "field_id": 125,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 213,
+                                    "field_id": 131,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 217,
+                                    "field_id": 132,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_125": "Baserow",
+                            "field_131": [
+                                1,
+                                4,
+                                7
+                            ],
+                            "field_132": "https://baserow.io",
+                            "field_283": "+33 1 23 45 67 89",
+                            "field_284": "bram@baserow.io"
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_125": "Libre Office",
+                            "field_131": [
+                                2,
+                                3
+                            ],
+                            "field_132": "https://libre-office.org",
+                            "field_283": "+42 3 34 56 78 90",
+                            "field_284": ""
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "field_125": "Decidim",
+                            "field_131": [
+                                5,
+                                6
+                            ],
+                            "field_132": "https://decidim.org",
+                            "field_283": "+01 2 34 56 78 90",
+                            "field_284": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

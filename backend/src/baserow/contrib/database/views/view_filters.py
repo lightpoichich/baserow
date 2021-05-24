@@ -231,9 +231,9 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
     compatible_field_types = [DateFieldType.type]
     query_for = ["year", "month", "day"]
 
-    def get_filter(self, field_name, _, model_field):
-        utc = timezone("UTC")
-        now = datetime.now(utc)
+    def get_filter(self, field_name, value, model_field, field):
+        timezone_object = timezone(value or "UTC")
+        now = datetime.utcnow().astimezone(timezone_object)
         query_dict = dict()
         if "year" in self.query_for:
             query_dict[f"{field_name}__year"] = now.year

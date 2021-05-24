@@ -17,7 +17,11 @@ export default {
     const labels = []
     const day = 24 * 60 * 60 * 1000
     for (let i = 0; i < 30; i++) {
-      labels.unshift(new Date(new Date().getTime() - day * i))
+      const time = new Date().getTime() - day * i
+      const date = new Date(time)
+      labels.unshift(
+        new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      )
     }
 
     const newUserData = this.mapCount(labels, this.newUsers)

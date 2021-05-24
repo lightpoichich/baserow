@@ -6,7 +6,7 @@
   border: 1px solid $color-neutral-200;
   background-color: $white;
   border-radius: 6px;
-  padding: 20px 30px;
+  padding: 30px;
   height: 100%;
 }
 
@@ -16,7 +16,13 @@
 }
 
 .admin-dashboard__numbers {
-  margin: 33px 0;
+  &:not(:first-child) {
+    margin-top: 33px;
+  }
+
+  &:not(:last-child) {
+    margin-bottom: 33px;
+  }
 }
 
 .admin-dashboard__numbers-name {

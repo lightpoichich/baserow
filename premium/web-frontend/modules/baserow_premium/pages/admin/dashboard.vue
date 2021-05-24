@@ -20,9 +20,7 @@
               <div class="admin-dashboard__numbers-value">
                 {{ total_groups }}
               </div>
-              <div class="admin-dashboard__numbers-percentage">
-                <a href="#">view all</a>
-              </div>
+              <div class="admin-dashboard__numbers-percentage"></div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">

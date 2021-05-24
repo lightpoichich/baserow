@@ -1229,12 +1229,12 @@ def test_date_day_month_year_filter_type(data_fixture):
             f"field_{date_field.id}": date(2021, 1, 2),
         }
     )
-    row_4 = model.objects.create(
+    model.objects.create(
         **{
             f"field_{date_field.id}": None,
         }
     )
-    row_5 = model.objects.create(
+    model.objects.create(
         **{
             f"field_{date_field.id}": date(2010, 1, 1),
         }

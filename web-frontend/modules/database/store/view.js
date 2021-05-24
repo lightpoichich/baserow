@@ -1,5 +1,4 @@
-import _ from 'lodash'
-
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import { uuid } from '@baserow/modules/core/utils/string'
 import ViewService from '@baserow/modules/database/services/view'
 import FilterService from '@baserow/modules/database/services/filter'
@@ -54,7 +53,6 @@ export function populateView(view, registry) {
 export const state = () => ({
   types: {},
   loading: false,
-  loaded: false,
   items: [],
   selected: {},
 })
@@ -72,15 +70,18 @@ export const mutations = {
     }
     view._.loading = value
   },
-  SET_LOADED(state, value) {
-    state.loaded = value
-  },
   ADD_ITEM(state, item) {
     state.items.push(item)
   },
   UPDATE_ITEM(state, { id, values }) {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
+  },
+  ORDER_ITEMS(state, order) {
+    state.items.forEach((view) => {
+      const index = order.findIndex((value) => value === view.id)
+      view.order = index === -1 ? 0 : index + 1
+    })
   },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
@@ -172,7 +173,6 @@ export const actions = {
    */
   async fetchAll({ commit, getters, dispatch, state }, table) {
     commit('SET_LOADING', true)
-    commit('SET_LOADED', false)
     commit('UNSELECT', {})
 
     try {
@@ -186,7 +186,6 @@ export const actions = {
       })
       commit('SET_ITEMS', data)
       commit('SET_LOADING', false)
-      commit('SET_LOADED', true)
     } catch (error) {
       commit('SET_ITEMS', [])
       commit('SET_LOADING', false)
@@ -245,6 +244,19 @@ export const actions = {
       commit('SET_ITEM_LOADING', { view, value: false })
     } catch (error) {
       dispatch('forceUpdate', { view, values: oldValues })
+      throw error
+    }
+  },
+  /**
+   * Updates the order of all the views in a table.
+   */
+  async order({ commit, getters }, { table, order, oldOrder }) {
+    commit('ORDER_ITEMS', order)
+
+    try {
+      await ViewService(this.$client).order(table.id, order)
+    } catch (error) {
+      commit('ORDER_ITEMS', oldOrder)
       throw error
     }
   },
@@ -321,7 +333,7 @@ export const actions = {
   selectById({ dispatch, getters }, id) {
     const view = getters.get(id)
     if (view === undefined) {
-      return new Error(`View with id ${id} is not found.`)
+      throw new StoreItemLookupError(`View with id ${id} is not found.`)
     }
     return dispatch('select', view)
   },
@@ -352,7 +364,7 @@ export const actions = {
       values.type = compatibleType.type
     }
 
-    const filter = _.assign({}, values)
+    const filter = Object.assign({}, values)
     populateFilter(filter)
     filter.id = uuid()
     filter._.loading = true
@@ -377,7 +389,7 @@ export const actions = {
    * Forcefully create a new view filterwithout making a request to the backend.
    */
   forceCreateFilter({ commit }, { view, values }) {
-    const filter = _.assign({}, values)
+    const filter = Object.assign({}, values)
     populateFilter(filter)
     commit('ADD_FILTER', { view, filter })
   },
@@ -460,7 +472,7 @@ export const actions = {
       values.order = 'ASC'
     }
 
-    const sort = _.assign({}, values)
+    const sort = Object.assign({}, values)
     populateSort(sort)
     sort.id = uuid()
     sort._.loading = true
@@ -481,7 +493,7 @@ export const actions = {
    * Forcefully create a new  view sorting without making a request to the backend.
    */
   forceCreateSort({ commit }, { view, values }) {
-    const sort = _.assign({}, values)
+    const sort = Object.assign({}, values)
     populateSort(sort)
     commit('ADD_SORT', { view, sort })
   },
@@ -593,9 +605,6 @@ export const getters = {
   },
   getSelectedId(state) {
     return state.selected.id || 0
-  },
-  isLoaded(state) {
-    return state.loaded
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)

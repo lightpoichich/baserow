@@ -5,8 +5,15 @@
     class="modal__wrapper"
     @click="outside($event)"
   >
-    <div class="modal__box" :class="{ 'modal__box--with-sidebar': sidebar }">
-      <a class="modal__close" @click="hide()">
+    <div
+      class="modal__box"
+      :class="{
+        'modal__box--with-sidebar': sidebar,
+        'modal__box--full-screen': fullScreen,
+        'modal__box--small': small,
+      }"
+    >
+      <a v-if="closeButton" class="modal__close" @click="hide()">
         <i class="fas fa-times"></i>
       </a>
       <template v-if="sidebar">
@@ -34,6 +41,21 @@ export default {
     sidebar: {
       type: Boolean,
       default: false,
+      required: false,
+    },
+    fullScreen: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    small: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    closeButton: {
+      type: Boolean,
+      default: true,
       required: false,
     },
   },

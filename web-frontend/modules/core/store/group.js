@@ -1,3 +1,4 @@
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import GroupService from '@baserow/modules/core/services/group'
 import {
   setGroupCookie,
@@ -44,6 +45,12 @@ export const mutations = {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
+  ORDER_ITEMS(state, order) {
+    state.items.forEach((group) => {
+      const index = order.findIndex((value) => value === group.id)
+      group.order = index === -1 ? 0 : index + 1
+    })
+  },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
@@ -68,9 +75,9 @@ export const actions = {
    * If not already loading or loaded it will trigger the fetchAll action which
    * will load all the groups for the user.
    */
-  loadAll({ state, dispatch }) {
+  async loadAll({ state, dispatch }) {
     if (!state.loaded && !state.loading) {
-      dispatch('fetchAll')
+      await dispatch('fetchAll')
     }
   },
   /**
@@ -110,6 +117,7 @@ export const actions = {
   async create({ commit, dispatch }, values) {
     const { data } = await GroupService(this.$client).create(values)
     dispatch('forceCreate', data)
+    return data
   },
   /**
    * Forcefully create an item in the store without making a call to the server.
@@ -134,6 +142,19 @@ export const actions = {
    */
   forceUpdate({ commit }, { group, values }) {
     commit('UPDATE_ITEM', { id: group.id, values })
+  },
+  /**
+   * Updates the order of the groups for the current user.
+   */
+  async order({ commit, getters }, { order, oldOrder }) {
+    commit('ORDER_ITEMS', order)
+
+    try {
+      await GroupService(this.$client).order(order)
+    } catch (error) {
+      commit('ORDER_ITEMS', oldOrder)
+      throw error
+    }
   },
   /**
    * Deletes an existing group with the provided id.
@@ -184,7 +205,7 @@ export const actions = {
   selectById({ dispatch, getters }, id) {
     const group = getters.get(id)
     if (group === undefined) {
-      throw new Error(`Group with id ${id} is not found.`)
+      throw new StoreItemLookupError(`Group with id ${id} is not found.`)
     }
     return dispatch('select', group)
   },
@@ -207,6 +228,9 @@ export const getters = {
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
+  },
+  getAll(state) {
+    return state.items
   },
   hasSelected(state) {
     return Object.prototype.hasOwnProperty.call(state.selected, 'id')

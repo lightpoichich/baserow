@@ -7,11 +7,13 @@ export class RealTimeHandler {
     this.connected = false
     this.reconnect = false
     this.reconnectTimeout = null
-    this.events = {}
     this.attempts = 0
+    this.events = {}
     this.page = null
     this.pageParameters = {}
     this.subscribedToPage = true
+    this.lastToken = null
+    this.authenticationSuccess = true
     this.registerCoreEvents()
   }
 
@@ -23,6 +25,26 @@ export class RealTimeHandler {
     this.reconnect = reconnect
 
     const token = this.context.store.getters['auth/token']
+
+    // If the user is already connected to the web socket, we don't have to do
+    // anything.
+    if (this.connected) {
+      return
+    }
+
+    // Stop connecting if we have already tried more than 10 times, if we do not have
+    // an authentication token or if the server has already responded with a failed
+    // authentication error and the token has not changed.
+    if (
+      this.attempts > 10 ||
+      token === null ||
+      (!this.authenticationSuccess && token === this.lastToken)
+    ) {
+      this.context.store.dispatch('notification/setFailedConnecting', true)
+      return
+    }
+
+    this.lastToken = token
 
     // The web socket url is the same as the PUBLIC_BACKEND_URL apart from the
     // protocol.
@@ -75,21 +97,29 @@ export class RealTimeHandler {
       // By default the user not subscribed to a page a.k.a `null`, so if the current
       // page is already null we can mark it as subscribed.
       this.subscribedToPage = this.page === null
-
-      // Automatically reconnect if the socket closes.
-      if (this.reconnect) {
-        this.attempts++
-        this.context.store.dispatch('notification/setConnecting', true)
-
-        this.reconnectTimeout = setTimeout(
-          () => {
-            this.connect(true)
-          },
-          // After the first try, we want to try again every 5 seconds.
-          this.attempts > 0 ? 5000 : 0
-        )
-      }
+      this.delayedReconnect()
     }
+  }
+
+  /**
+   * If reconnecting is enabled then a timeout is created that will try to connect
+   * to the backend one more time.
+   */
+  delayedReconnect() {
+    if (!this.reconnect) {
+      return
+    }
+
+    this.attempts++
+    this.context.store.dispatch('notification/setConnecting', true)
+
+    this.reconnectTimeout = setTimeout(
+      () => {
+        this.connect(true)
+      },
+      // After the first try, we want to try again every 5 seconds.
+      this.attempts > 1 ? 5000 : 0
+    )
   }
 
   /**
@@ -127,16 +157,16 @@ export class RealTimeHandler {
    * navigating to another page that doesn't require updates.
    */
   disconnect() {
-    if (!this.connected) {
-      return
+    if (this.connected) {
+      this.socket.close()
     }
 
     this.context.store.dispatch('notification/setConnecting', false)
+    this.context.store.dispatch('notification/setFailedConnecting', false)
     clearTimeout(this.reconnectTimeout)
     this.reconnect = false
     this.attempts = 0
     this.connected = false
-    this.socket.close()
   }
 
   /**
@@ -156,6 +186,10 @@ export class RealTimeHandler {
     // because we already know about the change.
     this.registerEvent('authentication', ({ store }, data) => {
       store.dispatch('auth/setWebSocketId', data.web_socket_id)
+
+      // Store if the authentication was successful in order to prevent retries that
+      // will fail.
+      this.authenticationSuccess = data.success
     })
 
     this.registerEvent('group_created', ({ store }, data) => {
@@ -194,6 +228,13 @@ export class RealTimeHandler {
       const application = store.getters['application/get'](data.application_id)
       if (application !== undefined) {
         store.dispatch('application/forceDelete', application)
+      }
+    })
+
+    this.registerEvent('applications_reordered', ({ store }, data) => {
+      const group = store.getters['group/get'](data.group_id)
+      if (group !== undefined) {
+        store.commit('application/ORDER_ITEMS', { group, order: data.order })
       }
     })
   }

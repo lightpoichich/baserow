@@ -6,11 +6,12 @@ underlying architecture of both the backend and the web-frontend.
 
 ## Running linters and tests
 
-If you have the [development environment](./development-environment.md) up and running.
+If you have the [development environment](./development-environment.md) up and running
 you can easily run the linters. Both the backend and the web-frontend have `make` files
 to help.
 
-* `make lint` (backend): all the python code will be checked with flake8.
+* `make format` (backend): auto format all python code using black.
+* `make lint` (backend): all the python code will be checked with flake8 and black.
 * `make eslint` (web-frontend): all the javascript code will be checked with eslint.
 * `make stylelint` (web-frontend): all the scss code will be checked with stylelint.
 
@@ -31,7 +32,7 @@ one of these jobs fails.
 
 The pipeline also has a build job. During this job
 [plugin boilerplate](../plugins/boilerplate.md) Baserow will be installed as a 
-dependency. This job will make sure that that still works.
+dependency to ensure that this still works.
 
 ### Run the GitLab runners locally
 
@@ -39,7 +40,7 @@ If you want to check if your job would succeed before pushing your branch then y
 also run them locally. Make sure that you have installed the GitLab runner by following
 the steps on https://docs.gitlab.com/runner/install/. After that you should be able to
 run the `gitlab-runner --help` command in your terminal. The jobs can be executed by 
-running the following commands below.
+running the commands below.
 
 > Make sure that you are in the root of the Baserow repository and that all changes 
 > have been committed because the runner checks out the current branch.

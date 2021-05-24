@@ -1,22 +1,24 @@
 import re
-from decimal import Decimal, DecimalException
 
 from django.db import models
 from django.db.models import Q
 
-from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
 from baserow.contrib.database.fields.exceptions import (
-    OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
+    OrderByFieldNotFound,
+    OrderByFieldNotPossible,
+    FilterFieldNotFound,
 )
-from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.contrib.database.fields.field_filters import (
+    FilterBuilder,
+    FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
+)
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.views.models import FILTER_TYPE_AND, FILTER_TYPE_OR
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
+from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
 
-
-deconstruct_filter_key_regex = re.compile(
-    r'filter__field_([0-9]+)__([a-zA-Z0-9_]*)$'
-)
+deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
 
 
 class TableModelQuerySet(models.QuerySet):
@@ -32,18 +34,17 @@ class TableModelQuerySet(models.QuerySet):
         """
 
         for field_object in self.model._field_objects.values():
-            self = field_object['type'].enhance_queryset(
-                self,
-                field_object['field'],
-                field_object['name']
+            self = field_object["type"].enhance_queryset(
+                self, field_object["field"], field_object["name"]
             )
         return self
 
     def search_all_fields(self, search):
         """
-        Searches very broad in all supported fields with the given search query. If the
-        primary key value matches then that result would be returned and if a char/text
-        field contains the search query then that result would be returned.
+        Performs a very broad search across all supported fields with the given search
+        query. If the primary key value matches then that result will be returned
+        otherwise all field types other than link row and boolean fields are currently
+        searched.
 
         :param search: The search query.
         :type search: str
@@ -51,39 +52,19 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        search_queries = models.Q()
-        excluded = ('order', 'created_on', 'updated_on')
+        filter_builder = FilterBuilder(filter_type=FILTER_TYPE_OR).filter(
+            Q(id__contains=search)
+        )
+        for field_object in self.model._field_objects.values():
+            field_name = field_object["name"]
+            model_field = self.model._meta.get_field(field_name)
 
-        for field in self.model._meta.get_fields():
-            if field.name in excluded:
-                continue
+            sub_filter = field_object["type"].contains_query(
+                field_name, search, model_field, field_object["field"]
+            )
+            filter_builder.filter(sub_filter)
 
-            if (
-                isinstance(field, models.CharField) or
-                isinstance(field, models.TextField)
-            ):
-                search_queries = search_queries | models.Q(**{
-                    f'{field.name}__icontains': search
-                })
-            elif (
-                isinstance(field, models.AutoField) or
-                isinstance(field, models.IntegerField)
-            ):
-                try:
-                    search_queries = search_queries | models.Q(**{
-                        f'{field.name}': int(search)
-                    })
-                except ValueError:
-                    pass
-            elif isinstance(field, models.DecimalField):
-                try:
-                    search_queries = search_queries | models.Q(**{
-                        f'{field.name}': Decimal(search)
-                    })
-                except (ValueError, DecimalException):
-                    pass
-
-        return self.filter(search_queries) if len(search_queries) > 0 else self
+        return filter_builder.apply_to_queryset(self)
 
     def order_by_fields_string(self, order_string):
         """
@@ -104,35 +85,32 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        order_by = order_string.split(',')
+        order_by = order_string.split(",")
 
         if len(order_by) == 0:
-            raise ValueError('At least one field must be provided.')
+            raise ValueError("At least one field must be provided.")
 
         for index, order in enumerate(order_by):
             field_id = int(re.sub("[^0-9]", "", str(order)))
 
             if field_id not in self.model._field_objects:
-                raise OrderByFieldNotFound(order, f'Field {field_id} does not exist.')
+                raise OrderByFieldNotFound(order, f"Field {field_id} does not exist.")
 
             field_object = self.model._field_objects[field_id]
-            field_type = field_object['type']
-            field_name = field_object['name']
+            field_type = field_object["type"]
+            field_name = field_object["name"]
 
-            if not field_object['type'].can_order_by:
+            if not field_object["type"].can_order_by:
                 raise OrderByFieldNotPossible(
                     field_name,
                     field_type.type,
-                    f'It is not possible to order by field type {field_type.type}.',
+                    f"It is not possible to order by field type {field_type.type}.",
                 )
 
-            order_by[index] = '{}{}'.format(
-                '-' if order[:1] == '-' else '',
-                field_name
-            )
+            order_by[index] = "{}{}".format("-" if order[:1] == "-" else "", field_name)
 
-        order_by.append('order')
-        order_by.append('id')
+        order_by.append("order")
+        order_by.append("id")
         return self.order_by(*order_by)
 
     def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
@@ -163,9 +141,9 @@ class TableModelQuerySet(models.QuerySet):
         """
 
         if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
-            raise ValueError(f'Unknown filter type {filter_type}.')
+            raise ValueError(f"Unknown filter type {filter_type}.")
 
-        q_filters = Q()
+        filter_builder = FilterBuilder(filter_type=filter_type)
 
         for key, values in filter_object.items():
             matches = deconstruct_filter_key_regex.match(key)
@@ -176,12 +154,11 @@ class TableModelQuerySet(models.QuerySet):
             field_id = int(matches[1])
 
             if field_id not in self.model._field_objects:
-                raise FilterFieldNotFound(
-                    field_id, f'Field {field_id} does not exist.'
-                )
+                raise FilterFieldNotFound(field_id, f"Field {field_id} does not exist.")
 
-            field_name = self.model._field_objects[field_id]['name']
-            field_type = self.model._field_objects[field_id]['type'].type
+            field_object = self.model._field_objects[field_id]
+            field_name = field_object["name"]
+            field_type = field_object["type"].type
             model_field = self.model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(matches[2])
 
@@ -195,20 +172,13 @@ class TableModelQuerySet(models.QuerySet):
                 values = [values]
 
             for value in values:
-                q_filter = view_filter_type.get_filter(
-                    field_name,
-                    value,
-                    model_field
+                filter_builder.filter(
+                    view_filter_type.get_filter(
+                        field_name, value, model_field, field_object["field"]
+                    )
                 )
 
-                # Depending on filter type we are going to combine the Q either as
-                # AND or as OR.
-                if filter_type == FILTER_TYPE_AND:
-                    q_filters &= q_filter
-                elif filter_type == FILTER_TYPE_OR:
-                    q_filters |= q_filter
-
-        return self.filter(q_filters)
+        return filter_builder.apply_to_queryset(self)
 
 
 class TableModelManager(models.Manager):
@@ -217,20 +187,21 @@ class TableModelManager(models.Manager):
 
 
 class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
-    database = models.ForeignKey('database.Database', on_delete=models.CASCADE)
+    database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
 
     class Meta:
-        ordering = ('order',)
+        ordering = ("order",)
 
     @classmethod
     def get_last_order(cls, database):
         queryset = Table.objects.filter(database=database)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
-    def get_model(self, fields=None, field_ids=None, attribute_names=False,
-                  manytomany_models=None):
+    def get_model(
+        self, fields=None, field_ids=None, attribute_names=False, manytomany_models=None
+    ):
         """
         Generates a temporary Django model based on available fields that belong to
         this table. Note that the model will not be registered with the apps because
@@ -260,29 +231,38 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         if not manytomany_models:
             manytomany_models = {}
 
-        app_label = 'database_table'
-        meta = type('Meta', (), {
-            'managed': False,
-            'db_table': f'database_table_{self.id}',
-            'app_label': app_label,
-            'ordering': ['order', 'id']
-        })
+        app_label = "database_table"
+        meta = type(
+            "Meta",
+            (),
+            {
+                "managed": False,
+                "db_table": f"database_table_{self.id}",
+                "app_label": app_label,
+                "ordering": ["order", "id"],
+            },
+        )
 
         attrs = {
-            'Meta': meta,
-            '__module__': 'database.models',
+            "Meta": meta,
+            "__module__": "database.models",
             # An indication that the model is a generated table model.
-            '_generated_table_model': True,
-            '_table_id': self.id,
+            "_generated_table_model": True,
+            "_table_id": self.id,
             # An object containing the table fields, field types and the chosen names
             # with the table field id as key.
-            '_field_objects': {},
+            "_field_objects": {},
             # We are using our own table model manager to implement some queryset
             # helpers.
-            'objects': TableModelManager(),
+            "objects": TableModelManager(),
             # Indicates which position the row has.
-            'order': models.DecimalField(max_digits=40, decimal_places=20,
-                                         editable=False, db_index=True, default=1)
+            "order": models.DecimalField(
+                max_digits=40,
+                decimal_places=20,
+                editable=False,
+                db_index=True,
+                default=1,
+            ),
         }
 
         # Construct a query to fetch all the fields of that table.
@@ -318,17 +298,17 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
                 # entry that is a duplicate.
                 if field_name in attrs:
                     duplicate_field_names.append(field_name)
-                    replaced_field_name = f'{field_name}_{attrs[field_name].db_column}'
+                    replaced_field_name = f"{field_name}_{attrs[field_name].db_column}"
                     attrs[replaced_field_name] = attrs.pop(field_name)
                 if field_name in duplicate_field_names:
-                    field_name = f'{field_name}_{field.db_column}'
+                    field_name = f"{field_name}_{field.db_column}"
 
             # Add the generated objects and information to the dict that optionally can
             # be returned.
-            attrs['_field_objects'][field.id] = {
-                'field': field,
-                'type': field_type,
-                'name': field_name
+            attrs["_field_objects"][field.id] = {
+                "field": field,
+                "type": field_type,
+                "name": field_name,
             }
 
             # Add the field to the attribute dict that is used to generate the model.
@@ -340,9 +320,12 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
 
         # Create the model class.
         model = type(
-            str(f'Table{self.pk}Model'),
-            (CreatedAndUpdatedOnMixin, models.Model,),
-            attrs
+            str(f"Table{self.pk}Model"),
+            (
+                CreatedAndUpdatedOnMixin,
+                models.Model,
+            ),
+            attrs,
         )
 
         # In some situations the field can only be added once the model class has been
@@ -350,12 +333,9 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         # the generated model as argument in order to do this. This is for example used
         # by the link row field. It can also be used to make other changes to the
         # class.
-        for field_id, field_object in attrs['_field_objects'].items():
-            field_object['type'].after_model_generation(
-                field_object['field'],
-                model,
-                field_object['name'],
-                manytomany_models
+        for field_id, field_object in attrs["_field_objects"].items():
+            field_object["type"].after_model_generation(
+                field_object["field"], model, field_object["name"], manytomany_models
             )
 
         return model

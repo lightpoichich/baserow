@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label"> Choose CSV file </label>
+      <label class="control__label">Choose CSV file</label>
       <div class="control__description">
         You can import an existing CSV by uploading the .CSV file with tabular
         data. Most spreadsheet applications will allow you to export your
@@ -31,19 +31,9 @@
       </div>
     </div>
     <div v-if="filename !== ''" class="row">
-      <div class="col col-6">
+      <div class="col col-4">
         <div class="control">
-          <label class="control__label"> First row is header </label>
-          <div class="control__elements">
-            <Checkbox v-model="values.firstRowHeader" @input="reload()"
-              >yes</Checkbox
-            >
-          </div>
-        </div>
-      </div>
-      <div class="col col-6">
-        <div class="control">
-          <label class="control__label"> Column separator </label>
+          <label class="control__label">Column separator</label>
           <div class="control__elements">
             <Dropdown v-model="columnSeparator" @input="reload()">
               <DropdownItem name="auto detect" value="auto"></DropdownItem>
@@ -63,8 +53,34 @@
           </div>
         </div>
       </div>
+      <div class="col col-8">
+        <div class="control">
+          <label class="control__label">Encoding</label>
+          <div class="control__elements">
+            <CharsetDropdown
+              v-model="encoding"
+              @input="reload()"
+            ></CharsetDropdown>
+          </div>
+        </div>
+      </div>
     </div>
-    <div v-if="error !== ''" class="alert alert--error alert--has-icon">
+    <div v-if="filename !== ''" class="row">
+      <div class="col col-6">
+        <div class="control">
+          <label class="control__label">First row is header</label>
+          <div class="control__elements">
+            <Checkbox v-model="values.firstRowHeader" @input="reload()"
+              >yes</Checkbox
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="error !== ''"
+      class="alert alert--error alert--has-icon margin-top-1"
+    >
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
       </div>
@@ -85,12 +101,13 @@ import Papa from 'papaparse'
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import CharsetDropdown from '@baserow/modules/core/components/helpers/CharsetDropdown'
 import importer from '@baserow/modules/database/mixins/importer'
 import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
 
 export default {
   name: 'TableCSVImporter',
-  components: { TableImporterPreview },
+  components: { TableImporterPreview, CharsetDropdown },
   mixins: [form, importer],
   data() {
     return {
@@ -100,6 +117,7 @@ export default {
       },
       filename: '',
       columnSeparator: 'auto',
+      encoding: 'utf-8',
       error: '',
       rawData: null,
       preview: {},
@@ -140,7 +158,7 @@ export default {
           this.rawData = event.target.result
           this.reload()
         })
-        reader.readAsBinaryString(event.target.files[0])
+        reader.readAsArrayBuffer(event.target.files[0])
       }
     },
     /**
@@ -150,17 +168,18 @@ export default {
      * when the CSV doesn't have any entries the appropriate error will be shown.
      */
     reload() {
+      const decoder = new TextDecoder(this.encoding)
+      const decodedData = decoder.decode(this.rawData)
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
-      const count = this.rawData.split(/\r\n|\r|\n/).length
+      const count = decodedData.split(/\r\n|\r|\n/).length
       if (limit !== null && count > limit) {
         this.values.data = ''
         this.error = `It is not possible to import more than ${limit} rows.`
         this.preview = {}
-        this.$emit('input', this.value)
         return
       }
 
-      Papa.parse(this.rawData, {
+      Papa.parse(decodedData, {
         delimiter: this.columnSeparator === 'auto' ? '' : this.columnSeparator,
         complete: (data) => {
           if (data.data.length === 0) {
@@ -180,8 +199,6 @@ export default {
               this.values.firstRowHeader
             )
           }
-
-          this.$emit('input', this.value)
         },
         error(error) {
           // Papa parse has resulted in an error which we need to display to the user.
@@ -189,7 +206,6 @@ export default {
           this.values.data = ''
           this.error = error.errors[0].message
           this.preview = {}
-          this.$emit('input', this.value)
         },
       })
     },

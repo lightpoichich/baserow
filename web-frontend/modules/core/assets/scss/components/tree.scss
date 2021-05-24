@@ -1,10 +1,12 @@
 .tree {
+  position: relative;
   list-style: none;
   padding: 0;
   margin: 0 0 12px;
 
   .tree__item & {
     padding-left: 8px;
+    margin-top: 6px;
   }
 }
 
@@ -35,15 +37,20 @@
 .tree__action {
   @extend %tree__size;
 
-  padding: 0 32px 0 6px;
+  padding: 0 6px;
   border-radius: 3px;
 
-  &:hover {
+  &:not(.tree__action--disabled):hover {
     background-color: $color-neutral-100;
   }
 
   .tree__item.active &:hover {
     background-color: transparent;
+  }
+
+  &.tree__action--has-options,
+  &.tree__action--has-right-icon {
+    padding-right: 32px;
   }
 }
 
@@ -51,23 +58,35 @@
   @extend %tree__size;
   @extend %ellipsis;
 
-  display: block;
   color: $color-primary-900;
   font-size: 14px;
+  display: block;
 
   &:hover {
     text-decoration: none;
   }
+
+  &.tree__link--group {
+    font-weight: 600;
+  }
+
+  .tree__action--disabled &:hover {
+    cursor: inherit;
+  }
 }
 
-.tree__type {
+.tree__icon {
   @extend %tree__size;
 
   text-align: center;
   width: $fa-fw-width;
-  color: $color-neutral-300;
+  color: $color-neutral-700;
   margin-right: 4px;
   font-size: 11px;
+
+  &.tree__icon--type {
+    color: $color-neutral-300;
+  }
 }
 
 %tree_sub-size {
@@ -76,6 +95,7 @@
 }
 
 .tree__subs {
+  position: relative;
   list-style: none;
   padding: 0 0 2px 0;
   margin: 0;
@@ -119,6 +139,7 @@
   display: block;
 
   &:hover {
+    cursor: pointer;
     text-decoration: none;
     color: $color-primary-500;
   }
@@ -141,7 +162,7 @@
   }
 }
 
-.tree__options {
+.tree__right-icon {
   display: none;
   position: absolute;
   z-index: 1;
@@ -149,13 +170,9 @@
   top: 0;
   text-align: center;
   width: 32px;
-  color: $color-neutral-300;
+  color: $color-neutral-700;
   height: inherit;
   line-height: inherit;
-
-  &:hover {
-    color: $color-neutral-700;
-  }
 
   :hover > & {
     display: block;
@@ -163,5 +180,15 @@
 
   .tree__item--loading > .tree__action > & {
     display: none;
+  }
+}
+
+.tree__options {
+  @extend .tree__right-icon;
+
+  color: $color-neutral-300;
+
+  &:hover {
+    color: $color-neutral-700;
   }
 }

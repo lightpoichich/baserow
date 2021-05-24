@@ -28,6 +28,7 @@
 }
 
 .select__items {
+  position: relative;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -142,7 +143,7 @@
     color: $color-neutral-700;
   }
 
-  :not(.select__item--loading):hover > & {
+  :not(.select__item--loading):not(.select__item--no-options):hover > & {
     display: block;
   }
 }

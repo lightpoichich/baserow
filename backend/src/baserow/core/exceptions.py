@@ -1,12 +1,20 @@
-class UserNotInGroupError(Exception):
+class IsNotAdminError(Exception):
+    """
+    Raised when the user tries to perform an action that is not allowed because he
+    does not have admin permissions.
+    """
+
+
+class UserNotInGroup(Exception):
     """Raised when the user doesn't have access to the related group."""
 
     def __init__(self, user=None, group=None, *args, **kwargs):
         if user and group:
-            super().__init__(f'User {user} doesn\'t belong to group {group}.', *args,
-                             **kwargs)
+            super().__init__(
+                f"User {user} doesn't belong to group {group}.", *args, **kwargs
+            )
         else:
-            super().__init__('The user doesn\'t belong to the group', *args, **kwargs)
+            super().__init__("The user doesn't belong to the group", *args, **kwargs)
 
 
 class UserInvalidGroupPermissionsError(Exception):
@@ -17,10 +25,10 @@ class UserInvalidGroupPermissionsError(Exception):
         self.group = group
         self.permissions = permissions
         super().__init__(
-            f'The user {user} doesn\'t have the right permissions {permissions} to '
-            f'{group}.',
+            f"The user {user} doesn't have the right permissions {permissions} to "
+            f"{group}.",
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -41,6 +49,18 @@ class GroupUserAlreadyExists(Exception):
 
 class ApplicationDoesNotExist(Exception):
     """Raised when trying to get an application that does not exist."""
+
+
+class ApplicationNotInGroup(Exception):
+    """Raised when a provided application does not belong to a group."""
+
+    def __init__(self, application_id=None, *args, **kwargs):
+        self.application_id = application_id
+        super().__init__(
+            f"The application {application_id} does not belong to the group.",
+            *args,
+            **kwargs,
+        )
 
 
 class InstanceTypeAlreadyRegistered(Exception):
@@ -83,4 +103,17 @@ class GroupInvitationDoesNotExist(Exception):
 class GroupInvitationEmailMismatch(Exception):
     """
     Raised when the group invitation email is not the expected email address.
+    """
+
+
+class TemplateDoesNotExist(Exception):
+    """
+    Raised when the requested template does not exist in the database.
+    """
+
+
+class TemplateFileDoesNotExist(Exception):
+    """
+    Raised when the JSON template file does not exist in the
+    APPLICATION_TEMPLATE_DIRS directory.
     """

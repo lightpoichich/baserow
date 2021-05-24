@@ -2,12 +2,87 @@
 
 ## Unreleased
 
+* Fixed bug where the grid view would fail hard if a cell is selected and the component
+  is destroyed.
+* Made it possible to import a JSON file when creating a table.
+* Made it possible to order the views by drag and drop.
+* Made it possible to order the groups by drag and drop.
+* Made it possible to order the applications by drag and drop.
+* Made it possible to order the tables by drag and drop.
+* Added today, this month and this year filter.
+
+## Released (2021-05-11)
+
+* Added configurable field limit.
+* Fixed memory leak in the `link_row` field.
+* Switch to using a celery based email backend by default.
+* Added `--add-columns` flag to the `fill_table` management command. It creates all the
+  field types before filling the table with random data.
+* Reworked Baserow's Docker setup to be easier to use, faster to build and more secure.
+* Make the view header more compact when the content doesn't fit anymore.
+* Allow providing a `template_id` when registering a new account, which will install
+  that template instead of the default database.
+* Made it possible to drag and drop rows in the desired order.
+* Fixed bug where the rows could get out of sync during real time collaboration.
+* Made it possible to export and import the file field including contents.
+* Added `fill_users` admin management command which fills baserow with fake users.
+* Made it possible to drag and drop the views in the desired order.
+* **Premium**: Added user admin area allowing management of all baserow users.
+
+## Released (2021-04-08)
+
+* Added support for importing tables from XML files.
+* Added support for different character encodings when importing CSV files.
+* Prevent websocket reconnect loop when the authentication fails.
+* Refactored the GridView component and improved interface speed.
+* Prevent websocket reconnect when the connection closes without error.
+* Added gunicorn worker test to the CI pipeline.
+* Made it possible to re-order fields in a grid view.
+* Show the number of filters and sorts active in the header of a grid view.
+* The first user to sign-up after installation now gets given staff status.
+* Rename the "includes" get parameter across all API endpoints to "include" to be 
+  consistent.
+* Add missing include query parameter and corresponding response attributes to API docs. 
+* Remove incorrectly included "filters_disabled" field from 
+  list_database_table_grid_view_rows api endpoint.
+* Show an error to the user when the web socket connection could not be made and the
+  reconnect loop stops.
+* Fixed 100X backend web socket errors when refreshing the page.
+* Fixed SSRF bug in the file upload by URL by blocking urls to the private network.
+* Fixed bug where an invalid date could be converted to 0001-01-01.
+* The list_database_table_rows search query parameter now searches all possible field
+  types.
+* Add Phone Number field.
+* Add support for Date, Number and Single Select fields to the Contains and Not Contains
+  view 
+  filters.
+* Searching all rows can now be done by clicking the new search icon in the top right.
+
+## Released (2021-03-01)
+
+* Redesigned the left sidebar.
+* Fixed error when a very long user file name is provided when uploading.
 * Upgraded DRF Spectacular dependency to the latest version.
 * Added single select field form option validation.
 * Changed all cookies to SameSite=lax.
 * Fixed the "Ignored attempt to cancel a touchmove" error.
 * Refactored the has_user everywhere such that the raise_error argument is used when
   possible.
+* Added Baserow Cloudron app.
+* Fixed bug where a single select field without options could not be converted to a
+  another field.
+* Fixed bug where the Editable component was not working if a prent a user-select:
+  none; property.
+* Fail hard when the web-frontend can't reach the backend because of a network error.
+* Use UTC time in the date picker.
+* Refactored handler get_* methods so that they never check for permissions.
+* Made it possible to configure SMTP settings via environment variables.
+* Added field name to the public REST API docs.
+* Made the public REST API docs compatible with smaller screens.
+* Made it possible for the admin to disable new signups.
+* Reduced the amount of queries when using the link row field.
+* Respect the date format when converting to a date field.
+* Added a field type filename contains filter.
 
 ## Released (2021-02-04)
 

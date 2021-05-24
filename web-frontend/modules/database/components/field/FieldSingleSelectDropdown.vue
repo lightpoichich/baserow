@@ -1,18 +1,25 @@
 <template>
   <div
     class="dropdown"
-    :class="{ 'dropdown--floating': !showInput }"
+    :class="{
+      'dropdown--floating': !showInput,
+      'dropdown--disabled': disabled,
+    }"
     @contextmenu.stop
   >
-    <a v-if="showInput" class="dropdown__selected" @click="show()">
+    <a
+      v-if="showInput"
+      class="field-single-select__dropdown-selected dropdown__selected"
+      @click="show()"
+    >
       <div
         v-if="hasValue()"
-        class="field-single-select__dropdown-option field-single-select__dropdown-option--align-32"
+        class="field-single-select__dropdown-option"
         :class="'background-color--' + selectedColor"
       >
         {{ selectedName }}
       </div>
-      <i class="dropdown__toggle-icon fas fa-caret-down"></i>
+      <i v-if="!disabled" class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">
       <div v-if="showSearch" class="select__search">

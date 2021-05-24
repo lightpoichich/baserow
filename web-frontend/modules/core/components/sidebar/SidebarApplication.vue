@@ -6,10 +6,10 @@
       'tree__item--loading': application._.loading,
     }"
   >
-    <div class="tree__action">
-      <a class="tree__link" @click="selectApplication(application)">
+    <div class="tree__action tree__action--has-options" data-sortable-handle>
+      <a class="tree__link" @click="$emit('selected', application)">
         <i
-          class="tree__type fas"
+          class="tree__icon tree__icon--type fas"
           :class="'fa-' + application._.type.iconClass"
         ></i>
         <Editable
@@ -22,16 +22,14 @@
         ref="contextLink"
         class="tree__options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+        @mousedown.stop
       >
         <i class="fas fa-ellipsis-v"></i>
       </a>
       <Context ref="context">
         <div class="context__menu-title">{{ application.name }}</div>
         <ul class="context__menu">
-          <component
-            :is="contextComponent"
-            :application="application"
-          ></component>
+          <slot name="context"></slot>
           <li>
             <a @click="enableRename()">
               <i class="context__menu-icon fas fa-fw fa-pen"></i>
@@ -51,16 +49,7 @@
         />
       </Context>
     </div>
-    <template
-      v-if="
-        application._.selected && application._.type.hasSelectedSidebarComponent
-      "
-    >
-      <component
-        :is="selectedApplicationComponent"
-        :application="application"
-      ></component>
-    </template>
+    <slot name="body"></slot>
   </li>
 </template>
 
@@ -75,18 +64,6 @@ export default {
     application: {
       type: Object,
       required: true,
-    },
-  },
-  computed: {
-    selectedApplicationComponent() {
-      return this.$registry
-        .get('application', this.application.type)
-        .getSelectedSidebarComponent()
-    },
-    contextComponent() {
-      return this.$registry
-        .get('application', this.application.type)
-        .getContextComponent()
     },
   },
   methods: {
@@ -116,37 +93,6 @@ export default {
       }
 
       this.setLoading(application, false)
-    },
-    async selectApplication(application) {
-      // If there is no route associated with the application we just change the
-      // selected state.
-      if (application._.type.routeName === null) {
-        try {
-          await this.$store.dispatch('application/select', application)
-        } catch (error) {
-          notifyIf(error, 'group')
-        }
-        return
-      }
-
-      // If we do have a route, this the related component with that route has to do
-      // the state change.
-      this.setLoading(application, true)
-
-      this.$nuxt.$router.push(
-        {
-          name: application._.type.routeName,
-          params: {
-            id: application.id,
-          },
-        },
-        () => {
-          this.setLoading(application, false)
-        },
-        () => {
-          this.setLoading(application, false)
-        }
-      )
     },
     deleteApplication() {
       this.$refs.context.hide()

@@ -6,24 +6,27 @@ from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
 from baserow.contrib.database.fields.field_types import (
-    LongTextFieldType, BooleanFieldType
+    LongTextFieldType,
+    BooleanFieldType,
 )
 
 from .models import Table
 from .exceptions import (
-    TableDoesNotExist, InvalidInitialTableData, InitialTableDataLimitExceeded
+    TableDoesNotExist,
+    TableNotInDatabase,
+    InvalidInitialTableData,
+    InitialTableDataLimitExceeded,
 )
-from .signals import table_created, table_updated, table_deleted
+from .signals import table_created, table_updated, table_deleted, tables_reordered
 
 
 class TableHandler:
-    def get_table(self, user, table_id, base_queryset=None):
+    def get_table(self, table_id, base_queryset=None):
         """
         Selects a table with a given id from the database.
 
-        :param user: The user on whose behalf the table is requested.
-        :type user: User
         :param table_id: The identifier of the table that must be returned.
         :type table_id: int
         :param base_queryset: The base queryset from where to select the table
@@ -38,17 +41,21 @@ class TableHandler:
             base_queryset = Table.objects
 
         try:
-            table = base_queryset.select_related('database__group').get(id=table_id)
+            table = base_queryset.select_related("database__group").get(id=table_id)
         except Table.DoesNotExist:
-            raise TableDoesNotExist(f'The table with id {table_id} doe not exist.')
-
-        group = table.database.group
-        group.has_user(user, raise_error=True)
+            raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 
         return table
 
-    def create_table(self, user, database, fill_example=False, data=None,
-                     first_row_header=True, **kwargs):
+    def create_table(
+        self,
+        user,
+        database,
+        fill_example=False,
+        data=None,
+        first_row_header=True,
+        **kwargs,
+    ):
         """
         Creates a new table and a primary text field.
 
@@ -68,6 +75,8 @@ class TableHandler:
         :type first_row_header: bool
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
+        :raises MaxFieldLimitExceeded: When the data contains more columns
+            than the field limit.
         :return: The created table instance.
         :rtype: Table
         """
@@ -76,11 +85,16 @@ class TableHandler:
 
         if data is not None:
             fields, data = self.normalize_initial_table_data(data, first_row_header)
+            if len(fields) > settings.MAX_FIELD_LIMIT:
+                raise MaxFieldLimitExceeded(
+                    f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
+                )
 
-        table_values = extract_allowed(kwargs, ['name'])
+        table_values = extract_allowed(kwargs, ["name"])
         last_order = Table.get_last_order(database)
-        table = Table.objects.create(database=database, order=last_order,
-                                     **table_values)
+        table = Table.objects.create(
+            database=database, order=last_order, **table_values
+        )
 
         if data is not None:
             # If the initial data has been provided we will create those fields before
@@ -88,16 +102,13 @@ class TableHandler:
             # away.
             for index, name in enumerate(fields):
                 fields[index] = TextField.objects.create(
-                    table=table,
-                    order=index,
-                    primary=index == 0,
-                    name=name
+                    table=table, order=index, primary=index == 0, name=name
                 )
 
         else:
             # If no initial data is provided we want to create a primary text field for
             # the table.
-            TextField.objects.create(table=table, order=0, primary=True, name='Name')
+            TextField.objects.create(table=table, order=0, primary=True, name="Name")
 
         # Create the table schema in the database database.
         connection = connections[settings.USER_TABLE_DATABASE]
@@ -130,28 +141,28 @@ class TableHandler:
         """
 
         if len(data) == 0:
-            raise InvalidInitialTableData('At least one row should be provided.')
+            raise InvalidInitialTableData("At least one row should be provided.")
 
         limit = settings.INITIAL_TABLE_DATA_LIMIT
         if limit and len(data) > limit:
             raise InitialTableDataLimitExceeded(
-                f'It is not possible to import more than '
-                f'{settings.INITIAL_TABLE_DATA_LIMIT} rows when creating a table.'
+                f"It is not possible to import more than "
+                f"{settings.INITIAL_TABLE_DATA_LIMIT} rows when creating a table."
             )
 
         largest_column_count = len(max(data, key=len))
 
         if largest_column_count == 0:
-            raise InvalidInitialTableData('At least one column should be provided.')
+            raise InvalidInitialTableData("At least one column should be provided.")
 
         fields = data.pop(0) if first_row_header else []
 
         for i in range(len(fields), largest_column_count):
-            fields.append(f'Field {i + 1}')
+            fields.append(f"Field {i + 1}")
 
         for row in data:
             for i in range(len(row), largest_column_count):
-                row.append('')
+                row.append("")
 
         return fields, data
 
@@ -174,13 +185,16 @@ class TableHandler:
         :type model: TableModel
         """
 
-        ViewHandler().create_view(user, table, GridViewType.type, name='Grid')
+        ViewHandler().create_view(user, table, GridViewType.type, name="Grid")
 
         bulk_data = [
-            model(order=index + 1, **{
-                f'field_{fields[index].id}': str(value)
-                for index, value in enumerate(row)
-            })
+            model(
+                order=index + 1,
+                **{
+                    f"field_{fields[index].id}": str(value)
+                    for index, value in enumerate(row)
+                },
+            )
             for index, row in enumerate(data)
         ]
         model.objects.bulk_create(bulk_data)
@@ -188,7 +202,7 @@ class TableHandler:
     def fill_example_table_data(self, user, table):
         """
         Fills the table with some initial example data. A new table is expected that
-        already has the a primary field named 'name'.
+        already has the primary field named 'name'.
 
         :param user: The user on whose behalf the table is filled.
         :type: user: User
@@ -199,23 +213,23 @@ class TableHandler:
         view_handler = ViewHandler()
         field_handler = FieldHandler()
 
-        view = view_handler.create_view(user, table, GridViewType.type, name='Grid')
-        notes = field_handler.create_field(user, table, LongTextFieldType.type,
-                                           name='Notes')
-        active = field_handler.create_field(user, table, BooleanFieldType.type,
-                                            name='Active')
+        view = view_handler.create_view(user, table, GridViewType.type, name="Grid")
+        notes = field_handler.create_field(
+            user, table, LongTextFieldType.type, name="Notes"
+        )
+        active = field_handler.create_field(
+            user, table, BooleanFieldType.type, name="Active"
+        )
 
-        field_options = {
-            notes.id: {'width': 400},
-            active.id: {'width': 100}
-        }
+        field_options = {notes.id: {"width": 400}, active.id: {"width": 100}}
         fields = [notes, active]
-        view_handler.update_grid_view_field_options(user, view, field_options,
-                                                    fields=fields)
+        view_handler.update_grid_view_field_options(
+            user, view, field_options, fields=fields
+        )
 
         model = table.get_model(attribute_names=True)
-        model.objects.create(name='Tesla', active=True, order=1)
-        model.objects.create(name='Amazon', active=False, order=2)
+        model.objects.create(name="Tesla", active=True, order=1)
+        model.objects.create(name="Amazon", active=False, order=2)
 
     def update_table(self, user, table, **kwargs):
         """
@@ -233,20 +247,49 @@ class TableHandler:
         """
 
         if not isinstance(table, Table):
-            raise ValueError('The table is not an instance of Table')
+            raise ValueError("The table is not an instance of Table")
 
         table.database.group.has_user(user, raise_error=True)
 
-        table = set_allowed_attrs(kwargs, ['name'], table)
+        table = set_allowed_attrs(kwargs, ["name"], table)
         table.save()
 
         table_updated.send(self, table=table, user=user)
 
         return table
 
+    def order_tables(self, user, database, order):
+        """
+        Updates the order of the tables in the given database. The order of the views
+        that are not in the `order` parameter set set to `0`.
+
+        :param user: The user on whose behalf the tables are ordered.
+        :type user: User
+        :param database: The database of which the views must be updated.
+        :type database: Database
+        :param order: A list containing the table ids in the desired order.
+        :type order: list
+        :raises TableNotInDatabase: If one of the table ids in the order does not belong
+            to the database.
+        """
+
+        group = database.group
+        group.has_user(user, raise_error=True)
+
+        queryset = Table.objects.filter(database_id=database.id)
+        table_ids = [table["id"] for table in queryset.values("id")]
+
+        for table_id in order:
+            if table_id not in table_ids:
+                raise TableNotInDatabase(table_id)
+
+        Table.order_objects(queryset, order)
+        tables_reordered.send(self, database=database, order=order, user=user)
+
     def delete_table(self, user, table):
         """
-        Deletes an existing table instance.
+        Deletes an existing table instance if the user has access to the related group.
+        The table deleted signals are also fired.
 
         :param user: The user on whose behalf the table is deleted.
         :type user: User
@@ -256,17 +299,21 @@ class TableHandler:
         """
 
         if not isinstance(table, Table):
-            raise ValueError('The table is not an instance of Table')
+            raise ValueError("The table is not an instance of Table")
 
         table.database.group.has_user(user, raise_error=True)
         table_id = table.id
 
-        # Delete the table schema from the database.
+        self._delete_table(table)
+
+        table_deleted.send(self, table_id=table_id, table=table, user=user)
+
+    def _delete_table(self, table):
+        """Deletes the table schema and instance."""
+
         connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             model = table.get_model()
             schema_editor.delete_model(model)
 
         table.delete()
-
-        table_deleted.send(self, table_id=table_id, table=table, user=user)

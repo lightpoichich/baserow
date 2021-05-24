@@ -1,7 +1,8 @@
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import ApplicationService from '@baserow/modules/core/services/application'
 import { clone } from '@baserow/modules/core/utils/object'
 
-function populateApplication(application, registry) {
+export function populateApplication(application, registry) {
   const type = registry.get('application', application.type)
 
   application._ = {
@@ -38,6 +39,14 @@ export const mutations = {
   UPDATE_ITEM(state, { id, values }) {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
+  },
+  ORDER_ITEMS(state, { group, order }) {
+    state.items
+      .filter((item) => item.group.id === group.id)
+      .forEach((item) => {
+        const index = order.findIndex((value) => value === item.id)
+        item.order = index === -1 ? 0 : index + 1
+      })
   },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
@@ -124,7 +133,9 @@ export const actions = {
     }
 
     if (!this.$registry.exists('application', type)) {
-      throw new Error(`An application type with type "${type}" doesn't exist.`)
+      throw new StoreItemLookupError(
+        `An application type with type "${type}" doesn't exist.`
+      )
     }
 
     const postData = clone(values)
@@ -169,6 +180,20 @@ export const actions = {
     commit('UPDATE_ITEM', { id: application.id, values: data })
   },
   /**
+   * Updates the order of all the applications in a group.
+   */
+  async order({ commit, getters }, { group, order, oldOrder }) {
+    commit('ORDER_ITEMS', { group, order })
+
+    try {
+      await ApplicationService(this.$client).order(group.id, order)
+    } catch (error) {
+      commit('ORDER_ITEMS', { group, order: oldOrder })
+      throw error
+    }
+  },
+
+  /**
    * Deletes an existing application.
    */
   async delete({ commit, dispatch, getters }, application) {
@@ -204,7 +229,7 @@ export const actions = {
   selectById({ dispatch, getters }, id) {
     const application = getters.get(id)
     if (application === undefined) {
-      throw new Error(`Application with id ${id} is not found.`)
+      throw new StoreItemLookupError(`Application with id ${id} is not found.`)
     }
     return dispatch('select', application)
   },

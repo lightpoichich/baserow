@@ -1,18 +1,19 @@
 {
   "name": "baserow",
-  "version": "0.8.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "Baserow: open source online database web frontend.",
+  "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
   "license": "MIT",
   "scripts": {
     "build": "nuxt build",
+    "build-local": "nuxt build --config-file ./config/nuxt.config.local.js",
     "dev": "nuxt --hostname 0.0.0.0",
     "start": "nuxt start --hostname 0.0.0.0",
-    "demo": "nuxt start --hostname 0.0.0.0 --config-file config/nuxt.config.demo.js",
     "eslint": "eslint --ext .js,.vue .",
     "stylelint": "stylelint **/*.scss --syntax scss",
-    "jest": "jest -i --verbose false test/"
+    "jest": "jest -i --verbose false",
+    "jest-all": "jest -i --verbose false test/"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.0",
@@ -29,6 +30,7 @@
     "nuxt": "^2.14.12",
     "nuxt-env": "^0.1.0",
     "papaparse": "^5.3.0",
+    "resize-observer-polyfill": "^1.5.1",
     "sass-loader": "^10.1.1",
     "thenby": "^1.3.4",
     "vuejs-datepicker": "^1.6.2",
@@ -53,6 +55,7 @@
     "eslint-plugin-promise": ">=4.0.1",
     "eslint-plugin-standard": ">=4.0.0",
     "eslint-plugin-vue": "^7.5.0",
+    "flush-promises": "^1.0.2",
     "jest": "^26.6.3",
     "jsdom": "^16.2.2",
     "jsdom-global": "^3.0.2",

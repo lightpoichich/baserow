@@ -11,6 +11,7 @@ import {
   DateFieldType,
   FileFieldType,
   SingleSelectFieldType,
+  PhoneNumberFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -18,6 +19,7 @@ import {
   DateEqualViewFilterType,
   DateNotEqualViewFilterType,
   ContainsViewFilterType,
+  FilenameContainsViewFilterType,
   ContainsNotViewFilterType,
   HigherThanViewFilterType,
   LowerThanViewFilterType,
@@ -33,6 +35,8 @@ import {
 import {
   CSVImporterType,
   PasteImporterType,
+  XMLImporterType,
+  JSONImporterType,
 } from '@baserow/modules/database/importerTypes'
 import { APITokenSettingsType } from '@baserow/modules/database/settingsTypes'
 
@@ -47,7 +51,8 @@ export default ({ store, app }) => {
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
   store.registerModule('field', fieldStore)
-  store.registerModule('view/grid', gridStore)
+  store.registerModule('page/view/grid', gridStore)
+  store.registerModule('template/view/grid', gridStore)
 
   app.$registry.register('application', new DatabaseApplicationType())
   app.$registry.register('view', new GridViewType())
@@ -65,6 +70,7 @@ export default ({ store, app }) => {
     new DateEqualsCurrentYearViewFilterType()
   )
   app.$registry.register('viewFilter', new ContainsViewFilterType())
+  app.$registry.register('viewFilter', new FilenameContainsViewFilterType())
   app.$registry.register('viewFilter', new ContainsNotViewFilterType())
   app.$registry.register('viewFilter', new HigherThanViewFilterType())
   app.$registry.register('viewFilter', new LowerThanViewFilterType())
@@ -83,8 +89,11 @@ export default ({ store, app }) => {
   app.$registry.register('field', new EmailFieldType())
   app.$registry.register('field', new FileFieldType())
   app.$registry.register('field', new SingleSelectFieldType())
+  app.$registry.register('field', new PhoneNumberFieldType())
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
+  app.$registry.register('importer', new XMLImporterType())
+  app.$registry.register('importer', new JSONImporterType())
   app.$registry.register('settings', new APITokenSettingsType())
 
   registerRealtimeEvents(app.$realtime)

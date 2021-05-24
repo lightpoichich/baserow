@@ -1,10 +1,23 @@
 from baserow.core.exceptions import (
-    InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
+    InstanceTypeDoesNotExist,
+    InstanceTypeAlreadyRegistered,
 )
 
 
 class ViewDoesNotExist(Exception):
     """Raised when trying to get a view that doesn't exist."""
+
+
+class ViewNotInTable(Exception):
+    """Raised when a provided view does not belong to a table."""
+
+    def __init__(self, view_id=None, *args, **kwargs):
+        self.view_id = view_id
+        super().__init__(
+            f"The view {view_id} does not belong to the table.",
+            *args,
+            **kwargs,
+        )
 
 
 class UnrelatedFieldError(Exception):
@@ -37,10 +50,10 @@ class ViewFilterTypeNotAllowedForField(Exception):
         self.filter_type = filter_type
         self.field_type = field_type
         super().__init__(
-            f'The view filter type {filter_type} is not compatible with field type '
-            f'{field_type}.',
+            f"The view filter type {filter_type} is not compatible with field type "
+            f"{field_type}.",
             *args,
-            **kwargs
+            **kwargs,
         )
 
 

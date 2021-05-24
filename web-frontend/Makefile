@@ -9,7 +9,12 @@ stylelint:
 
 lint: eslint stylelint
 
+lint-javascript: lint
+
 jest:
-	yarn run jest || exit;
+	yarn run jest-all || exit;
 
 test: jest
+
+unit-test-watch:
+	yarn run jest test/unit --watch || exit;

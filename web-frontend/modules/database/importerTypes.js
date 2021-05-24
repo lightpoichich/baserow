@@ -2,6 +2,8 @@ import { Registerable } from '@baserow/modules/core/registry'
 
 import TableCSVImporter from '@baserow/modules/database/components/table/TableCSVImporter'
 import TablePasteImporter from '@baserow/modules/database/components/table/TablePasteImporter'
+import TableXMLImporter from '@baserow/modules/database/components/table/TableXMLImporter'
+import TableJSONImporter from '@baserow/modules/database/components/table/TableJSONImporter'
 
 export class ImporterType extends Registerable {
   /**
@@ -82,5 +84,41 @@ export class PasteImporterType extends ImporterType {
 
   getFormComponent() {
     return TablePasteImporter
+  }
+}
+
+export class XMLImporterType extends ImporterType {
+  getType() {
+    return 'xml'
+  }
+
+  getIconClass() {
+    return 'file-code'
+  }
+
+  getName() {
+    return 'Import an XML file'
+  }
+
+  getFormComponent() {
+    return TableXMLImporter
+  }
+}
+
+export class JSONImporterType extends ImporterType {
+  getType() {
+    return 'json'
+  }
+
+  getIconClass() {
+    return 'file-code'
+  }
+
+  getName() {
+    return 'Import a JSON file'
+  }
+
+  getFormComponent() {
+    return TableJSONImporter
   }
 }

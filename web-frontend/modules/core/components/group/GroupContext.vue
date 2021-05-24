@@ -1,5 +1,6 @@
 <template>
   <Context ref="context">
+    <div class="context__menu-title">{{ group.name }} ({{ group.id }})</div>
     <ul class="context__menu">
       <li>
         <a @click="$emit('rename')">
@@ -8,7 +9,7 @@
         </a>
       </li>
       <li>
-        <a @click="$refs.groupMembersModal.show()">
+        <a @click=";[$refs.groupMembersModal.show(), hide()]">
           <i class="context__menu-icon fas fa-fw fa-users"></i>
           Members
         </a>

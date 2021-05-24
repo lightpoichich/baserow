@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { lowerCaseFirst } from '@baserow/modules/core/utils/string'
+import { upperCaseFirst } from '@baserow/modules/core/utils/string'
 
 export class ResponseErrorMessage {
   constructor(title, message) {
@@ -24,7 +24,7 @@ class ErrorHandler {
         "The action couldn't be completed because you aren't a " +
           'member of the related group.'
       ),
-      ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR: new ResponseErrorMessage(
+      ERROR_USER_INVALID_GROUP_PERMISSIONS: new ResponseErrorMessage(
         'Action not allowed.',
         "The action couldn't be completed because you don't have the right " +
           'permissions to the related group.'
@@ -51,6 +51,22 @@ class ErrorHandler {
       ERROR_FILE_URL_COULD_NOT_BE_REACHED: new ResponseErrorMessage(
         'Invalid URL',
         'The provided file URL could not be reached.'
+      ),
+      ERROR_INVALID_FILE_URL: new ResponseErrorMessage(
+        'Invalid URL',
+        'The provided file URL is invalid or not allowed.'
+      ),
+      USER_ADMIN_CANNOT_DEACTIVATE_SELF: new ResponseErrorMessage(
+        'Action not allowed.',
+        'You cannot de-activate or un-staff yourself.'
+      ),
+      USER_ADMIN_CANNOT_DELETE_SELF: new ResponseErrorMessage(
+        'Action not allowed.',
+        'You cannot delete yourself.'
+      ),
+      ERROR_MAX_FIELD_COUNT_EXCEEDED: new ResponseErrorMessage(
+        "Couldn't create field.",
+        "The action couldn't be completed because the field count exceeds the limit"
       ),
     }
 
@@ -82,6 +98,15 @@ class ErrorHandler {
    */
   isNotFound() {
     return this.response !== undefined && this.response.status === 404
+  }
+
+  /**
+   * Returns true if the response status code is equal to not found (429) which
+   * means that the user is sending too much requests to the server.
+   * @return {boolean}
+   */
+  isTooManyRequests() {
+    return this.response !== undefined && this.response.status === 429
   }
 
   /**
@@ -120,7 +145,7 @@ class ErrorHandler {
   getNotFoundMessage(name) {
     if (!Object.prototype.hasOwnProperty.call(this.notFoundMap, name)) {
       return new ResponseErrorMessage(
-        `${lowerCaseFirst(name)} not found.`,
+        `${upperCaseFirst(name)} not found.`,
         `The selected ${name.toLowerCase()} wasn't found, maybe it has already been deleted.`
       )
     }
@@ -139,10 +164,24 @@ class ErrorHandler {
   }
 
   /**
+   * Returns a standard network error message. For example if the API server
+   * could not be reached.
+   */
+  getTooManyRequestsError() {
+    return new ResponseErrorMessage(
+      'Too many requests',
+      'You are sending too many requests to the server. Please wait a moment.'
+    )
+  }
+
+  /**
    * If there is an error or the requested detail is not found an error
    * message related to the problem is returned.
    */
   getMessage(name = null, specificErrorMap = null) {
+    if (this.isTooManyRequests()) {
+      return this.getTooManyRequestsError()
+    }
     if (this.hasNetworkError()) {
       return this.getNetworkErrorMessage()
     }

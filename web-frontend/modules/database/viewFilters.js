@@ -80,7 +80,7 @@ export class ViewFilterType extends Registerable {
    * alternative solution where we keep the real time check and we don't have
    * to wait for the server in order to tell us if the value matches.
    */
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     throw new Error('The matches method must be implemented for every filter.')
   }
 }
@@ -99,10 +99,10 @@ export class EqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number']
+    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -127,10 +127,10 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number']
+    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -138,6 +138,28 @@ export class NotEqualViewFilterType extends ViewFilterType {
     rowValue = rowValue.toString().toLowerCase().trim()
     filterValue = filterValue.toString().toLowerCase().trim()
     return filterValue === '' || rowValue !== filterValue
+  }
+}
+
+export class FilenameContainsViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'filename_contains'
+  }
+
+  getName() {
+    return 'filename contains'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeText
+  }
+
+  getCompatibleFieldTypes() {
+    return ['file']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return fieldType.containsFilter(rowValue, filterValue, field)
   }
 }
 
@@ -155,13 +177,20 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'phone_number',
+      'date',
+      'single_select',
+      'number',
+    ]
   }
 
-  matches(rowValue, filterValue) {
-    rowValue = rowValue.toString().toLowerCase().trim()
-    filterValue = filterValue.toString().toLowerCase().trim()
-    return filterValue === '' || rowValue.includes(filterValue)
+  matches(rowValue, filterValue, field, fieldType) {
+    return fieldType.containsFilter(rowValue, filterValue, field)
   }
 }
 
@@ -179,13 +208,20 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'phone_number',
+      'date',
+      'single_select',
+      'number',
+    ]
   }
 
-  matches(rowValue, filterValue) {
-    rowValue = rowValue.toString().toLowerCase().trim()
-    filterValue = filterValue.toString().toLowerCase().trim()
-    return filterValue === '' || !rowValue.includes(filterValue)
+  matches(rowValue, filterValue, field, fieldType) {
+    return fieldType.notContainsFilter(rowValue, filterValue, field)
   }
 }
 
@@ -210,7 +246,7 @@ export class DateEqualViewFilterType extends ViewFilterType {
     return ['date']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -243,7 +279,7 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
     return ['date']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -330,7 +366,7 @@ export class HigherThanViewFilterType extends ViewFilterType {
     return ['number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (filterValue === '') {
       return true
     }
@@ -362,7 +398,7 @@ export class LowerThanViewFilterType extends ViewFilterType {
     return ['number']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     if (filterValue === '') {
       return true
     }
@@ -394,7 +430,7 @@ export class SingleSelectEqualViewFilterType extends ViewFilterType {
     return ['single_select']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return (
       filterValue === '' ||
       (rowValue !== null && rowValue.id === parseInt(filterValue))
@@ -423,7 +459,7 @@ export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
     return ['single_select']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return (
       filterValue === '' ||
       rowValue === null ||
@@ -453,7 +489,7 @@ export class BooleanViewFilterType extends ViewFilterType {
     return ['boolean']
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     filterValue = trueString.includes(
       filterValue.toString().toLowerCase().trim()
     )
@@ -491,13 +527,14 @@ export class EmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'phone_number',
     ]
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return (
       rowValue === null ||
-      rowValue === [] ||
+      (Array.isArray(rowValue) && rowValue.length === 0) ||
       rowValue === false ||
       rowValue.toString().trim() === ''
     )
@@ -533,13 +570,14 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'phone_number',
     ]
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field, fieldType) {
     return !(
       rowValue === null ||
-      rowValue === [] ||
+      (Array.isArray(rowValue) && rowValue.length === 0) ||
       rowValue === false ||
       rowValue.toString().trim() === ''
     )

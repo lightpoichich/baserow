@@ -1,5 +1,3 @@
-import _ from 'lodash'
-
 import FieldService from '@baserow/modules/database/services/field'
 import { clone } from '@baserow/modules/core/utils/object'
 
@@ -38,7 +36,7 @@ export const mutations = {
     state.loaded = value
   },
   SET_PRIMARY(state, item) {
-    state.primary = _.assign(state.primary || {}, item)
+    state.primary = Object.assign(state.primary || {}, item)
   },
   ADD_ITEM(state, item) {
     state.items.push(item)
@@ -139,7 +137,7 @@ export const actions = {
     // need to change things in loaded data. For example the grid field will add the
     // field to all of the rows that are in memory.
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldCreated(context, table, data, fieldType)
+      await viewType.fieldCreated(context, table, data, fieldType, 'page/')
     }
   },
   /**
@@ -195,7 +193,7 @@ export const actions = {
     // Call the field updated event on all the registered views because they might
     // need to change things in loaded data. For example the changed rows.
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldUpdated(context, data, oldField, fieldType)
+      await viewType.fieldUpdated(context, data, oldField, fieldType, 'page/')
     }
   },
   /**
@@ -224,10 +222,20 @@ export const actions = {
   /**
    * Remove the field from the items without calling the server.
    */
-  forceDelete({ commit, dispatch }, field) {
+  async forceDelete(context, field) {
+    const { commit, dispatch } = context
+
     // Also delete the related filters if there are any.
     dispatch('view/fieldDeleted', { field }, { root: true })
     commit('DELETE_ITEM', field.id)
+
+    // Call the field delete event on all the registered views because they might
+    // need to change things in loaded data. For example the grid field will remove the
+    // field options of that field.
+    const fieldType = this.$registry.get('field', field.type)
+    for (const viewType of Object.values(this.$registry.getAll('view'))) {
+      await viewType.fieldDeleted(context, field, fieldType, 'page/')
+    }
   },
 }
 

@@ -23,14 +23,24 @@ class AdminDashboardView(APIView):
     @extend_schema(
         tags=["Admin dashboard"],
         operation_id="admin_dashboard",
-        description="@TODO",
+        description="Returns the new and active users of the last 24 hours, 7 days and "
+        "30 days. The `previous_` values are the values of the period before, so for "
+        "example `previous_new_users_last_24_hours` are the new users that signed up "
+        "from 48 to 24 hours ago. It can be used to calculate an increase or decrease "
+        "in the amount of signups. A list of the new and active users for every day "
+        "for the last 30 days is also included.",
         responses={
             200: AdminDashboardSerializer,
         },
     )
     def get(self, request):
         """
-        @TODO
+        Returns the new and active users of the last 24 hours, 7 days and 30 days.
+        The `previous_` values are the values of the period before, so for example
+        `previous_new_users_last_24_hours` are the new users that signed up from 48
+        to 24 hours ago. It can be used to calculate an increase or decrease in the
+        amount of signups. A list of the new and active users for every day for the
+        last 30 days is also included.
         """
 
         handler = AdminDashboardHandler()

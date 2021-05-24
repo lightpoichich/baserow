@@ -7,7 +7,7 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Q, IntegerField, BooleanField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
-from pytz import timezone
+from pytz import timezone, all_timezones
 
 from baserow.contrib.database.fields.field_filters import (
     filename_contains_filter,
@@ -27,6 +27,7 @@ from baserow.contrib.database.fields.field_types import (
     PhoneNumberFieldType,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+
 from .registries import ViewFilterType
 
 
@@ -232,7 +233,8 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
     query_for = ["year", "month", "day"]
 
     def get_filter(self, field_name, value, model_field, field):
-        timezone_object = timezone(value or "UTC")
+        timezone_string = value if value in all_timezones else "UTC"
+        timezone_object = timezone(timezone_string)
         now = datetime.utcnow().astimezone(timezone_object)
         query_dict = dict()
         if "year" in self.query_for:

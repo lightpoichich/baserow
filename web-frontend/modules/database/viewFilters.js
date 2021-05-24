@@ -4,8 +4,10 @@ import ViewFilterTypeNumber from '@baserow/modules/database/components/view/View
 import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
+import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
 import { trueString } from '@baserow/modules/database/utils/constants'
 import moment from 'moment'
+import { tz } from 'moment-timezone'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -52,6 +54,15 @@ export class ViewFilterType extends Registerable {
    */
   getInputComponent() {
     return null
+  }
+
+  /**
+   * Should return the default value when a new filter of this type is created. In
+   * almost all cases this should be an empty string, but with timezone sensitive
+   * filters we might want use the current timezone.
+   */
+  getDefaultValue() {
+    return ''
   }
 
   /**
@@ -303,11 +314,23 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     return 'is today'
   }
 
+  getInputComponent() {
+    return ViewFilterTypeTimeZone
+  }
+
   getCompatibleFieldTypes() {
     return ['date']
   }
 
-  matches(rowValue) {
+  getDefaultValue() {
+    return tz.guess(true)
+  }
+
+  prepareValue() {
+    return tz.guess(true)
+  }
+
+  matches(rowValue, filterValue) {
     if (rowValue === null) {
       rowValue = ''
     }
@@ -315,7 +338,7 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     rowValue = rowValue.toString().toLowerCase().trim()
     rowValue = rowValue.slice(0, this.sliceLength)
     const format = 'YYYY-MM-DD'.slice(0, this.sliceLength)
-    const today = moment.utc().format(format)
+    const today = moment().tz(filterValue).format(format)
 
     return rowValue === today
   }

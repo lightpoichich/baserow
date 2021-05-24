@@ -1291,6 +1291,15 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert len(ids) == 1
         assert row.id not in ids
 
+        filter.value = "NOT_EXISTING_SO_WILL_BE_UTC"
+        filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 1
+        assert row_3.id in ids
+
 
 @pytest.mark.django_db
 def test_date_not_equal_filter_type(data_fixture):

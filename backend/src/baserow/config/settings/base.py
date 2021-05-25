@@ -130,8 +130,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # We need the `AllowAllUsersModelBackend` in order to respond with a proper error
 # message when the user is not active. The only thing it does, is allowing non active
-# users to authenticate, but the user still can't authenticate because the
-# `JSONWebTokenSerializer` does not allow not active users.
+# users to authenticate, but the user still can't obtain or use a JWT token or database
+# token because the user needs to be active to use that.
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.AllowAllUsersModelBackend"]
 
 

@@ -10,7 +10,7 @@
 * Made it possible to order the applications by drag and drop.
 * Made it possible to order the tables by drag and drop.
 * Added today, this month and this year filter.
-* Added an page of external resources to the docs.
+* Added a page containing external resources to the docs.
 
 ## Released (2021-05-11)
 

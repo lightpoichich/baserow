@@ -25,6 +25,7 @@ import scroll from '@baserow/modules/core/directives/scroll'
 import preventParentScroll from '@baserow/modules/core/directives/preventParentScroll'
 import tooltip from '@baserow/modules/core/directives/tooltip'
 import sortable from '@baserow/modules/core/directives/sortable'
+import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScroll'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -46,3 +47,4 @@ Vue.directive('scroll', scroll)
 Vue.directive('preventParentScroll', preventParentScroll)
 Vue.directive('tooltip', tooltip)
 Vue.directive('sortable', sortable)
+Vue.directive('autoOverflowScroll', autoOverflowScroll)

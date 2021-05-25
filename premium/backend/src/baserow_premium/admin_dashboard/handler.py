@@ -2,7 +2,6 @@ from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-
 from baserow.core.models import UserLogEntry
 
 
@@ -134,7 +133,8 @@ class AdminDashboardHandler:
             then the count of the last 14 days is returned.
         :type delta: timedelta
         :param now: If not provided, the current date will be used. This date is used
-            as base for calculating the range which is (now - delta) until now.
+            as base for calculating the range which is (now - delta) until now. The
+            timezone of the object is respected.
         :type now: datetime or None
         :rtype: A list containing a dict for each date including the date and the count.
         :rtype: list
@@ -145,7 +145,10 @@ class AdminDashboardHandler:
 
         return (
             User.objects.filter(date_joined__gt=now - delta, date_joined__lte=now)
-            .extra({"date": "date(date_joined)"})
+            .extra(
+                {"date": "date(date_joined at time zone %s)"},
+                select_params=(str(now.tzinfo),),
+            )
             .order_by("date")
             .values("date")
             .annotate(count=Count("id"))
@@ -163,7 +166,8 @@ class AdminDashboardHandler:
             then the count of the last 14 days is returned.
         :type delta: timedelta
         :param now: If not provided, the current date will be used. This date is used
-            as base for calculating the range which is (now - delta) until now.
+            as base for calculating the range which is (now - delta) until now. The
+            timezone of the object is respected.
         :type now: datetime or None
         :rtype: A list containing a dict for each date including the date and the count.
         :rtype: list
@@ -176,7 +180,10 @@ class AdminDashboardHandler:
             UserLogEntry.objects.filter(
                 action="SIGNED_IN", timestamp__gt=now - delta, timestamp__lte=now
             )
-            .extra({"date": "date(timestamp)"})
+            .extra(
+                {"date": "date(timestamp at time zone %s)"},
+                select_params=(str(now.tzinfo),),
+            )
             .order_by("date")
             .values("date")
             .annotate(count=Count("actor_id", distinct=True))

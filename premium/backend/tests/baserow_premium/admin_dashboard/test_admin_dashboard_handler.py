@@ -185,20 +185,21 @@ def test_get_active_user_counts(data_fixture):
 
 @pytest.mark.django_db
 def test_get_new_users_per_day(data_fixture):
-    tz = timezone("UTC")
+    utc = timezone("UTC")
+    gmt3 = timezone("Etc/GMT+3")
 
-    data_fixture.create_user(date_joined=datetime(2020, 12, 29, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 1, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 1, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 2, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 2, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 2, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 12, 1, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 15, 1, tzinfo=tz))
+    data_fixture.create_user(date_joined=datetime(2020, 12, 29, 12, 1, tzinfo=utc))
+    data_fixture.create_user(date_joined=datetime(2021, 1, 1, 1, 1, tzinfo=utc))
+    data_fixture.create_user(date_joined=datetime(2021, 1, 1, 12, 1, tzinfo=utc))
+    data_fixture.create_user(date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc))
+    data_fixture.create_user(date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc))
+    data_fixture.create_user(date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc))
+    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 12, 1, tzinfo=utc))
+    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 15, 1, tzinfo=utc))
 
     handler = AdminDashboardHandler()
-    now = datetime(2021, 1, 30, 23, 59, tzinfo=tz)
 
+    now = datetime(2021, 1, 30, 23, 59, tzinfo=utc)
     counts = handler.get_new_user_count_per_day(timedelta(days=30), now)
     assert len(counts) == 3
     assert counts[0]["date"] == date(2021, 1, 1)
@@ -208,10 +209,25 @@ def test_get_new_users_per_day(data_fixture):
     assert counts[2]["date"] == date(2021, 1, 30)
     assert counts[2]["count"] == 2
 
+    now = datetime(2021, 1, 1, 13, 00, tzinfo=utc)
+    counts = handler.get_new_user_count_per_day(timedelta(days=1), now)
+    assert len(counts) == 1
+    assert counts[0]["date"] == date(2021, 1, 1)
+    assert counts[0]["count"] == 2
+
+    now = datetime(2021, 1, 1, 13, 00, tzinfo=gmt3)
+    counts = handler.get_new_user_count_per_day(timedelta(days=1), now)
+    assert len(counts) == 2
+    assert counts[0]["date"] == date(2020, 12, 31)
+    assert counts[0]["count"] == 1
+    assert counts[1]["date"] == date(2021, 1, 1)
+    assert counts[1]["count"] == 1
+
 
 @pytest.mark.django_db
 def test_get_active_users_per_day(data_fixture):
-    tz = timezone("UTC")
+    utc = timezone("UTC")
+    gmt3 = timezone("Etc/GMT+3")
 
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
@@ -230,35 +246,36 @@ def test_get_active_users_per_day(data_fixture):
     create_entries(
         user_1,
         [
-            datetime(2020, 12, 29, tzinfo=tz),
-            datetime(2021, 1, 1, 12, 1, tzinfo=tz),
-            datetime(2021, 1, 1, 13, 1, tzinfo=tz),
-            datetime(2021, 1, 1, 14, 1, tzinfo=tz),
-            datetime(2021, 1, 10, 14, 1, tzinfo=tz),
+            datetime(2020, 12, 29, tzinfo=utc),
+            datetime(2021, 1, 1, 1, 1, tzinfo=utc),
+            datetime(2021, 1, 1, 12, 1, tzinfo=utc),
+            datetime(2021, 1, 1, 13, 1, tzinfo=utc),
+            datetime(2021, 1, 1, 14, 1, tzinfo=utc),
+            datetime(2021, 1, 10, 14, 1, tzinfo=utc),
         ],
     )
 
     create_entries(
         user_2,
         [
-            datetime(2020, 12, 29, tzinfo=tz),
-            datetime(2021, 1, 1, tzinfo=tz),
-            datetime(2021, 1, 10, 12, 1, tzinfo=tz),
-            datetime(2021, 1, 10, 13, 1, tzinfo=tz),
+            datetime(2020, 12, 29, tzinfo=utc),
+            datetime(2021, 1, 1, 1, 1, tzinfo=utc),
+            datetime(2021, 1, 10, 12, 1, tzinfo=utc),
+            datetime(2021, 1, 10, 13, 1, tzinfo=utc),
         ],
     )
 
     create_entries(
         user_3,
         [
-            datetime(2021, 1, 2, tzinfo=tz),
-            datetime(2021, 1, 10, tzinfo=tz),
+            datetime(2021, 1, 2, tzinfo=utc),
+            datetime(2021, 1, 10, tzinfo=utc),
         ],
     )
 
     handler = AdminDashboardHandler()
-    now = datetime(2021, 1, 30, 23, 59, tzinfo=tz)
 
+    now = datetime(2021, 1, 30, 23, 59, tzinfo=utc)
     counts = handler.get_active_user_count_per_day(timedelta(days=30), now)
     assert len(counts) == 3
     assert counts[0]["date"] == date(2021, 1, 1)
@@ -267,3 +284,17 @@ def test_get_active_users_per_day(data_fixture):
     assert counts[1]["count"] == 1
     assert counts[2]["date"] == date(2021, 1, 10)
     assert counts[2]["count"] == 3
+
+    now = datetime(2021, 1, 1, 13, 00, tzinfo=utc)
+    counts = handler.get_active_user_count_per_day(timedelta(days=1), now)
+    assert len(counts) == 1
+    assert counts[0]["date"] == date(2021, 1, 1)
+    assert counts[0]["count"] == 2
+
+    now = datetime(2021, 1, 1, 13, 00, tzinfo=gmt3)
+    counts = handler.get_active_user_count_per_day(timedelta(days=1), now)
+    assert len(counts) == 2
+    assert counts[0]["date"] == date(2020, 12, 31)
+    assert counts[0]["count"] == 2
+    assert counts[1]["date"] == date(2021, 1, 1)
+    assert counts[1]["count"] == 1

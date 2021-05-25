@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
+from baserow.api.decorators import accept_timezone
 from baserow.core.models import Group, Application
 from baserow_premium.admin_dashboard.handler import AdminDashboardHandler
 
@@ -33,7 +34,8 @@ class AdminDashboardView(APIView):
             200: AdminDashboardSerializer,
         },
     )
-    def get(self, request):
+    @accept_timezone()
+    def get(self, request, now):
         """
         Returns the new and active users of the last 24 hours, 7 days and 30 days.
         The `previous_` values are the values of the period before, so for example
@@ -63,8 +65,12 @@ class AdminDashboardView(APIView):
             },
             include_previous=True,
         )
-        new_users_per_day = handler.get_new_user_count_per_day(timedelta(days=30))
-        active_users_per_day = handler.get_active_user_count_per_day(timedelta(days=30))
+        new_users_per_day = handler.get_new_user_count_per_day(
+            timedelta(days=30), now=now
+        )
+        active_users_per_day = handler.get_active_user_count_per_day(
+            timedelta(days=30), now=now
+        )
 
         serializer = AdminDashboardSerializer(
             {

@@ -77,6 +77,12 @@ export const mutations = {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
+  ORDER_ITEMS(state, order) {
+    state.items.forEach((view) => {
+      const index = order.findIndex((value) => value === view.id)
+      view.order = index === -1 ? 0 : index + 1
+    })
+  },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
@@ -242,6 +248,19 @@ export const actions = {
     }
   },
   /**
+   * Updates the order of all the views in a table.
+   */
+  async order({ commit, getters }, { table, order, oldOrder }) {
+    commit('ORDER_ITEMS', order)
+
+    try {
+      await ViewService(this.$client).order(table.id, order)
+    } catch (error) {
+      commit('ORDER_ITEMS', oldOrder)
+      throw error
+    }
+  },
+  /**
    * Forcefully update an existing view without making a request to the backend.
    */
   forceUpdate({ commit }, { view, values }) {
@@ -343,6 +362,12 @@ export const actions = {
         )
       }
       values.type = compatibleType.type
+    }
+
+    // If the value is not provided, then we use the default value related to the type.
+    if (!Object.prototype.hasOwnProperty.call(values, 'value')) {
+      const viewFilterType = this.$registry.get('viewFilter', values.type)
+      values.value = viewFilterType.getDefaultValue()
     }
 
     const filter = Object.assign({}, values)

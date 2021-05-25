@@ -1,6 +1,6 @@
 <template>
   <li class="tree__sub" :class="{ active: table._.selected }">
-    <a class="tree__sub-link" @click.prevent="selectTable(database, table)">
+    <a class="tree__sub-link" @click="selectTable(database, table)">
       <Editable
         ref="rename"
         :value="table.name"
@@ -11,6 +11,7 @@
       v-show="!database._.loading"
       class="tree__options"
       @click="$refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)"
+      @mousedown.stop
     >
       <i class="fas fa-ellipsis-v"></i>
     </a>

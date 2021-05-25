@@ -4,6 +4,12 @@
 
 * Fixed bug where the grid view would fail hard if a cell is selected and the component
   is destroyed.
+* Made it possible to import a JSON file when creating a table.
+* Made it possible to order the views by drag and drop.
+* Made it possible to order the groups by drag and drop.
+* Made it possible to order the applications by drag and drop.
+* Made it possible to order the tables by drag and drop.
+* Added today, this month and this year filter.
 
 ## Released (2021-05-11)
 
@@ -20,6 +26,7 @@
 * Fixed bug where the rows could get out of sync during real time collaboration.
 * Made it possible to export and import the file field including contents.
 * Added `fill_users` admin management command which fills baserow with fake users.
+* Made it possible to drag and drop the views in the desired order.
 * **Premium**: Added user admin area allowing management of all baserow users.
 
 ## Released (2021-04-08)

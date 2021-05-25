@@ -1,3 +1,5 @@
+import moment from 'moment'
+
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
@@ -6,8 +8,6 @@ import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/Vie
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
 import { trueString } from '@baserow/modules/database/utils/constants'
-import moment from 'moment'
-import { tz } from 'moment-timezone'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -307,11 +307,6 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     return 'date_equals_today'
   }
 
-  getSliceLength() {
-    // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
-    return 10
-  }
-
   getName() {
     return 'is today'
   }
@@ -325,11 +320,16 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
   }
 
   getDefaultValue() {
-    return tz.guess(true)
+    return new Intl.DateTimeFormat().resolvedOptions().timeZone
   }
 
   prepareValue() {
-    return tz.guess(true)
+    return this.getDefaultValue()
+  }
+
+  getSliceLength() {
+    // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
+    return 10
   }
 
   matches(rowValue, filterValue) {

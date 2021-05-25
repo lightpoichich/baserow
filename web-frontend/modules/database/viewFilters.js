@@ -303,11 +303,13 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
 }
 
 export class DateEqualsTodayViewFilterType extends ViewFilterType {
-  // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
-  sliceLength = 10
-
   static getType() {
     return 'date_equals_today'
+  }
+
+  getSliceLength() {
+    // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
+    return 10
   }
 
   getName() {
@@ -335,9 +337,10 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
       rowValue = ''
     }
 
+    const sliceLength = this.getSliceLength()
     rowValue = rowValue.toString().toLowerCase().trim()
-    rowValue = rowValue.slice(0, this.sliceLength)
-    const format = 'YYYY-MM-DD'.slice(0, this.sliceLength)
+    rowValue = rowValue.slice(0, sliceLength)
+    const format = 'YYYY-MM-DD'.slice(0, sliceLength)
     const today = moment().tz(filterValue).format(format)
 
     return rowValue === today
@@ -345,10 +348,12 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
 }
 
 export class DateEqualsCurrentMonthViewFilterType extends DateEqualsTodayViewFilterType {
-  sliceLength = 7
-
   static getType() {
     return 'date_equals_month'
+  }
+
+  getSliceLength() {
+    return 7
   }
 
   getName() {
@@ -357,10 +362,12 @@ export class DateEqualsCurrentMonthViewFilterType extends DateEqualsTodayViewFil
 }
 
 export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilterType {
-  sliceLength = 4
-
   static getType() {
     return 'date_equals_year'
+  }
+
+  getSliceLength() {
+    return 4
   }
 
   getName() {

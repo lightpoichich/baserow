@@ -11,6 +11,8 @@
 * Made it possible to order the tables by drag and drop.
 * Added today, this month and this year filter.
 * Added a page containing external resources to the docs.
+* Added a human-readable error message when a user tries to sign in with a deactivated
+  account.
 
 ## Released (2021-05-11)
 

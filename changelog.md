@@ -13,6 +13,7 @@
 * Added today, this month and this year filter.
 * Added a human-readable error message when a user tries to sign in with a deactivated
   account.
+* Add App Pitch Planner template.
 
 ## Released (2021-05-11)
 

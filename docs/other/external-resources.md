@@ -4,7 +4,8 @@
   https://github.com/stevecomrie/baserow-php): A PHP client for the Baserow API with
   human readable table and field names.
 * [https://hub.docker.com/r/tiredofit/baserow](
-  https://hub.docker.com/r/tiredofit/baserow): Baserow docker image.
+  https://hub.docker.com/r/tiredofit/baserow): A third party docker image which runs
+  all Baserow services in a single container.
 * [https://github.com/dak-csis/ansible-role-baserow](
   https://github.com/dak-csis/ansible-role-baserow): Baserow Ansible role.
 * [https://github.com/mingfang/terraform-k8s-modules/tree/master/examples/baserow](

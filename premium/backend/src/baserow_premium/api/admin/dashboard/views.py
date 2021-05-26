@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import accept_timezone
 from baserow.core.models import Group, Application
-from baserow_premium.admin_dashboard.handler import AdminDashboardHandler
+
+from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
 
 from .serializers import AdminDashboardSerializer
 
@@ -22,7 +23,7 @@ class AdminDashboardView(APIView):
     permission_classes = (IsAdminUser,)
 
     @extend_schema(
-        tags=["Admin dashboard"],
+        tags=["Admin"],
         operation_id="admin_dashboard",
         description="Returns the new and active users for the last 24 hours, 7 days and"
         " 30 days. The `previous_` values are the values of the period before, so for "

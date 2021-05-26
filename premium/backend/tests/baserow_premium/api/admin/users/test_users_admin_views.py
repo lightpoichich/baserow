@@ -23,7 +23,7 @@ def test_non_admin_cannot_see_admin_users_endpoint(api_client, data_fixture):
         email="test@test.nl", password="password", first_name="Test1", is_staff=False
     )
     response = api_client.get(
-        reverse("api:premium:admin_user:users"),
+        reverse("api:premium:admin:users:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -52,7 +52,7 @@ def test_admin_can_see_admin_users_endpoint(api_client, data_fixture):
         permissions=GROUP_USER_PERMISSION_MEMBER,
     )
     response = api_client.get(
-        reverse("api:premium:admin_user:users"),
+        reverse("api:premium:admin:users:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -96,7 +96,7 @@ def test_admin_with_invalid_token_cannot_see_admin_users(api_client, data_fixtur
         is_staff=True,
     )
     response = api_client.get(
-        reverse("api:premium:admin_user:users"),
+        reverse("api:premium:admin:users:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT abc123",
     )
@@ -114,7 +114,7 @@ def test_admin_accessing_invalid_user_admin_page_returns_error(
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=2",
         format="json",
@@ -134,7 +134,7 @@ def test_admin_accessing_user_admin_with_invalid_page_size_returns_error(
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&size=201",
         format="json",
@@ -158,7 +158,7 @@ def test_admin_can_search_users(api_client, data_fixture):
         first_name="Test1",
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&search=specific_user",
         format="json",
@@ -198,7 +198,7 @@ def test_admin_can_sort_users(api_client, data_fixture):
         first_name="Test1",
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&search=specific_user",
         format="json",
@@ -234,14 +234,14 @@ def test_returns_error_response_if_invalid_sort_field_provided(
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&sorts=-invalid_field_name",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -254,14 +254,14 @@ def test_returns_error_response_if_sort_direction_not_provided(
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&sorts=username",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -274,14 +274,14 @@ def test_returns_error_response_if_invalid_sort_direction_provided(
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&sorts=*username",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -294,14 +294,14 @@ def test_returns_error_response_if_invalid_sorts_mixed_with_valid_ones(
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&sorts=+username,username,-invalid_field",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -312,14 +312,14 @@ def test_returns_error_response_if_blank_sorts_provided(api_client, data_fixture
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&sorts=,,",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -330,14 +330,14 @@ def test_returns_error_response_if_no_sorts_provided(api_client, data_fixture):
         first_name="Test1",
         is_staff=True,
     )
-    url = reverse("api:premium:admin_user:users")
+    url = reverse("api:premium:admin:users:list")
     response = api_client.get(
         f"{url}?page=1&sorts=",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "USER_ADMIN_INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -353,9 +353,7 @@ def test_non_admin_cannot_delete_user(api_client, data_fixture):
         password="password",
         first_name="Test1",
     )
-    url = reverse(
-        "api:premium:admin_user:user_edit", kwargs={"user_id": user_to_delete.id}
-    )
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user_to_delete.id})
     response = api_client.delete(
         url,
         format="json",
@@ -377,9 +375,7 @@ def test_admin_can_delete_user(api_client, data_fixture):
         password="password",
         first_name="Test1",
     )
-    url = reverse(
-        "api:premium:admin_user:user_edit", kwargs={"user_id": user_to_delete.id}
-    )
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user_to_delete.id})
     response = api_client.delete(
         url,
         format="json",
@@ -388,7 +384,7 @@ def test_admin_can_delete_user(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
 
     response = api_client.get(
-        reverse("api:premium:admin_user:users"),
+        reverse("api:premium:admin:users:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -404,9 +400,7 @@ def test_non_admin_cannot_patch_user(api_client, data_fixture):
         first_name="Test1",
         is_staff=False,
     )
-    url = reverse(
-        "api:premium:admin_user:user_edit", kwargs={"user_id": non_admin_user.id}
-    )
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": non_admin_user.id})
     response = api_client.patch(
         url,
         {"username": "some_other_email@test.nl"},
@@ -428,7 +422,7 @@ def test_admin_can_patch_user(api_client, data_fixture):
         is_staff=True,
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
-    url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user.id})
     old_password = user.password
     response = api_client.patch(
         url,
@@ -460,7 +454,7 @@ def test_error_returned_when_invalid_field_supplied_to_edit(api_client, data_fix
         is_staff=True,
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
-    url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user.id})
 
     # We have to provide a str as otherwise the test api client will "helpfully" try
     # to serialize the dict using the endpoints serializer, which will fail before
@@ -484,7 +478,7 @@ def test_error_returned_when_updating_user_with_invalid_email(api_client, data_f
         is_staff=True,
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
-    url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user.id})
 
     # We have to provide a str as otherwise the test api client will "helpfully" try
     # to serialize the dict using the endpoints serializer, which will fail before
@@ -510,7 +504,7 @@ def test_error_returned_when_valid_and_invalid_fields_supplied_to_edit(
         is_staff=True,
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
     )
-    url = reverse("api:premium:admin_user:user_edit", kwargs={"user_id": user.id})
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user.id})
 
     # We have to provide a str as otherwise the test api client will "helpfully" try
     # to serialize the dict using the endpoints serializer, which will fail before
@@ -542,7 +536,7 @@ def test_admin_getting_view_users_only_runs_two_queries_instead_of_n(
 
     with django_assert_num_queries(fixed_num_of_queries_unrelated_to_number_of_rows):
         response = api_client.get(
-            reverse("api:premium:admin_user:users"),
+            reverse("api:premium:admin:users:list"),
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
@@ -555,7 +549,7 @@ def test_admin_getting_view_users_only_runs_two_queries_instead_of_n(
 
     with django_assert_num_queries(fixed_num_of_queries_unrelated_to_number_of_rows):
         response = api_client.get(
-            reverse("api:premium:admin_user:users"),
+            reverse("api:premium:admin:users:list"),
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )

@@ -1,0 +1,118 @@
+import pytest
+
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_403_FORBIDDEN,
+)
+
+from django.shortcuts import reverse
+
+
+@pytest.mark.django_db
+def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
+    """
+    This endpoint doesn't need to be tested extensively because it uses the same base
+    class as the list users endpoint which already has extensive tests. We only need to
+    test if the functionality works in a basic form.
+    """
+
+    staff_user, staff_token = data_fixture.create_user_and_token(is_staff=True)
+    normal_user, normal_token = data_fixture.create_user_and_token()
+    group_1 = data_fixture.create_group(name="A")
+    group_2 = data_fixture.create_group(name="B")
+    data_fixture.create_user_group(
+        group=group_1, user=normal_user, permissions="MEMBER"
+    )
+    data_fixture.create_user_group(group=group_2, user=normal_user, permissions="ADMIN")
+
+    response = api_client.get(
+        reverse("api:premium:admin:groups:list"),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {normal_token}",
+    )
+    assert response.status_code == HTTP_403_FORBIDDEN
+
+    with django_assert_num_queries(5):
+        response = api_client.get(
+            reverse("api:premium:admin:groups:list"),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {staff_token}",
+        )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": group_1.id,
+                "name": group_1.name,
+                "users": [
+                    {
+                        "id": normal_user.id,
+                        "email": normal_user.email,
+                        "permissions": "MEMBER",
+                    }
+                ],
+            },
+            {
+                "id": group_2.id,
+                "name": group_2.name,
+                "users": [
+                    {
+                        "id": normal_user.id,
+                        "email": normal_user.email,
+                        "permissions": "ADMIN",
+                    }
+                ],
+            },
+        ],
+    }
+
+    response = api_client.get(
+        f'{reverse("api:premium:admin:groups:list")}?search=test',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {staff_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {"count": 0, "next": None, "previous": None, "results": []}
+
+    response = api_client.get(
+        f'{reverse("api:premium:admin:groups:list")}?sorts=-name',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {staff_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": group_2.id,
+                "name": group_2.name,
+                "users": [
+                    {
+                        "id": normal_user.id,
+                        "email": normal_user.email,
+                        "permissions": "ADMIN",
+                    }
+                ],
+            },
+            {
+                "id": group_1.id,
+                "name": group_1.name,
+                "users": [
+                    {
+                        "id": normal_user.id,
+                        "email": normal_user.email,
+                        "permissions": "MEMBER",
+                    }
+                ],
+            },
+        ],
+    }

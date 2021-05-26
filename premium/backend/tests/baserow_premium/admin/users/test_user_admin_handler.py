@@ -1,102 +1,17 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.utils import timezone
-from django.utils.datetime_safe import datetime
 
 from baserow.core.exceptions import IsNotAdminError
-from baserow_premium.user_admin.exceptions import (
+from baserow_premium.admin.users.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
     UserDoesNotExistException,
-    InvalidSortDirectionException,
-    InvalidSortAttributeException,
 )
-from baserow_premium.user_admin.handler import (
+from baserow_premium.admin.users.handler import (
     UserAdminHandler,
 )
 
 User = get_user_model()
-
-
-@pytest.mark.django_db
-def test_admin_can_get_users(data_fixture):
-    handler = UserAdminHandler()
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    assert handler.get_users(admin_user).count() == 1
-
-
-@pytest.mark.django_db
-def test_non_admin_cant_get_users(data_fixture):
-    handler = UserAdminHandler()
-    non_admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=False,
-    )
-    with pytest.raises(IsNotAdminError):
-        handler.get_users(non_admin_user)
-
-
-@pytest.mark.django_db
-def test_admin_can_search_by_username(data_fixture):
-    handler = UserAdminHandler()
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    data_fixture.create_user(
-        email="other_user@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    results = handler.get_users(admin_user, username_search="other_user")
-    assert results.count() == 1
-    assert results[0].username == "other_user@test.nl"
-
-
-@pytest.mark.django_db
-def test_admin_can_sort_by_multiple_fields_in_specified_order_and_directions(
-    data_fixture,
-):
-    handler = UserAdminHandler()
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-        is_active=False,
-        date_joined=datetime(2020, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-    )
-    data_fixture.create_user(
-        email="other_user1@test.nl",
-        password="password",
-        first_name="Test2",
-        is_staff=True,
-        is_active=True,
-        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-    )
-    data_fixture.create_user(
-        email="other_user2@test.nl",
-        password="password",
-        first_name="Test3",
-        is_staff=True,
-        is_active=True,
-        date_joined=datetime(2022, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-    )
-    results = handler.get_users(admin_user, sorts="-is_active,+date_joined")
-    assert results.count() == 3
-    assert results[0].first_name == "Test2"
-    assert results[1].first_name == "Test3"
-    assert results[2].first_name == "Test1"
 
 
 @pytest.mark.django_db
@@ -334,83 +249,3 @@ def test_raises_exception_when_updating_an_unknown_user(data_fixture):
     )
     with pytest.raises(UserDoesNotExistException):
         handler.update_user(admin_user, 99999, username="new_password")
-
-
-@pytest.mark.django_db
-def test_throws_error_if_sort_direction_not_provided(api_client, data_fixture):
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    handler = UserAdminHandler()
-    with pytest.raises(InvalidSortDirectionException):
-        handler.get_users(admin_user, sorts="username")
-
-
-@pytest.mark.django_db
-def test_throws_error_if_invalid_sort_direction_provided(api_client, data_fixture):
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    handler = UserAdminHandler()
-    with pytest.raises(InvalidSortDirectionException):
-        handler.get_users(admin_user, sorts="*username")
-
-
-@pytest.mark.django_db
-def test_throws_error_if_invalid_sorts_mixed_with_valid_ones(api_client, data_fixture):
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    handler = UserAdminHandler()
-    with pytest.raises(InvalidSortAttributeException):
-        handler.get_users(admin_user, sorts="+username,-idd")
-
-
-@pytest.mark.django_db
-def test_throws_error_if_multiple_of_the_same_sort_attr_are_given(
-    api_client, data_fixture
-):
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    handler = UserAdminHandler()
-    with pytest.raises(InvalidSortAttributeException):
-        handler.get_users(admin_user, sorts="+username,-id,-username")
-
-
-@pytest.mark.django_db
-def test_throws_error_if_blank_sorts_provided(api_client, data_fixture):
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    handler = UserAdminHandler()
-    with pytest.raises(InvalidSortAttributeException):
-        handler.get_users(admin_user, sorts=",,")
-
-
-@pytest.mark.django_db
-def test_throws_error_if_empty_sorts_provided(api_client, data_fixture):
-    admin_user = data_fixture.create_user(
-        email="test@test.nl",
-        password="password",
-        first_name="Test1",
-        is_staff=True,
-    )
-    handler = UserAdminHandler()
-    with pytest.raises(InvalidSortAttributeException):
-        handler.get_users(admin_user, sorts="")

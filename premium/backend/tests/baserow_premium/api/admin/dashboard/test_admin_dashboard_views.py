@@ -25,14 +25,14 @@ def test_admin_dashboard(api_client, data_fixture):
         UserLogEntry.objects.create(actor=admin_user, action="SIGNED_IN")
 
         response = api_client.get(
-            reverse("api:premium:admin_dashboard:dashboard"),
+            reverse("api:premium:admin:dashboard:dashboard"),
             format="json",
             HTTP_AUTHORIZATION=f"JWT {normal_token}",
         )
         assert response.status_code == HTTP_403_FORBIDDEN
 
         response = api_client.get(
-            reverse("api:premium:admin_dashboard:dashboard"),
+            reverse("api:premium:admin:dashboard:dashboard"),
             format="json",
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
@@ -57,7 +57,7 @@ def test_admin_dashboard(api_client, data_fixture):
             "active_users_per_day": [{"date": "2020-01-01", "count": 1}],
         }
 
-        url = reverse("api:premium:admin_dashboard:dashboard")
+        url = reverse("api:premium:admin:dashboard:dashboard")
         response = api_client.get(
             f"{url}?timezone=Etc/GMT%2B1",
             format="json",

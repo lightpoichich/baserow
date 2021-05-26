@@ -19,13 +19,13 @@ export default (client) => {
           })
           .join(',')
       }
-      return client.get(`/admin/user/`, { params })
+      return client.get(`/admin/users/`, { params })
     },
     update(userId, values) {
-      return client.patch(`/admin/user/${userId}/`, values)
+      return client.patch(`/admin/users/${userId}/`, values)
     },
     delete(userId) {
-      return client.delete(`/admin/user/${userId}/`)
+      return client.delete(`/admin/users/${userId}/`)
     },
   }
 }

@@ -5,7 +5,7 @@ from datetime import timedelta, datetime, date
 
 from baserow.core.models import UserLogEntry
 
-from baserow_premium.admin_dashboard.handler import AdminDashboardHandler
+from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
 
 
 @pytest.mark.django_db

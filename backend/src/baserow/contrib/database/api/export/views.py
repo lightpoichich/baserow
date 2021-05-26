@@ -63,6 +63,7 @@ def _validate_options(data: Dict[str, Any]) -> Dict[str, Any]:
     :param data: A dict of data to serialize using an exporter options serializer.
     :return: validated export options data
     """
+
     option_serializers = table_exporter_registry.get_option_serializer_map()
     validated_exporter_type = validate_data(BaseExporterOptionsSerializer, data)
     serializer = option_serializers[validated_exporter_type["exporter_type"]]
@@ -126,6 +127,7 @@ class ExportTableView(APIView):
         """
         Starts a new export job for the provided table, export type and options.
         """
+
         table = TableHandler().get_table(table_id)
         table.database.group.has_user(request.user, raise_error=True)
 
@@ -180,6 +182,7 @@ class ExportViewView(APIView):
         """
         Starts a new export job for the provided view, export type and options.
         """
+
         view = ViewHandler().get_view(view_id)
 
         option_data = _validate_options(request.data)
@@ -231,6 +234,7 @@ class ExportJobView(APIView):
         """
         Retrieves the specified export job.
         """
+
         try:
             job = ExportJob.objects.get(id=job_id)
         except ExportJob.DoesNotExist:

@@ -21,6 +21,7 @@ def run_export_job(self, job_id):
     Runs the export for a given job. Configured in base.py to run on a separate queue
     to prevent starving regular websocket jobs.
     """
+
     job = ExportJob.objects.get(id=job_id)
     ExportHandler.run_export_job(job)
 

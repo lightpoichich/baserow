@@ -31,6 +31,7 @@ def run_export_job_to_file(
     """
     Runs an export job and stores the result in the provided export file.
     """
+
     if job.view is None:
         # The job is not for a specific view, export just the table as it is.
         queryset, ordered_field_objects = _get_table_queryset_and_fields(job.table)
@@ -61,6 +62,7 @@ def _get_sorted_filtered_ordered_for_view_queryset_and_fields(
     :return: A tuple of the sorted and filtered queryset with an ordered list of
        fields which are visible in this view.
     """
+
     grid_view = ViewHandler().get_view(view.id, view_model=GridView)
     model = view.table.get_model()
     qs = GridViewHandler().get_rows(
@@ -120,6 +122,7 @@ def _check_and_update_job(job, last_update_time, current_row, total_rows):
     has elapsed. Will also raise a ExportJobCanceledException exception if the job
     has been cancelled, but will only check this if enough time has elapsed since the
     last check.
+
     :param job: The job to check and update progress for.
     :param last_update_time: a time.perf_counter value of the last time this function
         was called.

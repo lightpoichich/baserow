@@ -51,6 +51,7 @@ class TableExporter(Instance, ABC):
         Implement this function in your exporter to control how exactly the export_file
         is generated. It should return a function which when called with a row to export
         writes the row in the correct format to the provided export_file.
+
         :param ordered_field_objects: An ordered list of fields to export.
         :param export_options: The validated export options returned from
             the option_serializer_class property above.
@@ -58,6 +59,7 @@ class TableExporter(Instance, ABC):
         :return: A function taking one argument, a row to export to the file. Each call
             of the function should output the provided row to the file.
         """
+
         pass
 
 

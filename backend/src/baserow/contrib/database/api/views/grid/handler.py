@@ -6,6 +6,7 @@ class GridViewHandler:
         """
         A behalf of a requesting_user returns all rows sorted, filtered and searched
         for a grid view.
+
         :param user: The user who is requesting to view the rows, will raise exceptions
            if they do not have the required permissions.
         :param view: The view to lookup rows for.

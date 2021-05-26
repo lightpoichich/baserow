@@ -210,7 +210,7 @@ def _open_file_and_run_export(job: ExportJob) -> ExportJob:
     Using the jobs exporter type exports all data into a new file placed in the
     default storage.
 
-    :rtype: An updated ExportJob instance with the exported_file_name set.
+    :return: An updated ExportJob instance with the exported_file_name set.
     """
 
     exporter = table_exporter_registry.get(job.exporter_type)

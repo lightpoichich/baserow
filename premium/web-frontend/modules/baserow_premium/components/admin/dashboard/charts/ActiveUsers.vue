@@ -36,9 +36,6 @@ export default {
       const newUserData = this.mapCount(labels, this.newUsers)
       const activeUserData = this.mapCount(labels, this.activeUsers)
 
-      console.log(labels)
-      console.log(activeUserData)
-
       this.renderChart(
         {
           labels,

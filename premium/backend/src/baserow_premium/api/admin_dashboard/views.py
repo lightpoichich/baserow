@@ -24,8 +24,8 @@ class AdminDashboardView(APIView):
     @extend_schema(
         tags=["Admin dashboard"],
         operation_id="admin_dashboard",
-        description="Returns the new and active users of the last 24 hours, 7 days and "
-        "30 days. The `previous_` values are the values of the period before, so for "
+        description="Returns the new and active users for the last 24 hours, 7 days and"
+        " 30 days. The `previous_` values are the values of the period before, so for "
         "example `previous_new_users_last_24_hours` are the new users that signed up "
         "from 48 to 24 hours ago. It can be used to calculate an increase or decrease "
         "in the amount of signups. A list of the new and active users for every day "
@@ -37,7 +37,7 @@ class AdminDashboardView(APIView):
     @accept_timezone()
     def get(self, request, now):
         """
-        Returns the new and active users of the last 24 hours, 7 days and 30 days.
+        Returns the new and active users for the last 24 hours, 7 days and 30 days.
         The `previous_` values are the values of the period before, so for example
         `previous_new_users_last_24_hours` are the new users that signed up from 48
         to 24 hours ago. It can be used to calculate an increase or decrease in the

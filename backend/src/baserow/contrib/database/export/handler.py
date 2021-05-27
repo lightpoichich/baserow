@@ -19,6 +19,7 @@ from baserow.contrib.database.export.models import (
     EXPORT_JOB_COMPLETED_STATUS,
     EXPORT_JOB_EXPORTING_STATUS,
 )
+from baserow.contrib.database.export.tasks import run_export_job
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
@@ -28,7 +29,6 @@ from .exceptions import (
 )
 from .file_writer import PaginatedExportJobFileWriter
 from .registries import table_exporter_registry, TableExporter
-from baserow.contrib.database.export.tasks import run_export_job
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,20 @@ class ExportHandler:
     def create_and_start_new_job(
         user: User, table: Table, view: Optional[View], export_options: Dict[str, Any]
     ) -> ExportJob:
+        """
+        For the provided user, table, optional view and options will create a new
+        export job and start an asynchronous celery task which will perform the
+        export and update the job with any results.
+
+        :param user: The user who the export job is being run for.
+        :param table: The table on which the job is being run.
+        :param view: An optional view of the table to export instead of the table
+            itself.
+        :param export_options: A dict containing exporter_type and the relevant options
+            for that type.
+        :return: The created export job.
+        """
+
         job = ExportHandler.create_pending_export_job(user, table, view, export_options)
         # Ensure we only trigger the job after the transaction we are in has committed
         # and created the export job in the database. Otherwise the job might run before
@@ -64,7 +78,7 @@ class ExportHandler:
             itself.
         :param export_options: A dict containing exporter_type and the relevant options
             for that type.
-        :return:
+        :return: The created export job.
         """
 
         table.database.group.has_user(user, raise_error=True)

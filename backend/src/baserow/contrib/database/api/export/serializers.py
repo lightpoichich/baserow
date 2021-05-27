@@ -109,6 +109,7 @@ class BaseExporterOptionsSerializer(serializers.Serializer):
     view_id = fields.IntegerField(
         min_value=0,
         required=False,
+        allow_null=True,
         help_text="Optional: The view for this table to export using its filters, "
         "sorts and other view specific settings.",
     )

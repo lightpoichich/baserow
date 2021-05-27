@@ -37,7 +37,7 @@ import LocalDateField from '@baserow_premium/components/crud_table/fields/LocalD
 import ActiveField from '@baserow_premium/components/admin/users/fields/ActiveField'
 import EditUserContext from '@baserow_premium/components/admin/users/contexts/EditUserContext'
 import HiddenGroupsContext from '@baserow_premium/components/admin/users/contexts/HiddenGroupsContext'
-import CrudTableColumn from '@baserow_premium/crud_table/CrudTableColumn'
+import CrudTableColumn from '@baserow_premium/crud_table/crudTableColumn'
 
 export default {
   name: 'UsersAdminTable',

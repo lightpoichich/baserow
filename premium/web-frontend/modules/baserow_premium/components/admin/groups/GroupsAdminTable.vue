@@ -35,7 +35,7 @@ import GroupUsersField from '@baserow_premium/components/admin/groups/fields/Gro
 import GroupNameField from '@baserow_premium/components/admin/groups/fields/GroupNameField'
 import EditGroupContext from '@baserow_premium/components/admin/groups/contexts/EditGroupContext'
 import HiddenUsersContext from '@baserow_premium/components/admin/groups/contexts/HiddenUsersContext'
-import CrudTableColumn from '@baserow_premium/crud_table/CrudTableColumn'
+import CrudTableColumn from '@baserow_premium/crud_table/crudTableColumn'
 
 export default {
   name: 'GroupsAdminTable',

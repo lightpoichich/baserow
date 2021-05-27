@@ -28,15 +28,15 @@
 </template>
 
 <script>
-import UserAdminService from '@baserow_premium/services/userAdmin'
-import UsernameField from '@baserow_premium/components/admin/user/fields/UsernameField'
-import UserGroupsField from '@baserow_premium/components/admin/user/fields/UserGroupsField'
+import UserAdminService from '@baserow_premium/services/admin/users'
+import UsernameField from '@baserow_premium/components/admin/users/fields/UsernameField'
+import UserGroupsField from '@baserow_premium/components/admin/users/fields/UserGroupsField'
 import CrudTable from '@baserow_premium/components/crud_table/CrudTable'
 import SimpleField from '@baserow_premium/components/crud_table/fields/SimpleField'
 import LocalDateField from '@baserow_premium/components/crud_table/fields/LocalDateField'
-import ActiveField from '@baserow_premium/components/admin/user/fields/ActiveField'
-import EditUserContext from '@baserow_premium/components/admin/user/contexts/EditUserContext'
-import HiddenGroupsContext from '@baserow_premium/components/admin/user/contexts/HiddenGroupsContext'
+import ActiveField from '@baserow_premium/components/admin/users/fields/ActiveField'
+import EditUserContext from '@baserow_premium/components/admin/users/contexts/EditUserContext'
+import HiddenGroupsContext from '@baserow_premium/components/admin/users/contexts/HiddenGroupsContext'
 import CrudTableColumn from '@baserow_premium/crud_table/CrudTableColumn'
 
 export default {

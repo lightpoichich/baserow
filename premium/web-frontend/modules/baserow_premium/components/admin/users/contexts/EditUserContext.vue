@@ -64,12 +64,12 @@
 </template>
 
 <script>
-import ChangePasswordModal from '@baserow_premium/components/admin/user/modals/ChangeUserPasswordModal'
 import context from '@baserow/modules/core/mixins/context'
-import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
-import EditUserModal from '@baserow_premium/components/admin/user/modals/EditUserModal'
-import UserAdminService from '@baserow_premium/services/userAdmin'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import ChangePasswordModal from '@baserow_premium/components/admin/users/modals/ChangeUserPasswordModal'
+import DeleteUserModal from '@baserow_premium/components/admin/users/modals/DeleteUserModal'
+import EditUserModal from '@baserow_premium/components/admin/users/modals/EditUserModal'
+import UserAdminService from '@baserow_premium/services/admin/users'
 
 export default {
   name: 'EditUserContext',

@@ -29,9 +29,9 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
-import UserAdminService from '@baserow_premium/services/userAdmin'
-import UserForm from '@baserow_premium/components/admin/user/forms/UserForm'
-import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
+import UserAdminService from '@baserow_premium/services/admin/users'
+import UserForm from '@baserow_premium/components/admin/users/forms/UserForm'
+import DeleteUserModal from '@baserow_premium/components/admin/users/modals/DeleteUserModal'
 
 export default {
   name: 'EditUserModal',

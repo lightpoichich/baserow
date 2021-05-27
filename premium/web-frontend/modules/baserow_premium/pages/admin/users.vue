@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import UserAdminTable from '@baserow_premium/components/admin/user/UserAdminTable'
+import UserAdminTable from '@baserow_premium/components/admin/users/UserAdminTable'
 
 export default {
   components: { UserAdminTable },

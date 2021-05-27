@@ -39,7 +39,7 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
-import UserAdminService from '@baserow_premium/services/userAdmin'
+import UserAdminService from '@baserow_premium/services/admin/users'
 
 export default {
   name: 'DeleteUserModal',

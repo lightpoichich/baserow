@@ -12,8 +12,8 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
-import UserAdminService from '@baserow_premium/services/userAdmin'
-import ChangePasswordForm from '@baserow_premium/components/admin/user/forms/ChangePasswordForm'
+import UserAdminService from '@baserow_premium/services/admin/users'
+import ChangePasswordForm from '@baserow_premium/components/admin/users/forms/ChangePasswordForm'
 
 export default {
   name: 'ChangePasswordModal',

@@ -173,7 +173,7 @@
 
 <script>
 import ActiveUsers from '@baserow_premium/components/admin/dashboard/charts/ActiveUsers'
-import AdminDashboardService from '@baserow_premium/services/adminDashboard'
+import AdminDashboardService from '@baserow_premium/services/admin/dashboard'
 
 export default {
   components: { ActiveUsers },

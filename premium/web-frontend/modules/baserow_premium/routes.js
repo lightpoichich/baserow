@@ -9,6 +9,6 @@ export const routes = [
   {
     name: 'admin-users',
     path: '/admin/users',
-    component: path.resolve(__dirname, 'pages/admin/userAdmin.vue'),
+    component: path.resolve(__dirname, 'pages/admin/users.vue'),
   },
 ]

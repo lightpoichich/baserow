@@ -4,9 +4,11 @@ import {
   JSONTableExporter,
   XMLTableExporter,
 } from '@baserow_premium/tableExporterTypes'
+import { DashboardType, UsersAdminType } from '@baserow_premium/adminTypes'
 
 export default ({ app }) => {
   app.$registry.register('plugin', new PremPlugin())
+  app.$registry.register('admin', new DashboardType())
   app.$registry.register('admin', new UsersAdminType())
   app.$registry.register('exporter', new JSONTableExporter())
   app.$registry.register('exporter', new XMLTableExporter())

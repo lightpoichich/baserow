@@ -9,6 +9,10 @@
 * Made it possible to order the groups by drag and drop.
 * Made it possible to order the applications by drag and drop.
 * Made it possible to order the tables by drag and drop.
+* **Premium**: Added an admin dashboard.
+* Added today, this month and this year filter.
+* Added a human-readable error message when a user tries to sign in with a deactivated
+  account.
 * Tables and views can now be exported to CSV (if you have installed using the ubuntu 
   guide please use the updated .conf files to enable this feature).
 * **Premium** Tables and views can now be exported to JSON and XML.

@@ -186,7 +186,8 @@ class FieldHandler:
             # like filters or sortings need to be changed.
             ViewHandler().field_type_changed(field)
 
-        allowed_fields = ["name"] + field_type.allowed_fields
+        allowed_fields = ["name", "unique"] + field_type.allowed_fields
+        
         field_values = extract_allowed(kwargs, allowed_fields)
 
         field_values = field_type.prepare_values(field_values, user)

@@ -53,6 +53,7 @@ class Field(
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField(help_text="Lowest first.")
     name = models.CharField(max_length=255)
+    unique = models.BooleanField(default=False)
     primary = models.BooleanField(
         default=False,
         help_text="Indicates if the field is a primary field. If `true` the field "

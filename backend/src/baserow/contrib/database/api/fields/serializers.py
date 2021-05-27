@@ -57,9 +57,10 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("name", "type")
+        fields = ("name", "type", "unique")
         extra_kwargs = {
-            "name": {"required": False},
+            "name": {'required': False},
+            "unique": {'required': False}
         }
 
 

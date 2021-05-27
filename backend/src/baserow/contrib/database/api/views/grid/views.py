@@ -149,10 +149,10 @@ class GridViewView(APIView):
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
 
-        model = view.table.get_model()
         view.table.database.group.has_user(
             request.user, raise_error=True, allow_if_template=True
         )
+        model = view.table.get_model()
         queryset = view_handler.get_queryset(view, search, model)
 
         if "count" in request.GET:

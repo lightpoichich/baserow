@@ -16,11 +16,12 @@ from baserow.contrib.database.views.view_types import GridViewType
 
 
 class CsvTableExporter(TableExporter):
+
+    type = "csv"
+
     @property
     def option_serializer_class(self) -> Type[BaseExporterOptionsSerializer]:
         return CsvExporterOptionsSerializer
-
-    type = "csv"
 
     @property
     def can_export_table(self) -> bool:
@@ -40,6 +41,13 @@ class CsvTableExporter(TableExporter):
 
 
 class CsvQuerysetSerializer(QuerysetSerializer):
+    """
+    Writes the queryset to the provided file in csv format.
+
+    :param file_writer: The file writer to use to do the writing.
+    :param export_charset: The charset to write to the file using.
+    """
+
     def __init__(self, queryset, ordered_field_objects):
         super().__init__(queryset, ordered_field_objects)
 
@@ -79,6 +87,14 @@ class CsvQuerysetSerializer(QuerysetSerializer):
         file_writer.write_rows(self.queryset, write_row)
 
     def _value_to_csv(self, val):
+        """
+        Converts a python value to a csv suitable value. For lists it joins them with
+        commas, for dicts it turns them into a space separated key=value single column
+        value.
+
+        :param val: A python value to convert to a suitable csv value.
+        :return: A suitable csv value.
+        """
         if isinstance(val, list):
             return ",".join([self._value_to_csv(inner_val) for inner_val in val])
         if isinstance(val, dict):

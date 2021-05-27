@@ -1,10 +1,9 @@
 import { PremPlugin } from '@baserow_premium/plugins'
-import { UsersAdminType } from '@baserow_premium/adminTypes'
+import { DashboardType, UsersAdminType } from '@baserow_premium/adminTypes'
 import {
   JSONTableExporter,
   XMLTableExporter,
 } from '@baserow_premium/tableExporterTypes'
-import { DashboardType, UsersAdminType } from '@baserow_premium/adminTypes'
 
 export default ({ app }) => {
   app.$registry.register('plugin', new PremPlugin())

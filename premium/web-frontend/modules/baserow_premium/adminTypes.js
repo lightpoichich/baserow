@@ -18,7 +18,7 @@ export class DashboardType extends AdminType {
   }
 
   getOrder() {
-    return 0
+    return 3
   }
 }
 
@@ -37,6 +37,28 @@ export class UsersAdminType extends AdminType {
 
   getRouteName() {
     return 'admin-users'
+  }
+
+  getOrder() {
+    return 2
+  }
+}
+
+export class GroupsAdminType extends AdminType {
+  static getType() {
+    return 'groups'
+  }
+
+  getIconClass() {
+    return 'layer-group'
+  }
+
+  getName() {
+    return 'Groups'
+  }
+
+  getRouteName() {
+    return 'admin-groups'
   }
 
   getOrder() {

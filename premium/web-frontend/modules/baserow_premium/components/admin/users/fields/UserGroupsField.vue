@@ -11,7 +11,7 @@
           order: index,
         }"
       >
-        {{ group.name }}
+        {{ group[nameKey] }}
         <i
           v-if="group.permissions == 'ADMIN'"
           v-tooltip="'is group admin'"
@@ -52,6 +52,8 @@ export default {
   },
   data() {
     return {
+      eventName: 'show-hidden-groups',
+      nameKey: 'name',
       overflowing: false,
       numHiddenGroups: 0,
       renderContext: false,
@@ -81,8 +83,8 @@ export default {
   },
   methods: {
     showContext(event) {
-      this.$emit('show-group', {
-        hiddenGroups: this.hiddenGroups,
+      this.$emit(this.eventName, {
+        hiddenValues: this.hiddenGroups,
         target: event.currentTarget,
         time: Date.now(),
       })

@@ -16,11 +16,7 @@ class AdminGroupUserSerializer(ModelSerializer):
     class Meta:
         model = GroupUser
 
-        fields = (
-            "id",
-            "email",
-            "permissions",
-        )
+        fields = ("id", "email", "permissions")
 
 
 class GroupsAdminResponseSerializer(ModelSerializer):
@@ -32,4 +28,5 @@ class GroupsAdminResponseSerializer(ModelSerializer):
             "id",
             "name",
             "users",
+            "created_on",
         )

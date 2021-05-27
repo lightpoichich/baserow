@@ -2,11 +2,11 @@
   <Context>
     <ul class="context__menu">
       <li
-        v-for="group in hiddenGroups"
+        v-for="group in hiddenValues"
         :key="'hidden-admin-row-group' + group.id"
         class="user-admin-group__dropdown-item"
       >
-        {{ group.name }}
+        {{ group[nameKey] }}
         <i
           v-if="group.permissions == 'ADMIN'"
           v-tooltip="'is group admin'"
@@ -24,10 +24,15 @@ export default {
   name: 'HiddenGroupsContext',
   mixins: [context],
   props: {
-    hiddenGroups: {
+    hiddenValues: {
       required: true,
       type: Array,
     },
+  },
+  data() {
+    return {
+      nameKey: 'name',
+    }
   },
 }
 </script>

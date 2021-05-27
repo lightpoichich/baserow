@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 from rest_framework.permissions import IsAdminUser
@@ -70,12 +72,12 @@ class AdminListingView(APIView):
         if not search:
             return queryset
 
-        return queryset.filter(
-            **{
-                f"{search_field}__icontains": search
-                for search_field in self.search_fields
-            }
-        )
+        q = Q()
+
+        for search_field in self.search_fields:
+            q.add(Q(**{f"{search_field}__icontains": search}), Q.OR)
+
+        return queryset.filter(q)
 
     def _apply_sorts_or_default_sort(self, sorts: str, queryset):
         """

@@ -10,10 +10,7 @@ from .serializers import GroupsAdminResponseSerializer
 class GroupsAdminView(AdminListingView):
     serializer_class = GroupsAdminResponseSerializer
     search_fields = ["id", "name"]
-    sort_field_mapping = {
-        "id": "id",
-        "name": "name",
-    }
+    sort_field_mapping = {"id": "id", "name": "name", "created_on": "created_on"}
 
     def get_queryset(self, request):
         return Group.objects.prefetch_related("groupuser_set", "groupuser_set__user")

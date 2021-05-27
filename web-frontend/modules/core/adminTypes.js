@@ -28,7 +28,7 @@ export class AdminType extends Registerable {
    * The order value used to sort admin types in the sidebar menu.
    */
   getOrder() {
-    return 1
+    return 0
   }
 
   getRouteName() {

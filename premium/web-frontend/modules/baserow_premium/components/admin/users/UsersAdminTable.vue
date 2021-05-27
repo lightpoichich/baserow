@@ -5,11 +5,11 @@
     :service="service"
     row-id-key="id"
     @edit-user="displayEditUserContext"
-    @show-group="displayHiddenGroups"
+    @show-hidden-groups="displayHiddenGroups"
     @row-context="onRowContext"
   >
     <template #header>
-      <div class="crudtable__header-title">User Settings</div>
+      <div class="crudtable__header-title">All users</div>
     </template>
     <template #menus="slotProps">
       <EditUserContext
@@ -21,7 +21,7 @@
       </EditUserContext>
       <HiddenGroupsContext
         ref="hiddenGroupsContext"
-        :hidden-groups="hiddenGroups"
+        :hidden-values="hiddenGroups"
       ></HiddenGroupsContext>
     </template>
   </CrudTable>
@@ -40,7 +40,7 @@ import HiddenGroupsContext from '@baserow_premium/components/admin/users/context
 import CrudTableColumn from '@baserow_premium/crud_table/CrudTableColumn'
 
 export default {
-  name: 'UserAdminTable',
+  name: 'UsersAdminTable',
   components: {
     HiddenGroupsContext,
     CrudTable,
@@ -120,7 +120,7 @@ export default {
       })
     },
     displayHiddenGroups(event) {
-      this.hiddenGroups = event.hiddenGroups
+      this.hiddenGroups = event.hiddenValues
       this.$refs.hiddenGroupsContext.show(event.target, 'bottom', 'left', 4)
     },
   },

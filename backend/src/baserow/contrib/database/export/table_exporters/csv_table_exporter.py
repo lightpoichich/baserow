@@ -41,13 +41,6 @@ class CsvTableExporter(TableExporter):
 
 
 class CsvQuerysetSerializer(QuerysetSerializer):
-    """
-    Writes the queryset to the provided file in csv format.
-
-    :param file_writer: The file writer to use to do the writing.
-    :param export_charset: The charset to write to the file using.
-    """
-
     def __init__(self, queryset, ordered_field_objects):
         super().__init__(queryset, ordered_field_objects)
 
@@ -65,6 +58,18 @@ class CsvQuerysetSerializer(QuerysetSerializer):
         csv_column_separator=",",
         csv_include_header=True,
     ):
+        """
+        Writes the queryset to the provided file in csv format using the provided
+        options.
+
+        :param file_writer: The file writer to use to do the writing.
+        :param csv_column_separator: The character used to separate columns in the
+            resulting csv file.
+        :param csv_include_header: Whether or not to include a header in the resulting
+            csv file.
+        :param export_charset: The charset to write to the file using.
+        """
+
         # add BOM to support utf-8 CSVs in MS Excel (for Windows only)
         if export_charset == "utf-8":
             file_writer.write_bytes(b"\xef\xbb\xbf")

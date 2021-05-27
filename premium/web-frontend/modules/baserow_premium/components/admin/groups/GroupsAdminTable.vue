@@ -5,7 +5,7 @@
     :service="service"
     row-id-key="id"
     @edit-group="displayEditGroupContext"
-    @show-hidden-users="displayHiddenUsers"
+    @show-hidden-groups="displayHiddenUsers"
     @row-context="onRowContext"
   >
     <template #header>
@@ -15,7 +15,7 @@
       <EditGroupContext
         ref="editGroupContext"
         :group="editGroup"
-        @delete-user="slotProps.deleteRow"
+        @group-deleted="slotProps.deleteRow"
       >
       </EditGroupContext>
       <HiddenUsersContext

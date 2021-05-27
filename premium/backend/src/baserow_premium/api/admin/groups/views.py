@@ -1,8 +1,19 @@
-from drf_spectacular.utils import extend_schema
+from django.db import transaction
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from baserow.api.decorators import map_exceptions
+from baserow.api.schemas import get_error_schema
+from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST
 from baserow.core.models import Group
-
+from baserow.core.handler import CoreHandler
+from baserow.core.exceptions import GroupDoesNotExist
 from baserow_premium.api.admin.views import AdminListingView
+from baserow_premium.admin.groups.handler import GroupsAdminHandler
 
 from .serializers import GroupsAdminResponseSerializer
 
@@ -26,3 +37,41 @@ class GroupsAdminView(AdminListingView):
     )
     def get(self, *args, **kwargs):
         return super().get(*args, **kwargs)
+
+
+class GroupAdminView(APIView):
+    permission_classes = (IsAdminUser,)
+
+    @extend_schema(
+        tags=["Admin"],
+        operation_id="delete_group",
+        description="Deletes the specified group, if the requesting user is staff.",
+        parameters=[
+            OpenApiParameter(
+                name="group_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the group to delete",
+            ),
+        ],
+        responses={
+            204: None,
+            400: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        }
+    )
+    @transaction.atomic
+    def delete(self, request, group_id):
+        """Deletes the specified group"""
+
+        group = CoreHandler().get_group(
+            group_id, base_queryset=Group.objects.select_for_update()
+        )
+        handler = GroupsAdminHandler()
+        handler.delete_group(request.user, group)
+
+        return Response(status=204)

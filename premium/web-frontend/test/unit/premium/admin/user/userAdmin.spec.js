@@ -1,5 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
-import UserAdminTable from '@baserow_premium/components/admin/user/UserAdminTable'
+import UserAdminTable from '@baserow_premium/components/admin/users/UserAdminTable'
 import moment from 'moment'
 import flushPromises from 'flush-promises'
 import UserAdminUserHelpers from '../../../../fixtures/uiHelpers'

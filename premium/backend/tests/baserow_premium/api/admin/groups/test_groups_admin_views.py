@@ -1,13 +1,15 @@
 import pytest
 
 from django.utils.timezone import make_aware, datetime, utc
+from django.shortcuts import reverse
 
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
+from baserow.core.models import Group
 
 
 @pytest.mark.django_db
@@ -145,3 +147,24 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
             },
         ],
     }
+
+
+@pytest.mark.django_db
+def test_delete_group(api_client, data_fixture):
+    normal_user, normal_token = data_fixture.create_user_and_token()
+    staff_user, staff_token = data_fixture.create_user_and_token(is_staff=True)
+    group = data_fixture.create_group()
+
+    url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": 99999})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+    url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": group.id})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {normal_token}")
+    assert response.status_code == HTTP_403_FORBIDDEN
+
+    url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": group.id})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")
+    assert response.status_code == 204
+    assert Group.objects.all().count() == 0

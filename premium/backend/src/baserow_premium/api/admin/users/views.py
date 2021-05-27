@@ -143,6 +143,7 @@ class UserAdminView(APIView):
             UserDoesNotExistException: USER_ADMIN_UNKNOWN_USER,
         }
     )
+    @transaction.atomic
     def delete(self, request, user_id):
         """
         Deletes the specified user. Raises an exception if you attempt to delete
@@ -154,4 +155,4 @@ class UserAdminView(APIView):
         handler = UserAdminHandler()
         handler.delete_user(request.user, user_id)
 
-        return Response()
+        return Response(status=204)

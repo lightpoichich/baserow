@@ -9,22 +9,22 @@
           </a>
         </li>
       </ul>
-      <!--
-      <DeleteUserModal
-        ref="deleteUserModal"
-        :user="user"
-        @delete-user="onDeleteUser"
-      ></DeleteUserModal>
-      -->
+      <DeleteGroupModal
+        ref="deleteGroupModal"
+        :group="group"
+        @group-deleted="$emit('group-deleted', $event)"
+      ></DeleteGroupModal>
     </template>
   </Context>
 </template>
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
+import DeleteGroupModal from '@baserow_premium/components/admin/groups/modals/DeleteGroupModal'
 
 export default {
   name: 'EditUserContext',
+  components: { DeleteGroupModal },
   mixins: [context],
   props: {
     group: {
@@ -35,7 +35,7 @@ export default {
   methods: {
     showDeleteModal() {
       this.hide()
-      this.$refs.deleteUserModal.show()
+      this.$refs.deleteGroupModal.show()
     },
   },
 }

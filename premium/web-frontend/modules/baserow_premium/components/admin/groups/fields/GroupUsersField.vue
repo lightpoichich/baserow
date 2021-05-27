@@ -6,7 +6,7 @@ export default {
   extends: UserGroupsField,
   data() {
     return {
-      eventName: 'show-hidden-users',
+      eventName: 'show-hidden-groups',
       nameKey: 'email',
     }
   },

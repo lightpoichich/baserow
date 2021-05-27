@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.utils.datetime_safe import datetime
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
@@ -381,7 +382,7 @@ def test_admin_can_delete_user(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_204_NO_CONTENT
 
     response = api_client.get(
         reverse("api:premium:admin:users:list"),

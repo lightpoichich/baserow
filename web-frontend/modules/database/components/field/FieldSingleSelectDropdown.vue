@@ -13,7 +13,7 @@
       @click="show()"
     >
       <div
-        v-if="hasValue()"
+        v-if="hasValue"
         class="field-single-select__dropdown-option"
         :class="'background-color--' + selectedColor"
       >

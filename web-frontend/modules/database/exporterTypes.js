@@ -102,12 +102,4 @@ export class CSVTableExporterType extends TableExporterType {
   getSupportedViews() {
     return [new GridViewType().getType()]
   }
-
-  convertOptionsToJson(exporterOptions) {
-    return {
-      csv_include_header: exporterOptions.csvFirstRowHeader,
-      export_charset: exporterOptions.exportCharset,
-      csv_column_separator: exporterOptions.csvColumnSeparator,
-    }
-  }
 }

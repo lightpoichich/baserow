@@ -7,7 +7,7 @@
     }"
   >
     <a v-if="showInput" class="dropdown__selected" @click="show()">
-      <template v-if="hasValue()">
+      <template v-if="hasValue">
         <i
           v-if="selectedIcon"
           class="dropdown__selected-icon fas"
@@ -15,7 +15,7 @@
         ></i>
         {{ selectedName }}
       </template>
-      <template v-if="!hasValue()"> Make a choice </template>
+      <template v-if="!hasValue"> Make a choice </template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">

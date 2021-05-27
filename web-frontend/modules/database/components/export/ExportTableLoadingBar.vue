@@ -1,24 +1,6 @@
 <template>
   <div class="row">
-    <div
-      v-if="job !== null && !jobIsRunning"
-      class="col col-4 export-table-modal__actions"
-    >
-      <button
-        class="button button--large button--primary export-table-modal__export-button"
-        :class="{ 'button--loading': loading }"
-        :disabled="loading"
-      >
-        Re-Export
-      </button>
-    </div>
-    <div
-      class="col export-table-modal__actions"
-      :class="{
-        'col-8': job === null || jobIsRunning,
-        'col-4': job !== null && !jobIsRunning,
-      }"
-    >
+    <div class="col col-8 export-table-modal__actions">
       <div v-if="job !== null" class="export-table-modal__loading-bar">
         <div
           class="export-table-modal__loading-bar-inner"
@@ -36,20 +18,15 @@
     </div>
     <div class="col col-4 align-right export-table-modal__actions">
       <button
-        v-if="job === null"
+        v-if="job === null || job.status !== 'complete'"
         class="button button--large button--primary export-table-modal__export-button"
         :class="{ 'button--loading': loading }"
-        :disabled="loading"
+        :disabled="disabled"
       >
         Export
       </button>
-      <button
-        v-else-if="jobIsRunning"
-        class="button button--large button--primary button--loading export-table-modal__export-button"
-        :disabled="loading"
-      ></button>
       <a
-        v-else-if="job.status === 'complete'"
+        v-else
         class="button button--large button--success export-table-modal__export-button"
         :href="job.url"
         target="_blank"
@@ -70,6 +47,10 @@ export default {
       default: null,
     },
     loading: {
+      type: Boolean,
+      required: true,
+    },
+    disabled: {
       type: Boolean,
       required: true,
     },

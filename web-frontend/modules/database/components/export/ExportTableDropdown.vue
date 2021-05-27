@@ -1,11 +1,11 @@
 <template>
   <Dropdown
-    v-model="view_id"
+    v-model="localValue"
     :show-search="true"
     :disabled="loading"
-    @input="$emit('input', getViewFor($event))"
+    @input="$emit('input', $event)"
   >
-    <DropdownItem :name="'Export entire table'" :value="-1"></DropdownItem>
+    <DropdownItem name="Export entire table" :value="null"></DropdownItem>
     <DropdownItem
       v-for="v in views"
       :key="v.id"
@@ -18,11 +18,8 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import Dropdown from '@baserow/modules/core/components/Dropdown'
 import DropdownItem from '@baserow/modules/core/components/DropdownItem'
-import ViewService from '@baserow/modules/database/services/view'
-import { populateView } from '@baserow/modules/database/store/view'
 
 export default {
   name: 'ExportTableDropdown',
@@ -36,45 +33,20 @@ export default {
       type: Boolean,
       required: true,
     },
+    views: {
+      type: Array,
+      required: true,
+    },
     value: {
-      type: Object,
+      type: Number,
       required: false,
       default: null,
     },
   },
   data() {
     return {
-      views: [],
-      view_id: this.value === null ? -1 : this.value.id,
+      localValue: this.value,
     }
-  },
-  async fetch() {
-    if (this.table._.selected) {
-      this.views = this.selectedTableViews
-    } else {
-      this.loading = true
-      const { data: viewsData } = await ViewService(this.$client).fetchAll(
-        this.table.id
-      )
-      viewsData.forEach((v) => populateView(v, this.$registry))
-      this.views = viewsData
-      this.loading = false
-    }
-  },
-  computed: {
-    ...mapState({
-      selectedTableViews: (state) => state.view.items,
-    }),
-  },
-  methods: {
-    getViewFor(viewId) {
-      if (viewId === -1) {
-        return null
-      } else {
-        const index = this.views.findIndex((view) => view.id === viewId)
-        return this.views[index]
-      }
-    },
   },
 }
 </script>

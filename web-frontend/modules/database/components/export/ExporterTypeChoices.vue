@@ -10,10 +10,10 @@
             <a
               class="choice-items__link"
               :class="{
-                active: value !== null && value.type === exporterType.type,
+                active: value !== null && value === exporterType.type,
                 disabled: loading,
               }"
-              @click="switchToExporterType(exporterType)"
+              @click="switchToExporterType(exporterType.type)"
             >
               <i
                 class="choice-items__icon fas"
@@ -25,56 +25,25 @@
         </ul>
       </div>
     </div>
-    <div v-else-if="view !== null" class="error">
-      No exporter type available for view {{ view }}.
-    </div>
-    <div v-else class="error">
-      No exporter types are available to export this entire table.
-    </div>
   </div>
 </template>
 
 <script>
 export default {
   props: {
-    view: {
-      required: false,
-      type: Object,
-      default: null,
+    exporterTypes: {
+      required: true,
+      type: Array,
     },
     value: {
       required: false,
-      type: Object,
+      type: String,
       default: null,
     },
     loading: {
       type: Boolean,
       required: true,
     },
-  },
-  computed: {
-    exporterTypes() {
-      const types = Object.values(this.$registry.getAll('exporter'))
-      return types.filter((exporterType) => {
-        if (this.view !== null) {
-          return exporterType.getSupportedViews().includes(this.view.type)
-        } else {
-          return exporterType.getCanExportTable()
-        }
-      })
-    },
-  },
-  watch: {
-    view() {
-      this.switchToExporterType(
-        this.exporterTypes.length > 0 ? this.exporterTypes[0] : null
-      )
-    },
-  },
-  created() {
-    this.switchToExporterType(
-      this.exporterTypes.length > 0 ? this.exporterTypes[0] : null
-    )
   },
   methods: {
     switchToExporterType(exporterType) {

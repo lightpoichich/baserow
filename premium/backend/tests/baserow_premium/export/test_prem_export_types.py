@@ -137,13 +137,64 @@ def test_can_export_every_interesting_different_field_to_xml(
         "phone_number": "+4412345678",
     }
     xml = wide_test(data_fixture, storage_mock, expected, {"exporter_type": "xml"})
-    expected = """<?xml version="1.0" encoding="utf-8" ?>
+    expected_xml = f"""<?xml version="1.0" encoding="utf-8" ?>
 <rows>
-<row><id>1</id><text/><long_text/><url/><email/><negative_int/><positive_int/><negative_decimal/><positive_decimal/><boolean>false</boolean><datetime_us/><date_us/><datetime_eu/><date_eu/><link_row/><file/><single_select/><phone_number/></row>
-<row><id>2</id><text>text</text><long_text>long_text</long_text><url>http://www.google.com</url><email>test@example.com</email><negative_int>-1</negative_int><positive_int>1</positive_int><negative_decimal>-1.2</negative_decimal><positive_decimal>1.2</positive_decimal><boolean>true</boolean><datetime_us>02/01/2020 01:23</datetime_us><date_us>02/01/2020</date_us><datetime_eu>01/02/2020 01:23</datetime_eu><date_eu>01/02/2020</date_eu><link_row><item>linked_row_1</item><item>linked_row_2</item><item>unnamed row 3</item></link_row><file><item><visible_name>a.txt</visible_name><url>http://localhost:8000/media/user_files/hashed_name.txt</url></item></file><single_select>A</single_select><phone_number>+4412345678</phone_number></row>
+<row>
+    <id>1</id>
+    <text/>
+    <long_text/>
+    <url/>
+    <email/>
+    <negative_int/>
+    <positive_int/>
+    <negative_decimal/>
+    <positive_decimal/>
+    <boolean>false</boolean>
+    <datetime_us/>
+    <date_us/>
+    <datetime_eu/>
+    <date_eu/>
+    <link_row/>
+    <file/>
+    <single_select/>
+    <phone_number/>
+</row>
+<row>
+    <id>2</id>
+    <text>text</text>
+    <long_text>long_text</long_text>
+    <url>http://www.google.com</url>
+    <email>test@example.com</email>
+    <negative_int>-1</negative_int>
+    <positive_int>1</positive_int>
+    <negative_decimal>-1.2</negative_decimal>
+    <positive_decimal>1.2</positive_decimal>
+    <boolean>true</boolean>
+    <datetime_us>02/01/2020 01:23</datetime_us>
+    <date_us>02/01/2020</date_us>
+    <datetime_eu>01/02/2020 01:23</datetime_eu>
+    <date_eu>01/02/2020</date_eu>
+    <link_row>
+        <item>linked_row_1</item>
+        <item>linked_row_2</item>
+        <item>unnamed row 3</item>
+    </link_row>
+    <file>
+        <item>
+            <visible_name>a.txt</visible_name>
+            <url>http://localhost:8000/media/user_files/hashed_name.txt</url>
+        </item>
+    </file>
+    <single_select>A</single_select>
+    <phone_number>+4412345678</phone_number>
+</row>
 </rows>
 """
-    assert xml == expected
+    assert strip_indents_and_newlines(xml) == strip_indents_and_newlines(expected_xml)
+
+
+def strip_indents_and_newlines(xml):
+    return "".join([line.strip() for line in xml.split("\n")])
 
 
 def wide_test(data_fixture, storage_mock, expected, options):

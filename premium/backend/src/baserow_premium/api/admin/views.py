@@ -32,7 +32,8 @@ class AdminListingView(APIView):
     )
     def get(self, request):
         """
-        @TODO docs
+        Responds with paginated results related to queryset and serialized defined on
+        this class.
         """
 
         search = request.GET.get("search")
@@ -62,11 +63,16 @@ class AdminListingView(APIView):
 
     def _apply_search(self, search, queryset):
         """
-        @TOTO docs
+        Applies the provided search query to the provided query. If the search query
+        is provided then an `icontains` lookup will be done for each field in the
+        search_fields property. One of the fields has to match the query.
 
-        :param search:
-        :param queryset:
-        :return:
+        :param search: The search query.
+        :type search: str or None
+        :param queryset: The queryset where the search query must be applied to.
+        :type queryset: QuerySet
+        :return: The queryset filtering the results by the search query.
+        :rtype: QuerySet
         """
 
         if not search:
@@ -130,6 +136,11 @@ class AdminListingView(APIView):
     def get_extend_schema_parameters(
         name, serializer_class, search_fields, sort_field_mapping
     ):
+        """
+        Returns the schema properties that can be used in in the @extend_schema
+        decorator.
+        """
+
         fields = sort_field_mapping.keys()
         all_fields = ", ".join(fields)
         field_name_1 = "field_1"

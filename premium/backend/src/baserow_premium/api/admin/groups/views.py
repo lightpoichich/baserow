@@ -28,7 +28,7 @@ class GroupsAdminView(AdminListingView):
 
     @extend_schema(
         tags=["Admin"],
-        operation_id="list_groups",
+        operation_id="admin_list_groups",
         description="Returns all users with detailed information on each user, "
         "if the requesting user has admin permissions.",
         **AdminListingView.get_extend_schema_parameters(
@@ -44,7 +44,7 @@ class GroupAdminView(APIView):
 
     @extend_schema(
         tags=["Admin"],
-        operation_id="delete_group",
+        operation_id="admin_delete_group",
         description="Deletes the specified group, if the requesting user is staff.",
         parameters=[
             OpenApiParameter(
@@ -57,6 +57,7 @@ class GroupAdminView(APIView):
         responses={
             204: None,
             400: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+            401: None,
         },
     )
     @map_exceptions(

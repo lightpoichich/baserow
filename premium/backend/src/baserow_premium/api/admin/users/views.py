@@ -51,7 +51,7 @@ class UsersAdminView(AdminListingView):
 
     @extend_schema(
         tags=["Admin"],
-        operation_id="list_users",
+        operation_id="admin_list_users",
         description="Returns all users with detailed information on each user, "
         "if the requesting user has admin permissions.",
         **AdminListingView.get_extend_schema_parameters(
@@ -68,7 +68,7 @@ class UserAdminView(APIView):
     @extend_schema(
         tags=["Admin"],
         request=UserAdminUpdateSerializer,
-        operation_id="edit_user",
+        operation_id="admin_edit_user",
         description=f"Updates specified user attributes and returns the updated user if"
         f" the requesting user has admin permissions. You cannot update yourself to no "
         f"longer be an admin or active.",
@@ -115,7 +115,7 @@ class UserAdminView(APIView):
 
     @extend_schema(
         tags=["Admin"],
-        operation_id="delete_user",
+        operation_id="admin_delete_user",
         description="Deletes the specified user, if the requesting user has admin "
         "permissions. You cannot delete yourself.",
         parameters=[

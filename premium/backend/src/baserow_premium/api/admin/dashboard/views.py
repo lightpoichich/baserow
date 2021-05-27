@@ -33,6 +33,7 @@ class AdminDashboardView(APIView):
         "for the last 30 days is also included.",
         responses={
             200: AdminDashboardSerializer,
+            401: None,
         },
     )
     @accept_timezone()

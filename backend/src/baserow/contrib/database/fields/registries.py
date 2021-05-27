@@ -604,15 +604,15 @@ class FieldType(
 
         setattr(row, field_name, value)
 
-    def get_human_export_value(self, row, field_object):
+    def get_export_value(self, row, field_object):
         """
         Gets this fields value from the provided row in a form suitable for exporting
-        to a file format fit for humans.
+        to a standalone file.
 
         :param row: The row instance where the value be set on.
         :type row: Object
         :param field_object: The field object for the field to extract
-        :type field: FieldObject
+        :type field_object: FieldObject
         """
 
         return getattr(row, field_object["name"])

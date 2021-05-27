@@ -13,15 +13,35 @@ from baserow.contrib.database.views.registries import view_type_registry
 
 
 class FileWriter(abc.ABC):
+    """
+    A simple file wrapping abstract class which expects it's users to not interact
+    with the file but instead write to it via the provided methods. Crucially any
+    querysets to be written to the file must be done so via the write_rows method
+    as FileWriter implementations perform optimizations when writing querysets in bulk.
+    """
+
     def __init__(self, file):
         self._file = file
 
     @abc.abstractmethod
     def write_bytes(self, value: bytes):
+        """
+        Writes the provided bytes straight to the file.
+
+        :param value: The bytes value to write to the file.
+        """
+
         pass
 
     @abc.abstractmethod
     def write(self, value: str, encoding="utf-8"):
+        """
+        Writes the provided string to the file in the provided encoding.
+
+        :param value: The string to write.
+        :param encoding: The encoding to convert the string to before writing.
+        """
+
         pass
 
     @abc.abstractmethod
@@ -30,6 +50,14 @@ class FileWriter(abc.ABC):
         queryset: QuerySet,
         write_row: Callable[[Any, bool], None],
     ):
+        """
+        A specialized method which knows how to write an entire queryset to the file
+        in an optimal way.
+        :param queryset: The queryset to write to the file.
+        :param write_row: A callable function which takes each row from the queryset in
+            turn and writes to the file.
+        """
+
         pass
 
     def get_csv_dict_writer(self, headers, **kwargs):
@@ -37,6 +65,12 @@ class FileWriter(abc.ABC):
 
 
 class PaginatedExportJobFileWriter(FileWriter):
+    """
+    Uses Django's built-in paginator to write querysets to files in a memory efficient
+    manner. Also updates the provided job as it progresses through any queryset writes
+    every EXPORT_JOB_UPDATE_FREQUENCY_SECONDS.
+    """
+
     EXPORT_JOB_UPDATE_FREQUENCY_SECONDS = 1
 
     def __init__(self, file, job):
@@ -51,6 +85,19 @@ class PaginatedExportJobFileWriter(FileWriter):
         self._file.write(value.encode(encoding))
 
     def write_rows(self, queryset, write_row):
+        """
+        Writes the queryset to the file using the provided write_row callback.
+        Every EXPORT_JOB_UPDATE_FREQUENCY_SECONDS will check if the job has been
+        cancelled and if so stop writing to the file and will raise a
+        ExportJobCanceledException. Finally will also update job.progress_percentage
+        every EXPORT_JOB_UPDATE_FREQUENCY_SECONDS as it progresses through writing
+        the queryset.
+
+        :param queryset: The queryset to write to the file.
+        :param write_row: A callable function which takes each row from the queryset in
+            turn and writes to the file.
+        """
+
         self.last_check = time.perf_counter()
         paginator = Paginator(queryset.all(), 2000)
         i = 0
@@ -90,6 +137,11 @@ class PaginatedExportJobFileWriter(FileWriter):
 
 
 class QuerysetSerializer(abc.ABC):
+    """
+    A class knows how to serialize a given queryset and the fields of said queryset to
+    a file.
+    """
+
     def __init__(self, queryset, ordered_field_objects):
         self.queryset = queryset
         self.field_serializers = [lambda row: ("id", "id", row.id)]
@@ -99,10 +151,22 @@ class QuerysetSerializer(abc.ABC):
 
     @abc.abstractmethod
     def write_to_file(self, file_writer: FileWriter, **kwargs):
+        """
+        Writes the queryset to the provided file_writer.
+        :param file_writer: The file_writer used write the queryset to.
+        :param kwargs: Any kwargs will be passed onto the real non-abstract class.
+        """
+
         pass
 
     @classmethod
     def for_table(cls, table) -> "QuerysetSerializer":
+        """
+        Generates a queryset serializer for the provided table.
+        :param table: The table to serialize.
+        :return: A QuerysetSerializer ready to serialize the table.
+        """
+
         model = table.get_model()
         qs = model.objects.all().enhance_by_fields()
         ordered_field_objects = model._field_objects.values()
@@ -110,6 +174,15 @@ class QuerysetSerializer(abc.ABC):
 
     @classmethod
     def for_view(cls, view) -> "QuerysetSerializer":
+        """
+        Generates a queryset serializer for the provided view according to it's view
+        type and any relevant view settings it might have (filters, sorts,
+        hidden columns etc).
+
+        :param view: The view to serialize.
+        :return: A QuerysetSerializer ready to serialize the table.
+        """
+
         view_type = view_type_registry.get_by_model(view.specific_class)
         fields, model = view_type.get_fields_and_model(view)
         qs = ViewHandler().get_queryset(view, model=model)
@@ -117,13 +190,25 @@ class QuerysetSerializer(abc.ABC):
 
     @staticmethod
     def _get_field_serializer(field_object: FieldObject) -> Callable[[Any], Any]:
+        """
+        An internal standard method which generates a serializer function for a given
+        field_object. It will delegate to the field_types get_export_value on
+        how to convert a given field to a python value to be then writen to the file.
+
+        :param field_object: The field object to generate a serializer for.
+        :return: A callable function which when given a row will return a tuple of the
+            fields database column name, the fields human readable name and finally
+            the value of the field in the provided converted to a python value ready
+            for export.
+        """
+
         def serializer_func(row):
             attr = getattr(row, field_object["name"])
 
             if attr is None:
                 result = ""
             else:
-                result = field_object["type"].get_human_export_value(row, field_object)
+                result = field_object["type"].get_export_value(row, field_object)
 
             return (
                 field_object["name"],

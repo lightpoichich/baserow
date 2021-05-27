@@ -1,7 +1,6 @@
 from decimal import Decimal
 from io import BytesIO
 from unittest.mock import patch
-from xml.dom.minidom import parseString
 
 import pytest
 from django.utils.dateparse import parse_date, parse_datetime

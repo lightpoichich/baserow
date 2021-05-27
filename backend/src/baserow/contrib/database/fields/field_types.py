@@ -180,7 +180,7 @@ class NumberFieldType(FieldType):
             **kwargs,
         )
 
-    def get_human_export_value(self, row, field_object):
+    def get_export_value(self, row, field_object):
         # If the number is an integer we want it to be a literal json number and so
         # don't convert it to a string. However if a decimal to preserve any precision
         # we keep it as a string.
@@ -320,7 +320,7 @@ class DateFieldType(FieldType):
             "The value should be a date/time string, date object or " "datetime object."
         )
 
-    def get_human_export_value(self, row, field_object):
+    def get_export_value(self, row, field_object):
         value = getattr(row, field_object["name"])
         if value is None:
             return value
@@ -498,7 +498,7 @@ class LinkRowFieldType(FieldType):
             models.Prefetch(name, queryset=related_queryset)
         )
 
-    def get_human_export_value(self, row, field_object):
+    def get_export_value(self, row, field_object):
         instance = field_object["field"]
 
         if hasattr(instance, "_related_model"):
@@ -968,7 +968,7 @@ class FileFieldType(FieldType):
             **kwargs,
         )
 
-    def get_human_export_value(self, row, field_object):
+    def get_export_value(self, row, field_object):
         files = []
         value = getattr(row, field_object["name"])
         for file in value:
@@ -1132,7 +1132,7 @@ class SingleSelectFieldType(FieldType):
             "color is exposed."
         )
 
-    def get_human_export_value(self, row, field_object):
+    def get_export_value(self, row, field_object):
         value = getattr(row, field_object["name"])
         return value.value
 

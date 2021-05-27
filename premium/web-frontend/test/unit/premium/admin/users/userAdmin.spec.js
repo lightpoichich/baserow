@@ -1,5 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
-import UserAdminTable from '@baserow_premium/components/admin/users/UserAdminTable'
+import UsersAdminTable from '@baserow_premium/components/admin/users/UsersAdminTable'
 import moment from 'moment'
 import flushPromises from 'flush-promises'
 import UserAdminUserHelpers from '../../../../fixtures/uiHelpers'
@@ -406,7 +406,7 @@ describe('User Admin Component Tests', () => {
     mockPremiumServer.thereAreUsers([firstPageUser], 1, { count: 150 })
     mockPremiumServer.thereAreUsers([secondPageUser], 2, { count: 150 })
 
-    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const userAdmin = await testApp.mount(UsersAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
 
     expect(ui.getSingleRowUsernameText()).toContain(firstPageUser.username)
@@ -436,7 +436,7 @@ describe('User Admin Component Tests', () => {
     })
     mockPremiumServer.thereAreUsers([secondPageUser], 2, { count: 150 })
 
-    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const userAdmin = await testApp.mount(UsersAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
 
     expect(ui.getSingleRowUsernameText()).toContain(firstPageUser.username)
@@ -459,7 +459,7 @@ describe('User Admin Component Tests', () => {
     mockPremiumServer.thereAreUsers([firstUser, secondUser], 1)
     mockPremiumServer.thereAreUsers([firstUser], 1, { search: 'firstUser' })
 
-    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const userAdmin = await testApp.mount(UsersAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
 
     const cells = ui.findCells(14)
@@ -490,7 +490,7 @@ describe('User Admin Component Tests', () => {
       sorts: '+username',
     })
 
-    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const userAdmin = await testApp.mount(UsersAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
 
     const cells = ui.findCells(14)
@@ -528,7 +528,7 @@ describe('User Admin Component Tests', () => {
     })
     mockPremiumServer.thereAreUsers([firstUser, secondUser, thirdUser], 1)
 
-    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const userAdmin = await testApp.mount(UsersAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
 
     let usernameCellsText = ui.findUsernameColumnCellsText()
@@ -632,7 +632,7 @@ describe('User Admin Component Tests', () => {
     const user = mockPremiumServer.aUser(userSetup)
     mockPremiumServer.thereAreUsers([user], 1)
 
-    const userAdmin = await testApp.mount(UserAdminTable, {})
+    const userAdmin = await testApp.mount(UsersAdminTable, {})
     const ui = new UserAdminUserHelpers(userAdmin)
     return { user, userAdmin, ui }
   }

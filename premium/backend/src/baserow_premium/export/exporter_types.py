@@ -3,8 +3,6 @@ from collections import OrderedDict
 from typing import Type, List
 from xml.dom.minidom import parseString
 
-import dicttoxml as dicttoxml
-
 from baserow.contrib.database.api.export.serializers import (
     BaseExporterOptionsSerializer,
 )
@@ -71,18 +69,27 @@ class XMLQuerysetSerializer(QuerysetSerializer):
                 _, field_name, field_xml_value = field_serializer(row)
                 data[field_name] = field_xml_value
 
-            row_xml = dicttoxml.dicttoxml(
+            def to_xml_elem(key, val):
+                if val == "":
+                    return f"<{key}/>"
+                else:
+                    return f"<{key}>{val}</{key}>"
+
+            def to_xml(val):
+                if isinstance(val, bool):
+                    return "true" if val else "false"
+                if isinstance(val, dict):
+                    return "".join(
+                        [to_xml_elem(key, to_xml(val)) for key, val in val.items()]
+                    )
+                if isinstance(val, list):
+                    return "".join([to_xml_elem("item", to_xml(item)) for item in val])
+                return str(val)
+
+            row_xml = to_xml(
                 {"row": data},
-                root=False,
-                attr_type=False,
             )
-            # Extract the first node to get rid of the xml declaration at the top
-            # as we are creating that ourselves above and don't want a new one per row.
-            dom = parseString(row_xml).childNodes[0]
-            file_writer.write(
-                dom.toprettyxml(indent="    "),
-                encoding=export_charset,
-            )
+            file_writer.write(row_xml + "\n", encoding=export_charset)
 
         file_writer.write_rows(self.queryset, write_row)
         file_writer.write("</rows>\n", encoding=export_charset)

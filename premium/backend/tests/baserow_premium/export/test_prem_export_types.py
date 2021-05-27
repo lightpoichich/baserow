@@ -1,6 +1,7 @@
 from decimal import Decimal
 from io import BytesIO
 from unittest.mock import patch
+from xml.dom.minidom import parseString
 
 import pytest
 from django.utils.dateparse import parse_date, parse_datetime
@@ -135,63 +136,14 @@ def test_can_export_every_interesting_different_field_to_xml(
         "single_select": lambda: SelectOption.objects.get(value="A"),
         "phone_number": "+4412345678",
     }
-    contents = wide_test(data_fixture, storage_mock, expected, {"exporter_type": "xml"})
-    assert (
-        contents
-        == f"""<?xml version="1.0" encoding="utf-8" ?>
+    xml = wide_test(data_fixture, storage_mock, expected, {"exporter_type": "xml"})
+    expected = """<?xml version="1.0" encoding="utf-8" ?>
 <rows>
-<row>
-    <id>1</id>
-    <text/>
-    <long_text/>
-    <url/>
-    <email/>
-    <negative_int/>
-    <positive_int/>
-    <negative_decimal/>
-    <positive_decimal/>
-    <boolean>False</boolean>
-    <datetime_us/>
-    <date_us/>
-    <datetime_eu/>
-    <date_eu/>
-    <link_row/>
-    <file/>
-    <single_select/>
-    <phone_number/>
-</row>
-<row>
-    <id>2</id>
-    <text>text</text>
-    <long_text>long_text</long_text>
-    <url>http://www.google.com</url>
-    <email>test@example.com</email>
-    <negative_int>-1</negative_int>
-    <positive_int>1</positive_int>
-    <negative_decimal>-1.2</negative_decimal>
-    <positive_decimal>1.2</positive_decimal>
-    <boolean>True</boolean>
-    <datetime_us>02/01/2020 01:23</datetime_us>
-    <date_us>02/01/2020</date_us>
-    <datetime_eu>01/02/2020 01:23</datetime_eu>
-    <date_eu>01/02/2020</date_eu>
-    <link_row>
-        <item>linked_row_1</item>
-        <item>linked_row_2</item>
-        <item>unnamed row 3</item>
-    </link_row>
-    <file>
-        <item>
-            <visible_name>a.txt</visible_name>
-            <url>http://localhost:8000/media/user_files/hashed_name.txt</url>
-        </item>
-    </file>
-    <single_select>A</single_select>
-    <phone_number>+4412345678</phone_number>
-</row>
+<row><id>1</id><text/><long_text/><url/><email/><negative_int/><positive_int/><negative_decimal/><positive_decimal/><boolean>false</boolean><datetime_us/><date_us/><datetime_eu/><date_eu/><link_row/><file/><single_select/><phone_number/></row>
+<row><id>2</id><text>text</text><long_text>long_text</long_text><url>http://www.google.com</url><email>test@example.com</email><negative_int>-1</negative_int><positive_int>1</positive_int><negative_decimal>-1.2</negative_decimal><positive_decimal>1.2</positive_decimal><boolean>true</boolean><datetime_us>02/01/2020 01:23</datetime_us><date_us>02/01/2020</date_us><datetime_eu>01/02/2020 01:23</datetime_eu><date_eu>01/02/2020</date_eu><link_row><item>linked_row_1</item><item>linked_row_2</item><item>unnamed row 3</item></link_row><file><item><visible_name>a.txt</visible_name><url>http://localhost:8000/media/user_files/hashed_name.txt</url></item></file><single_select>A</single_select><phone_number>+4412345678</phone_number></row>
 </rows>
 """
-    )
+    assert xml == expected
 
 
 def wide_test(data_fixture, storage_mock, expected, options):

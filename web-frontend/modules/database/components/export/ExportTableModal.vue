@@ -1,6 +1,7 @@
 <template>
   <Modal>
     <h2 class="box__title">Export {{ table.name }}</h2>
+    <Error :error="error"></Error>
     <ExportTableForm
       :table="table"
       :view="view"
@@ -95,7 +96,6 @@ export default {
     },
     stopPollAndHandleError(error) {
       this.loading = false
-      this.job = null
       this.stopPollIfRunning()
       this.handleError(error, 'application')
     },

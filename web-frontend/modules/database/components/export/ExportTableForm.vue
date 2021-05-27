@@ -1,8 +1,7 @@
 <template>
   <div>
-    <div v-if="loadingViews" :class="{ 'loading-overlay': loadingViews }"></div>
+    <div v-if="loadingViews" class="loading-overlay"></div>
     <div v-else>
-      <Error :error="error"></Error>
       <form @submit.prevent="submit">
         <div class="row">
           <div class="col col-12">
@@ -44,7 +43,6 @@
 </template>
 
 <script>
-import error from '@baserow/modules/core/mixins/error'
 import ExportTableDropdown from '@baserow/modules/database/components/export/ExportTableDropdown'
 import form from '@baserow/modules/core/mixins/form'
 import ExporterTypeChoices from '@baserow/modules/database/components/export/ExporterTypeChoices'
@@ -61,7 +59,7 @@ export default {
     ExportTableDropdown,
     ExportTableLoadingBar,
   },
-  mixins: [error, form],
+  mixins: [form],
   props: {
     table: {
       type: Object,

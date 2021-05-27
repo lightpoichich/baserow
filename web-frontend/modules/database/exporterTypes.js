@@ -29,14 +29,6 @@ export class TableExporterType extends Registerable {
   }
 
   /**
-   * Converts the data object from the getFormComponent to a json serializable object
-   * which the server expects.
-   */
-  convertOptionsToJson(formComponentDataOptions) {
-    throw new Error('convertOptionsToJson for an exporter type must be set.')
-  }
-
-  /**
    * Whether this exporter type supports exporting just the table without a view.
    */
   getCanExportTable() {

@@ -27,12 +27,6 @@ export class JSONTableExporter extends TableExporterType {
   getSupportedViews() {
     return [new GridViewType().getType()]
   }
-
-  convertOptionsToJson(exporterOptions) {
-    return {
-      export_charset: exporterOptions.exportCharset,
-    }
-  }
 }
 
 export class XMLTableExporter extends TableExporterType {
@@ -58,11 +52,5 @@ export class XMLTableExporter extends TableExporterType {
 
   getSupportedViews() {
     return [new GridViewType().getType()]
-  }
-
-  convertOptionsToJson(exporterOptions) {
-    return {
-      export_charset: exporterOptions.exportCharset,
-    }
   }
 }

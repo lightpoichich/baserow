@@ -120,7 +120,7 @@
             {
               "id": 39,
               "type": "grid",
-              "name": "Grid",
+              "name": "All Companies",
               "order": 1,
               "filter_type": "AND",
               "filters_disabled": false,
@@ -708,7 +708,7 @@
             {
               "id": 42,
               "type": "grid",
-              "name": "Grid",
+              "name": "All Pipelines",
               "order": 1,
               "filter_type": "AND",
               "filters_disabled": false,

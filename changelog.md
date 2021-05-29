@@ -9,8 +9,13 @@
 * Made it possible to order the groups by drag and drop.
 * Made it possible to order the applications by drag and drop.
 * Made it possible to order the tables by drag and drop.
+* **Premium**: Added an admin dashboard.
+* **Premium**: Added group admin area allowing management of all baserow groups.
 * Added today, this month and this year filter.
 * Added Lightweight CRM, Wedding Planning and Book Catalog Template.
+* Added a page containing external resources to the docs.
+* Added a human-readable error message when a user tries to sign in with a deactivated
+  account.
 
 ## Released (2021-05-11)
 

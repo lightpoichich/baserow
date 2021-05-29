@@ -18,7 +18,7 @@ export class DashboardType extends AdminType {
   }
 
   getOrder() {
-    return 3
+    return 1
   }
 }
 
@@ -62,6 +62,6 @@ export class GroupsAdminType extends AdminType {
   }
 
   getOrder() {
-    return 1
+    return 3
   }
 }

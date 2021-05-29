@@ -82,4 +82,8 @@ export class SettingsAdminType extends AdminType {
   getRouteName() {
     return 'admin-settings'
   }
+
+  getOrder() {
+    return 9999
+  }
 }

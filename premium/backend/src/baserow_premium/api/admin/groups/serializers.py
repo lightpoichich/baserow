@@ -21,6 +21,7 @@ class AdminGroupUserSerializer(ModelSerializer):
 
 class GroupsAdminResponseSerializer(ModelSerializer):
     users = AdminGroupUserSerializer(source="groupuser_set", many=True)
+    application_count = serializers.IntegerField()
 
     class Meta:
         model = Group
@@ -28,5 +29,6 @@ class GroupsAdminResponseSerializer(ModelSerializer):
             "id",
             "name",
             "users",
+            "application_count",
             "created_on",
         )

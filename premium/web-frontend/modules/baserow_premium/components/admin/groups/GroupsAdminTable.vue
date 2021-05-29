@@ -72,6 +72,14 @@ export default {
         '500px'
       ),
       new CrudTableColumn(
+        'application_count',
+        'Applications',
+        SimpleField,
+        'min-content',
+        'max-content',
+        true
+      ),
+      new CrudTableColumn(
         'created_on',
         'Created',
         LocalDateField,

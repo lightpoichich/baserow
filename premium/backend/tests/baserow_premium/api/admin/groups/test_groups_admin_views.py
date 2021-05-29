@@ -33,6 +33,8 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
         group=group_1, user=normal_user, permissions="MEMBER"
     )
     data_fixture.create_user_group(group=group_2, user=normal_user, permissions="ADMIN")
+    data_fixture.create_database_application(group=group_1)
+    data_fixture.create_database_application(group=group_1)
 
     response = api_client.get(
         reverse("api:premium:admin:groups:list"),
@@ -65,6 +67,7 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
                         "permissions": "MEMBER",
                     }
                 ],
+                "application_count": 2,
                 "created_on": "2020-04-10T00:00:00Z",
             },
             {
@@ -77,6 +80,7 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
                         "permissions": "ADMIN",
                     }
                 ],
+                "application_count": 0,
                 "created_on": "2020-04-10T00:00:00Z",
             },
         ],
@@ -104,6 +108,7 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
                         "permissions": "MEMBER",
                     }
                 ],
+                "application_count": 2,
                 "created_on": "2020-04-10T00:00:00Z",
             },
         ],
@@ -131,6 +136,7 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
                         "permissions": "ADMIN",
                     }
                 ],
+                "application_count": 0,
                 "created_on": "2020-04-10T00:00:00Z",
             },
             {
@@ -143,6 +149,7 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
                         "permissions": "MEMBER",
                     }
                 ],
+                "application_count": 2,
                 "created_on": "2020-04-10T00:00:00Z",
             },
         ],

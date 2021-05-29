@@ -24,7 +24,7 @@ _USER_ADMIN_SERIALIZER_API_DOC_KWARGS = {
 }
 
 
-class AdminGroupUserSerializer(ModelSerializer):
+class UserAdminGroupsSerializer(ModelSerializer):
     id = serializers.IntegerField(source="group.id")
     name = serializers.CharField(source="group.name")
 
@@ -46,7 +46,7 @@ class UserAdminResponseSerializer(ModelSerializer):
     # Max length set to match django user models first_name fields max length
     name = CharField(source="first_name", max_length=30)
     username = EmailField()
-    groups = AdminGroupUserSerializer(source="groupuser_set", many=True)
+    groups = UserAdminGroupsSerializer(source="groupuser_set", many=True)
 
     class Meta:
         model = User

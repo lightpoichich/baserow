@@ -9,7 +9,7 @@ from baserow.core.models import Group, GroupUser
 User = get_user_model()
 
 
-class AdminGroupUserSerializer(ModelSerializer):
+class GroupAdminUsersSerializer(ModelSerializer):
     id = serializers.IntegerField(source="user.id")
     email = serializers.CharField(source="user.email")
 
@@ -20,7 +20,7 @@ class AdminGroupUserSerializer(ModelSerializer):
 
 
 class GroupsAdminResponseSerializer(ModelSerializer):
-    users = AdminGroupUserSerializer(source="groupuser_set", many=True)
+    users = GroupAdminUsersSerializer(source="groupuser_set", many=True)
     application_count = serializers.IntegerField()
 
     class Meta:

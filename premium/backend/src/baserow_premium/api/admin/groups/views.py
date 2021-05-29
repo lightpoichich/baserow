@@ -37,9 +37,8 @@ class GroupsAdminView(AdminListingView):
     @extend_schema(
         tags=["Admin"],
         operation_id="admin_list_groups",
-        description="Returns all users with detailed information on each user, "
-        "if the requesting user has admin permissions.\n\nThis is a **premium** "
-        "feature.",
+        description="Returns all groups with detailed information on each group, "
+        "if the requesting user is staff.\n\nThis is a **premium** feature.",
         **AdminListingView.get_extend_schema_parameters(
             "groups", serializer_class, search_fields, sort_field_mapping
         ),
@@ -54,8 +53,8 @@ class GroupAdminView(APIView):
     @extend_schema(
         tags=["Admin"],
         operation_id="admin_delete_group",
-        description="Deletes the specified group, if the requesting user is staff."
-        "\n\nThis is a **premium** feature.",
+        description="Deletes the specified group and the applications inside that "
+        "group, if the requesting user is staff. \n\nThis is a **premium** feature.",
         parameters=[
             OpenApiParameter(
                 name="group_id",

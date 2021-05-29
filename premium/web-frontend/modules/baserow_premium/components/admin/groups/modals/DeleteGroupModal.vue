@@ -10,7 +10,7 @@
       </p>
       <p>
         The group will be permanently deleted, including the related
-        application. It is not possible to undo this action.
+        applications. It is not possible to undo this action.
       </p>
       <div class="actions">
         <div class="align-right">

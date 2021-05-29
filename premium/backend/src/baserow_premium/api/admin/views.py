@@ -32,8 +32,8 @@ class AdminListingView(APIView):
     )
     def get(self, request):
         """
-        Responds with paginated results related to queryset and serialized defined on
-        this class.
+        Responds with paginated results related to queryset and the serializer
+        defined on this class.
         """
 
         search = request.GET.get("search")

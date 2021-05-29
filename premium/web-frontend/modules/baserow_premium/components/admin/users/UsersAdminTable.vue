@@ -107,8 +107,9 @@ export default {
   },
   methods: {
     displayEditUserContext(event) {
+      const action = event.user.id === this.editUser.id ? 'toggle' : 'show'
       this.editUser = event.user
-      this.$refs.editUserContext.show(event.target, 'bottom', 'left', 4)
+      this.$refs.editUserContext[action](event.target, 'bottom', 'left', 4)
     },
     onRowContext({ row, event }) {
       this.displayEditUserContext({
@@ -120,8 +121,10 @@ export default {
       })
     },
     displayHiddenGroups(event) {
+      const action =
+        this.hiddenGroups === event.hiddenValues ? 'toggle' : 'show'
       this.hiddenGroups = event.hiddenValues
-      this.$refs.hiddenGroupsContext.show(event.target, 'bottom', 'left', 4)
+      this.$refs.hiddenGroupsContext[action](event.target, 'bottom', 'left', 4)
     },
   },
 }

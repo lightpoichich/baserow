@@ -30,7 +30,7 @@ class AdminDashboardView(APIView):
         "example `previous_new_users_last_24_hours` are the new users that signed up "
         "from 48 to 24 hours ago. It can be used to calculate an increase or decrease "
         "in the amount of signups. A list of the new and active users for every day "
-        "for the last 30 days is also included.",
+        "for the last 30 days is also included.\n\nThis is a **premium** feature.",
         responses={
             200: AdminDashboardSerializer,
             401: None,

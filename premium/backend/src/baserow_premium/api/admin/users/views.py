@@ -53,7 +53,8 @@ class UsersAdminView(AdminListingView):
         tags=["Admin"],
         operation_id="admin_list_users",
         description="Returns all users with detailed information on each user, "
-        "if the requesting user has admin permissions.",
+        "if the requesting user has admin permissions. \n\nThis is a **premium** "
+        "feature.",
         **AdminListingView.get_extend_schema_parameters(
             "users", serializer_class, search_fields, sort_field_mapping
         ),
@@ -71,7 +72,7 @@ class UserAdminView(APIView):
         operation_id="admin_edit_user",
         description=f"Updates specified user attributes and returns the updated user if"
         f" the requesting user has admin permissions. You cannot update yourself to no "
-        f"longer be an admin or active.",
+        f"longer be an admin or active. \n\nThis is a **premium** feature.",
         parameters=[
             OpenApiParameter(
                 name="user_id",
@@ -117,7 +118,7 @@ class UserAdminView(APIView):
         tags=["Admin"],
         operation_id="admin_delete_user",
         description="Deletes the specified user, if the requesting user has admin "
-        "permissions. You cannot delete yourself.",
+        "permissions. You cannot delete yourself. \n\nThis is a **premium** feature.",
         parameters=[
             OpenApiParameter(
                 name="user_id",

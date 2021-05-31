@@ -61,7 +61,7 @@ $ sudo systemctl enable --now redis-server
 $ sudo systemctl restart redis.service
 ```
 
-By default Redis is not publicly accessible, so there is no need to setup a password.
+Redis is not publicly accessible by default, so there is no need to setup a password.
 
 ## Install Baserow
 
@@ -81,7 +81,7 @@ $ sudo -i
 # Clone the baserow project
 $ mkdir /baserow
 $ cd /baserow
-$ git clone --branch master https://gitlab.com/bramw/baserow.git .
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 ```
 
 The password used for the `baserow` user does not have to be the same as the one used
@@ -103,13 +103,13 @@ $ chmod 0755 media
 $ apt install python3 python3-pip virtualenv libpq-dev libmysqlclient-dev -y
 
 # Create virtual environment
-$ virtualenv -p python3 backend/env
+$ virtualenv -p python3 env
 
 # Activate the virtual environment
-$ source backend/env/bin/activate
+$ source env/bin/activate
 
 # Install backend dependencies through pip
-$ pip3 install -e ./backend
+$ pip3 install -e ./baserow/backend
 
 # Deactivate the virtual environment
 $ deactivate

@@ -115,7 +115,7 @@ $ pip3 install -e ./baserow/backend
 $ deactivate
 
 # Install NodeJS
-$ curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+$ curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 $ apt install nodejs -y
 
 # Install yarn
@@ -125,7 +125,7 @@ $ apt update
 $ apt install yarn -y
 
 # Install frontend dependencies through yarn
-$ cd web-frontend
+$ cd baserow/web-frontend
 $ yarn install
 
 # Build frontend
@@ -163,7 +163,7 @@ replace `media.baserow.com` with your domain to serve the user files.
 
 ```bash
 # Move virtualhost files to /etc/nginx/sites-enabled/
-$ cp docs/guides/installation/configuration-files/nginx.conf /etc/nginx/sites-enabled/baserow.conf
+$ cp baserow/docs/guides/installation/configuration-files/nginx.conf /etc/nginx/sites-enabled/baserow.conf
 
 $ rm /etc/nginx/sites-enabled/default
 
@@ -186,7 +186,7 @@ commands:
 
 ```bash
 # Prepare for creating the database schema
-$ source backend/env/bin/activate
+$ source env/bin/activate
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'

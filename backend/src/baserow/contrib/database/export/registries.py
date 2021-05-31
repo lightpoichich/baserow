@@ -27,8 +27,6 @@ class TableExporter(Instance, ABC):
         :return a file extension starting with a dot.
         """
 
-        pass
-
     @property
     @abstractmethod
     def can_export_table(self) -> bool:
@@ -36,16 +34,12 @@ class TableExporter(Instance, ABC):
         Whether or not this exporter supports just exporting a table without a view.
         """
 
-        pass
-
     @property
     @abstractmethod
     def supported_views(self) -> List[str]:
         """
         The list of view types supported by this exporter.
         """
-
-        pass
 
     @property
     @abstractmethod
@@ -56,8 +50,6 @@ class TableExporter(Instance, ABC):
         QuerysetSerializer returned by queryset_serializer_class below.
         """
 
-        pass
-
     @property
     @abstractmethod
     def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
@@ -65,8 +57,6 @@ class TableExporter(Instance, ABC):
         A QuerysetSerializer class which implements this table exporter's specific
         type of export.
         """
-
-        pass
 
 
 class TableExporterRegistry(Registry):

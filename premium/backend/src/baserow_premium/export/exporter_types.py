@@ -138,7 +138,6 @@ def _to_xml_elem(key, val):
 
 
 class XMLTableExporter(TableExporter):
-
     type = "xml"
 
     @property

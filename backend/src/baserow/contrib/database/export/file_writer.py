@@ -31,8 +31,6 @@ class FileWriter(abc.ABC):
         :param value: The bytes value to write to the file.
         """
 
-        pass
-
     @abc.abstractmethod
     def write(self, value: str, encoding="utf-8"):
         """
@@ -41,8 +39,6 @@ class FileWriter(abc.ABC):
         :param value: The string to write.
         :param encoding: The encoding to convert the string to before writing.
         """
-
-        pass
 
     @abc.abstractmethod
     def write_rows(
@@ -57,8 +53,6 @@ class FileWriter(abc.ABC):
         :param write_row: A callable function which takes each row from the queryset in
             turn and writes to the file.
         """
-
-        pass
 
     def get_csv_dict_writer(self, headers, **kwargs):
         return csv.DictWriter(self._file, headers, **kwargs)
@@ -114,6 +108,7 @@ class PaginatedExportJobFileWriter(FileWriter):
         updates its progress percentage.
         Will raise a ExportJobCanceledException exception if when a check occurs
         the job has been cancelled.
+
         :param current_row: An int indicating the current row this export job has
             exported upto
         :param total_rows: An int of the total number of rows this job is exporting.
@@ -153,11 +148,10 @@ class QuerysetSerializer(abc.ABC):
     def write_to_file(self, file_writer: FileWriter, **kwargs):
         """
         Writes the queryset to the provided file_writer.
+
         :param file_writer: The file_writer used write the queryset to.
         :param kwargs: Any kwargs will be passed onto the real non-abstract class.
         """
-
-        pass
 
     @classmethod
     def for_table(cls, table) -> "QuerysetSerializer":

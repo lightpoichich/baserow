@@ -68,6 +68,7 @@ class ExportJob(models.Model):
             not.
         :return: A queryset of export jobs that require clean up.
         """
+
         expired_job_time = current_time - timezone.timedelta(
             minutes=settings.EXPORT_FILE_EXPIRE_MINUTES
         )

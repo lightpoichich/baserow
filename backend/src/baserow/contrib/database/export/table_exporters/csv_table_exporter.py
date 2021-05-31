@@ -16,7 +16,6 @@ from baserow.contrib.database.views.view_types import GridViewType
 
 
 class CsvTableExporter(TableExporter):
-
     type = "csv"
 
     @property
@@ -100,6 +99,7 @@ class CsvQuerysetSerializer(QuerysetSerializer):
         :param val: A python value to convert to a suitable csv value.
         :return: A suitable csv value.
         """
+
         if isinstance(val, list):
             return ",".join([self._value_to_csv(inner_val) for inner_val in val])
         if isinstance(val, dict):

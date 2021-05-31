@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal @hidden="stopPollIfRunning()">
     <div v-if="loadingViews" class="loading-overlay"></div>
     <h2 class="box__title">Export {{ table.name }}</h2>
     <Error :error="error"></Error>
@@ -69,17 +69,20 @@ export default {
       selectedTableViews: (state) => state.view.items,
     }),
   },
-  beforeDestroy() {
-    this.stopPollIfRunning()
-  },
   methods: {
     async show(...args) {
       const show = modal.methods.show.call(this, ...args)
+      this.job = null
+      this.loading = false
       await this.fetchViews()
       this.$nextTick(() => {
         this.valuesChanged()
       })
       return show
+    },
+    hide(...args) {
+      this.stopPollIfRunning()
+      return modal.methods.hide.call(this, ...args)
     },
     async fetchViews() {
       if (this.table._.selected) {

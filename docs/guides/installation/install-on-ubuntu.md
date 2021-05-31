@@ -81,7 +81,7 @@ $ sudo -i
 # Clone the baserow project
 $ mkdir /baserow
 $ cd /baserow
-$ git clone https://gitlab.com/bramw/baserow.git .
+$ git clone --branch master https://gitlab.com/bramw/baserow.git .
 ```
 
 The password used for the `baserow` user does not have to be the same as the one used
@@ -163,14 +163,14 @@ replace `media.baserow.com` with your domain to serve the user files.
 
 ```bash
 # Move virtualhost files to /etc/nginx/sites-enabled/
-$ cp docs/guides/installation/configuration-files/nginx/* /etc/nginx/sites-enabled/
+$ cp docs/guides/installation/configuration-files/nginx.conf /etc/nginx/sites-enabled/baserow.conf
 
 $ rm /etc/nginx/sites-enabled/default
 
 # Change the server_name values
-$ sed -i 's/\*YOUR_DOMAIN\*/api.domain.com/g' /etc/nginx/sites-enabled/baserow-backend.conf
-$ sed -i 's/\*YOUR_DOMAIN\*/baserow.domain.com/g' /etc/nginx/sites-enabled/baserow-frontend.conf
-$ sed -i 's/\*YOUR_DOMAIN\*/media.domain.com/g' /etc/nginx/sites-enabled/baserow-media.conf
+$ sed -i 's/\*YOUR_BACKEND_DOMAIN\*/api.domain.com/g' /etc/nginx/sites-enabled/baserow.conf
+$ sed -i 's/\*YOUR_WEB_FRONTEND_DOMAIN\*/baserow.domain.com/g' /etc/nginx/sites-enabled/baserow.conf
+$ sed -i 's/\*YOUR_MEDIA_DOMAIN\*/media.domain.com/g' /etc/nginx/sites-enabled/baserow.conf
 
 # Then restart nginx so that it processes the configuration files
 $ service nginx restart
@@ -189,7 +189,7 @@ commands:
 $ source backend/env/bin/activate
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
-$ export DATABASE_HOST="localhost"
+$ export DATABASE_HOST='localhost'
 
 # Create database schema
 $ baserow migrate
@@ -216,11 +216,11 @@ $ mkdir /var/log/baserow/
 
 # Move configuration files
 $ cd /baserow
-$ cp docs/guides/installation/configuration-files/supervisor/* /etc/supervisor/conf.d/
+$ cp docs/guides/installation/configuration-files/supervisor.conf /etc/supervisor/conf.d/baserow.conf
 ```
 
-You will need to edit the `baserow-frontend.conf` and `baserow-backend.conf` files
-(located now at `/etc/supervisor/conf.d/`) in order to set the necessary environment
+You will need to edit the `baserow.conf` file (located now at 
+`/etc/supervisor/conf.d/`) in order to set the necessary environment
 variables. You will need to change at least the following variables which can be found
 in the `environment =` section.
 

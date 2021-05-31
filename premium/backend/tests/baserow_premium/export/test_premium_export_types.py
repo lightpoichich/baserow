@@ -246,9 +246,8 @@ def test_if_xml_duplicate_name_and_value_are_escaped(storage_mock, data_fixture)
     job, contents = run_export_job_with_mock_storage(
         table, None, storage_mock, user, {"exporter_type": "xml"}
     )
-    assert (
-        strip_indents_and_newlines(contents)
-        == strip_indents_and_newlines(f"""
+    assert strip_indents_and_newlines(contents) == strip_indents_and_newlines(
+        f"""
 <?xml version="1.0" encoding="utf-8" ?>
 <rows>
   <row>
@@ -262,7 +261,8 @@ def test_if_xml_duplicate_name_and_value_are_escaped(storage_mock, data_fixture)
     <name-2>&lt;value&gt;</name-2>
   </row>
 </rows>
-"""))
+"""
+    )
 
 
 def strip_indents_and_newlines(xml):

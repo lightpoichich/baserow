@@ -22,7 +22,7 @@ def get_unique_name(
 
     keys = data.keys()
 
-    new_name = f'{base_name}{separator}{count}' if count else base_name
+    new_name = f"{base_name}{separator}{count}" if count else base_name
 
     if new_name not in keys:
         return new_name

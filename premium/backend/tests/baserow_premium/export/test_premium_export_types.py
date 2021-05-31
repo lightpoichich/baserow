@@ -115,11 +115,11 @@ def test_if_duplicate_field_names_json_export(storage_mock, data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database)
-    data_fixture.create_text_field(table=table, name="name")
-    data_fixture.create_text_field(table=table, name="name")
-    data_fixture.create_text_field(table=table, name="name")
-    data_fixture.create_text_field(table=table, name='Another"name')
-    data_fixture.create_text_field(table=table, name='Another"name')
+    data_fixture.create_text_field(table=table, name="name", order=1)
+    data_fixture.create_text_field(table=table, name="name", order=2)
+    data_fixture.create_text_field(table=table, name="name", order=3)
+    data_fixture.create_text_field(table=table, name='Another"name', order=4)
+    data_fixture.create_text_field(table=table, name='Another"name', order=5)
     row_handler = RowHandler()
     row_handler.create_row(user=user, table=table)
     job, contents = run_export_job_with_mock_storage(
@@ -130,11 +130,11 @@ def test_if_duplicate_field_names_json_export(storage_mock, data_fixture):
         == """[
 {
     "id": 1,
-    "Another\\"name": "",
-    "Another\\"name 2": "",
     "name": "",
     "name 2": "",
-    "name_3": ""
+    "name 3": "",
+    "Another\\"name": "",
+    "Another\\"name 2": ""
 }
 ]
 """
@@ -230,13 +230,13 @@ def test_if_xml_duplicate_name_and_value_are_escaped(storage_mock, data_fixture)
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database)
-    text = data_fixture.create_text_field(table=table, name="<name>")
-    data_fixture.create_text_field(table=table, name="name")
-    data_fixture.create_text_field(table=table, name="Another name")
-    data_fixture.create_text_field(table=table, name="Another@name")
-    empty_1 = data_fixture.create_text_field(table=table, name="@")
-    empty_2 = data_fixture.create_text_field(table=table, name="")
-    data_fixture.create_text_field(table=table, name="1")
+    text = data_fixture.create_text_field(table=table, name="<name>", order=0)
+    data_fixture.create_text_field(table=table, name="name", order=1)
+    data_fixture.create_text_field(table=table, name="Another name", order=2)
+    data_fixture.create_text_field(table=table, name="Another@name", order=3)
+    empty_1 = data_fixture.create_text_field(table=table, name="@", order=4)
+    empty_2 = data_fixture.create_text_field(table=table, name="", order=5)
+    data_fixture.create_text_field(table=table, name="1", order=6)
     row_handler = RowHandler()
     row_handler.create_row(
         user=user,
@@ -252,13 +252,13 @@ def test_if_xml_duplicate_name_and_value_are_escaped(storage_mock, data_fixture)
 <rows>
   <row>
     <id>1</id>
-    <field-1/>
-    <field-{empty_2.id}/>
-    <field-{empty_1.id}/>
+    <name>&lt;value&gt;</name>
+    <name-2/>
     <Another-name/>
     <Another-name-2/>
-    <name/>
-    <name-2>&lt;value&gt;</name-2>
+    <field-{empty_1.id}/>
+    <field-{empty_2.id}/>
+    <field-1/>
   </row>
 </rows>
 """

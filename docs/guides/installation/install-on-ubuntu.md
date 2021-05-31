@@ -216,13 +216,13 @@ $ mkdir /var/log/baserow/
 
 # Move configuration files
 $ cd /baserow
-$ cp docs/guides/installation/configuration-files/supervisor.conf /etc/supervisor/conf.d/baserow.conf
+$ cp baserow/docs/guides/installation/configuration-files/supervisor.conf /etc/supervisor/conf.d/baserow.conf
 ```
 
 You will need to edit the `baserow.conf` file (located now at 
 `/etc/supervisor/conf.d/`) in order to set the necessary environment
 variables. You will need to change at least the following variables which can be found
-in the `environment =` section.
+in the `environment=` section.
 
 - `PUBLIC_WEB_FRONTEND_URL`: The URL under which your frontend can be reached from the
   internet.
@@ -300,6 +300,30 @@ If you already have Baserow installed on your server and you want to update to t
 latest version then you can execute the following commands. This only works if there
 aren't any additional instructions in the previous release blog posts.
 
+Follow these steps if you installed after June first 2021:
+
+```
+$ cd /baserow/baserow
+$ git pull
+$ cd /baserow
+$ source env/bin/activate
+$ pip3 install -e ./baserow/backend
+$ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
+$ export DATABASE_PASSWORD='yourpassword'
+$ export DATABASE_HOST='localhost'
+$ baserow migrate
+$ baserow sync_templates
+$ deactivate
+$ cd baserow/web-frontend
+$ yarn install
+$ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.local.js
+$ supervisorctl reread
+$ supervisorctl update
+$ supervisorctl restart all
+```
+
+Follow these steps if you installed before June first 2021.
+
 ```
 $ cd /baserow
 $ git pull
@@ -318,4 +342,3 @@ $ supervisorctl reread
 $ supervisorctl update
 $ supervisorctl restart all
 ```
-

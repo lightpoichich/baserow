@@ -25,10 +25,6 @@ export default {
   name: 'ExportTableDropdown',
   components: { Dropdown, DropdownItem },
   props: {
-    table: {
-      type: Object,
-      required: true,
-    },
     loading: {
       type: Boolean,
       required: true,

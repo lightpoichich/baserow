@@ -12,6 +12,8 @@ from baserow.contrib.database.export.file_writer import (
 from baserow.contrib.database.export.registries import TableExporter
 from baserow.contrib.database.views.view_types import GridViewType
 
+from .utils import get_unique_name, safe_xml_tag_name, to_xml
+
 
 class JSONQuerysetSerializer(QuerysetSerializer):
     def write_to_file(self, file_writer: FileWriter, export_charset="utf-8"):
@@ -36,6 +38,7 @@ class JSONQuerysetSerializer(QuerysetSerializer):
             data = {}
             for field_serializer in self.field_serializers:
                 _, field_name, field_csv_value = field_serializer(row)
+                field_name = get_unique_name(data, field_name, separator=" ")
                 data[field_name] = field_csv_value
 
             file_writer.write(json.dumps(data, indent=4), encoding=export_charset)
@@ -47,7 +50,6 @@ class JSONQuerysetSerializer(QuerysetSerializer):
 
 
 class JSONTableExporter(TableExporter):
-
     type = "json"
 
     @property
@@ -95,46 +97,19 @@ class XMLQuerysetSerializer(QuerysetSerializer):
             data = OrderedDict()
             for field_serializer in self.field_serializers:
                 _, field_name, field_xml_value = field_serializer(row)
+                field_name = safe_xml_tag_name(
+                    field_name, "field-", _.replace("_", "-")
+                )
+                field_name = get_unique_name(data, field_name, separator="-")
                 data[field_name] = field_xml_value
 
-            row_xml = _to_xml(
+            row_xml = to_xml(
                 {"row": data},
             )
             file_writer.write(row_xml + "\n", encoding=export_charset)
 
         file_writer.write_rows(self.queryset, write_row)
         file_writer.write("</rows>\n", encoding=export_charset)
-
-
-def _to_xml(val):
-    """
-    Encodes the given python value into an xml string. Does not return an entire
-    xml document but instead a fragment just representing this value.
-
-    :rtype: A string containing an xml fragment for the provided value.
-    """
-    if isinstance(val, bool):
-        return "true" if val else "false"
-    if isinstance(val, dict):
-        return "".join([_to_xml_elem(key, _to_xml(val)) for key, val in val.items()])
-    if isinstance(val, list):
-        return "".join([_to_xml_elem("item", _to_xml(item)) for item in val])
-    return str(val)
-
-
-def _to_xml_elem(key, val):
-    """
-    Returns an xml element of type key containing the val, unless val is the
-    empty string when it returns a closed xml element.
-
-    :param key: The xml tag of the element to generate.
-    :param val: The value of the element to generate.
-    :return: An xml element string.
-    """
-    if val == "":
-        return f"<{key}/>"
-    else:
-        return f"<{key}>{val}</{key}>"
 
 
 class XMLTableExporter(TableExporter):

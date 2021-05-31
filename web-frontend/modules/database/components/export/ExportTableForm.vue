@@ -9,7 +9,6 @@
               v-model="values.view_id"
               :views="views"
               :loading="loading"
-              :table="table"
               @input="values.exporter_type = firstExporterType"
             ></ExportTableDropdown>
           </div>
@@ -50,10 +49,6 @@ export default {
   },
   mixins: [form],
   props: {
-    table: {
-      type: Object,
-      required: true,
-    },
     view: {
       type: Object,
       required: false,

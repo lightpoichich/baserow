@@ -246,15 +246,15 @@ def test_exporting_xml_writes_file_to_storage(
 <rows>
 <row>
     <id>2</id>
-    <text_field>atest</text_field>
-    <option_field>A</option_field>
-    <date_field>02/01/2020 01:23</date_field>
+    <text-field>atest</text-field>
+    <option-field>A</option-field>
+    <date-field>02/01/2020 01:23</date-field>
 </row>
 <row>
     <id>1</id>
-    <text_field>test</text_field>
-    <option_field>B</option_field>
-    <date_field>02/01/2020 01:23</date_field>
+    <text-field>test</text-field>
+    <option-field>B</option-field>
+    <date-field>02/01/2020 01:23</date-field>
 </row>
 </rows>
 """

@@ -111,6 +111,38 @@ def test_can_export_every_interesting_different_field_to_json(
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.export.handler.default_storage")
+def test_if_duplicate_field_names_json_export(storage_mock, data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table, name="name")
+    data_fixture.create_text_field(table=table, name="name")
+    data_fixture.create_text_field(table=table, name="name")
+    data_fixture.create_text_field(table=table, name='Another"name')
+    data_fixture.create_text_field(table=table, name='Another"name')
+    row_handler = RowHandler()
+    row_handler.create_row(user=user, table=table)
+    job, contents = run_export_job_with_mock_storage(
+        table, None, storage_mock, user, {"exporter_type": "json"}
+    )
+    assert (
+        contents
+        == """[
+{
+    "id": 1,
+    "Another\\"name": "",
+    "Another\\"name 2": "",
+    "name": "",
+    "name 2": "",
+    "name_3": ""
+}
+]
+"""
+    )
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
 def test_can_export_every_interesting_different_field_to_xml(
     storage_mock, data_fixture
 ):
@@ -141,55 +173,96 @@ def test_can_export_every_interesting_different_field_to_xml(
 <row>
     <id>1</id>
     <text/>
-    <long_text/>
+    <long-text/>
     <url/>
     <email/>
-    <negative_int/>
-    <positive_int/>
-    <negative_decimal/>
-    <positive_decimal/>
+    <negative-int/>
+    <positive-int/>
+    <negative-decimal/>
+    <positive-decimal/>
     <boolean>false</boolean>
-    <datetime_us/>
-    <date_us/>
-    <datetime_eu/>
-    <date_eu/>
-    <link_row/>
+    <datetime-us/>
+    <date-us/>
+    <datetime-eu/>
+    <date-eu/>
+    <link-row/>
     <file/>
-    <single_select/>
-    <phone_number/>
+    <single-select/>
+    <phone-number/>
 </row>
 <row>
     <id>2</id>
     <text>text</text>
-    <long_text>long_text</long_text>
+    <long-text>long_text</long-text>
     <url>http://www.google.com</url>
     <email>test@example.com</email>
-    <negative_int>-1</negative_int>
-    <positive_int>1</positive_int>
-    <negative_decimal>-1.2</negative_decimal>
-    <positive_decimal>1.2</positive_decimal>
+    <negative-int>-1</negative-int>
+    <positive-int>1</positive-int>
+    <negative-decimal>-1.2</negative-decimal>
+    <positive-decimal>1.2</positive-decimal>
     <boolean>true</boolean>
-    <datetime_us>02/01/2020 01:23</datetime_us>
-    <date_us>02/01/2020</date_us>
-    <datetime_eu>01/02/2020 01:23</datetime_eu>
-    <date_eu>01/02/2020</date_eu>
-    <link_row>
+    <datetime-us>02/01/2020 01:23</datetime-us>
+    <date-us>02/01/2020</date-us>
+    <datetime-eu>01/02/2020 01:23</datetime-eu>
+    <date-eu>01/02/2020</date-eu>
+    <link-row>
         <item>linked_row_1</item>
         <item>linked_row_2</item>
         <item>unnamed row 3</item>
-    </link_row>
+    </link-row>
     <file>
         <item>
             <visible_name>a.txt</visible_name>
             <url>http://localhost:8000/media/user_files/hashed_name.txt</url>
         </item>
     </file>
-    <single_select>A</single_select>
-    <phone_number>+4412345678</phone_number>
+    <single-select>A</single-select>
+    <phone-number>+4412345678</phone-number>
 </row>
 </rows>
 """
     assert strip_indents_and_newlines(xml) == strip_indents_and_newlines(expected_xml)
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_if_xml_duplicate_name_and_value_are_escaped(storage_mock, data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    text = data_fixture.create_text_field(table=table, name="<name>")
+    data_fixture.create_text_field(table=table, name="name")
+    data_fixture.create_text_field(table=table, name="Another name")
+    data_fixture.create_text_field(table=table, name="Another@name")
+    empty_1 = data_fixture.create_text_field(table=table, name="@")
+    empty_2 = data_fixture.create_text_field(table=table, name="")
+    data_fixture.create_text_field(table=table, name="1")
+    row_handler = RowHandler()
+    row_handler.create_row(
+        user=user,
+        table=table,
+        values={f"field_{text.id}": "<value>"},
+    )
+    job, contents = run_export_job_with_mock_storage(
+        table, None, storage_mock, user, {"exporter_type": "xml"}
+    )
+    assert (
+        strip_indents_and_newlines(contents)
+        == strip_indents_and_newlines(f"""
+<?xml version="1.0" encoding="utf-8" ?>
+<rows>
+  <row>
+    <id>1</id>
+    <field-1/>
+    <field-{empty_2.id}/>
+    <field-{empty_1.id}/>
+    <Another-name/>
+    <Another-name-2/>
+    <name/>
+    <name-2>&lt;value&gt;</name-2>
+  </row>
+</rows>
+"""))
 
 
 def strip_indents_and_newlines(xml):

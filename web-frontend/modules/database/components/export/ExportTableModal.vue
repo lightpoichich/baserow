@@ -5,10 +5,8 @@
     <Error :error="error"></Error>
     <ExportTableForm
       ref="form"
-      :table="table"
       :view="view"
       :views="views"
-      :job="job"
       :loading="loading"
       @submitted="submitted"
       @values-changed="valuesChanged"

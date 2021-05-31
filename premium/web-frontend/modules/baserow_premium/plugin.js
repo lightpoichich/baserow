@@ -16,5 +16,4 @@ export default ({ app }) => {
   app.$registry.register('admin', new GroupsAdminType())
   app.$registry.register('exporter', new JSONTableExporter())
   app.$registry.register('exporter', new XMLTableExporter())
-  app.$registry.register('admin', new GroupsAdminType())
 }

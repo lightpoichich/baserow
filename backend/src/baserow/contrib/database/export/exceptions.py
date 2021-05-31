@@ -8,3 +8,7 @@ class TableOnlyExportUnsupported(Exception):
 
 class ViewUnsupportedForExporterType(Exception):
     pass
+
+
+class ExportJobDoesNotExistException(Exception):
+    pass

@@ -16,7 +16,6 @@ from baserow.api.errors import (
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import validate_data, PolymorphicMappingSerializer
 from baserow.contrib.database.api.export.errors import (
-    ExportJobDoesNotExistException,
     ERROR_EXPORT_JOB_DOES_NOT_EXIST,
     ERROR_TABLE_ONLY_EXPORT_UNSUPPORTED,
 )
@@ -30,7 +29,7 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.export.exceptions import (
-    TableOnlyExportUnsupported,
+    TableOnlyExportUnsupported, ExportJobDoesNotExistException
 )
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.export.models import ExportJob

@@ -17,7 +17,3 @@ ERROR_TABLE_ONLY_EXPORT_UNSUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "This exporter type does not support exporting just the table.",
 )
-
-
-class ExportJobDoesNotExistException(Exception):
-    pass

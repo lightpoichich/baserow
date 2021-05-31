@@ -29,7 +29,8 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.export.exceptions import (
-    TableOnlyExportUnsupported, ExportJobDoesNotExistException
+    TableOnlyExportUnsupported,
+    ExportJobDoesNotExistException,
 )
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.export.models import ExportJob

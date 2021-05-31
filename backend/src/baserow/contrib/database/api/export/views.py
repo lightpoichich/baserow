@@ -159,11 +159,6 @@ class ExportJobView(APIView):
         ),
         responses={
             200: ExportJobSerializer,
-            400: get_error_schema(
-                [
-                    "ERROR_REQUEST_BODY_VALIDATION",
-                ]
-            ),
             404: get_error_schema(["ERROR_EXPORT_JOB_DOES_NOT_EXIST"]),
         },
     )
@@ -177,6 +172,7 @@ class ExportJobView(APIView):
         """
         Retrieves the specified export job.
         """
+
         try:
             job = ExportJob.objects.get(id=job_id, user_id=request.user.id)
         except ExportJob.DoesNotExist:

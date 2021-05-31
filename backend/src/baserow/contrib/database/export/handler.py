@@ -26,6 +26,7 @@ from baserow.contrib.database.views.registries import view_type_registry
 from .exceptions import (
     TableOnlyExportUnsupported,
     ViewUnsupportedForExporterType,
+    ExportJobCanceledException,
 )
 from .file_writer import PaginatedExportJobFileWriter
 from .registries import table_exporter_registry, TableExporter
@@ -117,6 +118,9 @@ class ExportHandler:
         job.table.database.group.has_user(job.user, raise_error=True)
         try:
             return _mark_job_as_finished(_open_file_and_run_export(job))
+        except ExportJobCanceledException:
+            # If the job was canceled then it must not be marked as failed.
+            pass
         except Exception as e:
             _mark_job_as_failed(job, e)
             raise e
@@ -126,6 +130,7 @@ class ExportHandler:
         """
         Given an export file name returns the path to where that export file should be
         put in storage.
+
         :param exported_file_name: The name of the file to generate a path for.
         :return: The path where this export file should be put in storage.
         """
@@ -197,6 +202,7 @@ def _cancel_unfinished_jobs(user):
 def _mark_job_as_finished(export_job: ExportJob) -> ExportJob:
     """
     Marks the provided job as finished with the result being the provided file name.
+
     :param export_job: The job to update to be finished.
     :return: The updated finished job.
     """
@@ -210,6 +216,7 @@ def _mark_job_as_finished(export_job: ExportJob) -> ExportJob:
 def _mark_job_as_failed(job, e):
     """
     Marks the given export job as failed and stores the exception in the job.
+
     :param job: The job to mark as failed
     :param e: The exception causing the failure
     :return: The updated failed job.

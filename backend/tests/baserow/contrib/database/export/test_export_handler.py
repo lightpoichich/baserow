@@ -19,6 +19,7 @@ from baserow.contrib.database.api.export.serializers import (
 from baserow.contrib.database.export.exceptions import (
     TableOnlyExportUnsupported,
     ViewUnsupportedForExporterType,
+    ExportJobCanceledException,
 )
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.export.models import (
@@ -576,7 +577,16 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
         def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
             raise Exception("Failed")
 
+    class CancelledTestFileExporter(BrokenTestFileExporter):
+        type = "cancelled"
+
+        @property
+        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+            raise ExportJobCanceledException()
+
     table_exporter_registry.register(BrokenTestFileExporter())
+    table_exporter_registry.register(CancelledTestFileExporter())
+
     job_which_fails = handler.create_pending_export_job(
         user, table, None, {"exporter_type": "broken"}
     )
@@ -587,6 +597,12 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
     assert job_which_fails.status == EXPORT_JOB_FAILED_STATUS
     assert job_which_fails.error == "Failed"
     table_exporter_registry.unregister("broken")
+
+    # We do not expect an error because canceled errors should be ignored.
+    job_which_fails = handler.create_pending_export_job(
+        user, table, None, {"exporter_type": "cancelled"}
+    )
+    handler.run_export_job(job_which_fails)
 
 
 @pytest.mark.django_db

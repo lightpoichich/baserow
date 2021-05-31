@@ -1,30 +1,28 @@
 <template>
-  <div>
-    <Context ref="context">
-      <ul class="context__menu">
-        <li>
-          <a @click="exportView()">
-            <i class="context__menu-icon fas fa-fw fa-file-export"></i>
-            Export view
-          </a>
-        </li>
-        <li>
-          <a @click="enableRename()">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
-            Rename view
-          </a>
-        </li>
-        <li>
-          <a @click="deleteView()">
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
-            Delete view
-          </a>
-        </li>
-      </ul>
-    </Context>
+  <Context ref="context">
+    <ul class="context__menu">
+      <li>
+        <a @click="exportView()">
+          <i class="context__menu-icon fas fa-fw fa-file-export"></i>
+          Export view
+        </a>
+      </li>
+      <li>
+        <a @click="enableRename()">
+          <i class="context__menu-icon fas fa-fw fa-pen"></i>
+          Rename view
+        </a>
+      </li>
+      <li>
+        <a @click="deleteView()">
+          <i class="context__menu-icon fas fa-fw fa-trash"></i>
+          Delete view
+        </a>
+      </li>
+    </ul>
     <DeleteViewModal ref="deleteViewModal" :view="view" />
     <ExportTableModal ref="exportViewModal" :table="table" :view="view" />
-  </div>
+  </Context>
 </template>
 
 <script>

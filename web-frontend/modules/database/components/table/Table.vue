@@ -30,9 +30,7 @@
               </span>
             </template>
             <span v-else>
-              <i
-                class="header__filter-icon header-filter-icon-no-choice fas fa-caret-square-down"
-              ></i>
+              <i class="header__filter-icon fas fa-caret-square-down"></i>
               Choose view
             </span>
           </a>
@@ -45,7 +43,10 @@
             @selected-view="$emit('selected-view', $event)"
           ></ViewsContext>
         </li>
-        <li v-if="hasSelectedView && !readOnly" class="header__filter-item">
+        <li
+          v-if="hasSelectedView && !readOnly"
+          class="header__filter-item header__filter-item--no-margin-left"
+        >
           <a
             class="header__filter-link"
             @click="
@@ -57,9 +58,7 @@
               )
             "
           >
-            <i
-              class="header__filter-icon header-filter-icon-no-choice fas fa-ellipsis-h"
-            ></i>
+            <i class="header__filter-icon fas fa-ellipsis-h"></i>
           </a>
           <ViewContext
             ref="viewContext"

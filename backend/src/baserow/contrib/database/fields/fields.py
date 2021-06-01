@@ -46,7 +46,9 @@ class URLTextField(models.TextField):
         super().__init__(verbose_name, name, **kwargs)
 
     def formfield(self, **kwargs):
-        return super().formfield(**{
-            'form_class': forms.URLField,
-            **kwargs,
-        })
+        return super().formfield(
+            **{
+                "form_class": forms.URLField,
+                **kwargs,
+            }
+        )

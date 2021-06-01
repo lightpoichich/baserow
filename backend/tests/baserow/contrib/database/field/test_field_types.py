@@ -99,18 +99,14 @@ def test_url_field_type(data_fixture):
         )
 
     very_long_url = "https://baserow.io/with-a-very-long-url-that-exceeds-the-old-254-"
-    "char-limit/with-a-very-long-url-that-exceeds-the-old-254-char-limit/with-a-very-" \
-    "long-url-that-exceeds-the-old-254-char-limit/with-a-very-long-url-that-exceeds" \
+    "char-limit/with-a-very-long-url-that-exceeds-the-old-254-char-limit/with-a-very-"
+    "long-url-that-exceeds-the-old-254-char-limit/with-a-very-long-url-that-exceeds"
     "-the-old-254-char/with-a-very-long-url-that-exceeds-the-old-254-char/"
 
     row_handler.create_row(
         user=user,
         table=table,
-        values={
-            "name": "http://test.nl",
-            "url": very_long_url,
-            "number": 5
-        },
+        values={"name": "http://test.nl", "url": very_long_url, "number": 5},
         model=model,
     )
     row_handler.create_row(

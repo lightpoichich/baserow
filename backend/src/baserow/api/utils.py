@@ -7,6 +7,7 @@ from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
 
 from baserow.core.exceptions import InstanceTypeDoesNotExist
+
 from .exceptions import RequestBodyValidationException
 
 

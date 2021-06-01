@@ -80,8 +80,8 @@ export default {
      * Returns true is everything is valid.
      */
     isFormValid() {
-      // Some forms might not themselves do any validation, if they don't then they are
-      // by definition valid if their children are valid.
+      // Some forms might not do any validation themselves. If they don't, then they
+      // are by definition valid if their children are valid.
       const thisFormInvalid = '$v' in this && this.$v.$invalid
       return !thisFormInvalid && this.areChildFormsValid()
     },

@@ -22,6 +22,7 @@ from baserow.contrib.database.export.models import (
 from baserow.contrib.database.export.tasks import run_export_job
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.exceptions import ViewNotInTable
 from baserow.contrib.database.views.registries import view_type_registry
 from .exceptions import (
     TableOnlyExportUnsupported,
@@ -79,10 +80,14 @@ class ExportHandler:
             itself.
         :param export_options: A dict containing exporter_type and the relevant options
             for that type.
+        :raises ViewNotInTable: If the view does not belong to the table.
         :return: The created export job.
         """
 
         table.database.group.has_user(user, raise_error=True)
+
+        if view and view.table.id != table.id:
+            raise ViewNotInTable()
 
         _cancel_unfinished_jobs(user)
 

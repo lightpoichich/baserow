@@ -182,9 +182,12 @@ class ViewType(
         Returns the field objects for the provided view. Depending on the view type this
         will only return the visible or appropriate fields as different view types can
         hide or show fields based on their configuration.
+
         :param view: The view to get the fields for.
+        :type view: View
         :return: An ordered list of field objects for this view and the model for the
             view.
+        :rtype list, Model
         """
 
         model = view.table.get_model()

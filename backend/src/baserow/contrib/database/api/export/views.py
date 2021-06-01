@@ -124,13 +124,7 @@ class ExportTableView(APIView):
         option_data = _validate_options(request.data)
 
         view_id = option_data.pop("view_id", None)
-        if view_id is None:
-            view = None
-        else:
-            view = ViewHandler().get_view(view_id)
-
-            if view.table != table:
-                raise ViewNotInTable()
+        view = ViewHandler().get_view(view_id) if view_id else None
 
         job = ExportHandler.create_and_start_new_job(
             request.user, table, view, option_data

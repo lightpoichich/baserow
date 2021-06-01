@@ -66,13 +66,18 @@ class GridViewType(ViewType):
         return grid_view
 
     def get_fields_and_model(self, view):
+        """
+        Returns the model and the field options in the correct order for exporting
+        this view type.
+        """
+
         grid_view = ViewHandler().get_view(view.id, view_model=GridView)
 
         ordered_field_objects = []
         ordered_visible_fields = (
             grid_view.get_field_options()
             .filter(hidden=False)
-            .order_by("order", "id")
+            .order_by("-field__primary", "order", "id")
             .values_list("field__id", flat=True)
         )
         model = view.table.get_model(field_ids=ordered_visible_fields)

@@ -42,6 +42,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.views.exceptions import ViewNotInTable
 
 
 def _parse_datetime(datetime):
@@ -712,6 +713,19 @@ def test_adding_more_rows_doesnt_increase_number_of_queries_run(
     )
     with django_assert_num_queries(len(captured.captured_queries)):
         run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
+
+
+@pytest.mark.django_db
+def test_creating_job_with_view_that_is_not_in_the_table(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(user=user)
+    handler = ExportHandler()
+
+    with pytest.raises(ViewNotInTable):
+        handler.create_pending_export_job(user, table, view, {"exporter_type": "csv"})
 
 
 def run_export_job_with_mock_storage(

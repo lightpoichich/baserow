@@ -4,7 +4,6 @@ import ViewService from '@baserow/modules/database/services/view'
 import FilterService from '@baserow/modules/database/services/filter'
 import SortService from '@baserow/modules/database/services/sort'
 import { clone } from '@baserow/modules/core/utils/object'
-// import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
 export function populateFilter(filter) {
   filter._ = {

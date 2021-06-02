@@ -35,7 +35,7 @@ to your machine. This contains the Cloudron manifest file that you need when ins
 the app.
 
 ```
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 $ cd baserow/deploy/cloudron
 ```
 

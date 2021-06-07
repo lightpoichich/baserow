@@ -857,3 +857,40 @@ def test_update_select_options(data_fixture):
 
     assert SelectOption.objects.all().count() == 2
     assert field_2.select_options.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_create_unique_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(user=user)
+
+    handler = FieldHandler()
+    field = handler.create_field(
+        user,
+        table,
+        "text",
+        primary=True,
+        **{"unique": True},
+    )
+
+    assert field.unique
+
+    field_2 = handler.create_field(
+        user,
+        table_2,
+        "text",
+        primary=True,
+        **{"unique": False},
+    )
+
+    assert not field_2.unique
+
+    field_1_updated = handler.update_field(
+        user,
+        field_2,
+        new_type_name=None,
+        **{"unique": False},
+    )
+
+    assert not field_1_updated.unique

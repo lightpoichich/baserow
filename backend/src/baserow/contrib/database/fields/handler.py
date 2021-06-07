@@ -187,7 +187,7 @@ class FieldHandler:
             ViewHandler().field_type_changed(field)
 
         allowed_fields = ["name", "unique"] + field_type.allowed_fields
-        
+
         field_values = extract_allowed(kwargs, allowed_fields)
 
         field_values = field_type.prepare_values(field_values, user)

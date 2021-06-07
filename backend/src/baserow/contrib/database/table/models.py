@@ -309,20 +309,22 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
 
             # Add the generated objects and information to the dict that optionally can
             # be returned.
-            attrs['_field_objects'][field.id] = {
+            attrs["_field_objects"][field.id] = {
                 "field": field,
                 "type": field_type,
                 "name": field_name,
-                "unique": field.unique
+                "unique": field.unique,
             }
 
             # Add the field to the attribute dict that is used to generate the model.
             # All the kwargs that are passed to the `get_model_field` method are going
             # to be passed along to the model field.
             attrs[field_name] = field_type.get_model_field(
-                field, db_column=field.db_column, verbose_name=field.name, unique=field.unique
+                field,
+                db_column=field.db_column,
+                verbose_name=field.name,
+                unique=field.unique,
             )
-
 
         # Create the model class.
         model = type(

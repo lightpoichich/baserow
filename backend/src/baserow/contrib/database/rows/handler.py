@@ -6,10 +6,11 @@ from django.db import transaction
 from django.db.models import Max, F, Q
 from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
+from django.db.utils import IntegrityError
 
 from baserow.contrib.database.fields.models import Field
 
-from .exceptions import RowDoesNotExist
+from .exceptions import RowDoesNotExist, DuplicateKey
 from .signals import (
     before_row_update,
     before_row_delete,
@@ -249,7 +250,11 @@ class RowHandler:
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
         values["order"] = self.get_order_before_row(before, model)
-        instance = model.objects.create(**values)
+        try:
+            instance = model.objects.create(**values)
+        except IntegrityError as e:
+            print(e)
+            raise DuplicateKey()
 
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)

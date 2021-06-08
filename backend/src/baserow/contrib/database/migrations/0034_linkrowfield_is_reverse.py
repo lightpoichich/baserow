@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0033_remove_field_unique'),
+        ('database', '0031_fix_url_field_max_length'),
     ]
 
     operations = [

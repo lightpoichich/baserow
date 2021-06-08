@@ -251,6 +251,8 @@ class LinkRowField(Field):
     )
     link_row_relation_id = models.IntegerField(null=True, blank=True)
 
+    is_reverse = models.BooleanField(null=False, default=False)
+
     def save(self, *args, **kwargs):
         """
         Every LinkRow needs to have a unique relation id that is shared with the

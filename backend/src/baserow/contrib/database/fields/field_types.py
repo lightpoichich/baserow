@@ -454,6 +454,7 @@ class LinkRowFieldType(FieldType):
         "link_row_table",
         "link_row_related_field",
         "link_row_relation_id",
+        "is_reverse",
     ]
     serializer_field_names = ["link_row_table", "link_row_related_field"]
     serializer_field_overrides = {
@@ -686,8 +687,80 @@ class LinkRowFieldType(FieldType):
         table so a reversed lookup can be done by the user.
         """
 
+        """
+        Many-To-Many relationships are bidirectional in Baserow which implies that
+        neither entity "owns" the relationship.  For example a book can have many
+        authors and an author can have many books.  However even in this example you
+        normally define one of the entities as owning the relationship.  In the example
+        above this would probably be the book owning it's list of authors.  This is also
+        simplifies the way the relationship is managed programmatically.
+
+        The below patch makes this assumption and adds an "on delete cascade foreign
+        key" on the owning entity such that if the owning entity of a foreign key is
+        deleted the corresponding many-to-many entities are removed.
+
+        Note that for the other side of the relationship we enforce a foreign key but
+        without the "on delete cascade" clause.  In our toy example this means you can
+        associate books with authors AND you can delete book records and have the
+        book-to-authors many-to-many relationships deleted for you BUT you can't delete
+        an author that is listed for a book without first removing the author from the
+        list of authors for all their books
+        """
+
         if field.link_row_related_field:
+            with connection.cursor() as cursor:
+                link_database_name = f"database_relation_{field.link_row_relation_id}"
+                constraint_name = (
+                    f"fk_{field.link_row_relation_id}_" f"{field.link_row_table_id}"
+                )
+
+                if field.link_row_table_id == field.table.id:
+                    parent_foreign_key_column_name = (
+                        f"to_table" f"{field.link_row_table_id}model_id"
+                    )
+                else:
+                    parent_foreign_key_column_name = (
+                        f"table" f"{field.link_row_table_id}model_id"
+                    )
+
+                parent_table = f"database_table_{field.link_row_table_id}"
+
+                sql = (
+                    f"ALTER TABLE {link_database_name} ADD CONSTRAINT "
+                    f"{constraint_name} FOREIGN KEY  "
+                    f"({parent_foreign_key_column_name}"
+                    f") REFERENCES {parent_table}(id) ON DELETE CASCADE "
+                )
+                cursor.execute(sql)
+
             return
+
+        with connection.cursor() as cursor:
+            link_database_name = f"database_relation_{field.link_row_relation_id}"
+            constraint_name = (
+                f"fk_{field.link_row_relation_id}_" f"{field.link_row_table_id}"
+            )
+
+            if field.link_row_table_id == field.table.id:
+                parent_foreign_key_column_name = (
+                    f"from_table" f"{field.link_row_table_id}model_id"
+                )
+            else:
+                parent_foreign_key_column_name = (
+                    f"table" f"{field.link_row_table_id}model_id"
+                )
+
+            parent_table = f"database_table_{field.link_row_table_id}"
+
+            sql = (
+                f"ALTER TABLE {link_database_name} ADD CONSTRAINT "
+                f"{constraint_name} "
+                f"FOREIGN KEY  ({parent_foreign_key_column_name}) "
+                f"REFERENCES {parent_table}(id)"
+            )
+            print(sql)
+
+            cursor.execute(sql)
 
         field.link_row_related_field = FieldHandler().create_field(
             user=user,
@@ -698,6 +771,7 @@ class LinkRowFieldType(FieldType):
             link_row_table=field.table,
             link_row_related_field=field,
             link_row_relation_id=field.link_row_relation_id,
+            is_reverse=True,
         )
         field.save()
 

@@ -657,7 +657,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
         {
-            f"field_{link_row_field.id}": [customers_row_1.id, customers_row_2.id, 999],
+            f"field_{link_row_field.id}": [customers_row_1.id, customers_row_2.id],
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -735,6 +735,17 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json[f"field_{link_row_field.id}"]) == 0
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
+        {
+            f"field_{link_row_field.id}": [999],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db

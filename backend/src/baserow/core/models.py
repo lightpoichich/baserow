@@ -6,16 +6,28 @@ from rest_framework.exceptions import NotAuthenticated
 
 from baserow.core.user_files.models import UserFile
 
-from .managers import GroupQuerySet
 from .mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+    TrashableModelMixin,
+    ParentGroupTrashableModelMixin,
 )
 from .exceptions import UserNotInGroup, UserInvalidGroupPermissionsError
 
 
-__all__ = ["UserFile"]
+__all__ = [
+    "Settings",
+    "Group",
+    "GroupUser",
+    "GroupInvitation",
+    "Application",
+    "TemplateCategory",
+    "Template",
+    "UserLogEntry",
+    "Trash",
+    "UserFile",
+]
 
 
 User = get_user_model()
@@ -48,14 +60,17 @@ class Settings(models.Model):
     )
 
 
-class Group(CreatedAndUpdatedOnMixin, models.Model):
+class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=100)
     users = models.ManyToManyField(User, through="GroupUser")
 
-    objects = GroupQuerySet.as_manager()
-
     def has_user(
-        self, user, permissions=None, raise_error=False, allow_if_template=False
+        self,
+        user,
+        permissions=None,
+        raise_error=False,
+        allow_if_template=False,
+        include_trash=False,
     ):
         """
         Checks if the provided user belongs to the group.
@@ -71,6 +86,9 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         :param allow_if_template: If true and if the group is related to a template,
             then True is always returned and no exception will be raised.
         :type allow_if_template: bool
+        :param include_trash: If true then also checks if the group has been trashed
+            instead of raising a DoesNotExist exception.
+        :type include_trash: bool
         :raises UserNotInGroup: If the user does not belong to the group.
         :raises UserInvalidGroupPermissionsError: If the user does belong to the group,
             but doesn't have the right permissions.
@@ -89,7 +107,12 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
             else:
                 return False
 
-        queryset = GroupUser.objects.filter(user_id=user.id, group_id=self.id)
+        if include_trash:
+            manager = GroupUser.objects_and_trash
+        else:
+            manager = GroupUser.objects
+
+        queryset = manager.filter(user_id=user.id, group_id=self.id)
 
         if raise_error:
             try:
@@ -109,7 +132,12 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         return f"<Group id={self.id}, name={self.name}>"
 
 
-class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
+class GroupUser(
+    ParentGroupTrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    models.Model,
+):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -140,7 +168,9 @@ class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         return cls.get_highest_order_of_queryset(queryset) + 1
 
 
-class GroupInvitation(CreatedAndUpdatedOnMixin, models.Model):
+class GroupInvitation(
+    ParentGroupTrashableModelMixin, CreatedAndUpdatedOnMixin, models.Model
+):
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
@@ -247,3 +277,15 @@ class UserLogEntry(models.Model):
     class Meta:
         get_latest_by = "timestamp"
         ordering = ["-timestamp"]
+
+
+class Trash(models.Model):
+    user_who_trashed = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, null=True, blank=True
+    )
+    trash_item_type = models.TextField()
+    trash_item_id = models.PositiveIntegerField()
+    should_be_permanently_deleted = models.BooleanField(default=False)
+    trashed_at = models.DateTimeField(auto_now_add=True)

@@ -135,7 +135,8 @@ class GroupView(APIView):
         description=(
             "Deletes an existing group if the authorized user belongs to the group. "
             "All the applications, databases, tables etc that were in the group are "
-            "going to be deleted also."
+            "going to be deleted also. After the group has been deleted it can be "
+            "restored from the trash page or using the trash api endpoints."
         ),
         request=GroupSerializer,
         responses={

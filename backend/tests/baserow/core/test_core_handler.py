@@ -38,6 +38,7 @@ from baserow.core.models import (
     TemplateCategory,
     GROUP_USER_PERMISSION_ADMIN,
 )
+from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
 
@@ -200,6 +201,33 @@ def test_create_group(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+@patch("baserow.core.signals.group_created.send")
+def test_restore_group(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(name="Test group", user=user)
+
+    handler = CoreHandler()
+
+    handler.delete_group(user, group)
+
+    assert Group.objects.count() == 0
+
+    TrashHandler.restore_item(user, "group", group.id)
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["group"].id == group.id
+    assert send_mock.call_args[1]["user"] is None
+
+    group = Group.objects.all().first()
+    user_group = GroupUser.objects.all().first()
+
+    assert group.name == "Test group"
+    assert user_group.user == user
+    assert user_group.group == group
+    assert user_group.permissions == GROUP_USER_PERMISSION_ADMIN
+
+
+@pytest.mark.django_db
 @patch("baserow.core.signals.group_updated.send")
 def test_update_group(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
@@ -230,7 +258,7 @@ def test_delete_group(send_mock, data_fixture):
     user = data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group_1)
-    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_database_table(database=database)
     data_fixture.create_group(user=user)
     user_2 = data_fixture.create_user()
     group_3 = data_fixture.create_group(user=user_2)
@@ -238,25 +266,28 @@ def test_delete_group(send_mock, data_fixture):
     handler = CoreHandler()
     handler.delete_group(user, group_1)
 
+    assert group_1.trashed
+
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["group"].id == group_1.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert len(send_mock.call_args[1]["group_users"]) == 1
     assert send_mock.call_args[1]["group_users"][0].id == user.id
 
-    assert Database.objects.all().count() == 0
-    assert Table.objects.all().count() == 0
-    assert f"database_table_{table.id}" not in connection.introspection.table_names()
-    assert Group.objects.all().count() == 2
-    assert GroupUser.objects.all().count() == 2
+    assert Group.objects.count() == 2
+    assert GroupUser.objects.count() == 2
+    assert Group.trash.count() == 1
+    assert GroupUser.trash.count() == 1
 
     with pytest.raises(UserNotInGroup):
         handler.delete_group(user, group_3)
 
     handler.delete_group(user_2, group_3)
 
-    assert Group.objects.all().count() == 1
-    assert GroupUser.objects.all().count() == 1
+    assert Group.objects.count() == 1
+    assert GroupUser.objects.count() == 1
+    assert Group.trash.count() == 2
+    assert GroupUser.trash.count() == 2
 
     with pytest.raises(ValueError):
         handler.delete_group(user=user_2, group=object())

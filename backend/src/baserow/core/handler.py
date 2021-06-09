@@ -38,6 +38,7 @@ from .exceptions import (
     TemplateFileDoesNotExist,
     TemplateDoesNotExist,
 )
+from .trash.handler import TrashHandler
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
 from .signals import (
@@ -174,7 +175,8 @@ class CoreHandler:
     def delete_group(self, user, group):
         """
         Deletes an existing group and related applications if the user has admin
-        permissions to the group.
+        permissions for the group. The group can be restored after deletion using the
+        trash handler.
 
         :param user: The user on whose behalf the delete is done.
         :type: user: User
@@ -193,22 +195,11 @@ class CoreHandler:
         group_id = group.id
         group_users = list(group.users.all())
 
-        self._delete_group(group)
+        TrashHandler.trash(user, group, None, group)
 
         group_deleted.send(
             self, group_id=group_id, group=group, group_users=group_users, user=user
         )
-
-    def _delete_group(self, group):
-        """Deletes the provided group."""
-
-        # Select all the applications so we can delete them via the handler which is
-        # needed in order to call the pre_delete method for each application.
-        applications = group.application_set.all().select_related("group")
-        for application in applications:
-            self._delete_application(application)
-
-        group.delete()
 
     def order_groups(self, user, group_ids):
         """
@@ -391,6 +382,8 @@ class CoreHandler:
         :return: The requested field instance of the provided id.
         :rtype: GroupInvitation
         """
+
+        # TODO Raise does not exist if Group has been trashed
 
         if not base_queryset:
             base_queryset = GroupInvitation.objects
@@ -581,6 +574,8 @@ class CoreHandler:
         :return: The requested application instance of the provided id.
         :rtype: Application
         """
+
+        # TODO Raise does not exist if group or self trashed
 
         if not base_queryset:
             base_queryset = Application.objects
@@ -871,7 +866,7 @@ class CoreHandler:
                 and installed_template.group
                 and installed_template.export_hash != export_hash
             ):
-                self._delete_group(installed_template.group)
+                TrashHandler.permanently_delete(installed_template.group)
 
             # If the installed template does not yet exist or if there is a export
             # hash mismatch, which means the group has already been deleted, we can
@@ -944,7 +939,7 @@ class CoreHandler:
             for template_file_path in templates
         ]
         for template in Template.objects.filter(~Q(slug__in=slugs)):
-            self._delete_group(template.group)
+            TrashHandler.permanently_delete(template.group)
             template.delete()
 
         # Delete all the categories that don't have any templates anymore.

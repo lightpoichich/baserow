@@ -55,6 +55,8 @@ class ViewHandler:
         :return:
         """
 
+        # TODO raise DoesNotExist if table, group or app does not exist
+
         if not view_model:
             view_model = View
 

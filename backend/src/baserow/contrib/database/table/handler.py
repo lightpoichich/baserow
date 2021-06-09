@@ -37,6 +37,8 @@ class TableHandler:
         :rtype: Table
         """
 
+        # Raise DoesNotExist if parent group or app has been deleted
+
         if not base_queryset:
             base_queryset = Table.objects
 

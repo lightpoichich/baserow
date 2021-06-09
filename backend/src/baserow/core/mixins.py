@@ -1,8 +1,15 @@
-from django.db import models
-from django.db.models import Case, When, Value
-from django.db.models.fields import NOT_PROVIDED
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
+from django.db.models import Case, When, Value, Manager
+from django.db.models.fields import NOT_PROVIDED
 from django.utils.functional import cached_property
+
+from baserow.core.managers import (
+    NonTrashedManager,
+    TrashedManager,
+    GroupParentNonTrashedManager,
+    GroupParentTrashedManager,
+)
 
 
 class OrderableMixin:
@@ -159,6 +166,36 @@ class CreatedAndUpdatedOnMixin(models.Model):
 
     created_on = models.DateTimeField(auto_now_add=True, blank=True, editable=False)
     updated_on = models.DateTimeField(auto_now=True, blank=True, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class ParentGroupTrashableModelMixin(models.Model):
+    """
+    Returns a mixin which overrides the models object's attribute to filter out
+    rows whose parent group is trashed.
+    """
+
+    objects = GroupParentNonTrashedManager()
+    trash = GroupParentTrashedManager()
+    objects_and_trash = Manager()
+
+    class Meta:
+        abstract = True
+
+
+class TrashableModelMixin(models.Model):
+    """
+    This mixin allows this model to be trashed and restored from the trash by adding
+    new columns recording it's trash status.
+    """
+
+    trashed = models.BooleanField(default=False)
+
+    objects = NonTrashedManager()
+    trash = TrashedManager()
+    objects_and_trash = Manager()
 
     class Meta:
         abstract = True

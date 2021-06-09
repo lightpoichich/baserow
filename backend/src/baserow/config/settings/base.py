@@ -82,6 +82,11 @@ CELERY_BROKER_URL = REDIS_URL
 CELERY_TASK_ROUTES = {
     "baserow.contrib.database.export.tasks.run_export_job": {"queue": "export"},
     "baserow.contrib.database.export.tasks.clean_up_old_jobs": {"queue": "export"},
+    # TODO Rename export queue to slow queue.
+    "baserow.core.trash.tasks.mark_old_trash_for_permanent_deletion": {
+        "queue": "export"
+    },
+    "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
 }
 CELERY_SOFT_TIME_LIMIT = 60 * 5
 CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60
@@ -309,3 +314,6 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 DEFAULT_APPLICATION_TEMPLATE = "project-management"
 
 MAX_FIELD_LIMIT = 1500
+
+HOUR_DURATION_UNTIL_TRASH_ITEM_PERMANENTLY_DELETED = 24 * 4
+OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5

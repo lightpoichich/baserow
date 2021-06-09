@@ -203,6 +203,8 @@ class RowHandler:
         :rtype: Model
         """
 
+        # TODO Raises if this is trashed or any parent
+
         if not model:
             model = table.get_model()
 

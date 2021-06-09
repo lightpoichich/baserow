@@ -43,6 +43,8 @@ class FieldHandler:
         :rtype: Field
         """
 
+        # TODO raise DoesNotExist if parent group, table or app does not exist
+
         if not field_model:
             field_model = Field
 

@@ -216,9 +216,15 @@ def test_can_get_trash_contents_structure(api_client, data_fixture):
             {
                 "id": group_to_delete.id,
                 "trashed": True,
-                "applications": [{"id": application.id}],
+                "name": group_to_delete.name,
+                "applications": [{"id": application.id, "name": application.name}],
             },
-            {"id": normal_group.id, "trashed": False, "applications": []},
+            {
+                "id": normal_group.id,
+                "trashed": False,
+                "name": normal_group.name,
+                "applications": [],
+            },
         ]
     }
 

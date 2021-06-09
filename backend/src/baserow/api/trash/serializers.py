@@ -8,6 +8,7 @@ class TrashStructureApplicationSerializer(serializers.ModelSerializer):
         model = Application
         fields = (
             "id",
+            "name"
             # TODO Trash - Remove when apps are trashable "trashed"
         )
 
@@ -19,7 +20,7 @@ class TrashStructureGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ("id", "trashed", "applications")
+        fields = ("id", "trashed", "name", "applications")
 
 
 class TrashContentsGroupSerializer(serializers.ModelSerializer):

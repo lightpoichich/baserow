@@ -233,6 +233,7 @@ class TemplateCategory(models.Model):
         ordering = ("name",)
 
 
+# TODO Trash - What if group trashed?
 class Template(models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(

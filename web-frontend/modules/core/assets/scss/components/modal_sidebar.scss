@@ -6,6 +6,11 @@
 
 .modal-sidebar__head-icon {
   flex: 0 0 32px;
+  margin-right: 16px;
+}
+
+.modal-sidebar__head-initials-icon {
+  flex: 0 0 32px;
   border-radius: 100%;
   margin-right: 16px;
   background-color: $color-primary-500;

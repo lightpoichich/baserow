@@ -34,6 +34,10 @@ class TrashStructureSerializer(serializers.Serializer):
 
 
 class TrashContentsSerializer(serializers.ModelSerializer):
+    user_who_trashed = serializers.CharField(
+        source="user_who_trashed.first_name", max_length=32
+    )
+
     class Meta:
         model = Trash
         fields = (
@@ -44,4 +48,6 @@ class TrashContentsSerializer(serializers.ModelSerializer):
             "trashed_at",
             "application",
             "group",
+            "name",
+            "parent_name",
         )

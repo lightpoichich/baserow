@@ -1,3 +1,29 @@
 .trash__unselected-group-icon {
   color: $color-neutral-300;
 }
+
+.trash__trashed-group-link {
+  text-decoration-line: line-through;
+
+  &:hover {
+    text-decoration: line-through;
+  }
+}
+
+.trash-box-title {
+  padding-bottom: 5px;
+}
+
+.trash-box-title__header {
+  margin-bottom: 5px;
+}
+
+.trash-sub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.trash-sub-header__title {
+  color: $color-neutral-400;
+}

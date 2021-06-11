@@ -283,6 +283,8 @@ class UserLogEntry(models.Model):
 class Trash(models.Model):
     user_who_trashed = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    name = models.TextField()
+    parent_name = models.TextField(null=True, blank=True)
     application = models.ForeignKey(
         Application, on_delete=models.CASCADE, null=True, blank=True
     )

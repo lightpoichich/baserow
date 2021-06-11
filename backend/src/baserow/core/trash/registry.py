@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 from baserow.core.models import Group
 from baserow.core.registries import application_type_registry
@@ -9,7 +9,7 @@ from baserow.core.registry import (
     ModelInstanceMixin,
     Instance,
 )
-from baserow.core.signals import group_created
+from baserow.core.signals import group_created, group_user_updated
 
 
 class TrashableItemTypeRegistry(ModelRegistryMixin, Registry):
@@ -63,14 +63,46 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         """
         pass
 
+    @abstractmethod
+    def get_name(self, trashed_item: Any) -> str:
+        """
+        Should return the name of this particular trashed item to display in the trash
+        modal.
+
+        :param trashed_item: The item to be named.
+        :return The name of the trashed_item
+        """
+        pass
+
+    @abstractmethod
+    def get_parent_name(self, trashed_item: Any) -> Optional[str]:
+        """
+        Should return the name of the parent for this particular trashed item to
+        display in the trash modal.
+
+        :param trashed_item: The item whose parent is to be named.
+        :return The name of the parent of the trashed_item if any or None if no parent.
+        """
+        pass
+
 
 class GroupTrashableItemType(TrashableItemType):
+    def get_name(self, trashed_item: Group) -> str:
+        return trashed_item.name
+
+    def get_parent_name(self, trashed_item: Any) -> Optional[str]:
+        return None
+
     def trashed_item_restored(self, trashed_item: Group):
         """
         Informs any clients that the group exists again.
         """
 
-        # TODO Trash - Can't reorder groups after a restore in GUI?
+        # TODO Trash - How does this perform? Do we want to instead provide group
+        #  member info in the group_created signal? Without this the front end does
+        #  not know what permission they have in the group which breaks things!
+        for group_user in trashed_item.groupuser_set.all():
+            group_user_updated.send(self, group_user=group_user, user=None)
         group_created.send(self, group=trashed_item, user=None)
 
     def permanently_delete_item(self, trashed_item: Group):

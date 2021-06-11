@@ -53,7 +53,9 @@ def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fi
                 "trash_item_id": group_to_delete.id,
                 "trash_item_type": "group",
                 "trashed_at": "2020-01-01T12:00:00Z",
-                "user_who_trashed": user.id,
+                "user_who_trashed": user.first_name,
+                "name": group_to_delete.name,
+                "parent_name": None,
             }
         ],
     }

@@ -26,12 +26,13 @@ export const actions = {
   /**
    * Shows a notification message to the user.
    */
-  add({ commit }, { type, title, message }) {
+  add({ commit }, { type, title = null, message = null, data = null }) {
     commit('ADD', {
       id: uuid(),
       type,
       title,
       message,
+      data,
     })
   },
   info({ dispatch }, { title, message }) {
@@ -45,6 +46,13 @@ export const actions = {
   },
   success({ dispatch }, { title, message }) {
     dispatch('add', { type: 'success', title, message })
+  },
+  undoDelete({ dispatch }, { trashItemType, trashItemId }) {
+    const undoDeleteData = { trashItemType, trashItemId }
+    dispatch('add', {
+      type: 'undoDelete',
+      data: undoDeleteData,
+    })
   },
   remove({ commit }, notification) {
     commit('REMOVE', notification)

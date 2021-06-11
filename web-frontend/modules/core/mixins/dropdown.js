@@ -210,7 +210,7 @@ export default {
     /**
      * A nasty hack, but in some cases the $children have not yet been loaded when the
      * `selectName` and `selectIcon` are computed. This would result in an empty
-     * initial value of the Dropdown because the correct value can't be extracted from
+     * initial value of the Dropdown because the correct value can't be emitDeletedIfTrashStructureChanged from
      * the DropdownItem. With this hack we force the computed properties to recompute
      * when the component is mounted. At this moment the $children have been added.
      */

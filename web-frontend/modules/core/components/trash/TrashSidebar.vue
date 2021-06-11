@@ -18,6 +18,7 @@
             :class="{
               active:
                 group.id === selectedGroup.id && selectedApplication === null,
+              'trash__trashed-group-link': group.trashed,
             }"
             @click="$emit('selected', { group })"
           >
@@ -41,6 +42,7 @@
               active:
                 selectedApplication !== null &&
                 application.id === selectedApplication.id,
+              'trash__trashed-group-link': group.trashed || application.trashed,
             }"
             @click="$emit('selected', { group, application })"
           >
@@ -62,7 +64,8 @@ export default {
     },
     selectedGroup: {
       type: Object,
-      required: true,
+      required: false,
+      default: null,
     },
     selectedApplication: {
       type: Object,

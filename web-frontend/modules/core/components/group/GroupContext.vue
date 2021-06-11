@@ -14,8 +14,8 @@
           Members
         </a>
       </li>
-      <li>
-        <a @click="$refs.deleteGroupModal.show()">
+      <li :class="{ 'context__menu-item--loading': loading }">
+        <a @click="deleteGroup">
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           Delete group
         </a>
@@ -25,18 +25,17 @@
       ref="groupMembersModal"
       :group="group"
     ></GroupMembersModal>
-    <DeleteGroupModal ref="deleteGroupModal" :group="group" />
   </Context>
 </template>
 
 <script>
-import DeleteGroupModal from '@baserow/modules/core/components/group/DeleteGroupModal'
 import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import context from '@baserow/modules/core/mixins/context'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'GroupContext',
-  components: { DeleteGroupModal, GroupMembersModal },
+  components: { GroupMembersModal },
   mixins: [context],
   props: {
     group: {
@@ -44,9 +43,30 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      loading: false,
+    }
+  },
   methods: {
     showGroupMembersModal() {
       this.$refs.groupMembersModal.show()
+    },
+    async deleteGroup() {
+      this.loading = true
+
+      try {
+        await this.$store.dispatch('group/delete', this.group)
+        await this.$store.dispatch('notification/undoDelete', {
+          trashItemType: 'group',
+          trashItemId: this.group.id,
+        })
+        this.hide()
+      } catch (error) {
+        notifyIf(error, 'application')
+      }
+
+      this.loading = false
     },
   },
 }

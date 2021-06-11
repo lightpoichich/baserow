@@ -50,6 +50,8 @@ class TrashHandler:
             application=application,
             trash_item_type=trash_item_type.type,
             trash_item_id=trash_item.id,
+            name=trash_item_type.get_name(trash_item),
+            parent_name=trash_item_type.get_parent_name(trash_item),
         )
 
     @staticmethod

@@ -201,8 +201,9 @@ def test_create_group(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+@patch("baserow.core.signals.group_user_updated.send")
 @patch("baserow.core.signals.group_created.send")
-def test_restore_group(send_mock, data_fixture):
+def test_restore_group(group_created_mock, group_user_updated_mock, data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(name="Test group", user=user)
 
@@ -214,9 +215,16 @@ def test_restore_group(send_mock, data_fixture):
 
     TrashHandler.restore_item(user, "group", group.id)
 
-    send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group"].id == group.id
-    assert send_mock.call_args[1]["user"] is None
+    group_created_mock.assert_called_once()
+    assert group_created_mock.call_args[1]["group"].id == group.id
+    assert group_created_mock.call_args[1]["user"] is None
+
+    group_user_updated_mock.assert_called_once()
+    assert (
+        group_user_updated_mock.call_args[1]["group_user"].id
+        == group.groupuser_set.get(user=user).id
+    )
+    assert group_user_updated_mock.call_args[1]["user"] is None
 
     group = Group.objects.all().first()
     user_group = GroupUser.objects.all().first()

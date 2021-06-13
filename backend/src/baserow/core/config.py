@@ -6,6 +6,10 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         from baserow.core.trash.registry import trash_item_type_registry
-        from baserow.core.trash.registry import GroupTrashableItemType
+        from baserow.core.trash.registry import (
+            GroupTrashableItemType,
+            ApplicationTrashableItemType,
+        )
 
         trash_item_type_registry.register(GroupTrashableItemType())
+        trash_item_type_registry.register(ApplicationTrashableItemType())

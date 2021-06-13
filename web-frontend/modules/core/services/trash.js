@@ -3,9 +3,13 @@ export default (client) => {
     fetchStructure() {
       return client.get(`/trash/`)
     },
-    fetchContents({ groupId, applicationId = null }) {
+    fetchContents({ page = null, groupId, applicationId = null }) {
       const config = {
         params: {},
+      }
+
+      if (page !== null) {
+        config.params.page = page
       }
 
       if (applicationId !== null) {

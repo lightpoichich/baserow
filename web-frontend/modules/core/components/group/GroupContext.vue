@@ -14,8 +14,11 @@
           Members
         </a>
       </li>
-      <li :class="{ 'context__menu-item--loading': loading }">
-        <a @click="deleteGroup">
+      <li>
+        <a
+          :class="{ 'context__menu-item--loading': loading }"
+          @click="deleteGroup"
+        >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           Delete group
         </a>

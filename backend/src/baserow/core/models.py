@@ -64,6 +64,12 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=100)
     users = models.ManyToManyField(User, through="GroupUser")
 
+    def application_set_including_trash(self):
+        """
+        :return: The applications for this group including any trashed applications.
+        """
+        return self.application_set(manager="objects_and_trash")
+
     def has_user(
         self,
         user,
@@ -205,7 +211,11 @@ class GroupInvitation(
 
 
 class Application(
-    CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin, models.Model
+    TrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    models.Model,
 ):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
@@ -281,8 +291,18 @@ class UserLogEntry(models.Model):
 
 
 class Trash(models.Model):
-    user_who_trashed = models.ForeignKey(User, on_delete=models.CASCADE)
+    # If the user who trashed something gets deleted we still wish to preserve this
+    # trash record as it is independant of if the user exists or not.
+    user_who_trashed = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True
+    )
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    # For trash entries which have parent-child relationships inside of a single app
+    # we need to ensure that deleting a parent trash entry cascades and deletes all
+    # children.
+    parent_entry = models.ForeignKey(
+        "Trash", on_delete=models.CASCADE, null=True, blank=True
+    )
     name = models.TextField()
     parent_name = models.TextField(null=True, blank=True)
     application = models.ForeignKey(

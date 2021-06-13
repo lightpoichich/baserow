@@ -2,10 +2,10 @@ import pytest
 from django.utils import timezone
 from freezegun import freeze_time
 
-from baserow.core.exceptions import GroupDoesNotExist
-from baserow.core.models import Group
-from baserow.core.trash.handler import TrashHandler
+from baserow.core.exceptions import GroupDoesNotExist, ApplicationDoesNotExist
+from baserow.core.models import Group, Application
 from baserow.core.models import Trash
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -139,4 +139,158 @@ def test_a_group_marked_for_perm_deletion_no_longer_shows_up_in_trash_structure(
     trash_entry.should_be_permanently_deleted = True
     trash_entry.save()
 
-    assert TrashHandler.get_trash_structure(user)["groups"].count() == 0
+    assert len(TrashHandler.get_trash_structure(user)["groups"]) == 0
+
+
+@pytest.mark.django_db
+def test_an_app_marked_for_perm_deletion_raises_a_404_when_asked_for_trash_contents(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    trashed_database = data_fixture.create_database_application(user=user, group=group)
+    assert not trashed_database.trashed
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, group, trashed_database, trashed_database)
+    trash_entry = Trash.objects.get(
+        trash_item_id=trashed_database.id, trash_item_type="application"
+    )
+    trash_entry.should_be_permanently_deleted = True
+    trash_entry.save()
+
+    with pytest.raises(ApplicationDoesNotExist):
+        TrashHandler.get_trash_contents(user, group.id, trashed_database.id)
+
+
+@pytest.mark.django_db
+def test_a_trashed_app_shows_up_in_trash_structure(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    trashed_database = data_fixture.create_database_application(user=user, group=group)
+    assert not trashed_database.trashed
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, group, trashed_database, trashed_database)
+
+    structure = TrashHandler.get_trash_structure(user)
+    applications_qs = structure["groups"][0]["applications"]
+    assert applications_qs.count() == 1
+    assert applications_qs.get().trashed
+
+
+@pytest.mark.django_db
+def test_an_app_marked_for_perm_deletion_no_longer_shows_up_in_trash_structure(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    trashed_database = data_fixture.create_database_application(user=user, group=group)
+    assert not trashed_database.trashed
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, group, trashed_database, trashed_database)
+    trash_entry = Trash.objects.get(
+        trash_item_id=trashed_database.id, trash_item_type="application"
+    )
+    trash_entry.should_be_permanently_deleted = True
+    trash_entry.save()
+
+    for group in TrashHandler.get_trash_structure(user)["groups"]:
+        assert group["applications"].count() == 0
+
+
+@pytest.mark.django_db
+def test_perm_deleting_a_parent_with_a_trashed_child_also_cleans_up_the_child_entry(
+    data_fixture,
+):
+    # TODO Trash: Add case for table and row!
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    trashed_database = data_fixture.create_database_application(user=user, group=group)
+    assert not trashed_database.trashed
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, group, trashed_database, trashed_database)
+        TrashHandler.trash(user, group, None, group)
+    parent_trash_entry = Trash.objects.get(
+        trash_item_id=group.id, trash_item_type="group"
+    )
+    parent_trash_entry.should_be_permanently_deleted = True
+    parent_trash_entry.save()
+
+    assert Trash.objects.count() == 2
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert Trash.objects.count() == 0
+    assert Group.objects_and_trash.count() == 0
+    assert Application.objects_and_trash.count() == 0
+
+
+@pytest.mark.django_db
+def test_trash_contents_are_ordered_from_newest_to_oldest_entries(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    trashed_database = data_fixture.create_database_application(user=user, group=group)
+
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, group, trashed_database, trashed_database)
+    with freeze_time("2020-01-01 12:02"):
+        TrashHandler.trash(user, group, None, group)
+
+    contents = TrashHandler.get_trash_contents(user, group.id, None)
+
+    assert contents[0].trash_item_type == "group"
+    assert contents[0].trash_item_id == group.id
+    assert contents[0].trashed_at.isoformat() == "2020-01-01T12:02:00+00:00"
+
+    assert contents[1].trash_item_type == "application"
+    assert contents[1].trash_item_id == trashed_database.id
+    assert contents[1].trashed_at.isoformat() == "2020-01-01T12:00:00+00:00"
+
+
+@pytest.mark.django_db
+def test_perm_deleting_one_group_should_not_effect_another_trashed_group(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    trashed_group = data_fixture.create_group(user=user)
+    other_trashed_group = data_fixture.create_group(user=user)
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, trashed_group, None, trashed_group)
+        TrashHandler.trash(user, other_trashed_group, None, other_trashed_group)
+
+    # Only mark one for deletion
+    parent_trash_entry = Trash.objects.get(
+        trash_item_id=trashed_group.id, trash_item_type="group"
+    )
+    parent_trash_entry.should_be_permanently_deleted = True
+    parent_trash_entry.save()
+
+    assert Trash.objects.count() == 2
+    assert Trash.objects.filter(should_be_permanently_deleted=True).count() == 1
+    assert Group.objects_and_trash.count() == 2
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert Trash.objects.count() == 1
+    assert Group.objects_and_trash.count() == 1
+
+
+@pytest.mark.django_db
+def test_deleting_a_user_who_trashed_items_should_still_leave_those_items_trashed(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    trashed_group = data_fixture.create_group(user=user)
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, trashed_group, None, trashed_group)
+
+    assert Trash.objects.count() == 1
+    assert Group.objects_and_trash.count() == 1
+
+    user.delete()
+
+    assert Trash.objects.count() == 1
+    assert Group.objects_and_trash.count() == 1

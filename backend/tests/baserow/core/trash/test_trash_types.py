@@ -4,6 +4,7 @@ from django.db import connection
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.core.models import Group, GroupUser
+from baserow.core.trash.handler import TrashHandler
 from baserow.core.trash.registry import GroupTrashableItemType
 
 
@@ -30,3 +31,19 @@ def test_perm_delete_group(data_fixture):
 
     assert Group.objects.all().count() == 1
     assert GroupUser.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_perm_delete_application(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    table = data_fixture.create_database_table(database=database)
+
+    handler = TrashHandler()
+
+    handler.permanently_delete(database)
+
+    assert Database.objects.all().count() == 0
+    assert Table.objects.all().count() == 0
+    assert f"database_table_{table.id}" not in connection.introspection.table_names()

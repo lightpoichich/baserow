@@ -37,16 +37,15 @@
             </a>
           </li>
           <li>
-            <a @click="deleteApplication()">
+            <a
+              :class="{ 'context__menu-item--loading': loading }"
+              @click="deleteApplication()"
+            >
               <i class="context__menu-icon fas fa-fw fa-trash"></i>
               Delete {{ application._.type.name | lowercase }}
             </a>
           </li>
         </ul>
-        <DeleteApplicationModal
-          ref="deleteApplicationModal"
-          :application="application"
-        />
       </Context>
     </div>
     <slot name="body"></slot>
@@ -55,16 +54,19 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import DeleteApplicationModal from './DeleteApplicationModal'
 
 export default {
   name: 'SidebarApplication',
-  components: { DeleteApplicationModal },
   props: {
     application: {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      loading: false,
+    }
   },
   methods: {
     setLoading(application, value) {
@@ -94,9 +96,20 @@ export default {
 
       this.setLoading(application, false)
     },
-    deleteApplication() {
-      this.$refs.context.hide()
-      this.$refs.deleteApplicationModal.show()
+    async deleteApplication() {
+      this.loading = true
+
+      try {
+        await this.$store.dispatch('application/delete', this.application)
+        await this.$store.dispatch('notification/undoDelete', {
+          trashItemType: 'application',
+          trashItemId: this.application.id,
+        })
+      } catch (error) {
+        notifyIf(error, 'application')
+      }
+
+      this.loading = false
     },
   },
 }

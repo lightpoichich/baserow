@@ -578,7 +578,7 @@ def test_when_group_is_trashed_so_is_invitation(data_fixture, api_client):
         permissions="ADMIN",
         message="Test bericht 2",
     )
-    # Put the trashed_item in the trash
+    # Put the trashed_group in the trash
     CoreHandler().delete_group(user=user_1, group=trashed_group)
 
     # The trashed group 404's when asking for invitations

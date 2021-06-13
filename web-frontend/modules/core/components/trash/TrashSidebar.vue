@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="trash-side-bar">
     <div class="modal-sidebar__head">
       <div class="tree__link tree__link--group">
         <i class="modal-sidebar__head-icon fas fa-trash"></i>
@@ -16,11 +16,10 @@
           <a
             class="modal-sidebar__nav-link"
             :class="{
-              active:
-                group.id === selectedGroup.id && selectedApplication === null,
+              active: isSelectedGroup(group),
               'trash__trashed-group-link': group.trashed,
             }"
-            @click="$emit('selected', { group })"
+            @click="emitIfNotAlreadySelectedGroup(group)"
           >
             <i
               class="modal-sidebar__nav-icon fas"
@@ -30,7 +29,7 @@
                 'trash__unselected-group-icon': group.id !== selectedGroup.id,
               }"
             ></i>
-            {{ group.name }}
+            {{ group.name || 'Unnamed group ' + group.id }}
           </a>
         </li>
         <template v-if="group.id === selectedGroup.id">
@@ -39,14 +38,14 @@
             :key="'trash-application-' + application.id"
             class="modal-sidebar__nav-link"
             :class="{
-              active:
-                selectedApplication !== null &&
-                application.id === selectedApplication.id,
+              active: isSelectedApp(application),
               'trash__trashed-group-link': group.trashed || application.trashed,
             }"
-            @click="$emit('selected', { group, application })"
+            @click="emitIfNotAlreadySelectedApplication(group, application)"
           >
-            {{ application.name }}
+            <span>{{
+              application.name || 'Unnamed application ' + application.id
+            }}</span>
           </li>
         </template>
       </ul>
@@ -73,6 +72,31 @@ export default {
       default: null,
     },
   },
-  methods: {},
+  methods: {
+    isSelectedGroup(group) {
+      return (
+        group.id === this.selectedGroup.id && this.selectedApplication === null
+      )
+    },
+    isSelectedApp(app) {
+      return (
+        this.selectedApplication !== null &&
+        app.id === this.selectedApplication.id
+      )
+    },
+    emitIfNotAlreadySelectedGroup(group) {
+      if (!this.isSelectedGroup(group)) {
+        this.emitSelected({ group })
+      }
+    },
+    emitIfNotAlreadySelectedApplication(group, application) {
+      if (!this.isSelectedApp(application)) {
+        this.emitSelected({ group, application })
+      }
+    },
+    emitSelected(selected) {
+      this.$emit('selected', selected)
+    },
+  },
 }
 </script>

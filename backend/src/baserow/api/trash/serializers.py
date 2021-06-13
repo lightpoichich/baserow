@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.core.models import Trash, Group, Application
@@ -6,21 +8,14 @@ from baserow.core.models import Trash, Group, Application
 class TrashStructureApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
-        fields = (
-            "id",
-            "name"
-            # TODO Trash - Remove when apps are trashable "trashed"
-        )
+        fields = ("id", "name", "trashed")
 
 
-class TrashStructureGroupSerializer(serializers.ModelSerializer):
-    applications = TrashStructureApplicationSerializer(
-        source="application_set", many=True
-    )
-
-    class Meta:
-        model = Group
-        fields = ("id", "trashed", "name", "applications")
+class TrashStructureGroupSerializer(serializers.Serializer):
+    id = serializers.IntegerField(min_value=0)
+    trashed = serializers.BooleanField()
+    name = serializers.CharField()
+    applications = TrashStructureApplicationSerializer(many=True)
 
 
 class TrashContentsGroupSerializer(serializers.ModelSerializer):
@@ -34,9 +29,14 @@ class TrashStructureSerializer(serializers.Serializer):
 
 
 class TrashContentsSerializer(serializers.ModelSerializer):
-    user_who_trashed = serializers.CharField(
-        source="user_who_trashed.first_name", max_length=32
-    )
+    user_who_trashed = serializers.SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_user_who_trashed(self, instance):
+        if instance.user_who_trashed is not None:
+            return instance.user_who_trashed.first_name
+        else:
+            return None
 
     class Meta:
         model = Trash

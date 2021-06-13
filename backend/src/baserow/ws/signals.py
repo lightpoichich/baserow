@@ -72,7 +72,7 @@ def group_user_deleted(sender, group_user, user, **kwargs):
 
 
 @receiver(signals.application_created)
-def application_created(sender, application, user, type_name, **kwargs):
+def application_created(sender, application, user, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_group.delay(
             application.group_id,

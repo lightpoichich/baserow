@@ -33,8 +33,11 @@
         :selected-application="selectedApplication"
         :trash-contents="trashContents"
         :loading-contents="loadingContents"
+        :loading-next-page="loadingNextPage"
+        :entry-count="entryCount"
         @empty="onEmpty"
         @restore="onRestore"
+        @load-next-page="loadNextPage"
       ></TrashContent>
     </template>
   </Modal>
@@ -57,10 +60,12 @@ export default {
     return {
       loading: true,
       loadingContents: true,
+      loadingNextPage: false,
       groups: [],
       trashContents: [],
       selectedGroup: null,
       selectedApplication: null,
+      entryCount: 0,
     }
   },
   methods: {
@@ -83,6 +88,24 @@ export default {
       }
       this.loading = false
     },
+    async loadNextPage(nextPage) {
+      try {
+        this.loadingNextPage = true
+        const { data } = await TrashService(this.$client).fetchContents({
+          page: nextPage,
+          groupId: this.selectedGroup.id,
+          applicationId:
+            this.selectedApplication !== null
+              ? this.selectedApplication.id
+              : null,
+        })
+        this.entryCount = data.count
+        this.trashContents = this.trashContents.concat(data.results)
+      } catch (error) {
+        this.handleError(error, 'trash')
+      }
+      this.loadingNextPage = false
+    },
     async fetchContents() {
       this.loadingContents = true
       this.trashContents = []
@@ -94,6 +117,7 @@ export default {
               ? this.selectedApplication.id
               : null,
         })
+        this.entryCount = data.count
         this.trashContents = data.results
       } catch (error) {
         this.handleError(error, 'trash')
@@ -113,6 +137,7 @@ export default {
           (t) => t.id === trashEntry.id
         )
         this.trashContents.splice(index, 1)
+        this.entryCount--
         this.updateStructureIfGroupOrAppRestored(trashEntry)
       } catch (error) {
         this.handleError(error, 'trash')
@@ -129,7 +154,7 @@ export default {
         const index = this.selectedGroup.applications.findIndex(
           (app) => app.id === trashItemId
         )
-        this.selectedGroup.groups[index].trashed = false
+        this.selectedGroup.applications[index].trashed = false
       }
     },
     async onEmpty() {
@@ -143,6 +168,7 @@ export default {
         })
         this.removeGroupOrAppFromSidebarIfNowPermDeleted()
         this.trashContents = []
+        this.entryCount = 0
         this.loadingContents = false
       } catch (error) {
         this.handleError(error, 'trash')

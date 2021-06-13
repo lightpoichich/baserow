@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-from baserow.core.models import Group
+from baserow.core.models import Group, Application
 from baserow.core.registries import application_type_registry
 from baserow.core.registry import (
     ModelRegistryMixin,
@@ -9,7 +9,7 @@ from baserow.core.registry import (
     ModelInstanceMixin,
     Instance,
 )
-from baserow.core.signals import group_created, group_user_updated
+from baserow.core.signals import group_created, group_user_updated, application_created
 
 
 class TrashableItemTypeRegistry(ModelRegistryMixin, Registry):
@@ -70,7 +70,7 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         modal.
 
         :param trashed_item: The item to be named.
-        :return The name of the trashed_item
+        :return The name of the trashed_group
         """
         pass
 
@@ -81,12 +81,29 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         display in the trash modal.
 
         :param trashed_item: The item whose parent is to be named.
-        :return The name of the parent of the trashed_item if any or None if no parent.
+        :return The name of the parent of the trashed_group if any or None if no parent.
         """
         pass
 
+    @abstractmethod
+    def get_parent_type(self) -> Optional[str]:
+        """
+        :return The trashable item type of the parent if this type has one.
+        """
+        pass
+
+    # noinspection PyMethodMayBeStatic
+    def get_parent_id(self, trashed_item: Any) -> int:
+        """
+        :return The item id of the provided trashed_item's parent if this type has one.
+        """
+        return 0
+
 
 class GroupTrashableItemType(TrashableItemType):
+    def get_parent_type(self) -> Optional[str]:
+        return None
+
     def get_name(self, trashed_item: Group) -> str:
         return trashed_item.name
 
@@ -105,31 +122,54 @@ class GroupTrashableItemType(TrashableItemType):
             group_user_updated.send(self, group_user=group_user, user=None)
         group_created.send(self, group=trashed_item, user=None)
 
-    def permanently_delete_item(self, trashed_item: Group):
+    def permanently_delete_item(self, trashed_group: Group):
         """
         Deletes the provided group and all of its applications permanently.
         """
 
         # Select all the applications so we can delete them via the handler which is
         # needed in order to call the pre_delete method for each application.
-        applications = trashed_item.application_set.all().select_related("group")
+        applications = trashed_group.application_set.all().select_related("group")
+        application_trashable_type = trash_item_type_registry.get("application")
         for application in applications:
-            self._delete_application(application)
+            application_trashable_type.permanently_delete_item(application)
 
-        trashed_item.delete()
+        trashed_group.delete()
 
-    @staticmethod
-    def _delete_application(application):
+    type = "group"
+    model_class = Group
+
+
+class ApplicationTrashableItemType(TrashableItemType):
+    def get_name(self, trashed_item: Application) -> str:
+        return trashed_item.name
+
+    def get_parent_name(self, trashed_item: Application) -> Optional[str]:
+        return trashed_item.group.name
+
+    def trashed_item_restored(self, trashed_item: Application):
+        application_created.send(
+            self,
+            application=trashed_item,
+            user=None,
+        )
+
+    def permanently_delete_item(self, trashed_item: Application):
         """
         Deletes an application and the related relations in the correct way.
         """
 
-        # TODO Dedupe somehow with the application delete code
-        application = application.specific
+        application = trashed_item.specific
         application_type = application_type_registry.get_by_model(application)
         application_type.pre_delete(application)
         application.delete()
         return application
 
-    type = "group"
-    model_class = Group
+    def get_parent_type(self) -> Optional[str]:
+        return "group"
+
+    def get_parent_id(self, trashed_app) -> int:
+        return trashed_app.group.id
+
+    type = "application"
+    model_class = Application

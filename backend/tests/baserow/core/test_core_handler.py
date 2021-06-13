@@ -1,16 +1,14 @@
 import os
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from io import BytesIO
-
 import pytest
 from django.conf import settings
-from django.db import connection
 from django.core.files.storage import FileSystemStorage
 from itsdangerous.exc import BadSignature
 
-from baserow.contrib.database.models import Database, Table
+from baserow.contrib.database.models import Database
 from baserow.core.exceptions import (
     UserNotInGroup,
     ApplicationTypeDoesNotExist,
@@ -696,7 +694,6 @@ def test_create_database_application(send_mock, data_fixture):
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application"].id == database.id
     assert send_mock.call_args[1]["user"].id == user.id
-    assert send_mock.call_args[1]["type_name"] == "database"
 
     with pytest.raises(UserNotInGroup):
         handler.create_application(
@@ -801,7 +798,7 @@ def test_delete_database_application(send_mock, data_fixture):
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group)
-    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_database_table(database=database)
 
     handler = CoreHandler()
 
@@ -813,9 +810,11 @@ def test_delete_database_application(send_mock, data_fixture):
 
     handler.delete_application(user=user, application=database)
 
+    database.refresh_from_db()
+    assert database.trashed
+
     assert Database.objects.all().count() == 0
-    assert Table.objects.all().count() == 0
-    assert f"database_table_{table.id}" not in connection.introspection.table_names()
+    assert Database.trash.all().count() == 1
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application_id"] == database.id
@@ -995,7 +994,6 @@ def test_install_template(send_mock, tmpdir, data_fixture):
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application"].id == applications[0].id
     assert send_mock.call_args[1]["user"].id == user.id
-    assert send_mock.call_args[1]["type_name"] == "database"
 
     # Because the `example-template.json` has a file field that contains the hello
     # world file, we expect it to exist after syncing the templates.
@@ -1007,3 +1005,28 @@ def test_install_template(send_mock, tmpdir, data_fixture):
     assert file_path.open().read() == "Hello World"
 
     settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+
+@pytest.mark.django_db
+@patch("baserow.core.signals.application_created.send")
+def test_restore_application(application_created_mock, data_fixture):
+    user = data_fixture.create_user()
+    data_fixture.create_group(name="Test group", user=user)
+    database = data_fixture.create_database_application(user=user)
+
+    handler = CoreHandler()
+
+    handler.delete_application(user, application=database)
+
+    assert Application.objects.count() == 0
+
+    TrashHandler.restore_item(user, "application", database.id)
+
+    application_created_mock.assert_called_once()
+    assert application_created_mock.call_args[1]["application"].id == database.id
+    assert application_created_mock.call_args[1]["user"] is None
+
+    restored_app = Application.objects.all().first()
+
+    assert restored_app.name == database.name
+    assert restored_app.id == database.id

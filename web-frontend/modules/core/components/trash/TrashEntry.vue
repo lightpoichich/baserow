@@ -2,15 +2,15 @@
   <div
     ref="member"
     class="trash-entry"
-    :class="{ 'trash-entry--highlight': highlighted }"
+    :class="{ 'trash-entry--disabled': disabled }"
   >
     <div class="trash-entry__initials">
       {{ trashEntry.user_who_trashed | nameAbbreviation }}
     </div>
     <div class="trash-entry__content">
       <div class="trash-entry__name">
-        {{ trashEntry.user_who_trashed }} Deleted
-        <strong>{{ trashEntry.name }}</strong>
+        {{ trashEntry.user_who_trashed || 'A Deleted User' }} Deleted
+        <strong>{{ trashItemTitle }}</strong>
         {{ trashEntry.parent_name ? ' from ' + trashEntry.parent_name : '' }}
       </div>
       <div class="trash-entry__description">{{ timeAgo }}</div>
@@ -45,13 +45,23 @@ export default {
     },
   },
   data() {
-    return {
-      highlighted: false,
-    }
+    return {}
   },
   computed: {
     timeAgo() {
       return moment.utc(this.trashEntry.trashed_at).fromNow()
+    },
+    trashItemTitle() {
+      if (this.trashEntry.name === '') {
+        return (
+          'Unnamed ' +
+          this.trashEntry.trash_item_type +
+          ' ' +
+          this.trashEntry.trash_item_id
+        )
+      } else {
+        return this.trashEntry.name
+      }
     },
   },
   methods: {

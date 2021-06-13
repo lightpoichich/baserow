@@ -620,9 +620,7 @@ class CoreHandler:
             group=group, order=last_order, **application_values
         )
 
-        application_created.send(
-            self, application=instance, user=user, type_name=type_name
-        )
+        application_created.send(self, application=instance, user=user)
 
         return instance
 
@@ -698,7 +696,7 @@ class CoreHandler:
         application.group.has_user(user, raise_error=True)
 
         application_id = application.id
-        application = self._delete_application(application)
+        TrashHandler.trash(user, application.group, application, application)
 
         application_deleted.send(
             self, application_id=application_id, application=application, user=user

@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from baserow.core.exceptions import (
@@ -42,7 +43,21 @@ class TrashHandler:
         trash_item.trashed = True
         trash_item.save()
 
+        # Check if the parent has a trash entry, if so link this new entry to it
+        # via a cascading on delete FK to ensure if the parent entry is deleted then
+        # this one is also deleted. We do this as say if a table is perm deleted,
+        # we don't then want to
         trash_item_type = trash_item_type_registry.get_by_model(trash_item)
+        parent_type = trash_item_type.get_parent_type()
+        parent_entry = None
+        if parent_type is not None:
+            parent_id = trash_item_type.get_parent_id(trash_item)
+            try:
+                parent_entry = Trash.objects.get(
+                    trash_item_type=parent_type, trash_item_id=parent_id
+                )
+            except Trash.DoesNotExist:
+                pass
 
         return Trash.objects.create(
             user_who_trashed=requesting_user,
@@ -52,6 +67,7 @@ class TrashHandler:
             trash_item_id=trash_item.id,
             name=trash_item_type.get_name(trash_item),
             parent_name=trash_item_type.get_parent_name(trash_item),
+            parent_entry=parent_entry,
         )
 
     @staticmethod
@@ -113,11 +129,29 @@ class TrashHandler:
             should_be_permanently_deleted=True,
             trash_item_id__in=groups.values_list("id", flat=True),
         ).values_list("trash_item_id", flat=True)
-        return {
-            "groups": (
-                groups.exclude(id__in=perm_deleted_groups).order_by("groupuser__order")
+
+        structure = {"groups": []}
+        groups = groups.exclude(id__in=perm_deleted_groups).order_by("groupuser__order")
+        for group in groups:
+            perm_deleted_apps = Trash.objects.filter(
+                trash_item_type="application",
+                should_be_permanently_deleted=True,
+                trash_item_id__in=group.application_set_including_trash().values_list(
+                    "id", flat=True
+                ),
+            ).values_list("trash_item_id", flat=True)
+            structure["groups"].append(
+                {
+                    "id": group.id,
+                    "trashed": group.trashed,
+                    "name": group.name,
+                    "applications": group.application_set_including_trash()
+                    .exclude(id__in=perm_deleted_apps)
+                    .order_by("order", "id"),
+                }
             )
-        }
+
+        return structure
 
     @staticmethod
     def mark_old_trash_for_permanent_deletion():
@@ -151,8 +185,16 @@ class TrashHandler:
         Looks up every trash item marked for permanent deletion and removes them
         irreversibly from the database along with their corresponding trash entries.
         """
-        for trash_entry in Trash.objects.filter(should_be_permanently_deleted=True):
+        while True:
+            # Lookup trash entries one by one as deleting a trash entry might cascade
+            # and delete all of it's children which we do not want to then consider.
             with transaction.atomic():
+                trash_entry = Trash.objects.filter(
+                    should_be_permanently_deleted=True
+                ).first()
+                if not trash_entry:
+                    return
+
                 trash_item_type = trash_item_type_registry.get(
                     trash_entry.trash_item_type
                 )
@@ -174,7 +216,7 @@ class TrashHandler:
     @staticmethod
     def get_trash_contents(
         user: User, group_id: int, application_id: Optional[int]
-    ) -> Dict[str, Any]:
+    ) -> QuerySet:
         """
         Looks up the trash contents for a particular group optionally filtered by
         the provided application id.
@@ -208,19 +250,27 @@ class TrashHandler:
 
         if application_id is not None:
             try:
-                # TODO Trash search for trashed applications also
-                application = Application.objects.get(id=application_id)
+                application = Application.objects_and_trash.get(id=application_id)
             except Application.DoesNotExist:
                 raise ApplicationDoesNotExist()
+
+            try:
+                trash_entry = TrashHandler.get_trash_entry(
+                    user, "application", application.id
+                )
+                if trash_entry.should_be_permanently_deleted:
+                    raise ApplicationDoesNotExist
+            except TrashItemDoesNotExist:
+                pass
 
             if application.group != group:
                 raise ApplicationNotInGroup()
         else:
             application = None
 
-        # TODO Trash - Raise 404 if app is marked for perm deletion
-
-        # TODO Trash - Lookup trash contents for group
-        return Trash.objects.filter(
-            group=group, application=application, should_be_permanently_deleted=False
+        trash_contents = Trash.objects.filter(
+            group=group, should_be_permanently_deleted=False
         )
+        if application:
+            trash_contents = trash_contents.filter(application=application)
+        return trash_contents.order_by("-trashed_at")

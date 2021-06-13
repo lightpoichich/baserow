@@ -1,44 +1,66 @@
 <template>
   <div>
     <div class="box__title trash-box-title">
-      <h2 class="trash-box-title__header">
-        {{
-          selectedApplication === null
-            ? selectedGroup.name
-            : selectedApplication.name
-        }}
-      </h2>
+      <h2 class="trash-box-title__header">{{ title }}</h2>
       <div class="trash-sub-header">
         <h3 class="trash-sub-header__title">
           Restore deleted items from the past three days
         </h3>
         <a
+          v-show="entryCount > 0"
           class="button button--error"
           :disabled="loadingContents"
-          @click="$emit('empty')"
+          @click="showEmptyModalIfNotLoading"
           >{{ emptyButtonText }}</a
         >
       </div>
     </div>
     <div v-if="loadingContents" class="loading-overlay"></div>
-    <div v-else>
-      <TrashEntry
-        v-for="trashEntry in trashContents"
-        :key="'trash-item-' + trashEntry.id"
-        :trash-entry="trashEntry"
-        :disabled="loadingContents"
-        @restore="$emit('restore', $event)"
+    <div v-if="entryCount === 0" class="trash-empty-contents">
+      <i class="trash-empty-contents__icon fas fa-recycle"></i>
+      <span class="trash-empty-contents__text"
+        >Nothing has been deleted in the past three days.</span
       >
-      </TrashEntry>
     </div>
+    <div v-else>
+      <InfiniteScroll
+        :max-count="entryCount"
+        :items="trashContents"
+        @load-next-page="$emit('load-next-page', $event)"
+      >
+        <template #default="item">
+          <TrashEntry
+            :key="'trash-item-' + item.id"
+            :trash-entry="item"
+            :disabled="
+              loadingContents ||
+              (selfIsTrashed && item.trash_item_id !== selfTrashItemId)
+            "
+            @restore="$emit('restore', $event)"
+          >
+          </TrashEntry>
+        </template>
+      </InfiniteScroll>
+      <div v-if="loadingNextPage" class="trash-contents__loading-box">
+        <div class="loading"></div>
+      </div>
+    </div>
+    <TrashEmptyModal
+      ref="emptyModal"
+      :name="title"
+      :loading="loadingContents"
+      @empty="$emit('empty')"
+    ></TrashEmptyModal>
   </div>
 </template>
 
 <script>
 import TrashEntry from '@baserow/modules/core/components/trash/TrashEntry'
+import InfiniteScroll from '@baserow/modules/core/components/infinite_scroll/InfiniteScroll'
+import TrashEmptyModal from '@baserow/modules/core/components/trash/TrashEmptyModal'
 export default {
   name: 'TrashContents',
-  components: { TrashEntry },
+  components: { InfiniteScroll, TrashEntry, TrashEmptyModal },
   mixins: [],
   props: {
     selectedGroup: {
@@ -58,8 +80,29 @@ export default {
       type: Boolean,
       required: true,
     },
+    loadingNextPage: {
+      type: Boolean,
+      required: true,
+    },
+    entryCount: {
+      type: Number,
+      required: true,
+    },
   },
   computed: {
+    title() {
+      const title =
+        this.selectedApplication === null
+          ? this.selectedGroup.name
+          : this.selectedApplication.name
+      const groupOrApp =
+        this.selectedApplication === null ? 'Group' : 'Application'
+      const id =
+        this.selectedApplication === null
+          ? this.selectedGroup.id
+          : this.selectedApplication.id
+      return title === '' ? 'Unnamed ' + groupOrApp + ' ' + id : title
+    },
     emptyButtonText() {
       if (this.selectedApplication === null) {
         if (this.selectedGroup.trashed) {
@@ -71,6 +114,23 @@ export default {
         return 'Delete application permanently'
       } else {
         return "Empty this application's trash"
+      }
+    },
+    selfIsTrashed() {
+      return this.selectedApplication === null
+        ? this.selectedGroup.trashed
+        : this.selectedApplication.trashed
+    },
+    selfTrashItemId() {
+      return this.selectedApplication === null
+        ? this.selectedGroup.id
+        : this.selectedApplication.id
+    },
+  },
+  methods: {
+    showEmptyModalIfNotLoading() {
+      if (!this.loadingContents) {
+        this.$refs.emptyModal.show()
       }
     },
   },

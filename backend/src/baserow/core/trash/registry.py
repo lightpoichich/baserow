@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, List
 
-from baserow.core.models import Group, Application
+from baserow.core.models import Group, Application, Trash
 from baserow.core.registries import application_type_registry
 from baserow.core.registry import (
     ModelRegistryMixin,
@@ -31,16 +31,16 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
     A TrashableItemType specifies a baserow model which can be trashed.
     """
 
-    def lookup_trashed_item(self, trashed_item_id: int):
+    def lookup_trashed_item(self, trashed_entry: Trash):
         """
         Returns the actual instance of the trashed item. By default simply does a get
         on the model_class's trash manager.
 
-        :param trashed_item_id: The id to lookup.
+        :param trashed_entry: The entry to get the real trashed instance for.
         :return: An instance of the model_class with trashed_item_id
         """
 
-        return self.model_class.trash.get(id=trashed_item_id)
+        return self.model_class.trash.get(id=trashed_entry.trash_item_id)
 
     @abstractmethod
     def permanently_delete_item(self, trashed_item: Any):
@@ -53,12 +53,13 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         pass
 
     @abstractmethod
-    def trashed_item_restored(self, trashed_item: Any):
+    def trashed_item_restored(self, trashed_item: Any, trash_entry: Trash):
         """
         Called when a trashed item is restored, should perform any extra operations
         such as sending web socket signals which occur when an item is "created" in
         baserow.
 
+        :param trash_entry: The trash entry that was restored from.
         :param trashed_item: The item that has been restored.
         """
         pass
@@ -95,9 +96,24 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
     # noinspection PyMethodMayBeStatic
     def get_parent_id(self, trashed_item: Any) -> int:
         """
-        :return The item id of the provided trashed_item's parent if this type has one.
+        :return The item id of the provided trashed_entry's parent if this type has one.
         """
         return 0
+
+    # noinspection PyMethodMayBeStatic
+    def get_items_to_trash(
+        self, trashed_item: Any, parent_id: Optional[int]
+    ) -> List[Any]:
+        """
+        When trashing some items you might also need to mark other related items also
+        as trashed. Override this method and return instances of trashable models
+        which should also be marked as trashed. Each of these instances will not
+        however be given their own unique trash entry, but instead be restored
+        all together from a single trash entry made for trashed_item only.
+
+        :return  An iterable of trashable model instances.
+        """
+        return [trashed_item]
 
 
 class GroupTrashableItemType(TrashableItemType):
@@ -110,7 +126,7 @@ class GroupTrashableItemType(TrashableItemType):
     def get_parent_name(self, trashed_item: Any) -> Optional[str]:
         return None
 
-    def trashed_item_restored(self, trashed_item: Group):
+    def trashed_item_restored(self, trashed_item: Group, trash_entry: Trash):
         """
         Informs any clients that the group exists again.
         """
@@ -147,7 +163,7 @@ class ApplicationTrashableItemType(TrashableItemType):
     def get_parent_name(self, trashed_item: Application) -> Optional[str]:
         return trashed_item.group.name
 
-    def trashed_item_restored(self, trashed_item: Application):
+    def trashed_item_restored(self, trashed_item: Application, trash_entry: Trash):
         application_created.send(
             self,
             application=trashed_item,

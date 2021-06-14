@@ -761,7 +761,7 @@ class LinkRowFieldType(FieldType):
             )
             to_field.save()
 
-    def after_delete(self, field, model, user, connection):
+    def after_delete(self, field, model, connection):
         """
         After the field has been deleted we also need to delete the related field.
         """
@@ -997,7 +997,7 @@ class FileFieldType(FieldType):
         )
 
     def get_model_field(self, instance, **kwargs):
-        return JSONField(default=[], **kwargs)
+        return JSONField(default=list, **kwargs)
 
     def random_value(self, instance, fake, cache):
         """

@@ -8,6 +8,7 @@ from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
 
 from baserow.contrib.database.fields.models import Field
+from baserow.core.trash.handler import TrashHandler
 
 from .exceptions import RowDoesNotExist
 from .signals import (
@@ -407,7 +408,8 @@ class RowHandler:
         )
 
         row_id = row.id
-        row.delete()
+
+        TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
 
         row_deleted.send(
             self,

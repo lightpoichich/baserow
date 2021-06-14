@@ -33,25 +33,18 @@
         </a>
       </li>
     </ul>
-    <DeleteFieldModal
-      v-if="!field.primary"
-      ref="deleteFieldModal"
-      :field="field"
-      @delete="$emit('delete')"
-    />
   </Context>
 </template>
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
 import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
-import DeleteFieldModal from './DeleteFieldModal'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'FieldContext',
   components: {
     UpdateFieldContext,
-    DeleteFieldModal,
   },
   mixins: [context],
   props: {
@@ -64,13 +57,39 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      loading: false,
+    }
+  },
   methods: {
     setLoading(field, value) {
       this.$store.dispatch('field/setItemLoading', { field, value })
     },
-    deleteField() {
-      this.$refs.context.hide()
-      this.$refs.deleteFieldModal.show()
+    async deleteField() {
+      this.loading = true
+      const { field } = this
+
+      try {
+        await this.$store.dispatch('field/deleteCall', field)
+        this.$emit('delete')
+        // TODO Trash: Why are these not being awaited?
+        this.$store.dispatch('field/forceDelete', field)
+        this.$store.dispatch('notification/restore', {
+          trash_item_type: 'field',
+          parent_trash_item_id: this.table.id,
+          trash_item_id: field.id,
+        })
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          this.$emit('delete')
+          this.$store.dispatch('field/forceDelete', field)
+        } else {
+          notifyIf(error, 'field')
+        }
+      }
+      this.hide()
+      this.loading = false
     },
   },
 }

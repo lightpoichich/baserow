@@ -5,8 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions
-from .serializers import TrashContentsSerializer, TrashStructureSerializer
+from baserow.api.decorators import map_exceptions, validate_body
+from .serializers import (
+    TrashContentsSerializer,
+    TrashStructureSerializer,
+    TrashEntryRequestSerializer,
+)
 from baserow.core.exceptions import (
     UserNotInGroup,
     ApplicationNotInGroup,
@@ -33,23 +37,10 @@ class TrashItemView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="trash_item_type",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.STR,
-                description="The trashable type of the item to restore.",
-            ),
-            OpenApiParameter(
-                name="trash_item_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                description="The id of the item to restore.",
-            ),
-        ],
         tags=["Trash"],
         operation_id="restore",
         description="Restores the specified trashed item back into baserow.",
+        request=TrashEntryRequestSerializer,
         responses={
             204: None,
             400: get_error_schema(
@@ -57,19 +48,25 @@ class TrashItemView(APIView):
             ),
         },
     )
+    @validate_body(TrashEntryRequestSerializer)
     @map_exceptions(
         {
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TrashItemDoesNotExist: ERROR_TRASH_ITEM_DOES_NOT_EXIST,
         }
     )
-    def patch(self, request, trash_item_type, trash_item_id):
+    def patch(self, request, data):
         """
         Restores the specified trashable item if it is in the trash and the user is
         in the items group.
         """
 
-        TrashHandler.restore_item(request.user, trash_item_type, trash_item_id)
+        TrashHandler.restore_item(
+            request.user,
+            data["trash_item_type"],
+            data.get("parent_trash_item_id", None),
+            data["trash_item_id"],
+        )
         return Response(status=204)
 
 

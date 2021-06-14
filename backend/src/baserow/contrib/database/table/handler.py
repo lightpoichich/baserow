@@ -1,6 +1,7 @@
 from django.db import connections
 from django.conf import settings
 
+from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
@@ -306,16 +307,6 @@ class TableHandler:
         table.database.group.has_user(user, raise_error=True)
         table_id = table.id
 
-        self._delete_table(table)
+        TrashHandler.trash(user, table.database.group, table.database, table)
 
         table_deleted.send(self, table_id=table_id, table=table, user=user)
-
-    def _delete_table(self, table):
-        """Deletes the table schema and instance."""
-
-        connection = connections[settings.USER_TABLE_DATABASE]
-        with connection.schema_editor() as schema_editor:
-            model = table.get_model()
-            schema_editor.delete_model(model)
-
-        table.delete()

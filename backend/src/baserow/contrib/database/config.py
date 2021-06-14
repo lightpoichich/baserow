@@ -137,6 +137,17 @@ class DatabaseConfig(AppConfig):
 
         table_exporter_registry.register(CsvTableExporter())
 
+        from .trash.trash_types import (
+            TableTrashableItemType,
+            RowTrashableItemType,
+            FieldTrashableItemType,
+        )
+        from baserow.core.trash.registry import trash_item_type_registry
+
+        trash_item_type_registry.register(TableTrashableItemType())
+        trash_item_type_registry.register(FieldTrashableItemType())
+        trash_item_type_registry.register(RowTrashableItemType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.ws.signals  # noqa: F403, F401

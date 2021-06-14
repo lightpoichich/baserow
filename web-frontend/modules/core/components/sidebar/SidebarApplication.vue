@@ -62,6 +62,10 @@ export default {
       type: Object,
       required: true,
     },
+    group: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -101,9 +105,10 @@ export default {
 
       try {
         await this.$store.dispatch('application/delete', this.application)
-        await this.$store.dispatch('notification/undoDelete', {
-          trashItemType: 'application',
-          trashItemId: this.application.id,
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'application',
+          parent_trash_item_id: this.group.id,
+          trash_item_id: this.application.id,
         })
       } catch (error) {
         notifyIf(error, 'application')

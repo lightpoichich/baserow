@@ -326,7 +326,7 @@ def test_delete_database_table(send_mock, data_fixture):
         handler.delete_table(user=user_2, table=table)
 
     assert Table.objects.all().count() == 1
-    assert f"database_table_{table.id}" in connection.introspection.table_names()
+    assert Table.trash.all().count() == 0
 
     table_id = table.id
     handler.delete_table(user=user, table=table)
@@ -336,4 +336,5 @@ def test_delete_database_table(send_mock, data_fixture):
     assert send_mock.call_args[1]["user"].id == user.id
 
     assert Table.objects.all().count() == 0
-    assert f"database_table_{table.id}" not in connection.introspection.table_names()
+    assert Table.trash.all().count() == 1
+    assert f"database_table_{table.id}" in connection.introspection.table_names()

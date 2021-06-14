@@ -182,7 +182,7 @@ def test_if_group_trashed_then_group_user_is_trashed(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response_json["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
 
-    TrashHandler.restore_item(user_1, "group", trashed_group.id)
+    TrashHandler.restore_item(user_1, "group", None, trashed_group.id)
 
     response = api_client.get(
         reverse("api:groups:users:list", kwargs={"group_id": trashed_group.id}),

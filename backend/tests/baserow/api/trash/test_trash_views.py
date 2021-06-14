@@ -50,6 +50,7 @@ def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fi
                 "application": None,
                 "group": group_to_delete.id,
                 "id": Trash.objects.first().id,
+                "parent_trash_item_id": None,
                 "trash_item_id": group_to_delete.id,
                 "trash_item_type": "group",
                 "trashed_at": "2020-01-01T12:00:00Z",
@@ -74,11 +75,11 @@ def test_can_restore_a_deleted_trash_item(api_client, data_fixture):
     response = api_client.patch(
         reverse(
             "api:trash:restore",
-            kwargs={
-                "trash_item_type": "group",
-                "trash_item_id": group_to_delete.id,
-            },
         ),
+        {
+            "trash_item_type": "group",
+            "trash_item_id": group_to_delete.id,
+        },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
@@ -120,11 +121,12 @@ def test_cant_restore_a_deleted_trash_item_if_not_in_group(api_client, data_fixt
     response = api_client.patch(
         reverse(
             "api:trash:restore",
-            kwargs={
-                "trash_item_type": "group",
-                "trash_item_id": group_to_delete.id,
-            },
         ),
+        {
+            "trash_item_type": "group",
+            "trash_item_id": group_to_delete.id,
+        },
+        format="json",
         HTTP_AUTHORIZATION=f"JWT {other_token}",
     )
 
@@ -139,11 +141,40 @@ def test_cant_restore_a_non_existent_trashed_item(api_client, data_fixture):
     response = api_client.patch(
         reverse(
             "api:trash:restore",
-            kwargs={
-                "trash_item_type": "group",
-                "trash_item_id": 99999,
-            },
         ),
+        {
+            "trash_item_type": "group",
+            "trash_item_id": 99999,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TRASH_ITEM_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_cant_restore_a_trashed_item_with_a_missing_parent(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    application = data_fixture.create_database_application(user=user, group=group)
+
+    url = reverse("api:applications:item", kwargs={"application_id": application.id})
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "application",
+            "parent_trash_item_id": 99999,
+            "trash_item_id": application.id,
+        },
+        format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
@@ -175,11 +206,12 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
     response = api_client.patch(
         reverse(
             "api:trash:restore",
-            kwargs={
-                "trash_item_type": "group",
-                "trash_item_id": group_to_delete.id,
-            },
         ),
+        {
+            "trash_item_type": "group",
+            "trash_item_id": group_to_delete.id,
+        },
+        format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
@@ -602,6 +634,7 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
                 "application": None,
                 "group": group_to_delete.id,
                 "id": Trash.objects.first().id,
+                "parent_trash_item_id": None,
                 "trash_item_id": group_to_delete.id,
                 "trash_item_type": "group",
                 "trashed_at": "2020-01-01T12:00:00Z",

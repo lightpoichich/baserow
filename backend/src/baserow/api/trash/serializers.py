@@ -1,14 +1,27 @@
+from django.utils.functional import lazy
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
-from rest_framework import serializers
+from rest_framework import serializers, fields
 
+from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.core.models import Trash, Group, Application
+from baserow.core.trash.registry import trash_item_type_registry
 
 
 class TrashStructureApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = ("id", "name", "trashed")
+
+
+class TrashEntryRequestSerializer(
+    UnknownFieldRaisesExceptionSerializerMixin, serializers.Serializer
+):
+    trash_item_id = serializers.IntegerField(min_value=0)
+    parent_trash_item_id = serializers.IntegerField(min_value=0, required=False)
+    trash_item_type = fields.ChoiceField(
+        choices=lazy(trash_item_type_registry.get_types, list)(),
+    )
 
 
 class TrashStructureGroupSerializer(serializers.Serializer):
@@ -45,6 +58,7 @@ class TrashContentsSerializer(serializers.ModelSerializer):
             "user_who_trashed",
             "trash_item_type",
             "trash_item_id",
+            "parent_trash_item_id",
             "trashed_at",
             "application",
             "group",

@@ -15,7 +15,7 @@ import TrashService from '@baserow/modules/core/services/trash'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
-  name: 'UndoDeleteNotification',
+  name: 'RestoreNotification',
   props: {
     notification: {
       type: Object,
@@ -39,10 +39,7 @@ export default {
     async restore() {
       this.loading = true
       try {
-        await TrashService(this.$client).restore({
-          trash_item_type: this.notification.data.trashItemType,
-          trash_item_id: this.notification.data.trashItemId,
-        })
+        await TrashService(this.$client).restore(this.notification.data)
       } catch (error) {
         notifyIf(error, 'trash')
       }

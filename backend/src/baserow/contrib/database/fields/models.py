@@ -6,6 +6,8 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+    TrashableModelMixin,
+    ParentFieldTrashableModelMixin,
 )
 
 NUMBER_TYPE_INTEGER = "INTEGER"
@@ -42,7 +44,11 @@ def get_default_field_content_type():
 
 
 class Field(
-    CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin, models.Model
+    TrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    models.Model,
 ):
     """
     Because each field type can have custom settings, for example precision for a number
@@ -98,7 +104,7 @@ class Field(
         return name
 
 
-class SelectOption(models.Model):
+class SelectOption(ParentFieldTrashableModelMixin, models.Model):
     value = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField()
@@ -279,7 +285,7 @@ class LinkRowField(Field):
     @staticmethod
     def get_new_relation_id():
         last_id = (
-            LinkRowField.objects.all().aggregate(
+            LinkRowField.objects_and_trash.all().aggregate(
                 largest=models.Max("link_row_relation_id")
             )["largest"]
             or 0

@@ -2,6 +2,7 @@ import pytest
 from django.utils import timezone
 from freezegun import freeze_time
 
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.exceptions import GroupDoesNotExist, ApplicationDoesNotExist
 from baserow.core.models import Group, Application
 from baserow.core.models import Trash
@@ -36,7 +37,7 @@ def test_restoring_a_trashed_item_unmarks_it_as_trashed_and_deletes_the_entry(
     assert group_to_delete.trashed
     assert Trash.objects.count() == 1
 
-    TrashHandler.restore_item(user, "group", group_to_delete.id)
+    TrashHandler.restore_item(user, "group", None, group_to_delete.id)
 
     group_to_delete.refresh_from_db()
     assert not group_to_delete.trashed
@@ -62,7 +63,7 @@ def test_a_trash_entry_older_than_setting_gets_marked_for_permanent_deletion(
     with freeze_time(trashed_at):
         TrashHandler.trash(user, group_to_delete, None, group_to_delete)
 
-    entry = TrashHandler.get_trash_entry(user, "group", group_to_delete.id)
+    entry = TrashHandler.get_trash_entry(user, "group", None, group_to_delete.id)
     assert not entry.should_be_permanently_deleted
 
     datetime_when_trash_item_should_still_be_kept = trashed_at + half_time
@@ -294,3 +295,57 @@ def test_deleting_a_user_who_trashed_items_should_still_leave_those_items_trashe
 
     assert Trash.objects.count() == 1
     assert Group.objects_and_trash.count() == 1
+
+
+@pytest.mark.django_db
+def test_trashing_two_rows_in_different_tables_works_as_expected(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_1 = data_fixture.create_database_table(name="Car", user=user)
+    table_2 = data_fixture.create_database_table(name="Other Cars", user=user)
+    group = data_fixture.create_group(user=user)
+    name_field = data_fixture.create_text_field(
+        table=table_1, name="Name", text_default="Test"
+    )
+
+    handler = RowHandler()
+
+    row_in_table_1 = handler.create_row(
+        user=user,
+        table=table_1,
+        values={
+            name_field.id: "Tesla",
+        },
+    )
+    row_in_table_2 = handler.create_row(
+        user=user,
+        table=table_2,
+        values={
+            name_field.id: "Ford",
+        },
+    )
+    with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(
+            user, group, table_1.database, row_in_table_1, parent_id=table_1.id
+        )
+        TrashHandler.trash(
+            user, group, table_2.database, row_in_table_2, parent_id=table_2.id
+        )
+
+    table_1_model = table_1.get_model()
+    table_2_model = table_2.get_model()
+
+    assert table_1_model.trash.count() == 1
+    assert table_1_model.objects.count() == 0
+
+    assert table_2_model.trash.count() == 1
+    assert table_2_model.objects.count() == 0
+
+    TrashHandler.restore_item(user, "row", table_1.id, row_in_table_1.id)
+
+    assert table_1_model.trash.count() == 0
+    assert table_1_model.objects.count() == 1
+
+    assert table_2_model.trash.count() == 1
+    assert table_2_model.objects.count() == 0

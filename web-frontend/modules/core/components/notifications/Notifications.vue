@@ -12,11 +12,11 @@
       ></Notification>
     </div>
     <div class="bottom-right-notifications">
-      <UndoDeleteNotification
-        v-for="notification in undoDeleteNotifications"
+      <RestoreNotification
+        v-for="notification in restoreNotifications"
         :key="notification.id"
         :notification="notification"
-      ></UndoDeleteNotification>
+      ></RestoreNotification>
     </div>
   </div>
 </template>
@@ -27,22 +27,22 @@ import { mapState } from 'vuex'
 import Notification from '@baserow/modules/core/components/notifications/Notification'
 import ConnectingNotification from '@baserow/modules/core/components/notifications/ConnectingNotification'
 import FailedConnectingNotification from '@baserow/modules/core/components/notifications/FailedConnectingNotification'
-import UndoDeleteNotification from '@baserow/modules/core/components/notifications/UndoDeleteNotification'
+import RestoreNotification from '@baserow/modules/core/components/notifications/RestoreNotification'
 
 export default {
   name: 'Notifications',
   components: {
-    UndoDeleteNotification,
+    RestoreNotification,
     Notification,
     ConnectingNotification,
     FailedConnectingNotification,
   },
   computed: {
-    undoDeleteNotifications() {
-      return this.notifications.filter((n) => n.type === 'undoDelete')
+    restoreNotifications() {
+      return this.notifications.filter((n) => n.type === 'restore')
     },
     normalNotifications() {
-      return this.notifications.filter((n) => n.type !== 'undoDelete')
+      return this.notifications.filter((n) => n.type !== 'restore')
     },
     ...mapState({
       connecting: (state) => state.notification.connecting,

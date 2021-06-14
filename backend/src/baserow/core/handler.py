@@ -702,15 +702,6 @@ class CoreHandler:
             self, application_id=application_id, application=application, user=user
         )
 
-    def _delete_application(self, application):
-        """Deletes an application and the related relations in the correct way."""
-
-        application = application.specific
-        application_type = application_type_registry.get_by_model(application)
-        application_type.pre_delete(application)
-        application.delete()
-        return application
-
     def export_group_applications(self, group, files_buffer, storage=None):
         """
         Exports the applications of a group to a list. They can later be imported via

@@ -77,6 +77,8 @@ export default {
       this.trashContents = []
       this.selectedGroup = null
       this.selectedApplication = null
+      this.hideError()
+      this.entryCount = 0
 
       try {
         const { data } = await TrashService(this.$client).fetchStructure()
@@ -132,7 +134,11 @@ export default {
     async onRestore(trashEntry) {
       try {
         trashEntry.loading = true
-        await TrashService(this.$client).restore(trashEntry)
+        await TrashService(this.$client).restore({
+          trash_item_type: trashEntry.trash_item_type,
+          trash_item_id: trashEntry.trash_item_id,
+          parent_trash_item_id: trashEntry.parent_trash_item_id,
+        })
         const index = this.trashContents.findIndex(
           (t) => t.id === trashEntry.id
         )

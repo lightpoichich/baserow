@@ -47,11 +47,10 @@ export const actions = {
   success({ dispatch }, { title, message }) {
     dispatch('add', { type: 'success', title, message })
   },
-  undoDelete({ dispatch }, { trashItemType, trashItemId }) {
-    const undoDeleteData = { trashItemType, trashItemId }
+  restore({ dispatch }, restoreData) {
     dispatch('add', {
-      type: 'undoDelete',
-      data: undoDeleteData,
+      type: 'restore',
+      data: restoreData,
     })
   },
   remove({ commit }, notification) {

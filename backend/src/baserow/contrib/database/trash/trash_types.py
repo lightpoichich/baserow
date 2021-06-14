@@ -1,0 +1,173 @@
+from typing import Optional, Any, List
+
+from django.conf import settings
+from django.db import connections
+
+from baserow.contrib.database.fields.models import Field, LinkRowField
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.signals import field_created
+from baserow.contrib.database.rows.signals import row_created
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import Table, GeneratedTableModel
+from baserow.contrib.database.table.signals import table_created
+from baserow.core.models import Application, Trash
+from baserow.core.trash.registry import TrashableItemType
+
+
+class TableTrashableItemType(TrashableItemType):
+    def get_name(self, trashed_item: Table) -> str:
+        return trashed_item.name
+
+    def get_parent_name(self, trashed_item: Table) -> Optional[str]:
+        return trashed_item.database.name
+
+    def trashed_item_restored(self, trashed_item: Table, trash_entry: Trash):
+        table_created.send(
+            self,
+            table=trashed_item,
+            user=None,
+        )
+
+    def permanently_delete_item(self, trashed_item: Application):
+        """Deletes the table schema and instance."""
+
+        connection = connections[settings.USER_TABLE_DATABASE]
+        with connection.schema_editor() as schema_editor:
+            model = trashed_item.get_model()
+            schema_editor.delete_model(model)
+
+        trashed_item.delete()
+
+    def get_parent_type(self) -> Optional[str]:
+        return "application"
+
+    def get_parent_id(self, trashed_app) -> int:
+        return trashed_app.database.id
+
+    # noinspection PyMethodMayBeStatic
+    def get_items_to_trash(
+        self, trashed_item: Table, parent_id: Optional[int]
+    ) -> List[Any]:
+        """
+        When trashing a link row field we also want to trash the related link row field.
+        """
+        model = trashed_item.get_model()
+        things_to_trash = [trashed_item]
+        for field in model._field_objects.values():
+            field = field["field"]
+            if isinstance(field, LinkRowField):
+                things_to_trash.append(field.link_row_related_field)
+        return things_to_trash
+
+    type = "table"
+    model_class = Table
+
+
+class FieldTrashableItemType(TrashableItemType):
+    def get_name(self, trashed_item: Field) -> str:
+        return trashed_item.name
+
+    def get_parent_name(self, trashed_item: Field) -> Optional[str]:
+        return trashed_item.table.name
+
+    def trashed_item_restored(self, trashed_item: Field, trash_entry: Trash):
+        field_created.send(
+            self,
+            field=trashed_item,
+            user=None,
+        )
+
+    def permanently_delete_item(self, field: Application):
+        """Deletes the table schema and instance."""
+
+        field = field.specific
+        field_type = field_type_registry.get_by_model(field)
+
+        # Remove the field from the table schema.
+        connection = connections[settings.USER_TABLE_DATABASE]
+        with connection.schema_editor() as schema_editor:
+            from_model = field.table.get_model(field_ids=[], fields=[field])
+            model_field = from_model._meta.get_field(field.db_column)
+            schema_editor.remove_field(from_model, model_field)
+
+        field.delete()
+
+        # After the field is deleted we are going to to call the after_delete method of
+        # the field type because some instance cleanup might need to happen.
+        field_type.after_delete(field, from_model, connection)
+
+    def get_parent_type(self) -> Optional[str]:
+        return "table"
+
+    def get_parent_id(self, trashed_field) -> int:
+        return trashed_field.table.id
+
+    # noinspection PyMethodMayBeStatic
+    def get_items_to_trash(
+        self, trashed_item: Field, parent_id: Optional[int]
+    ) -> List[Any]:
+        """
+        When trashing a link row field we also want to trash the related link row field.
+        """
+        if isinstance(trashed_item.specific, LinkRowField):
+            return [trashed_item, trashed_item.specific.link_row_related_field]
+        return [trashed_item]
+
+    type = "field"
+    model_class = Field
+
+
+class RowTrashableItemType(TrashableItemType):
+    def get_name(self, trashed_item) -> str:
+        # TODO Trash: Fix
+        return "Row"
+
+    def get_parent_name(self, trashed_item) -> Optional[str]:
+        # TODO Trash: Fix
+        return "Table"
+
+    def trashed_item_restored(self, trashed_item, trash_entry: Trash):
+        table = TableHandler().get_table(
+            table_id=trash_entry.parent_trash_item_id,
+            base_queryset=Table.objects_and_trash,
+        )
+
+        model = table.get_model()
+        row_created.send(
+            self,
+            row=trashed_item,
+            table=table,
+            model=model,
+            before=None,
+            user=None,
+        )
+
+    def permanently_delete_item(self, row):
+        row.delete()
+
+    def get_parent_type(self) -> Optional[str]:
+        return "table"
+
+    def get_parent_id(self, trashed_row) -> int:
+        raise Exception("Unknown")
+
+    def lookup_trashed_item(self, trashed_entry: Trash):
+        """
+        Returns the actual instance of the trashed item. By default simply does a get
+        on the model_class's trash manager.
+
+        :param trashed_entry: The entry to get the real trashed instance for.
+        :return: An instance of the model_class with trashed_item_id
+        """
+
+        table = TableHandler().get_table(
+            table_id=trashed_entry.parent_trash_item_id,
+            base_queryset=Table.objects_and_trash,
+        )
+
+        model = table.get_model()
+
+        return model.trash.get(id=trashed_entry.trash_item_id)
+
+    type = "row"
+    model_class = GeneratedTableModel

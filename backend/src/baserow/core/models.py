@@ -291,24 +291,52 @@ class UserLogEntry(models.Model):
 
 
 class Trash(models.Model):
+    # The TrashableItemType.type of the item that is trashed.
+    trash_item_type = models.TextField()
+    # We need to also store the parent id as for some trashable items the
+    # trash_item_type and the trash_item_id is not unique as the items of that type
+    # could be spread over multiple tables with the same id.
+    parent_trash_item_id = models.PositiveIntegerField(null=True, blank=True)
+    # The actual id of the item that is trashed
+    trash_item_id = models.PositiveIntegerField()
+
     # If the user who trashed something gets deleted we still wish to preserve this
     # trash record as it is independant of if the user exists or not.
     user_who_trashed = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True
     )
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
     # For trash entries which have parent-child relationships inside of a single app
     # we need to ensure that deleting a parent trash entry cascades and deletes all
     # children.
     parent_entry = models.ForeignKey(
         "Trash", on_delete=models.CASCADE, null=True, blank=True
     )
-    name = models.TextField()
-    parent_name = models.TextField(null=True, blank=True)
+
+    # The group and application fields are used to group trash into separate "bins"
+    # which can be viewed and emptied independently of each other.
+
+    # The group the item that is trashed is found in, if the trashed item is the
+    # group itself then this should also be set to that trashed group.
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    # The application the item that is trashed is found in, if the trashed item is the
+    # application itself then this should also be set to that trashed application.
     application = models.ForeignKey(
         Application, on_delete=models.CASCADE, null=True, blank=True
     )
-    trash_item_type = models.TextField()
-    trash_item_id = models.PositiveIntegerField()
+
+    # When set to true this trash entry will be picked up by a period job and the
+    # underlying item will be actually permanently deleted.
     should_be_permanently_deleted = models.BooleanField(default=False)
     trashed_at = models.DateTimeField(auto_now_add=True)
+
+    name = models.TextField()
+    parent_name = models.TextField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("trash_item_type", "parent_trash_item_id", "trash_item_id")
+        # TODO Trash: Reason more about what indexes we want
+        indexes = [
+            models.Index(
+                fields=["-trashed_at", "trash_item_type", "group", "application"]
+            )
+        ]

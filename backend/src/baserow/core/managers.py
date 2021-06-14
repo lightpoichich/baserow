@@ -35,3 +35,11 @@ class GroupParentNonTrashedManager(ParentNonTrashedManager):
 
 class GroupParentTrashedManager(ParentTrashedManager):
     parent = "group"
+
+
+class GroupFieldNonTrashedManager(ParentNonTrashedManager):
+    parent = "field"
+
+
+class GroupFieldTrashedManager(ParentTrashedManager):
+    parent = "field"

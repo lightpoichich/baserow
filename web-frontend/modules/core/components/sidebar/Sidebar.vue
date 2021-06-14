@@ -158,6 +158,7 @@
                   handle: '[data-sortable-handle]',
                 }"
                 :application="application"
+                :group="selectedGroup"
               ></component>
             </ul>
             <li class="sidebar__new-wrapper">

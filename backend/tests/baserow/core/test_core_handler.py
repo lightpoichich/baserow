@@ -211,7 +211,7 @@ def test_restore_group(group_created_mock, group_user_updated_mock, data_fixture
 
     assert Group.objects.count() == 0
 
-    TrashHandler.restore_item(user, "group", group.id)
+    TrashHandler.restore_item(user, "group", None, group.id)
 
     group_created_mock.assert_called_once()
     assert group_created_mock.call_args[1]["group"].id == group.id
@@ -1011,8 +1011,8 @@ def test_install_template(send_mock, tmpdir, data_fixture):
 @patch("baserow.core.signals.application_created.send")
 def test_restore_application(application_created_mock, data_fixture):
     user = data_fixture.create_user()
-    data_fixture.create_group(name="Test group", user=user)
-    database = data_fixture.create_database_application(user=user)
+    group = data_fixture.create_group(name="Test group", user=user)
+    database = data_fixture.create_database_application(user=user, group=group)
 
     handler = CoreHandler()
 
@@ -1020,7 +1020,7 @@ def test_restore_application(application_created_mock, data_fixture):
 
     assert Application.objects.count() == 0
 
-    TrashHandler.restore_item(user, "application", database.id)
+    TrashHandler.restore_item(user, "application", group.id, database.id)
 
     application_created_mock.assert_called_once()
     assert application_created_mock.call_args[1]["application"].id == database.id

@@ -412,7 +412,7 @@ class FieldType(
         :type before: any
         """
 
-    def after_delete(self, field, model, user, connection):
+    def after_delete(self, field, model, connection):
         """
         This hook is called right after the field has been deleted and the schema
         change has been done.
@@ -421,8 +421,6 @@ class FieldType(
         :type field: Field
         :param model: The Django model that contains the deleted field.
         :type model: Model
-        :param user: The user on whose behalf the delete is done.
-        :type user: User
         :param connection: The connection used to make the database schema change.
         :type connection: DatabaseWrapper
         """

@@ -11,9 +11,8 @@ urlpatterns = [
         TrashContentsView.as_view(),
         name="contents",
     ),
-    # TODO Trash - Enforce this regex on registry types also
     url(
-        r"^item/(?P<trash_item_type>[A-Za-z0-9]+)/(?P<trash_item_id>[0-9]+)/$",
+        r"^restore/$",
         TrashItemView.as_view(),
         name="restore",
     ),

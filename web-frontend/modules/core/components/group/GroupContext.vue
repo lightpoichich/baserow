@@ -60,9 +60,9 @@ export default {
 
       try {
         await this.$store.dispatch('group/delete', this.group)
-        await this.$store.dispatch('notification/undoDelete', {
-          trashItemType: 'group',
-          trashItemId: this.group.id,
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'group',
+          trash_item_id: this.group.id,
         })
         this.hide()
       } catch (error) {

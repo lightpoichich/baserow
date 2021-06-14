@@ -63,6 +63,7 @@
               open:
                 navActive === 'section-table-' + table.id ||
                 navActive === 'section-table-' + table.id + '-fields' ||
+                navActive === 'section-table-' + table.id + '-field-list' ||
                 navActive === 'section-table-' + table.id + '-list' ||
                 navActive === 'section-table-' + table.id + '-get' ||
                 navActive === 'section-table-' + table.id + '-create' ||
@@ -81,6 +82,19 @@
                   navigate('section-table-' + table.id + '-fields')
                 "
                 >Fields</a
+              >
+            </li>
+            <li>
+              <a
+                class="api-docs__nav-link"
+                :class="{
+                  active:
+                    navActive === 'section-table-' + table.id + '-field-list',
+                }"
+                @click.prevent="
+                  navigate('section-table-' + table.id + '-field-list')
+                "
+                >List fields</a
               >
             </li>
             <li>
@@ -287,6 +301,68 @@
                 </template>
               </tbody>
             </table>
+          </div>
+        </div>
+        <div class="api-docs__item">
+          <div class="api-docs__left">
+            <h3
+              :id="'section-table-' + table.id + '-field-list'"
+              class="api-docs__heading-3"
+            >
+              List fields
+            </h3>
+            <p class="api-docs__content">
+              To list fields of the {{ table.name }} table a
+              <code class="api-docs__code">GET</code> request as to be made to
+              the {{ table.name }} fields endpoint.
+            </p>
+            <h4 class="api-docs__heading-4">Result field properties</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter name="id" :optional="false" type="integer">
+                Field primary key. Can be used to generate the database column
+                name by adding
+                <code class="api-docs__code">field_</code> prefix.
+              </APIDocsParameter>
+            </ul>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter name="name" :optional="false" type="string">
+                Field name.
+              </APIDocsParameter>
+            </ul>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="table_id"
+                :optional="false"
+                type="integer"
+              >
+                Related table id.
+              </APIDocsParameter>
+            </ul>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter name="order" :optional="false" type="integer">
+                Field order in table. 0 for the first field.
+              </APIDocsParameter>
+            </ul>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter name="primary" :optional="false" type="boolean">
+                Indicates if the field is a primary field. If
+                <code class="api-docs__code">true</code> the field cannot be
+                deleted and the value should represent the whole row.
+              </APIDocsParameter>
+            </ul>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter name="type" :optional="false" type="string">
+                Type defined for this field.
+              </APIDocsParameter>
+            </ul>
+          </div>
+          <div class="api-docs__right">
+            <APIDocsExample
+              v-model="exampleType"
+              type="GET"
+              :url="getFieldsURL(table)"
+              :response="getResponseFields(table)"
+            ></APIDocsExample>
           </div>
         </div>
         <div class="api-docs__item">
@@ -728,6 +804,7 @@ export default {
     }
 
     const fields = {}
+    const fieldsSample = {}
     const populateField = (field) => {
       const fieldType = app.$registry.get('field', field.type)
       field._ = {
@@ -742,10 +819,21 @@ export default {
     for (const i in database.tables) {
       const table = database.tables[i]
       const { data } = await FieldService(app.$client).fetchAll(table.id)
+      // Generate a filtered field sample
+      fieldsSample[table.id] = data
+        .slice(0, 3)
+        .map(({ id, table_id: tableId, name, order, type, primary }) => ({
+          id,
+          table_id: tableId,
+          name,
+          order,
+          type,
+          primary,
+        }))
       fields[table.id] = data.map((field) => populateField(field))
     }
 
-    return { database, fields }
+    return { database, fields, fieldsSample }
   },
   data() {
     return {
@@ -841,6 +929,12 @@ export default {
       return item
     },
     /**
+     * Generates a example response based on the available fields of the table.
+     */
+    getResponseFields(table) {
+      return this.fieldsSample[table.id]
+    },
+    /**
      * Returns the mapping of the field id as key and the field name as value.
      */
     getFieldMapping(table) {
@@ -849,6 +943,9 @@ export default {
         mapping[`field_${field.id}`] = field.name
       })
       return mapping
+    },
+    getFieldsURL(table) {
+      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/fields/table/${table.id}/`
     },
     getListURL(table) {
       return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/`

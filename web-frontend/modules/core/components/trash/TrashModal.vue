@@ -103,6 +103,7 @@ export default {
       this.loading = false
     },
     async loadNextPage(nextPage) {
+      this.hideError()
       try {
         this.loadingNextPage = true
         const { data } = await TrashService(this.$client).fetchContents({
@@ -123,6 +124,7 @@ export default {
     async fetchContents() {
       this.loadingContents = true
       this.trashContents = []
+      this.hideError()
       try {
         const { data } = await TrashService(this.$client).fetchContents({
           groupId: this.selectedGroup.id,
@@ -144,6 +146,7 @@ export default {
       this.fetchContents()
     },
     async onRestore(trashEntry) {
+      this.hideError()
       try {
         trashEntry.loading = true
         await TrashService(this.$client).restore({
@@ -176,6 +179,7 @@ export default {
       }
     },
     async onEmpty() {
+      this.hideError()
       this.loadingContents = true
       try {
         const applicationIdOrNull =

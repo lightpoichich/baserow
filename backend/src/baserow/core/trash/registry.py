@@ -9,7 +9,10 @@ from baserow.core.registry import (
     ModelInstanceMixin,
     Instance,
 )
-from baserow.core.signals import group_created, group_user_updated, application_created
+from baserow.core.signals import (
+    application_created,
+    group_restored,
+)
 
 
 class TrashableItemTypeRegistry(ModelRegistryMixin, Registry):
@@ -146,12 +149,8 @@ class GroupTrashableItemType(TrashableItemType):
         Informs any clients that the group exists again.
         """
 
-        # TODO Trash - How does this perform? Do we want to instead provide group
-        #  member info in the group_created signal? Without this the front end does
-        #  not know what permission they have in the group which breaks things!
         for group_user in trashed_item.groupuser_set.all():
-            group_user_updated.send(self, group_user=group_user, user=None)
-        group_created.send(self, group=trashed_item, user=None)
+            group_restored.send(self, group_user=group_user, user=None)
 
     def permanently_delete_item(self, trashed_group: Group):
         """

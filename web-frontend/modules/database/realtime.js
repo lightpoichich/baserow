@@ -51,6 +51,16 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('field_restored', ({ store, app }, data) => {
+    const table = store.getters['table/getSelected']
+    if (table !== undefined && table.id === data.field.table_id) {
+      store.dispatch('field/forceCreate', { table, values: data.field })
+      app.$bus.$emit('table-refresh', {
+        tableId: store.getters['table/getSelectedId'],
+      })
+    }
+  })
+
   realtime.registerEvent('field_updated', ({ store, app }, data) => {
     const field = store.getters['field/get'](data.field.id)
     if (field !== undefined) {

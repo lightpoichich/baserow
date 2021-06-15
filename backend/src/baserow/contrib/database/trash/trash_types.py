@@ -5,7 +5,7 @@ from django.db import connections
 
 from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.signals import field_created
+from baserow.contrib.database.fields.signals import field_restored
 from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
@@ -71,7 +71,7 @@ class FieldTrashableItemType(TrashableItemType):
         return trashed_item.table.name
 
     def trashed_item_restored(self, trashed_item: Field, trash_entry: Trash):
-        field_created.send(
+        field_restored.send(
             self,
             field=trashed_item,
             user=None,

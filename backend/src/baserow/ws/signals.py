@@ -60,6 +60,21 @@ def group_user_updated(sender, group_user, user, **kwargs):
     )
 
 
+@receiver(signals.group_restored)
+def group_restored(sender, group_user, user, **kwargs):
+    transaction.on_commit(
+        lambda: broadcast_to_users.delay(
+            [group_user.user_id],
+            {
+                "type": "group_created",
+                "group_id": group_user.group_id,
+                "group": GroupUserGroupSerializer(group_user).data,
+            },
+            getattr(user, "web_socket_id", None),
+        )
+    )
+
+
 @receiver(signals.group_user_deleted)
 def group_user_deleted(sender, group_user, user, **kwargs):
     transaction.on_commit(

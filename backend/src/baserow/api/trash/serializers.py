@@ -18,7 +18,9 @@ class TrashEntryRequestSerializer(
     UnknownFieldRaisesExceptionSerializerMixin, serializers.Serializer
 ):
     trash_item_id = serializers.IntegerField(min_value=0)
-    parent_trash_item_id = serializers.IntegerField(min_value=0, required=False)
+    parent_trash_item_id = serializers.IntegerField(
+        min_value=0, required=False, allow_null=True
+    )
     trash_item_type = fields.ChoiceField(
         choices=lazy(trash_item_type_registry.get_types, list)(),
     )

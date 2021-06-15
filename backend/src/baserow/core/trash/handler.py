@@ -139,7 +139,9 @@ class TrashHandler:
                 trash_item_type=trash_item_type, trash_item_id=trashed_item.id
             ).delete()
 
-            trashable_item_type.trashed_item_restored(trashed_item, trash_entry)
+            for item in items_to_trash:
+                trashable_item_type = trash_item_type_registry.get_by_model(item)
+                trashable_item_type.trashed_item_restored(item, trash_entry)
 
     @staticmethod
     def get_trash_entry(

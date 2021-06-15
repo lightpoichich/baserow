@@ -197,3 +197,48 @@ def test_trashed_row_entry_includes_the_rows_primary_key_value_as_an_extra_descr
     assert trash_entry.extra_description == "John"
     assert trash_entry.name == "Row " + str(row.id)
     assert trash_entry.parent_name == "Customers"
+
+
+@pytest.mark.django_db
+def test_restoring_a_trashed_link_field_restores_the_opposing_field_also(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Jane"},
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=customers_table,
+    )
+    TrashHandler.trash(user, database.group, database, link_field_1)
+
+    assert LinkRowField.trash.count() == 2
+
+    TrashHandler.restore_item(user, "field", table.id, link_field_1.id)
+
+    assert LinkRowField.objects.count() == 2

@@ -182,9 +182,13 @@ class RowTrashableItemType(TrashableItemType):
         model = table.get_model()
         for field in model._field_objects.values():
             if field["field"].primary:
-                return getattr(trashed_item, field["name"])
+                primary_value = getattr(trashed_item, field["name"])
+                # TODO Trash: A better way of converting weird primary fields please.
+                if primary_value is None or isinstance(primary_value, dict):
+                    primary_value = f"unnamed row {trashed_item.id}"
+                return str(primary_value)
 
-        return None
+        return "unknown row"
 
     type = "row"
     model_class = GeneratedTableModel

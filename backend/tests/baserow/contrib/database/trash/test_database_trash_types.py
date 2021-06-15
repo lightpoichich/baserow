@@ -200,6 +200,37 @@ def test_trashed_row_entry_includes_the_rows_primary_key_value_as_an_extra_descr
 
 
 @pytest.mark.django_db
+def test_trashed_row_entry_extra_description_is_unnamed_when_no_value_pk(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={},
+    )
+    trash_entry = TrashHandler.trash(
+        user, database.group, database, row, parent_id=customers_table.id
+    )
+
+    assert trash_entry.extra_description == f"unnamed row {row.id}"
+    assert trash_entry.name == "Row " + str(row.id)
+    assert trash_entry.parent_name == "Customers"
+
+
+@pytest.mark.django_db
 def test_restoring_a_trashed_link_field_restores_the_opposing_field_also(
     data_fixture,
 ):

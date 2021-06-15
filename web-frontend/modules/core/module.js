@@ -51,6 +51,10 @@ export default function DatabaseModule(options) {
           key: 'INITIAL_TABLE_DATA_LIMIT',
           default: null,
         },
+        {
+          key: 'HOURS_UNTIL_TRASH_PERMANENTLY_DELETED',
+          default: 24 * 3,
+        },
       ],
     },
   ])

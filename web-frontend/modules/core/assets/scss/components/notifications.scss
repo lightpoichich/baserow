@@ -9,7 +9,7 @@
 .bottom-right-notifications {
   display: flex;
   flex-direction: column-reverse;
-  align-items: end;
+  align-items: flex-end;
   position: fixed;
   bottom: 10px;
   right: 30px;

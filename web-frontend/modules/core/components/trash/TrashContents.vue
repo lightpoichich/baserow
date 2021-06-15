@@ -4,7 +4,7 @@
       <h2 class="trash-box-title__header">{{ title }}</h2>
       <div class="trash-sub-header">
         <h3 class="trash-sub-header__title">
-          Restore deleted items from the past three days
+          Restore deleted items from the past {{ trashDuration }}
         </h3>
         <a
           v-show="entryCount > 0"
@@ -53,6 +53,7 @@
 </template>
 
 <script>
+import moment from 'moment'
 import TrashEntry from '@baserow/modules/core/components/trash/TrashEntry'
 import InfiniteScroll from '@baserow/modules/core/components/infinite_scroll/InfiniteScroll'
 import TrashEmptyModal from '@baserow/modules/core/components/trash/TrashEmptyModal'
@@ -130,6 +131,10 @@ export default {
       return this.selectedApplication === null
         ? this.selectedGroup.id
         : this.selectedApplication.id
+    },
+    trashDuration() {
+      const hours = this.$env.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
+      return moment().subtract(hours, 'hours').fromNow().replace('ago', '')
     },
   },
   methods: {

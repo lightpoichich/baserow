@@ -192,7 +192,7 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
 
     trashed_at = timezone.now()
     time_when_trash_item_old_enough = trashed_at + timezone.timedelta(
-        hours=settings.HOUR_DURATION_UNTIL_TRASH_ITEM_PERMANENTLY_DELETED + 1
+        hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
 
     with freeze_time(trashed_at):

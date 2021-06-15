@@ -56,10 +56,10 @@ def test_a_trash_entry_older_than_setting_gets_marked_for_permanent_deletion(
 
     trashed_at = timezone.now()
     half_time = timezone.timedelta(
-        hours=settings.HOUR_DURATION_UNTIL_TRASH_ITEM_PERMANENTLY_DELETED / 2
+        hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED / 2
     )
     plus_one_hour_over = timezone.timedelta(
-        hours=settings.HOUR_DURATION_UNTIL_TRASH_ITEM_PERMANENTLY_DELETED + 1
+        hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
     with freeze_time(trashed_at):
         TrashHandler.trash(user, group_to_delete, None, group_to_delete)
@@ -91,7 +91,7 @@ def test_a_trash_entry_marked_for_permanent_deletion_gets_deleted_by_task(
 
     trashed_at = timezone.now()
     plus_one_hour_over = timezone.timedelta(
-        hours=settings.HOUR_DURATION_UNTIL_TRASH_ITEM_PERMANENTLY_DELETED + 1
+        hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
     with freeze_time(trashed_at):
         TrashHandler.trash(user, group_to_delete, None, group_to_delete)

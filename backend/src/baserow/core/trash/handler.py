@@ -225,7 +225,7 @@ class TrashHandler:
         """
         now = timezone.now()
         cutoff = now - timezone.timedelta(
-            hours=settings.HOUR_DURATION_UNTIL_TRASH_ITEM_PERMANENTLY_DELETED
+            hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
         )
         Trash.objects.filter(trashed_at__lte=cutoff).update(
             should_be_permanently_deleted=True

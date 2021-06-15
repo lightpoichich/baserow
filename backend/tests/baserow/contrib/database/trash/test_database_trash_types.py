@@ -166,3 +166,34 @@ def test_trashing_a_table_with_link_fields_pointing_at_it_also_trashes_those_fie
 
     link_field_1.refresh_from_db()
     assert link_field_1.trashed
+
+
+@pytest.mark.django_db
+def test_trashed_row_entry_includes_the_rows_primary_key_value_as_an_extra_description(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    trash_entry = TrashHandler.trash(
+        user, database.group, database, row, parent_id=customers_table.id
+    )
+
+    assert trash_entry.extra_description == "John"
+    assert trash_entry.name == "Row " + str(row.id)
+    assert trash_entry.parent_name == "Customers"

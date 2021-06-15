@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions, validate_body
+from .errors import ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD
 from .serializers import (
     TrashContentsSerializer,
     TrashStructureSerializer,
@@ -31,6 +32,7 @@ from baserow.api.errors import (
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.schemas import get_error_schema
+from ...core.trash.exceptions import CannotRestoreChildBeforeParent
 
 
 class TrashItemView(APIView):
@@ -44,7 +46,11 @@ class TrashItemView(APIView):
         responses={
             204: None,
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_TRASH_ITEM_DOES_NOT_EXIST"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_TRASH_ITEM_DOES_NOT_EXIST",
+                    "ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD",
+                ]
             ),
         },
     )
@@ -53,6 +59,7 @@ class TrashItemView(APIView):
         {
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TrashItemDoesNotExist: ERROR_TRASH_ITEM_DOES_NOT_EXIST,
+            CannotRestoreChildBeforeParent: ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
         }
     )
     def patch(self, request, data):

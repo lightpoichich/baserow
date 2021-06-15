@@ -39,14 +39,26 @@
           <li>
             <a
               :class="{ 'context__menu-item--loading': loading }"
-              @click="deleteApplication()"
+              @click="deleteApplication"
             >
               <i class="context__menu-icon fas fa-fw fa-trash"></i>
               Delete {{ application._.type.name | lowercase }}
             </a>
           </li>
+          <li>
+            <a @click="showApplicationTrashModal">
+              <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+              View trash
+            </a>
+          </li>
         </ul>
       </Context>
+      <TrashModal
+        ref="applicationTrashModal"
+        :initial-group="group"
+        :initial-application="application"
+      >
+      </TrashModal>
     </div>
     <slot name="body"></slot>
   </li>
@@ -54,9 +66,11 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 
 export default {
   name: 'SidebarApplication',
+  components: { TrashModal },
   props: {
     application: {
       type: Object,
@@ -115,6 +129,9 @@ export default {
       }
 
       this.loading = false
+    },
+    showApplicationTrashModal() {
+      this.$refs.applicationTrashModal.show()
     },
   },
 }

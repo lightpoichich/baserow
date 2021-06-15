@@ -6,7 +6,7 @@
     @click="restore"
   >
     <i class="button__icon fas fa-undo"> </i>
-    Restore deleted {{ notification.data.trashItemType }}
+    Restore deleted {{ notification.data.trash_item_type }}
   </button>
 </template>
 

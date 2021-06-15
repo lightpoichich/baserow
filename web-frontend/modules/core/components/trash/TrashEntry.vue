@@ -13,7 +13,13 @@
         <strong>{{ trashItemTitle }}</strong>
         {{ trashEntry.parent_name ? ' from ' + trashEntry.parent_name : '' }}
       </div>
-      <div class="trash-entry__description">{{ timeAgo }}</div>
+      <div class="trash-entry__deleted-at-display">{{ timeAgo }}</div>
+      <span
+        v-if="trashEntry.extra_description"
+        class="trash-entry__extra-description"
+      >
+        {{ trashEntry.extra_description }}
+      </span>
     </div>
     <div class="trash-entry__actions">
       <a

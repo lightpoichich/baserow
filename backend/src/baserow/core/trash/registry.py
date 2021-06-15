@@ -76,12 +76,15 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         pass
 
     @abstractmethod
-    def get_parent_name(self, trashed_item: Any) -> Optional[str]:
+    def get_parent_name(
+        self, trashed_item: Any, parent_id: Optional[int]
+    ) -> Optional[str]:
         """
         Should return the name of the parent for this particular trashed item to
         display in the trash modal.
 
         :param trashed_item: The item whose parent is to be named.
+        :param parent_id: The id of the parent item if it exists.
         :return The name of the parent of the trashed_group if any or None if no parent.
         """
         pass
@@ -115,6 +118,16 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         """
         return [trashed_item]
 
+    # noinspection PyMethodMayBeStatic
+    def get_extra_description(self, trashed_item: Any, parent_id: int) -> Optional[str]:
+        """
+        Should return an optional extra description to show along with the trash
+        entry for this particular trashed item.
+
+        :return A short string giving extra detail on what has been trashed.
+        """
+        return None
+
 
 class GroupTrashableItemType(TrashableItemType):
     def get_parent_type(self) -> Optional[str]:
@@ -123,7 +136,9 @@ class GroupTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item: Group) -> str:
         return trashed_item.name
 
-    def get_parent_name(self, trashed_item: Any) -> Optional[str]:
+    def get_parent_name(
+        self, trashed_item: Any, parent_id: Optional[int]
+    ) -> Optional[str]:
         return None
 
     def trashed_item_restored(self, trashed_item: Group, trash_entry: Trash):
@@ -160,7 +175,9 @@ class ApplicationTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item: Application) -> str:
         return trashed_item.name
 
-    def get_parent_name(self, trashed_item: Application) -> Optional[str]:
+    def get_parent_name(
+        self, trashed_item: Application, parent_id: Optional[int]
+    ) -> Optional[str]:
         return trashed_item.group.name
 
     def trashed_item_restored(self, trashed_item: Application, trash_entry: Trash):

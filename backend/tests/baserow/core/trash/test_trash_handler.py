@@ -6,6 +6,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.exceptions import GroupDoesNotExist, ApplicationDoesNotExist
 from baserow.core.models import Group, Application
 from baserow.core.models import Trash
+from baserow.core.trash.exceptions import CannotRestoreChildBeforeParent
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -349,3 +350,43 @@ def test_trashing_two_rows_in_different_tables_works_as_expected(
 
     assert table_2_model.trash.count() == 1
     assert table_2_model.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_cannot_restore_a_child_before_the_parent(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_1 = data_fixture.create_database_table(name="Car", user=user)
+    group = table_1.database.group
+    name_field = data_fixture.create_text_field(
+        table=table_1, name="Name", text_default="Test"
+    )
+
+    handler = RowHandler()
+
+    row_in_table_1 = handler.create_row(
+        user=user,
+        table=table_1,
+        values={
+            name_field.id: "Tesla",
+        },
+    )
+    TrashHandler.trash(
+        user, group, table_1.database, row_in_table_1, parent_id=table_1.id
+    )
+    TrashHandler.trash(user, group, table_1.database, table_1)
+
+    with pytest.raises(CannotRestoreChildBeforeParent):
+        TrashHandler.restore_item(user, "row", table_1.id, row_in_table_1.id)
+
+    TrashHandler.trash(user, group, table_1.database, table_1.database)
+    TrashHandler.trash(user, group, None, group)
+
+    with pytest.raises(CannotRestoreChildBeforeParent):
+        TrashHandler.restore_item(user, "application", group.id, table_1.database.id)
+
+    TrashHandler.restore_item(user, "group", None, group.id)
+
+    with pytest.raises(CannotRestoreChildBeforeParent):
+        TrashHandler.restore_item(user, "table", table_1.database.id, table_1.id)

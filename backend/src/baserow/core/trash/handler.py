@@ -13,6 +13,7 @@ from baserow.core.exceptions import (
     TrashItemDoesNotExist,
 )
 from baserow.core.models import Trash, Application, Group
+from baserow.core.trash.exceptions import CannotRestoreChildBeforeParent
 from baserow.core.trash.registry import trash_item_type_registry
 
 User = get_user_model()
@@ -53,6 +54,27 @@ class TrashHandler:
             item.trashed = True
             item.save()
 
+        parent_entry, parent_id = TrashHandler.lookup_parent_trash_entry(
+            parent_id, trash_item, trash_item_type
+        )
+
+        return Trash.objects.create(
+            user_who_trashed=requesting_user,
+            group=group,
+            application=application,
+            trash_item_type=trash_item_type.type,
+            trash_item_id=trash_item.id,
+            name=trash_item_type.get_name(trash_item),
+            parent_name=trash_item_type.get_parent_name(trash_item, parent_id),
+            parent_entry=parent_entry,
+            parent_trash_item_id=parent_id,
+            extra_description=trash_item_type.get_extra_description(
+                trash_item, parent_id
+            ),
+        )
+
+    @staticmethod
+    def lookup_parent_trash_entry(parent_id, trash_item, trash_item_type):
         parent_type = trash_item_type.get_parent_type()
         parent_entry = None
         if parent_type is not None:
@@ -64,18 +86,7 @@ class TrashHandler:
                 )
             except Trash.DoesNotExist:
                 pass
-
-        return Trash.objects.create(
-            user_who_trashed=requesting_user,
-            group=group,
-            application=application,
-            trash_item_type=trash_item_type.type,
-            trash_item_id=trash_item.id,
-            name=trash_item_type.get_name(trash_item),
-            parent_name=trash_item_type.get_parent_name(trash_item),
-            parent_entry=parent_entry,
-            parent_trash_item_id=parent_id,
-        )
+        return parent_entry, parent_id
 
     @staticmethod
     def restore_item(user, trash_item_type, parent_trash_item_id, trash_item_id):
@@ -98,6 +109,25 @@ class TrashHandler:
                 trash_entry.trash_item_type
             )
             trashed_item = trashable_item_type.lookup_trashed_item(trash_entry)
+
+            if (
+                trash_entry.group.trashed
+                and trash_entry.group.id != trash_entry.trash_item_id
+            ):
+                raise CannotRestoreChildBeforeParent()
+
+            if (
+                trash_entry.application
+                and trash_entry.application.trashed
+                and trash_entry.trash_item_id != trash_entry.application.id
+            ):
+                raise CannotRestoreChildBeforeParent()
+
+            parent_entry, parent_id = TrashHandler.lookup_parent_trash_entry(
+                parent_trash_item_id, trashed_item, trashable_item_type
+            )
+            if parent_entry:
+                raise CannotRestoreChildBeforeParent()
 
             items_to_trash = trashable_item_type.get_items_to_trash(
                 trashed_item, parent_trash_item_id

@@ -18,7 +18,7 @@ class TableTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item: Table) -> str:
         return trashed_item.name
 
-    def get_parent_name(self, trashed_item: Table) -> Optional[str]:
+    def get_parent_name(self, trashed_item: Table, parent_id: int) -> Optional[str]:
         return trashed_item.database.name
 
     def trashed_item_restored(self, trashed_item: Table, trash_entry: Trash):
@@ -67,7 +67,7 @@ class FieldTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item: Field) -> str:
         return trashed_item.name
 
-    def get_parent_name(self, trashed_item: Field) -> Optional[str]:
+    def get_parent_name(self, trashed_item: Field, parent_id: int) -> Optional[str]:
         return trashed_item.table.name
 
     def trashed_item_restored(self, trashed_item: Field, trash_entry: Trash):
@@ -119,12 +119,15 @@ class FieldTrashableItemType(TrashableItemType):
 
 class RowTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item) -> str:
-        # TODO Trash: Fix
-        return "Row"
+        return f"Row {trashed_item.id}"
 
-    def get_parent_name(self, trashed_item) -> Optional[str]:
-        # TODO Trash: Fix
-        return "Table"
+    def get_parent_name(self, trashed_item, parent_id: int) -> Optional[str]:
+        table = TableHandler().get_table(
+            table_id=parent_id,
+            base_queryset=Table.objects_and_trash,
+        )
+
+        return table.name
 
     def trashed_item_restored(self, trashed_item, trash_entry: Trash):
         table = TableHandler().get_table(
@@ -168,6 +171,20 @@ class RowTrashableItemType(TrashableItemType):
         model = table.get_model()
 
         return model.trash.get(id=trashed_entry.trash_item_id)
+
+    # noinspection PyMethodMayBeStatic
+    def get_extra_description(self, trashed_item: Any, parent_id: int) -> Optional[str]:
+        table = TableHandler().get_table(
+            table_id=parent_id,
+            base_queryset=Table.objects_and_trash,
+        )
+
+        model = table.get_model()
+        for field in model._field_objects.values():
+            if field["field"].primary:
+                return getattr(trashed_item, field["name"])
+
+        return None
 
     type = "row"
     model_class = GeneratedTableModel

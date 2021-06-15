@@ -331,6 +331,7 @@ class Trash(models.Model):
 
     name = models.TextField()
     parent_name = models.TextField(null=True, blank=True)
+    extra_description = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = ("trash_item_type", "parent_trash_item_id", "trash_item_id")

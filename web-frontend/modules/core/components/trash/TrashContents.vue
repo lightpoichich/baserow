@@ -32,10 +32,7 @@
           <TrashEntry
             :key="'trash-item-' + item.id"
             :trash-entry="item"
-            :disabled="
-              loadingContents ||
-              (selfIsTrashed && item.trash_item_id !== selfTrashItemId)
-            "
+            :disabled="loadingContents || isParentItemTrashed(item)"
             @restore="$emit('restore', $event)"
           >
           </TrashEntry>
@@ -132,6 +129,26 @@ export default {
       if (!this.loadingContents) {
         this.$refs.emptyModal.show()
       }
+    },
+    isParentItemTrashed(item) {
+      const parentType =
+        this.selectedApplication === null ? 'group' : 'application'
+      const parentId = item.parent_trash_item_id
+      let parentIsTrashed = false
+      if (parentId !== null) {
+        const index = this.trashContents.findIndex(
+          (i) => i.trash_item_id === parentId
+        )
+        parentIsTrashed = index !== -1
+      }
+      return (
+        (this.selfIsTrashed &&
+          !(
+            item.trash_item_id === this.selfTrashItemId &&
+            item.trash_item_type === parentType
+          )) ||
+        parentIsTrashed
+      )
     },
   },
 }

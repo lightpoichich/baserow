@@ -64,4 +64,5 @@ class TrashContentsSerializer(serializers.ModelSerializer):
             "group",
             "name",
             "parent_name",
+            "extra_description",
         )

@@ -23,11 +23,18 @@
           Delete group
         </a>
       </li>
+      <li>
+        <a @click="showGroupTrashModal">
+          <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+          View trash
+        </a>
+      </li>
     </ul>
     <GroupMembersModal
       ref="groupMembersModal"
       :group="group"
     ></GroupMembersModal>
+    <TrashModal ref="groupTrashModal" :initial-group="group"> </TrashModal>
   </Context>
 </template>
 
@@ -35,10 +42,11 @@
 import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 
 export default {
   name: 'GroupContext',
-  components: { GroupMembersModal },
+  components: { TrashModal, GroupMembersModal },
   mixins: [context],
   props: {
     group: {
@@ -54,6 +62,9 @@ export default {
   methods: {
     showGroupMembersModal() {
       this.$refs.groupMembersModal.show()
+    },
+    showGroupTrashModal() {
+      this.$refs.groupTrashModal.show()
     },
     async deleteGroup() {
       this.loading = true

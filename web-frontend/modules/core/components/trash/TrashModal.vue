@@ -55,7 +55,18 @@ export default {
   name: 'TrashModal',
   components: { TrashSidebar, TrashContent },
   mixins: [modal, error],
-  props: {},
+  props: {
+    initialGroup: {
+      type: Object,
+      required: false,
+      default: null,
+    },
+    initialApplication: {
+      type: Object,
+      required: false,
+      default: null,
+    },
+  },
   data() {
     return {
       loading: true,
@@ -83,7 +94,8 @@ export default {
       try {
         const { data } = await TrashService(this.$client).fetchStructure()
         this.groups = data.groups
-        this.selectGroupOrApp({ group: this.groups[0] })
+        const group = this.initialGroup || this.groups[0]
+        this.selectGroupOrApp({ group, application: this.initialApplication })
       } catch (error) {
         notifyIf(error, 'trash')
         this.hide()

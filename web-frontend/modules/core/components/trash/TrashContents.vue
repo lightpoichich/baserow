@@ -46,6 +46,7 @@
       ref="emptyModal"
       :name="title"
       :loading="loadingContents"
+      :is-empty-or-perm-delete="isEmptying"
       @empty="$emit('empty')"
     ></TrashEmptyModal>
   </div>
@@ -99,6 +100,13 @@ export default {
           ? this.selectedGroup.id
           : this.selectedApplication.id
       return title === '' ? 'Unnamed ' + groupOrApp + ' ' + id : title
+    },
+    isEmptying() {
+      if (this.selectedApplication !== null) {
+        return !this.selectedApplication.trashed
+      } else {
+        return !this.selectedGroup.trashed
+      }
     },
     emptyButtonText() {
       if (this.selectedApplication === null) {

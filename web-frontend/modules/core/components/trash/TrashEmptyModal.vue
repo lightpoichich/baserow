@@ -1,9 +1,15 @@
 <template>
   <Modal :very-small="true" :close-button="false">
-    <h3>Are you sure you want to empty the trash of {{ name }}</h3>
+    <h3>
+      Are you sure you want to
+      {{ isEmptyOrPermDelete ? 'empty the trash of' : 'permanently delete' }}
+      {{ name }}
+    </h3>
     <p>
-      This will permanently delete the listed items. After emptying they cannot
-      be recovered.
+      This will permanently delete
+      {{
+        isEmptyOrPermDelete ? 'the listed items' : 'it and all of its contents'
+      }}. After which they cannot be recovered.
     </p>
     <div class="actions">
       <div class="align-right">
@@ -14,7 +20,7 @@
           class="button button button--error"
           @click.prevent="emitEmptyAndClose"
         >
-          Empty
+          {{ isEmptyOrPermDelete ? 'Empty' : 'Permanently delete' }}
         </a>
       </div>
     </div>
@@ -31,6 +37,10 @@ export default {
   props: {
     name: {
       type: String,
+      required: true,
+    },
+    isEmptyOrPermDelete: {
+      type: Boolean,
       required: true,
     },
   },

@@ -70,6 +70,9 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         """
         return self.application_set(manager="objects_and_trash")
 
+    def has_template(self):
+        return self.template_set.all().exists()
+
     def has_user(
         self,
         user,
@@ -105,7 +108,7 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         if permissions and not isinstance(permissions, list):
             permissions = [permissions]
 
-        if allow_if_template and self.template_set.all().exists():
+        if allow_if_template and self.has_template():
             return True
         elif not bool(user and user.is_authenticated):
             if raise_error:

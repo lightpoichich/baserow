@@ -242,3 +242,82 @@ def test_restoring_a_trashed_link_field_restores_the_opposing_field_also(
     TrashHandler.restore_item(user, "field", table.id, link_field_1.id)
 
     assert LinkRowField.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_trashing_a_row_hides_it_from_a_link_row_field_pointing_at_it(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    cars_table = data_fixture.create_database_table(name="Cars", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    john_row = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    jane_row = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Jane"},
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=cars_table,
+        type_name="link_row",
+        name="customer",
+        link_row_table=customers_table,
+    )
+    # Create a primary field and some example data for the cars table.
+    cars_primary_field = field_handler.create_field(
+        user=user, table=cars_table, type_name="text", name="Name", primary=True
+    )
+    linked_row_pointing_at_john = row_handler.create_row(
+        user=user,
+        table=cars_table,
+        values={
+            f"field_{cars_primary_field.id}": "BMW",
+            f"field_{link_field_1.id}": [john_row.id],
+        },
+    )
+    linked_row_pointing_at_jane = row_handler.create_row(
+        user=user,
+        table=cars_table,
+        values={
+            f"field_{cars_primary_field.id}": "Audi",
+            f"field_{link_field_1.id}": [jane_row.id],
+        },
+    )
+
+    cars_model = cars_table.get_model(attribute_names=True)
+    assert list(cars_model.objects.values_list("customer", flat=True)) == [
+        john_row.id,
+        jane_row.id,
+    ]
+    row = RowHandler().get_row(user, cars_table, linked_row_pointing_at_john.id)
+    assert list(
+        getattr(row, f"field_{link_field_1.id}").values_list("id", flat=True)
+    ) == [john_row.id]
+
+    TrashHandler.trash(
+        user, database.group, database, john_row, parent_id=customers_table.id
+    )
+
+    row = RowHandler().get_row(user, cars_table, linked_row_pointing_at_john.id)
+    assert list(getattr(row, f"field_{link_field_1.id}").all()) == []
+    row = RowHandler().get_row(user, cars_table, linked_row_pointing_at_jane.id)
+    assert list(
+        getattr(row, f"field_{link_field_1.id}").values_list("id", flat=True)
+    ) == [jane_row.id]

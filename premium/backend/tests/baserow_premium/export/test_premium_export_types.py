@@ -6,10 +6,8 @@ from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import utc, make_aware
 
 from baserow.contrib.database.export.handler import ExportHandler
-from baserow.contrib.database.fields.field_helpers import (
-    setup_interesting_test_table,
-)
 from baserow.contrib.database.rows.handler import RowHandler
+from tests.test_utils import setup_interesting_test_table
 
 
 def _parse_datetime(datetime):

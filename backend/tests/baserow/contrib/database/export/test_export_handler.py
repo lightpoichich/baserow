@@ -34,13 +34,11 @@ from baserow.contrib.database.export.registries import (
     table_exporter_registry,
     TableExporter,
 )
-from baserow.contrib.database.fields.field_helpers import (
-    setup_interesting_test_table,
-)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.exceptions import ViewNotInTable
 from baserow.contrib.database.views.models import GridView
+from tests.test_utils import setup_interesting_test_table
 
 
 def _parse_datetime(datetime):

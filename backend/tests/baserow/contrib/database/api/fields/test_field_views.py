@@ -114,7 +114,7 @@ def test_create_field(api_client, data_fixture):
 
     token = TokenHandler().create_token(user, table.database.group, "Good")
     wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
-    TokenHandler().update_token_permissions(user, wrong_token, True, True, False, True)
+    TokenHandler().update_token_permissions(user, wrong_token, False, True, True, True)
 
     # Test operation with JWT token
     response = api_client.post(

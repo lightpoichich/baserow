@@ -164,7 +164,7 @@ class FieldsView(APIView):
         table = TableHandler().get_table(table_id)
         table.database.group.has_user(request.user, raise_error=True)
 
-        TokenHandler().check_table_permissions(request, "update", table, False)
+        TokenHandler().check_table_permissions(request, "create", table, False)
 
         # Because each field type can raise custom exceptions while creating the
         # field we need to be able to map those to the correct API exceptions which are

@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db.models import Q
 
 from baserow.core.registry import (
@@ -613,6 +615,24 @@ class FieldType(
         """
 
         return value
+
+    def get_human_readable_value(self, value: Any, field_object) -> str:
+        """
+        Should convert the value of the provided field and it's value to a human
+        readable string for display purposes.
+
+        :param value: The value of the field extracted from a row to convert to human
+            readable form.
+        :param field_object: The field object for the field to extract
+        :type field_object: FieldObject
+        :return A human readable string.
+        """
+
+        human_readable_value = self.get_export_value(value, field_object)
+        if human_readable_value is None:
+            return ""
+        else:
+            return str(human_readable_value)
 
 
 class FieldTypeRegistry(

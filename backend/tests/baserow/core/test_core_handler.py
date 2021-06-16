@@ -210,7 +210,7 @@ def test_restore_group(group_restored_mock, data_fixture):
 
     assert Group.objects.count() == 0
 
-    TrashHandler.restore_item(user, "group", None, group.id)
+    TrashHandler.restore_item(user, "group", group.id)
 
     group_restored_mock.assert_called_once()
     assert group_restored_mock.call_args[1]["user"] is None
@@ -1015,7 +1015,7 @@ def test_restore_application(application_created_mock, data_fixture):
 
     assert Application.objects.count() == 0
 
-    TrashHandler.restore_item(user, "application", group.id, database.id)
+    TrashHandler.restore_item(user, "application", database.id)
 
     application_created_mock.assert_called_once()
     assert application_created_mock.call_args[1]["application"].id == database.id

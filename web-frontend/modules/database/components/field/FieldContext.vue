@@ -77,7 +77,6 @@ export default {
         this.$store.dispatch('field/forceDelete', field)
         this.$store.dispatch('notification/restore', {
           trash_item_type: 'field',
-          parent_trash_item_id: this.table.id,
           trash_item_id: field.id,
         })
       } catch (error) {

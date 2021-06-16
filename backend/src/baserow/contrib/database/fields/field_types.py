@@ -2,6 +2,7 @@ from collections import defaultdict
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint
+from typing import Any, Callable, Dict
 
 from dateutil import parser
 from dateutil.parser import ParserError
@@ -497,8 +498,17 @@ class LinkRowFieldType(FieldType):
         )
 
     def get_export_value(self, value, field_object):
-        instance = field_object["field"]
+        def map_to_export_value(inner_value, inner_field_object):
+            return inner_field_object["type"].get_export_value(
+                inner_value, inner_field_object
+            )
 
+        return self._get_and_map_pk_values(field_object, value, map_to_export_value)
+
+    def _get_and_map_pk_values(
+        self, field_object, value, map_func: Callable[[Any, Dict[str, Any]], Any]
+    ):
+        instance = field_object["field"]
         if hasattr(instance, "_related_model"):
             related_model = instance._related_model
             primary_field = next(
@@ -508,21 +518,32 @@ class LinkRowFieldType(FieldType):
             )
             if primary_field:
                 primary_field_name = primary_field["name"]
-                primary_field_type = primary_field["type"]
                 primary_field_values = []
                 for sub in value.all():
                     # Ensure we also convert the value from the other table to it's
-                    # export form as it could be an odd field type!
+                    # appropriate form as it could be an odd field type!
                     linked_value = getattr(sub, primary_field_name)
                     if self._is_unnamed_primary_field_value(linked_value):
-                        export_linked_value = f"unnamed row {sub.id}"
+                        linked_pk_value = f"unnamed row {sub.id}"
                     else:
-                        export_linked_value = primary_field_type.get_export_value(
+                        linked_pk_value = map_func(
                             getattr(sub, primary_field_name), primary_field
                         )
-                    primary_field_values.append(export_linked_value)
+                    primary_field_values.append(linked_pk_value)
                 return primary_field_values
         return []
+
+    def get_human_readable_value(self, value, field_object):
+        def map_to_human_readable_value(inner_value, inner_field_object):
+            return inner_field_object["type"].get_human_readable_value(
+                inner_value, inner_field_object
+            )
+
+        return ",".join(
+            self._get_and_map_pk_values(
+                field_object, value, map_to_human_readable_value
+            )
+        )
 
     @staticmethod
     def _is_unnamed_primary_field_value(primary_field_value):
@@ -1003,6 +1024,15 @@ class FileFieldType(FieldType):
             )
 
         return files
+
+    def get_human_readable_value(self, value, field_object):
+        file_names = []
+        for file in value:
+            file_names.append(
+                file["visible_name"],
+            )
+
+        return ",".join(file_names)
 
     def get_response_serializer_field(self, instance, **kwargs):
         return FileFieldResponseSerializer(many=True, required=False, **kwargs)

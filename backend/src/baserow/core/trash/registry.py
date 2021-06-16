@@ -55,6 +55,14 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         """
         pass
 
+    @property
+    def requires_parent_id(self) -> bool:
+        """
+        :returns True if this trash type requires a parent id to lookup a specific item,
+            false if only the trash_item_id is required to perform a lookup.
+        """
+        return False
+
     @abstractmethod
     def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
         """
@@ -90,9 +98,7 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         pass
 
     # noinspection PyMethodMayBeStatic
-    def get_items_to_trash(
-        self, trashed_item: Any, parent_id: Optional[int]
-    ) -> List[Any]:
+    def get_items_to_trash(self, trashed_item: Any) -> List[Any]:
         """
         When trashing some items you might also need to mark other related items also
         as trashed. Override this method and return instances of trashable models
@@ -105,7 +111,9 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         return [trashed_item]
 
     # noinspection PyMethodMayBeStatic
-    def get_extra_description(self, trashed_item: Any, parent_id: int) -> Optional[str]:
+    def get_extra_description(
+        self, trashed_item: Any, parent: Optional[Any]
+    ) -> Optional[str]:
         """
         Should return an optional extra description to show along with the trash
         entry for this particular trashed item.

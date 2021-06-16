@@ -13,7 +13,10 @@ from baserow.core.exceptions import (
     TrashItemDoesNotExist,
 )
 from baserow.core.models import TrashEntry, Application, Group
-from baserow.core.trash.exceptions import CannotRestoreChildBeforeParent
+from baserow.core.trash.exceptions import (
+    CannotRestoreChildBeforeParent,
+    ParentIdMustBeSpecifiedException,
+)
 from baserow.core.trash.registry import trash_item_type_registry
 
 User = get_user_model()
@@ -50,12 +53,15 @@ class TrashHandler:
         with transaction.atomic():
             trash_item_type = trash_item_type_registry.get_by_model(trash_item)
 
-            items_to_trash = trash_item_type.get_items_to_trash(trash_item, parent_id)
+            if trash_item_type.requires_parent_id and parent_id is None:
+                raise ParentIdMustBeSpecifiedException()
+
+            items_to_trash = trash_item_type.get_items_to_trash(trash_item)
             for item in items_to_trash:
                 item.trashed = True
                 item.save()
 
-            parent = trash_item_type.get_parent(trash_item)
+            parent = trash_item_type.get_parent(trash_item, parent_id)
             if parent is not None:
                 parent_type = trash_item_type_registry.get_by_model(parent)
                 parent_name = parent_type.get_name(parent)
@@ -72,12 +78,12 @@ class TrashHandler:
                 parent_name=parent_name,
                 parent_trash_item_id=parent_id,
                 extra_description=trash_item_type.get_extra_description(
-                    trash_item, parent_id
+                    trash_item, parent
                 ),
             )
 
     @staticmethod
-    def restore_item(user, trash_item_type, parent_trash_item_id, trash_item_id):
+    def restore_item(user, trash_item_type, trash_item_id, parent_trash_item_id=None):
         """
         Restores an item from the trash re-instating it back in Baserow exactly how it
         was before it was trashed.
@@ -91,23 +97,21 @@ class TrashHandler:
         """
 
         with transaction.atomic():
-            trash_entry = TrashHandler.get_trash_entry(
+            trashable_item_type = trash_item_type_registry.get(trash_item_type)
+            if trashable_item_type.requires_parent_id and parent_trash_item_id is None:
+                raise ParentIdMustBeSpecifiedException()
+
+            trash_entry = _get_trash_entry(
                 user, trash_item_type, parent_trash_item_id, trash_item_id
             )
 
-            trash_item_type = trash_item_type_registry.get(trash_entry.trash_item_type)
-            trash_item = trash_item_type.lookup_trashed_item(trash_entry)
+            trash_item = trashable_item_type.lookup_trashed_item(trash_entry)
 
-            items_to_restore = trash_item_type.get_items_to_trash(
-                trash_item, parent_trash_item_id
+            items_to_restore = trashable_item_type.get_items_to_trash(trash_item)
+
+            _check_all_parents_arent_trashed(
+                trash_entry, trash_item, trashable_item_type
             )
-
-            while True:
-                parent = trash_item_type.get_parent(trash_item, trash_entry)
-                if parent is None:
-                    break
-                elif parent.trashed:
-                    raise CannotRestoreChildBeforeParent()
 
             trash_entry.delete()
 
@@ -123,41 +127,6 @@ class TrashHandler:
                 restore_type.trashed_item_restored(item, trash_entry)
 
     @staticmethod
-    def get_trash_entry(
-        requesting_user: User,
-        trash_item_type: str,
-        parent_trash_item_id: Optional[int],
-        trash_item_id: int,
-    ) -> TrashEntry:
-        """
-        Gets the trash entry for a particular resource in baserow which has been
-        trashed.
-        :param trash_item_id: The id of the item to look for a trash entry for.
-        :param parent_trash_item_id: The parent id of the item to look for a trash
-            entry for.
-        :param trash_item_type: The trashable type of the item.
-        :param requesting_user: The user requesting to get the trashed item ,
-            they must be in the group of the trashed item otherwise this will raise
-            UserNotInGroup if not.
-        :returns The trash entry for the specified baserow item.
-        :raises UserNotInGroup: If the requesting_user is not in the trashed items
-            group.
-        """
-
-        try:
-            trash_entry = TrashEntry.objects.get(
-                parent_trash_item_id=parent_trash_item_id,
-                trash_item_id=trash_item_id,
-                trash_item_type=trash_item_type,
-            )
-        except TrashEntry.DoesNotExist:
-            raise TrashItemDoesNotExist()
-        trash_entry.group.has_user(
-            requesting_user, raise_error=True, include_trash=True
-        )
-        return trash_entry
-
-    @staticmethod
     def get_trash_structure(user: User) -> Dict[str, Any]:
         """
         Returns the structure of the trash available to the user. This consists of the
@@ -169,9 +138,9 @@ class TrashHandler:
             have trash contents.
         """
         structure = {"groups": []}
-        groups = TrashHandler._get_groups_excluding_perm_deleted(user)
+        groups = _get_groups_excluding_perm_deleted(user)
         for group in groups:
-            applications = TrashHandler._get_applications_excluding_perm_deleted(group)
+            applications = _get_applications_excluding_perm_deleted(group)
             structure["groups"].append(
                 {
                     "id": group.id,
@@ -182,33 +151,6 @@ class TrashHandler:
             )
 
         return structure
-
-    @staticmethod
-    def _get_applications_excluding_perm_deleted(group):
-        perm_deleted_apps = TrashEntry.objects.filter(
-            trash_item_type="application",
-            should_be_permanently_deleted=True,
-            trash_item_id__in=group.application_set_including_trash().values_list(
-                "id", flat=True
-            ),
-        ).values_list("trash_item_id", flat=True)
-        applications = (
-            group.application_set_including_trash()
-            .exclude(id__in=perm_deleted_apps)
-            .order_by("order", "id")
-        )
-        return applications
-
-    @staticmethod
-    def _get_groups_excluding_perm_deleted(user):
-        groups = Group.objects_and_trash.filter(groupuser__user=user)
-        perm_deleted_groups = TrashEntry.objects.filter(
-            trash_item_type="group",
-            should_be_permanently_deleted=True,
-            trash_item_id__in=groups.values_list("id", flat=True),
-        ).values_list("trash_item_id", flat=True)
-        groups = groups.exclude(id__in=perm_deleted_groups).order_by("groupuser__order")
-        return groups
 
     @staticmethod
     def mark_old_trash_for_permanent_deletion():
@@ -312,8 +254,8 @@ class TrashHandler:
                 raise ApplicationDoesNotExist()
 
             try:
-                trash_entry = TrashHandler.get_trash_entry(
-                    user, "application", application.group.id, application.id
+                trash_entry = _get_trash_entry(
+                    user, "application", None, application.id
                 )
                 if trash_entry.should_be_permanently_deleted:
                     raise ApplicationDoesNotExist
@@ -335,10 +277,84 @@ class TrashHandler:
         # Check that the group is not marked for perm deletion, if so we don't want
         # to display it's contents anymore as it should be permanently deleted soon.
         try:
-            trash_entry = TrashHandler.get_trash_entry(user, "group", None, group.id)
+            trash_entry = _get_trash_entry(user, "group", None, group.id)
             if trash_entry.should_be_permanently_deleted:
                 raise GroupDoesNotExist
         except TrashItemDoesNotExist:
             pass
         group.has_user(user, raise_error=True, include_trash=True)
         return group
+
+
+def _get_groups_excluding_perm_deleted(user):
+    groups = Group.objects_and_trash.filter(groupuser__user=user)
+    perm_deleted_groups = TrashEntry.objects.filter(
+        trash_item_type="group",
+        should_be_permanently_deleted=True,
+        trash_item_id__in=groups.values_list("id", flat=True),
+    ).values_list("trash_item_id", flat=True)
+    groups = groups.exclude(id__in=perm_deleted_groups).order_by("groupuser__order")
+    return groups
+
+
+def _get_applications_excluding_perm_deleted(group):
+    perm_deleted_apps = TrashEntry.objects.filter(
+        trash_item_type="application",
+        should_be_permanently_deleted=True,
+        trash_item_id__in=group.application_set_including_trash().values_list(
+            "id", flat=True
+        ),
+    ).values_list("trash_item_id", flat=True)
+    applications = (
+        group.application_set_including_trash()
+        .exclude(id__in=perm_deleted_apps)
+        .order_by("order", "id")
+    )
+    return applications
+
+
+def _check_all_parents_arent_trashed(trash_entry, trash_item, trash_item_type):
+    parent_id = trash_entry.parent_trash_item_id
+    while True:
+        parent = trash_item_type.get_parent(trash_item, parent_id)
+        if parent is None:
+            break
+        elif parent.trashed:
+            raise CannotRestoreChildBeforeParent()
+        else:
+            trash_item = parent
+            parent_id = None
+            trash_item_type = trash_item_type_registry.get_by_model(trash_item)
+
+
+def _get_trash_entry(
+    requesting_user: User,
+    trash_item_type: str,
+    parent_trash_item_id: Optional[int],
+    trash_item_id: int,
+) -> TrashEntry:
+    """
+    Gets the trash entry for a particular resource in baserow which has been
+    trashed.
+    :param trash_item_id: The id of the item to look for a trash entry for.
+    :param parent_trash_item_id: The parent id of the item to look for a trash
+        entry for.
+    :param trash_item_type: The trashable type of the item.
+    :param requesting_user: The user requesting to get the trashed item ,
+        they must be in the group of the trashed item otherwise this will raise
+        UserNotInGroup if not.
+    :returns The trash entry for the specified baserow item.
+    :raises UserNotInGroup: If the requesting_user is not in the trashed items
+        group.
+    """
+
+    try:
+        trash_entry = TrashEntry.objects.get(
+            parent_trash_item_id=parent_trash_item_id,
+            trash_item_id=trash_item_id,
+            trash_item_type=trash_item_type,
+        )
+    except TrashEntry.DoesNotExist:
+        raise TrashItemDoesNotExist()
+    trash_entry.group.has_user(requesting_user, raise_error=True, include_trash=True)
+    return trash_entry

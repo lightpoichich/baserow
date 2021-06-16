@@ -10,7 +10,7 @@ from baserow.core.exceptions import GroupDoesNotExist, ApplicationDoesNotExist
 from baserow.core.models import Group, Application
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import CannotRestoreChildBeforeParent
-from baserow.core.trash.handler import TrashHandler
+from baserow.core.trash.handler import TrashHandler, _get_trash_entry
 
 
 @pytest.mark.django_db
@@ -41,7 +41,7 @@ def test_restoring_a_trashed_item_unmarks_it_as_trashed_and_deletes_the_entry(
     assert group_to_delete.trashed
     assert TrashEntry.objects.count() == 1
 
-    TrashHandler.restore_item(user, "group", None, group_to_delete.id)
+    TrashHandler.restore_item(user, "group", group_to_delete.id)
 
     group_to_delete.refresh_from_db()
     assert not group_to_delete.trashed
@@ -67,7 +67,7 @@ def test_a_trash_entry_older_than_setting_gets_marked_for_permanent_deletion(
     with freeze_time(trashed_at):
         TrashHandler.trash(user, group_to_delete, None, group_to_delete)
 
-    entry = TrashHandler.get_trash_entry(user, "group", None, group_to_delete.id)
+    entry = _get_trash_entry(user, "group", None, group_to_delete.id)
     assert not entry.should_be_permanently_deleted
 
     datetime_when_trash_item_should_still_be_kept = trashed_at + half_time
@@ -382,7 +382,9 @@ def test_trashing_two_rows_in_different_tables_works_as_expected(
     assert table_2_model.trash.count() == 1
     assert table_2_model.objects.count() == 0
 
-    TrashHandler.restore_item(user, "row", table_1.id, row_in_table_1.id)
+    TrashHandler.restore_item(
+        user, "row", row_in_table_1.id, parent_trash_item_id=table_1.id
+    )
 
     assert table_1_model.trash.count() == 0
     assert table_1_model.objects.count() == 1
@@ -417,15 +419,17 @@ def test_cannot_restore_a_child_before_the_parent(
     TrashHandler.trash(user, group, table_1.database, table_1)
 
     with pytest.raises(CannotRestoreChildBeforeParent):
-        TrashHandler.restore_item(user, "row", table_1.id, row_in_table_1.id)
+        TrashHandler.restore_item(
+            user, "row", row_in_table_1.id, parent_trash_item_id=table_1.id
+        )
 
     TrashHandler.trash(user, group, table_1.database, table_1.database)
     TrashHandler.trash(user, group, None, group)
 
     with pytest.raises(CannotRestoreChildBeforeParent):
-        TrashHandler.restore_item(user, "application", group.id, table_1.database.id)
+        TrashHandler.restore_item(user, "application", table_1.database.id)
 
-    TrashHandler.restore_item(user, "group", None, group.id)
+    TrashHandler.restore_item(user, "group", group.id)
 
     with pytest.raises(CannotRestoreChildBeforeParent):
-        TrashHandler.restore_item(user, "table", table_1.database.id, table_1.id)
+        TrashHandler.restore_item(user, "table", table_1.id)

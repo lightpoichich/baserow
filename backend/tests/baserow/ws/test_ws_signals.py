@@ -38,7 +38,7 @@ def test_group_restored(mock_broadcast_to_users, data_fixture):
         user=member_user, group=group, permissions=GROUP_USER_PERMISSION_MEMBER
     )
     TrashHandler.trash(user, group, None, group)
-    TrashHandler.restore_item(user, "group", None, group.id)
+    TrashHandler.restore_item(user, "group", group.id)
 
     args = mock_broadcast_to_users.delay.call_args_list
     assert len(args) == 2

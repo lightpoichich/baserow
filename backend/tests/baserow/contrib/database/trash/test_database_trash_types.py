@@ -270,7 +270,7 @@ def test_restoring_a_trashed_link_field_restores_the_opposing_field_also(
 
     assert LinkRowField.trash.count() == 2
 
-    TrashHandler.restore_item(user, "field", table.id, link_field_1.id)
+    TrashHandler.restore_item(user, "field", link_field_1.id)
 
     assert LinkRowField.objects.count() == 2
 

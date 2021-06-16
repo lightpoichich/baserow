@@ -121,7 +121,6 @@ export default {
         await this.$store.dispatch('application/delete', this.application)
         await this.$store.dispatch('notification/restore', {
           trash_item_type: 'application',
-          parent_trash_item_id: this.group.id,
           trash_item_id: this.application.id,
         })
       } catch (error) {

@@ -129,7 +129,6 @@ export default {
         })
         await this.$store.dispatch('notification/restore', {
           trash_item_type: 'table',
-          parent_trash_item_id: this.database.id,
           trash_item_id: this.table.id,
         })
       } catch (error) {

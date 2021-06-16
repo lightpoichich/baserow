@@ -39,9 +39,7 @@ class TableTrashableItemType(TrashableItemType):
         trashed_item.delete()
 
     # noinspection PyMethodMayBeStatic
-    def get_items_to_trash(
-        self, trashed_item: Table, parent_id: Optional[int]
-    ) -> List[Any]:
+    def get_items_to_trash(self, trashed_item: Table) -> List[Any]:
         """
         When trashing a link row field we also want to trash the related link row field.
         """
@@ -91,9 +89,7 @@ class FieldTrashableItemType(TrashableItemType):
         field_type.after_delete(field, from_model, connection)
 
     # noinspection PyMethodMayBeStatic
-    def get_items_to_trash(
-        self, trashed_item: Field, parent_id: Optional[int]
-    ) -> List[Any]:
+    def get_items_to_trash(self, trashed_item: Field) -> List[Any]:
         """
         When trashing a link row field we also want to trash the related link row field.
         """
@@ -106,17 +102,24 @@ class FieldTrashableItemType(TrashableItemType):
 
 
 class RowTrashableItemType(TrashableItemType):
+    @property
+    def requires_parent_id(self) -> bool:
+        # A row is not unique just with its ID. We also need the table id (parent id)
+        # to uniquely identify and lookup a specific row.
+        return True
+
     def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+        return self._get_table(parent_id)
+
+    @staticmethod
+    def _get_table(parent_id):
         return TableHandler().get_table(parent_id, Table.objects_and_trash)
 
     def get_name(self, trashed_item) -> str:
         return f"Row {trashed_item.id}"
 
     def trashed_item_restored(self, trashed_item, trash_entry: TrashEntry):
-        table = TableHandler().get_table(
-            table_id=trash_entry.parent_trash_item_id,
-            base_queryset=Table.objects_and_trash,
-        )
+        table = self.get_parent(trashed_item, trash_entry.parent_trash_item_id)
 
         model = table.get_model()
         row_created.send(
@@ -140,27 +143,20 @@ class RowTrashableItemType(TrashableItemType):
         :return: An instance of the model_class with trashed_item_id
         """
 
-        table = TableHandler().get_table(
-            table_id=trashed_entry.parent_trash_item_id,
-            base_queryset=Table.objects_and_trash,
-        )
+        table = self._get_table(trashed_entry.parent_trash_item_id)
 
         model = table.get_model()
 
         return model.trash.get(id=trashed_entry.trash_item_id)
 
     # noinspection PyMethodMayBeStatic
-    def get_extra_description(self, trashed_item: Any, parent_id: int) -> Optional[str]:
-        table = TableHandler().get_table(
-            table_id=parent_id,
-            base_queryset=Table.objects_and_trash,
-        )
+    def get_extra_description(self, trashed_item: Any, table) -> Optional[str]:
 
         model = table.get_model()
         for field in model._field_objects.values():
             if field["field"].primary:
                 primary_value = field["type"].get_human_readable_value(
-                    trashed_item, field
+                    getattr(trashed_item, field["name"]), field
                 )
                 if primary_value is None or primary_value == "":
                     primary_value = f"unnamed row {trashed_item.id}"

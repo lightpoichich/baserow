@@ -610,7 +610,7 @@ def test_when_group_is_trashed_so_is_invitation(data_fixture, api_client):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_GROUP_INVITATION_DOES_NOT_EXIST"
 
-    TrashHandler.restore_item(user_1, "group", None, trashed_group.id)
+    TrashHandler.restore_item(user_1, "group", trashed_group.id)
 
     # after restoring the group is visible again
     response = api_client.get(

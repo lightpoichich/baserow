@@ -5,13 +5,19 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, validate_body
-from .errors import ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD
-from .serializers import (
-    TrashContentsSerializer,
-    TrashStructureSerializer,
-    TrashEntryRequestSerializer,
+from baserow.api.applications.errors import (
+    ERROR_APPLICATION_DOES_NOT_EXIST,
+    ERROR_APPLICATION_NOT_IN_GROUP,
 )
+from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.errors import (
+    ERROR_GROUP_DOES_NOT_EXIST,
+    ERROR_USER_NOT_IN_GROUP,
+    ERROR_TRASH_ITEM_DOES_NOT_EXIST,
+)
+from baserow.api.pagination import PageNumberPagination
+from baserow.api.schemas import get_error_schema
+from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.core.exceptions import (
     UserNotInGroup,
     ApplicationNotInGroup,
@@ -20,19 +26,15 @@ from baserow.core.exceptions import (
     TrashItemDoesNotExist,
 )
 from baserow.core.trash.handler import TrashHandler
-from baserow.api.applications.errors import (
-    ERROR_APPLICATION_DOES_NOT_EXIST,
-    ERROR_APPLICATION_NOT_IN_GROUP,
+from .errors import ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD
+from .serializers import (
+    TrashContentsSerializer,
+    TrashStructureSerializer,
+    TrashEntryRequestSerializer,
 )
-from baserow.api.errors import (
-    ERROR_GROUP_DOES_NOT_EXIST,
-    ERROR_USER_NOT_IN_GROUP,
-    ERROR_TRASH_ITEM_DOES_NOT_EXIST,
+from ...core.trash.exceptions import (
+    CannotRestoreChildBeforeParent,
 )
-from baserow.api.pagination import PageNumberPagination
-from baserow.api.serializers import get_example_pagination_serializer_class
-from baserow.api.schemas import get_error_schema
-from ...core.trash.exceptions import CannotRestoreChildBeforeParent
 
 
 class TrashItemView(APIView):
@@ -68,11 +70,14 @@ class TrashItemView(APIView):
         in the items group.
         """
 
+        trash_item_type = data["trash_item_type"]
+        parent_trash_item_id = data.get("parent_trash_item_id", None)
+
         TrashHandler.restore_item(
             request.user,
-            data["trash_item_type"],
-            data.get("parent_trash_item_id", None),
+            trash_item_type,
             data["trash_item_id"],
+            parent_trash_item_id=parent_trash_item_id,
         )
         return Response(status=204)
 

@@ -484,7 +484,7 @@ def test_restore_row(send_mock, data_fixture):
     )
 
     handler.delete_row(user, table, row_1.id)
-    TrashHandler.restore_item(user, "row", table.id, row_1.id)
+    TrashHandler.restore_item(user, "row", row_1.id, parent_trash_item_id=table.id)
 
     assert len(send_mock.call_args) == 2
     assert send_mock.call_args[1]["row"].id == row_1.id

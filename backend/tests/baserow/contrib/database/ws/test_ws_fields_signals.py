@@ -28,7 +28,7 @@ def test_field_restored(mock_broadcast_to_channel_group, data_fixture):
     user = data_fixture.create_user()
     field = data_fixture.create_text_field(user=user)
     FieldHandler().delete_field(user, field)
-    TrashHandler.restore_item(user, "field", field.table.id, field.id)
+    TrashHandler.restore_item(user, "field", field.id)
 
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{field.table.id}"

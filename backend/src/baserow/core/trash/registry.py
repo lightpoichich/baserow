@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, List
 
-from baserow.core.models import Group, Application, Trash
+from baserow.core.models import Group, Application, TrashEntry
 from baserow.core.registries import application_type_registry
 from baserow.core.registry import (
     ModelRegistryMixin,
@@ -34,7 +34,7 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
     A TrashableItemType specifies a baserow model which can be trashed.
     """
 
-    def lookup_trashed_item(self, trashed_entry: Trash):
+    def lookup_trashed_item(self, trashed_entry: TrashEntry):
         """
         Returns the actual instance of the trashed item. By default simply does a get
         on the model_class's trash manager.
@@ -56,7 +56,18 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         pass
 
     @abstractmethod
-    def trashed_item_restored(self, trashed_item: Any, trash_entry: Trash):
+    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+        """
+        Returns the parent for this item.
+
+        :param trashed_item: The item to lookup a parent for.
+        :param trash_entry: The trash entry for this item to lookup a parent for.
+        :returns Either the parent item or None if this item has no parent.
+        """
+        pass
+
+    @abstractmethod
+    def trashed_item_restored(self, trashed_item: Any, trash_entry: TrashEntry):
         """
         Called when a trashed item is restored, should perform any extra operations
         such as sending web socket signals which occur when an item is "created" in
@@ -77,34 +88,6 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         :return The name of the trashed_group
         """
         pass
-
-    @abstractmethod
-    def get_parent_name(
-        self, trashed_item: Any, parent_id: Optional[int]
-    ) -> Optional[str]:
-        """
-        Should return the name of the parent for this particular trashed item to
-        display in the trash modal.
-
-        :param trashed_item: The item whose parent is to be named.
-        :param parent_id: The id of the parent item if it exists.
-        :return The name of the parent of the trashed_group if any or None if no parent.
-        """
-        pass
-
-    @abstractmethod
-    def get_parent_type(self) -> Optional[str]:
-        """
-        :return The trashable item type of the parent if this type has one.
-        """
-        pass
-
-    # noinspection PyMethodMayBeStatic
-    def get_parent_id(self, trashed_item: Any) -> int:
-        """
-        :return The item id of the provided trashed_entry's parent if this type has one.
-        """
-        return 0
 
     # noinspection PyMethodMayBeStatic
     def get_items_to_trash(
@@ -133,18 +116,13 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
 
 
 class GroupTrashableItemType(TrashableItemType):
-    def get_parent_type(self) -> Optional[str]:
+    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
         return None
 
     def get_name(self, trashed_item: Group) -> str:
         return trashed_item.name
 
-    def get_parent_name(
-        self, trashed_item: Any, parent_id: Optional[int]
-    ) -> Optional[str]:
-        return None
-
-    def trashed_item_restored(self, trashed_item: Group, trash_entry: Trash):
+    def trashed_item_restored(self, trashed_item: Group, trash_entry: TrashEntry):
         """
         Informs any clients that the group exists again.
         """
@@ -159,7 +137,11 @@ class GroupTrashableItemType(TrashableItemType):
 
         # Select all the applications so we can delete them via the handler which is
         # needed in order to call the pre_delete method for each application.
-        applications = trashed_group.application_set.all().select_related("group")
+        applications = (
+            trashed_group.application_set(manager="objects_and_trash")
+            .all()
+            .select_related("group")
+        )
         application_trashable_type = trash_item_type_registry.get("application")
         for application in applications:
             application_trashable_type.permanently_delete_item(application)
@@ -171,15 +153,13 @@ class GroupTrashableItemType(TrashableItemType):
 
 
 class ApplicationTrashableItemType(TrashableItemType):
+    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+        return trashed_item.group
+
     def get_name(self, trashed_item: Application) -> str:
         return trashed_item.name
 
-    def get_parent_name(
-        self, trashed_item: Application, parent_id: Optional[int]
-    ) -> Optional[str]:
-        return trashed_item.group.name
-
-    def trashed_item_restored(self, trashed_item: Application, trash_entry: Trash):
+    def trashed_item_restored(self, trashed_item: Application, trash_entry: TrashEntry):
         application_created.send(
             self,
             application=trashed_item,
@@ -196,12 +176,6 @@ class ApplicationTrashableItemType(TrashableItemType):
         application_type.pre_delete(application)
         application.delete()
         return application
-
-    def get_parent_type(self) -> Optional[str]:
-        return "group"
-
-    def get_parent_id(self, trashed_app) -> int:
-        return trashed_app.group.id
 
     type = "application"
     model_class = Application

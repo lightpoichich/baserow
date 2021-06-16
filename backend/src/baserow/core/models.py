@@ -25,7 +25,7 @@ __all__ = [
     "TemplateCategory",
     "Template",
     "UserLogEntry",
-    "Trash",
+    "TrashEntry",
     "UserFile",
 ]
 
@@ -246,7 +246,7 @@ class TemplateCategory(models.Model):
         ordering = ("name",)
 
 
-# TODO Trash - What if group trashed?
+# TODO TrashEntry - What if group trashed?
 class Template(models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(
@@ -293,7 +293,18 @@ class UserLogEntry(models.Model):
         ordering = ["-timestamp"]
 
 
-class Trash(models.Model):
+class TrashEntry(models.Model):
+    """
+    A TrashEntry is a record indicating that another model in Baserow has a trashed
+    row. When a user deletes certain things in Baserow they are not actually deleted
+    from the database, but instead marked as trashed. Trashed rows can be restored
+    or permanently deleted.
+
+    The other model must mixin the TrashableModelMixin and also have a corresponding
+    TrashableItemType registered specifying exactly how to delete and restore that
+    model.
+    """
+
     # The TrashableItemType.type of the item that is trashed.
     trash_item_type = models.TextField()
     # We need to also store the parent id as for some trashable items the
@@ -307,12 +318,6 @@ class Trash(models.Model):
     # trash record as it is independant of if the user exists or not.
     user_who_trashed = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    # For trash entries which have parent-child relationships inside of a single app
-    # we need to ensure that deleting a parent trash entry cascades and deletes all
-    # children.
-    parent_entry = models.ForeignKey(
-        "Trash", on_delete=models.CASCADE, null=True, blank=True
     )
 
     # The group and application fields are used to group trash into separate "bins"
@@ -338,7 +343,7 @@ class Trash(models.Model):
 
     class Meta:
         unique_together = ("trash_item_type", "parent_trash_item_id", "trash_item_id")
-        # TODO Trash: Reason more about what indexes we want
+        # TODO TrashEntry: Reason more about what indexes we want
         indexes = [
             models.Index(
                 fields=["-trashed_at", "trash_item_type", "group", "application"]

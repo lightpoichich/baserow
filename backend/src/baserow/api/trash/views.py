@@ -39,7 +39,7 @@ class TrashItemView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        tags=["Trash"],
+        tags=["TrashEntry"],
         operation_id="restore",
         description="Restores the specified trashed item back into baserow.",
         request=TrashEntryRequestSerializer,
@@ -102,7 +102,7 @@ class TrashContentsView(APIView):
                 description="Defines which page of trash contents should be returned.",
             ),
         ],
-        tags=["Trash"],
+        tags=["TrashEntry"],
         operation_id="get_contents",
         description="Responds with trash contents for a group optionally "
         "filtered to a specific application.",
@@ -160,7 +160,7 @@ class TrashContentsView(APIView):
                 "for this application in the group.",
             ),
         ],
-        tags=["Trash"],
+        tags=["TrashEntry"],
         operation_id="empty_contents",
         description="Empties the specified group and/or application of trash, including"
         " the group and application themselves if they are trashed also.",
@@ -199,7 +199,7 @@ class TrashStructureView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        tags=["Trash"],
+        tags=["TrashEntry"],
         operation_id="get_trash_structure",
         description="Responds with the groups and applications available for the "
         "requesting user to inspect the trash contents of.",

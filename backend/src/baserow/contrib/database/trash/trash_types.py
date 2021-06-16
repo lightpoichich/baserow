@@ -10,18 +10,18 @@ from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
-from baserow.core.models import Application, Trash
+from baserow.core.models import Application, TrashEntry
 from baserow.core.trash.registry import TrashableItemType
 
 
 class TableTrashableItemType(TrashableItemType):
+    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+        return trashed_item.database
+
     def get_name(self, trashed_item: Table) -> str:
         return trashed_item.name
 
-    def get_parent_name(self, trashed_item: Table, parent_id: int) -> Optional[str]:
-        return trashed_item.database.name
-
-    def trashed_item_restored(self, trashed_item: Table, trash_entry: Trash):
+    def trashed_item_restored(self, trashed_item: Table, trash_entry: TrashEntry):
         table_created.send(
             self,
             table=trashed_item,
@@ -37,12 +37,6 @@ class TableTrashableItemType(TrashableItemType):
             schema_editor.delete_model(model)
 
         trashed_item.delete()
-
-    def get_parent_type(self) -> Optional[str]:
-        return "application"
-
-    def get_parent_id(self, trashed_app) -> int:
-        return trashed_app.database.id
 
     # noinspection PyMethodMayBeStatic
     def get_items_to_trash(
@@ -64,13 +58,13 @@ class TableTrashableItemType(TrashableItemType):
 
 
 class FieldTrashableItemType(TrashableItemType):
+    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+        return trashed_item.table
+
     def get_name(self, trashed_item: Field) -> str:
         return trashed_item.name
 
-    def get_parent_name(self, trashed_item: Field, parent_id: int) -> Optional[str]:
-        return trashed_item.table.name
-
-    def trashed_item_restored(self, trashed_item: Field, trash_entry: Trash):
+    def trashed_item_restored(self, trashed_item: Field, trash_entry: TrashEntry):
         field_restored.send(
             self,
             field=trashed_item,
@@ -96,12 +90,6 @@ class FieldTrashableItemType(TrashableItemType):
         # the field type because some instance cleanup might need to happen.
         field_type.after_delete(field, from_model, connection)
 
-    def get_parent_type(self) -> Optional[str]:
-        return "table"
-
-    def get_parent_id(self, trashed_field) -> int:
-        return trashed_field.table.id
-
     # noinspection PyMethodMayBeStatic
     def get_items_to_trash(
         self, trashed_item: Field, parent_id: Optional[int]
@@ -118,18 +106,13 @@ class FieldTrashableItemType(TrashableItemType):
 
 
 class RowTrashableItemType(TrashableItemType):
+    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+        return TableHandler().get_table(parent_id, Table.objects_and_trash)
+
     def get_name(self, trashed_item) -> str:
         return f"Row {trashed_item.id}"
 
-    def get_parent_name(self, trashed_item, parent_id: int) -> Optional[str]:
-        table = TableHandler().get_table(
-            table_id=parent_id,
-            base_queryset=Table.objects_and_trash,
-        )
-
-        return table.name
-
-    def trashed_item_restored(self, trashed_item, trash_entry: Trash):
+    def trashed_item_restored(self, trashed_item, trash_entry: TrashEntry):
         table = TableHandler().get_table(
             table_id=trash_entry.parent_trash_item_id,
             base_queryset=Table.objects_and_trash,
@@ -148,13 +131,7 @@ class RowTrashableItemType(TrashableItemType):
     def permanently_delete_item(self, row):
         row.delete()
 
-    def get_parent_type(self) -> Optional[str]:
-        return "table"
-
-    def get_parent_id(self, trashed_row) -> int:
-        raise Exception("Unknown")
-
-    def lookup_trashed_item(self, trashed_entry: Trash):
+    def lookup_trashed_item(self, trashed_entry: TrashEntry):
         """
         Returns the actual instance of the trashed item. By default simply does a get
         on the model_class's trash manager.
@@ -182,11 +159,12 @@ class RowTrashableItemType(TrashableItemType):
         model = table.get_model()
         for field in model._field_objects.values():
             if field["field"].primary:
-                primary_value = getattr(trashed_item, field["name"])
-                # TODO Trash: A better way of converting weird primary fields please.
-                if primary_value is None or isinstance(primary_value, dict):
+                primary_value = field["type"].get_human_readable_value(
+                    trashed_item, field
+                )
+                if primary_value is None or primary_value == "":
                     primary_value = f"unnamed row {trashed_item.id}"
-                return str(primary_value)
+                return primary_value
 
         return "unknown row"
 

@@ -22,7 +22,11 @@ class DatabaseApplicationType(ApplicationType):
         handler.
         """
 
-        database_tables = database.table_set.all().select_related("database__group")
+        database_tables = (
+            database.table_set(manager="objects_and_trash")
+            .all()
+            .select_related("database__group")
+        )
 
         for table in database_tables:
             TrashHandler.permanently_delete(table)

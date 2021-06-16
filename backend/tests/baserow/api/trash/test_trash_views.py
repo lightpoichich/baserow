@@ -9,7 +9,7 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
 )
 
-from baserow.core.models import Group, Trash, Application
+from baserow.core.models import Group, TrashEntry, Application
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -49,7 +49,7 @@ def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fi
             {
                 "application": None,
                 "group": group_to_delete.id,
-                "id": Trash.objects.first().id,
+                "id": TrashEntry.objects.first().id,
                 "parent_trash_item_id": None,
                 "trash_item_id": group_to_delete.id,
                 "trash_item_type": "group",
@@ -447,7 +447,7 @@ def test_emptying_a_trashed_group_marks_it_for_perm_deletion(api_client, data_fi
 
     assert Group.objects.count() == 0
     assert Group.trash.count() == 1
-    assert Trash.objects.get(
+    assert TrashEntry.objects.get(
         trash_item_id=group_to_delete.id
     ).should_be_permanently_deleted
 
@@ -580,7 +580,7 @@ def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixt
 
     assert Application.objects.count() == 0
     assert Application.trash.count() == 1
-    assert Trash.objects.get(
+    assert TrashEntry.objects.get(
         trash_item_id=trashed_database.id
     ).should_be_permanently_deleted
 
@@ -634,7 +634,7 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
             {
                 "application": None,
                 "group": group_to_delete.id,
-                "id": Trash.objects.first().id,
+                "id": TrashEntry.objects.first().id,
                 "parent_trash_item_id": None,
                 "trash_item_id": group_to_delete.id,
                 "trash_item_type": "group",

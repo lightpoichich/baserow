@@ -4,7 +4,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers, fields
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
-from baserow.core.models import Trash, Group, Application
+from baserow.core.models import TrashEntry, Group, Application
 from baserow.core.trash.registry import trash_item_type_registry
 
 
@@ -54,7 +54,7 @@ class TrashContentsSerializer(serializers.ModelSerializer):
             return None
 
     class Meta:
-        model = Trash
+        model = TrashEntry
         fields = (
             "id",
             "user_who_trashed",

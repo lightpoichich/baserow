@@ -435,3 +435,6 @@ def test_phone_number_field_type(data_fixture):
 
     field_handler.delete_field(user=user, field=phone_number_field)
     assert len(PhoneNumberField.objects.all()) == 3
+
+def test_human_readable_values():
+

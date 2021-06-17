@@ -116,7 +116,7 @@ class RowTrashableItemType(TrashableItemType):
         return TableHandler().get_table(parent_id, Table.objects_and_trash)
 
     def get_name(self, trashed_item) -> str:
-        return f"Row {trashed_item.id}"
+        return str(trashed_item.id)
 
     def trashed_item_restored(self, trashed_item, trash_entry: TrashEntry):
         table = self.get_parent(trashed_item, trash_entry.parent_trash_item_id)

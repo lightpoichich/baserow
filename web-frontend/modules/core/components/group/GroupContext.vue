@@ -64,6 +64,7 @@ export default {
       this.$refs.groupMembersModal.show()
     },
     showGroupTrashModal() {
+      this.$refs.context.hide()
       this.$refs.groupTrashModal.show()
     },
     async deleteGroup() {

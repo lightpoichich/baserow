@@ -127,7 +127,7 @@ class RowHandler:
 
         :param values: The values where to extract the manytomany values from.
         :type values: dict
-        :param model: The model containing the fields. They key, which is also the
+        :param model: The model containing the fields. The key, which is also the
             field name, is used to check in the model if the value is a ManyToMany
             value.
         :type model: Model

@@ -505,9 +505,46 @@ class LinkRowFieldType(FieldType):
 
         return self._get_and_map_pk_values(field_object, value, map_to_export_value)
 
+    def prepare_value_for_db(self, instance, value):
+        m = instance.link_row_table.get_model()
+        actual = m.objects.filter(id__in=value).count()
+        if actual != len(value):
+            raise ValidationError(
+                "A row id was provided which does not exist in the linked table."
+            )
+        return value
+
+    def get_human_readable_value(self, value, field_object):
+        def map_to_human_readable_value(inner_value, inner_field_object):
+            return inner_field_object["type"].get_human_readable_value(
+                inner_value, inner_field_object
+            )
+
+        return ",".join(
+            self._get_and_map_pk_values(
+                field_object, value, map_to_human_readable_value
+            )
+        )
+
     def _get_and_map_pk_values(
         self, field_object, value, map_func: Callable[[Any, Dict[str, Any]], Any]
     ):
+        """
+        Helper function which given a linked row field point at another model,
+        constructs a list of the rows linked to primary key values mapped by the
+        provided function.
+
+        For example, Table A has Field 1 which links to Table B. Table B has a text
+        primary key column. This function takes the contents of Field 1 (field_object)
+        for a single row (value), which is a number of rows in Table B. It then gets
+        the primary key column values for those rows in Table B and applied map_func
+        to each individual value. Finally returning those mapped values as a list.
+
+        :param value: The value of the link field in a specific row.
+        :param field_object: The field object for the link field.
+        :param map_func: A function to apply to each linked primary key value.
+        :return: A list of mapped linked primary key values.
+        """
         instance = field_object["field"]
         if hasattr(instance, "_related_model"):
             related_model = instance._related_model
@@ -532,18 +569,6 @@ class LinkRowFieldType(FieldType):
                     primary_field_values.append(linked_pk_value)
                 return primary_field_values
         return []
-
-    def get_human_readable_value(self, value, field_object):
-        def map_to_human_readable_value(inner_value, inner_field_object):
-            return inner_field_object["type"].get_human_readable_value(
-                inner_value, inner_field_object
-            )
-
-        return ",".join(
-            self._get_and_map_pk_values(
-                field_object, value, map_to_human_readable_value
-            )
-        )
 
     @staticmethod
     def _is_unnamed_primary_field_value(primary_field_value):

@@ -34,7 +34,6 @@
 }
 
 .trash-side-bar {
-  height: 600px;
   overflow: auto;
 }
 
@@ -52,10 +51,11 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  margin-top: 60px;
+  margin-bottom: 30px;
 }
 
 .trash-empty-contents__icon {
-  margin-top: 60px;
   margin-bottom: 35px;
   color: $color-primary-500;
   font-size: 50px;

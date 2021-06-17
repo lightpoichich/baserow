@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Add trash where deleted apps, groups, tables, fields and rows can be restored 
+  deletion.
+* API Change: Creating or updating a row which has a linked field now raises a 500 error
+  if an unknown linked row id is provided, instead of filtering out unknown row ids.
+
 ## Released (2021-06-02)
 
 * Fixed bug where the grid view would fail hard if a cell is selected and the component

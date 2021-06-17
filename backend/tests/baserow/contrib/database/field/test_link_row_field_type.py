@@ -661,6 +661,18 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
+        {
+            f"field_{link_row_field.id}": [customers_row_1.id, customers_row_2.id],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
     row_id = response_json["id"]
     assert response.status_code == HTTP_200_OK
     assert len(response_json[f"field_{link_row_field.id}"]) == 2

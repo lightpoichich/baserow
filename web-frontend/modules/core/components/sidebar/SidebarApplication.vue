@@ -130,6 +130,7 @@ export default {
       this.loading = false
     },
     showApplicationTrashModal() {
+      this.$refs.context.hide()
       this.$refs.applicationTrashModal.show()
     },
   },

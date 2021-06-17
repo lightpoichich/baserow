@@ -228,6 +228,18 @@ export default {
         this.removeSelectedAppFromSidebar()
       } else if (this.selectedGroup.trashed) {
         this.removeSelectedGroupFromSidebar()
+      } else {
+        for (const app of this.selectedGroup.applications.slice()) {
+          const index = this.trashContents.findIndex((item) => {
+            return (
+              item.trash_item_id === app.id &&
+              item.trash_item_type === 'application'
+            )
+          })
+          if (index !== -1) {
+            this.selectedGroup.applications.splice(index, 1)
+          }
+        }
       }
     },
   },

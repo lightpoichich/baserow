@@ -10,6 +10,7 @@
     <div class="trash-entry__content">
       <div class="trash-entry__name">
         {{ trashEntry.user_who_trashed || 'A Deleted User' }} Deleted
+        {{ trashEntry.trash_item_type }}
         <strong>{{ trashItemTitle }}</strong>
         {{ trashEntry.parent_name ? ' from ' + trashEntry.parent_name : '' }}
       </div>

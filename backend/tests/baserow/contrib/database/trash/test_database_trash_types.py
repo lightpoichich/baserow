@@ -5,6 +5,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.trash.exceptions import (
     ParentIdMustBeSpecifiedException,
     ParentIdMustNotBeSpecifiedException,
@@ -498,3 +499,126 @@ def test_a_parent_id_must_not_be_provided_when_trashing_or_restoring_an_app(
         TrashHandler.restore_item(
             user, "application", database.id, parent_trash_item_id=database.group.id
         )
+
+
+@pytest.mark.django_db
+def test_trashing_a_field_with_a_filter_trashes_the_filter(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    other_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Other"
+    )
+    grid_view = data_fixture.create_grid_view(user=user, table=customers_table)
+    data_fixture.create_view_filter(
+        view=grid_view, user=user, field=other_field, value="Steve"
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={
+            f"field_{customers_primary_field.id}": "John",
+            f"field_{other_field.id}": "Test",
+        },
+    )
+
+    TrashHandler.trash(
+        user,
+        database.group,
+        database,
+        other_field,
+    )
+
+    model = customers_table.get_model()
+    filtered_qs = ViewHandler().apply_filters(grid_view, model.objects.all())
+    assert filtered_qs.count() == 1
+    TrashHandler.restore_item(
+        user,
+        "field",
+        other_field.id,
+    )
+
+    model = customers_table.get_model()
+    filtered_qs = ViewHandler().apply_filters(grid_view, model.objects.all())
+    assert filtered_qs.count() == 0
+
+
+@pytest.mark.django_db
+def test_trashing_a_field_with_a_sort_trashes_the_sort(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    other_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Other"
+    )
+    grid_view = data_fixture.create_grid_view(user=user, table=customers_table)
+    data_fixture.create_view_sort(
+        view=grid_view, user=user, field=other_field, order="ASC"
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={
+            f"field_{customers_primary_field.id}": "1",
+            f"field_{other_field.id}": "2",
+        },
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={
+            f"field_{customers_primary_field.id}": "2",
+            f"field_{other_field.id}": "1",
+        },
+    )
+
+    TrashHandler.trash(
+        user,
+        database.group,
+        database,
+        other_field,
+    )
+
+    model = customers_table.get_model()
+    filtered_qs = ViewHandler().apply_sorting(grid_view, model.objects.all())
+    assert list(
+        filtered_qs.values_list(f"field_{customers_primary_field.id}", flat=True)
+    ) == ["1", "2"]
+
+    TrashHandler.restore_item(
+        user,
+        "field",
+        other_field.id,
+    )
+
+    model = customers_table.get_model()
+    filtered_qs = ViewHandler().apply_sorting(grid_view, model.objects.all())
+    assert list(
+        filtered_qs.values_list(f"field_{customers_primary_field.id}", flat=True)
+    ) == ["2", "1"]

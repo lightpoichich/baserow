@@ -51,10 +51,15 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent('field_restored', ({ store, app }, data) => {
+  realtime.registerEvent('field_restored', async ({ store, app }, data) => {
     const table = store.getters['table/getSelected']
     if (table !== undefined && table.id === data.field.table_id) {
-      store.dispatch('field/forceCreate', { table, values: data.field })
+      await store.dispatch('field/forceCreate', { table, values: data.field })
+      // The field might have view filters or sorts which were restored also,
+      // refresh the selected view to make it update it's filters and sorts so they
+      // appear.
+      await store.dispatch('view/refreshSelected')
+      // Finally trigger a table refresh to get the row data for the field.
       app.$bus.$emit('table-refresh', {
         tableId: store.getters['table/getSelectedId'],
         includeFieldOptions: true,

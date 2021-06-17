@@ -10,6 +10,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+    ParentFieldTrashableModelMixin,
 )
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))
@@ -57,7 +58,7 @@ class View(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
 
-class ViewFilter(models.Model):
+class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -85,7 +86,7 @@ class ViewFilter(models.Model):
         ordering = ("id",)
 
 
-class ViewSort(models.Model):
+class ViewSort(ParentFieldTrashableModelMixin, models.Model):
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,

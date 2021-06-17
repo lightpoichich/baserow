@@ -167,6 +167,26 @@ export const actions = {
     commit('SET_ITEM_LOADING', { view, value })
   },
   /**
+   * Refreshes the selected view from the server.
+   */
+  async refreshSelected({ commit, getters }) {
+    commit('SET_LOADING', true)
+
+    try {
+      const viewId = getters.getSelectedId
+      if (viewId !== 0) {
+        const { data } = await ViewService(this.$client).get(viewId, true, true)
+        populateView(data, this.$registry)
+        commit('UPDATE_ITEM', { id: viewId, values: data })
+      }
+      commit('SET_LOADING', false)
+    } catch (error) {
+      commit('SET_LOADING', false)
+
+      throw error
+    }
+  },
+  /**
    * Fetches all the views of a given table. The is mostly called when the user
    * selects a different table.
    */

@@ -36,6 +36,11 @@
 </template>
 
 <script>
+/**
+ * Displays a specific TrashEntry with a link which will trigger the restoring of the
+ * trashed entry. Shows extra information about the entry like it's name, who trashed it
+ * , how long ago it was trashed etc.
+ */
 import moment from 'moment'
 
 export default {
@@ -69,15 +74,6 @@ export default {
       } else {
         return this.trashEntry.name
       }
-    },
-  },
-  methods: {
-    highlight() {
-      this.$refs.member.scrollIntoView({ behavior: 'smooth' })
-      this.highlighted = true
-      setTimeout(() => {
-        this.highlighted = false
-      }, 2000)
     },
   },
 }

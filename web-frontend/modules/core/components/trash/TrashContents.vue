@@ -7,7 +7,7 @@
           Restore deleted items from the past {{ trashDuration }}
         </h3>
         <a
-          v-show="entryCount > 0"
+          v-show="totalServerSideTrashContentsCount > 0"
           class="button button--error"
           :disabled="loadingContents"
           @click="showEmptyModalIfNotLoading"
@@ -16,7 +16,10 @@
       </div>
     </div>
     <div v-if="loadingContents" class="loading-overlay"></div>
-    <div v-if="entryCount === 0" class="trash-empty-contents">
+    <div
+      v-if="totalServerSideTrashContentsCount === 0"
+      class="trash-empty-contents"
+    >
       <i class="trash-empty-contents__icon fas fa-recycle"></i>
       <span class="trash-empty-contents__text"
         >Nothing has been deleted in the past three days.</span
@@ -24,7 +27,7 @@
     </div>
     <div v-else>
       <InfiniteScroll
-        :max-count="entryCount"
+        :max-count="totalServerSideTrashContentsCount"
         :items="trashContents"
         @load-next-page="$emit('load-next-page', $event)"
       >
@@ -32,7 +35,7 @@
           <TrashEntry
             :key="'trash-item-' + item.id"
             :trash-entry="item"
-            :disabled="loadingContents || isGroupOrAppTrashed(item)"
+            :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
             @restore="$emit('restore', $event)"
           >
           </TrashEntry>
@@ -46,13 +49,24 @@
       ref="emptyModal"
       :name="title"
       :loading="loadingContents"
-      :is-empty-or-perm-delete="isEmptying"
+      :selected-is-trashed="selectedItem.trashed"
       @empty="$emit('empty')"
     ></TrashEmptyModal>
   </div>
 </template>
 
 <script>
+/**
+ * Displays a infinite scrolling list of trash contents for either a selectedGroup or
+ * a specific selectedApplication in the selectedGroup. The user can empty the trash
+ * contents permanently deleting them all, or restore individual trashed items.
+ *
+ * If the selectedItem (the selectedApplication if provided, otherwise the selectedGroup
+ * ) is trashed itself then the modal will display buttons and modals which indicate
+ * that they will permanently delete the selectedItem instead of just emptying it's
+ * contents.
+ */
+
 import moment from 'moment'
 import TrashEntry from '@baserow/modules/core/components/trash/TrashEntry'
 import InfiniteScroll from '@baserow/modules/core/components/infinite_scroll/InfiniteScroll'
@@ -83,54 +97,32 @@ export default {
       type: Boolean,
       required: true,
     },
-    entryCount: {
+    totalServerSideTrashContentsCount: {
       type: Number,
       required: true,
     },
   },
   computed: {
-    title() {
-      const title =
-        this.selectedApplication === null
-          ? this.selectedGroup.name
-          : this.selectedApplication.name
-      const groupOrApp =
-        this.selectedApplication === null ? 'Group' : 'Application'
-      const id =
-        this.selectedApplication === null
-          ? this.selectedGroup.id
-          : this.selectedApplication.id
-      return title === '' ? 'Unnamed ' + groupOrApp + ' ' + id : title
+    selectedItem() {
+      return this.selectedApplication === null
+        ? this.selectedGroup
+        : this.selectedApplication
     },
-    isEmptying() {
-      if (this.selectedApplication !== null) {
-        return !this.selectedApplication.trashed
-      } else {
-        return !this.selectedGroup.trashed
-      }
+    selectedItemType() {
+      return this.selectedApplication === null ? 'Group' : 'Application'
+    },
+    title() {
+      const title = this.selectedItem.name
+      return title === ''
+        ? `Unnamed ${this.selectedItemType} ${this.selectedItem.id}`
+        : title
     },
     emptyButtonText() {
-      if (this.selectedApplication === null) {
-        if (this.selectedGroup.trashed) {
-          return 'Delete group permanently'
-        } else {
-          return "Empty this group's trash"
-        }
-      } else if (this.selectedApplication.trashed) {
-        return 'Delete application permanently'
+      if (this.selectedItem.trashed) {
+        return `Delete ${this.selectedItemType} permanently`
       } else {
-        return "Empty this application's trash"
+        return `Empty this ${this.selectedItemType}'s trash`
       }
-    },
-    selfIsTrashed() {
-      return this.selectedApplication === null
-        ? this.selectedGroup.trashed
-        : this.selectedApplication.trashed
-    },
-    selfTrashItemId() {
-      return this.selectedApplication === null
-        ? this.selectedGroup.id
-        : this.selectedApplication.id
     },
     trashDuration() {
       const hours = this.$env.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
@@ -143,16 +135,12 @@ export default {
         this.$refs.emptyModal.show()
       }
     },
-    isGroupOrAppTrashed(item) {
-      const parentType =
-        this.selectedApplication === null ? 'group' : 'application'
-      return (
-        this.selfIsTrashed &&
-        !(
-          item.trash_item_id === this.selfTrashItemId &&
-          item.trash_item_type === parentType
-        )
-      )
+    shouldTrashEntryBeDisabled(entry) {
+      const selectedItemType = this.selectedItemType.toLowerCase()
+      const entryIsForSelectedItem =
+        entry.trash_item_id === this.selectedItem.id &&
+        entry.trash_item_type === selectedItemType
+      return this.selectedItem.trashed && !entryIsForSelectedItem
     },
   },
 }

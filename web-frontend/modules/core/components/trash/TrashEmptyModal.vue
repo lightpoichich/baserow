@@ -2,13 +2,13 @@
   <Modal :very-small="true" :close-button="false">
     <h3>
       Are you sure you want to
-      {{ isEmptyOrPermDelete ? 'empty the trash of' : 'permanently delete' }}
+      {{ selectedIsTrashed ? 'empty the trash of' : 'permanently delete' }}
       {{ name }}
     </h3>
     <p>
       This will permanently delete
       {{
-        isEmptyOrPermDelete ? 'the listed items' : 'it and all of its contents'
+        selectedIsTrashed ? 'the listed items' : 'it and all of its contents'
       }}. After which they cannot be recovered.
     </p>
     <div class="actions">
@@ -20,7 +20,7 @@
           class="button button button--error"
           @click.prevent="emitEmptyAndClose"
         >
-          {{ isEmptyOrPermDelete ? 'Empty' : 'Permanently delete' }}
+          {{ selectedIsTrashed ? 'Empty' : 'Permanently delete' }}
         </a>
       </div>
     </div>
@@ -28,6 +28,10 @@
 </template>
 
 <script>
+/**
+ * A simple confirmation modal to check that the user is sure they want to permanently
+ * delete / empty.
+ */
 import modal from '@baserow/modules/core/mixins/modal'
 
 export default {
@@ -39,7 +43,7 @@ export default {
       type: String,
       required: true,
     },
-    isEmptyOrPermDelete: {
+    selectedIsTrashed: {
       type: Boolean,
       required: true,
     },

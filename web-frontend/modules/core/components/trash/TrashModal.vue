@@ -34,10 +34,10 @@
         :trash-contents="trashContents"
         :loading-contents="loadingContents"
         :loading-next-page="loadingNextPage"
-        :entry-count="entryCount"
+        :entry-count="totalServerSideTrashContentsCount"
         @empty="onEmpty"
         @restore="onRestore"
-        @load-next-page="loadNextPage"
+        @load-next-page="loadTrashContentsPage"
       ></TrashContent>
     </template>
   </Modal>
@@ -76,11 +76,15 @@ export default {
       trashContents: [],
       selectedGroup: null,
       selectedApplication: null,
-      entryCount: 0,
+      totalServerSideTrashContentsCount: 0,
     }
   },
   methods: {
     async show(...args) {
+      /**
+       * Loads the structure of the trash modal from the server, selects an initial
+       * group or application depending on the props and shows the trash modal.
+       **/
       modal.methods.show.call(this, ...args)
 
       this.loading = true
@@ -89,7 +93,7 @@ export default {
       this.selectedGroup = null
       this.selectedApplication = null
       this.hideError()
-      this.entryCount = 0
+      this.totalServerSideTrashContentsCount = 0
 
       try {
         const { data } = await TrashService(this.$client).fetchStructure()
@@ -102,7 +106,10 @@ export default {
       }
       this.loading = false
     },
-    async loadNextPage(nextPage) {
+    async loadTrashContentsPage(nextPage) {
+      /**
+       * Loads the next page of trash contents for the currently selected application.
+       */
       this.hideError()
       try {
         this.loadingNextPage = true
@@ -114,38 +121,28 @@ export default {
               ? this.selectedApplication.id
               : null,
         })
-        this.entryCount = data.count
+        this.totalServerSideTrashContentsCount = data.count
         this.trashContents = this.trashContents.concat(data.results)
       } catch (error) {
         this.handleError(error, 'trash')
       }
       this.loadingNextPage = false
     },
-    async fetchContents() {
-      this.loadingContents = true
-      this.trashContents = []
-      this.hideError()
-      try {
-        const { data } = await TrashService(this.$client).fetchContents({
-          groupId: this.selectedGroup.id,
-          applicationId:
-            this.selectedApplication !== null
-              ? this.selectedApplication.id
-              : null,
-        })
-        this.entryCount = data.count
-        this.trashContents = data.results
-      } catch (error) {
-        this.handleError(error, 'trash')
-      }
-      this.loadingContents = false
-    },
     selectGroupOrApp({ group, application = null }) {
+      /**
+       * Switches to a different group or application to display the trash contents for
+       * and triggers the fetch for the first page of contents.
+       */
       this.selectedGroup = group
       this.selectedApplication = application
-      this.fetchContents()
+      this.loadTrashContentsPage(0)
     },
     async onRestore(trashEntry) {
+      /**
+       * Triggered when a user requests a trashEntry be restored. Sends the request to
+       * the server, updates the client side state if successful and updates the trash
+       * structure if say a group or application was restored.
+       */
       this.hideError()
       try {
         trashEntry.loading = true
@@ -158,7 +155,7 @@ export default {
           (t) => t.id === trashEntry.id
         )
         this.trashContents.splice(index, 1)
-        this.entryCount--
+        this.totalServerSideTrashContentsCount--
         this.updateStructureIfGroupOrAppRestored(trashEntry)
       } catch (error) {
         this.handleError(error, 'trash')
@@ -166,6 +163,12 @@ export default {
       trashEntry.loading = false
     },
     updateStructureIfGroupOrAppRestored(trashEntry) {
+      /**
+       * If a group or app is trashed it is displayed with a strike through it's text.
+       * This method checks if a restored trash entry is a group or application and
+       * if so updates the state of said group/app so it no longer is displayed as
+       * trashed.
+       */
       const trashItemId = trashEntry.trash_item_id
       const trashItemType = trashEntry.trash_item_type
       if (trashItemType === 'group') {
@@ -179,6 +182,13 @@ export default {
       }
     },
     async onEmpty() {
+      /**
+       * Triggered when the user has requested the currently selected group or app
+       * should be emptied. If the selected item is trashed itself the empty operation
+       * will permanently delete the selected item also. Once emptied this method will
+       * ensure that any now permanently deleted groups or apps are removed from the
+       * sidebar.
+       */
       this.hideError()
       this.loadingContents = true
       try {
@@ -190,7 +200,7 @@ export default {
         })
         this.removeGroupOrAppFromSidebarIfNowPermDeleted()
         this.trashContents = []
-        this.entryCount = 0
+        this.totalServerSideTrashContentsCount = 0
         this.loadingContents = false
       } catch (error) {
         this.handleError(error, 'trash')
@@ -221,6 +231,10 @@ export default {
       }
     },
     removeGroupOrAppFromSidebarIfNowPermDeleted() {
+      /**
+       * Updates the trash structure to remove any deleted groups or applications after
+       * an empty is performed.
+       */
       if (
         this.selectedApplication !== null &&
         this.selectedApplication.trashed
@@ -228,7 +242,9 @@ export default {
         this.removeSelectedAppFromSidebar()
       } else if (this.selectedGroup.trashed) {
         this.removeSelectedGroupFromSidebar()
-      } else {
+      } else if (this.selectedApplication === null) {
+        // The group was emptied, it might have contained trashed applications hence
+        // we need to search through the trash and remove any now deleted applications.
         for (const app of this.selectedGroup.applications.slice()) {
           const index = this.trashContents.findIndex((item) => {
             return (

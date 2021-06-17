@@ -16,8 +16,9 @@ from baserow.core.models import TrashEntry, Application, Group
 from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
     ParentIdMustBeSpecifiedException,
+    ParentIdMustNotBeSpecifiedException,
 )
-from baserow.core.trash.registry import trash_item_type_registry
+from baserow.core.trash.registry import trash_item_type_registry, TrashableItemType
 
 User = get_user_model()
 
@@ -53,8 +54,7 @@ class TrashHandler:
         with transaction.atomic():
             trash_item_type = trash_item_type_registry.get_by_model(trash_item)
 
-            if trash_item_type.requires_parent_id and parent_id is None:
-                raise ParentIdMustBeSpecifiedException()
+            _check_parent_id_valid(parent_id, trash_item_type)
 
             items_to_trash = trash_item_type.get_items_to_trash(trash_item)
             for item in items_to_trash:
@@ -98,8 +98,7 @@ class TrashHandler:
 
         with transaction.atomic():
             trashable_item_type = trash_item_type_registry.get(trash_item_type)
-            if trashable_item_type.requires_parent_id and parent_trash_item_id is None:
-                raise ParentIdMustBeSpecifiedException()
+            _check_parent_id_valid(parent_trash_item_id, trashable_item_type)
 
             trash_entry = _get_trash_entry(
                 user, trash_item_type, parent_trash_item_id, trash_item_id
@@ -284,6 +283,30 @@ class TrashHandler:
             pass
         group.has_user(user, raise_error=True, include_trash=True)
         return group
+
+
+def _check_parent_id_valid(
+    parent_trash_item_id: Optional[int], trashable_item_type: TrashableItemType
+):
+    """
+    Raises an exception if the parent id is missing when it is required, or when the
+    parent id is included when it is not required.
+
+    Because the parent id is stored in the database and used to lookup trash entries
+    uniquely, we want to enforce it is not provided when not needed. For example, if
+    the API allowed you to provide a parent id when trashing a table, that id will then
+    be stored, and it must then be provided when trying to restore that table otherwise
+    the entry will not be found. Hence by being strict we ensure it's not possible to
+    accidentally trash an item which is hard to then restore.
+
+    :param parent_trash_item_id: The parent id
+    :param trashable_item_type: The type to check to see if it needs a parent id or not.
+    :return:
+    """
+    if trashable_item_type.requires_parent_id and parent_trash_item_id is None:
+        raise ParentIdMustBeSpecifiedException()
+    if not trashable_item_type.requires_parent_id and parent_trash_item_id is not None:
+        raise ParentIdMustNotBeSpecifiedException()
 
 
 def _get_groups_excluding_perm_deleted(user):

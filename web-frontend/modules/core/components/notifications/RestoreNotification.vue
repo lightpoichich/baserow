@@ -43,7 +43,6 @@ export default {
       } catch (error) {
         notifyIf(error, 'trash')
       }
-      // TODO Trash: Is it ok if an error occurs that we hide the restore button?
       this.close()
       this.loading = false
     },

@@ -160,8 +160,13 @@ def test_cant_restore_a_trashed_item_with_a_missing_parent(api_client, data_fixt
     user, token = data_fixture.create_user_and_token()
     group = data_fixture.create_group(user=user)
     application = data_fixture.create_database_application(user=user, group=group)
+    table = data_fixture.create_database_table(user=user, database=application)
+    model = table.get_model()
+    row = model.objects.create()
 
-    url = reverse("api:applications:item", kwargs={"application_id": application.id})
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -171,9 +176,9 @@ def test_cant_restore_a_trashed_item_with_a_missing_parent(api_client, data_fixt
             "api:trash:restore",
         ),
         {
-            "trash_item_type": "application",
+            "trash_item_type": "row",
             "parent_trash_item_id": 99999,
-            "trash_item_id": application.id,
+            "trash_item_id": row.id,
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -646,3 +651,67 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
             }
         ],
     }
+
+
+@pytest.mark.django_db
+def test_restoring_an_item_which_doesnt_need_parent_id_with_one_returns_error(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    application = data_fixture.create_database_application(user=user, group=group)
+
+    url = reverse("api:applications:item", kwargs={"application_id": application.id})
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "application",
+            "parent_trash_item_id": 99999,
+            "trash_item_id": application.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED"
+
+
+@pytest.mark.django_db
+def test_cant_restore_a_trashed_item_requiring_a_parent_id_without_providing_it(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    application = data_fixture.create_database_application(user=user, group=group)
+    table = data_fixture.create_database_table(user=user, database=application)
+    model = table.get_model()
+    row = model.objects.create()
+
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row.id}
+    )
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "row",
+            "trash_item_id": row.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PARENT_ID_MUST_BE_PROVIDED"

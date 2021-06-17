@@ -246,7 +246,6 @@ class TemplateCategory(models.Model):
         ordering = ("name",)
 
 
-# TODO TrashEntry - What if group trashed?
 class Template(models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(
@@ -343,7 +342,6 @@ class TrashEntry(models.Model):
 
     class Meta:
         unique_together = ("trash_item_type", "parent_trash_item_id", "trash_item_id")
-        # TODO TrashEntry: Reason more about what indexes we want
         indexes = [
             models.Index(
                 fields=["-trashed_at", "trash_item_type", "group", "application"]

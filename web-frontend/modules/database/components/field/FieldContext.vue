@@ -73,7 +73,6 @@ export default {
       try {
         await this.$store.dispatch('field/deleteCall', field)
         this.$emit('delete')
-        // TODO Trash: Why are these not being awaited?
         this.$store.dispatch('field/forceDelete', field)
         this.$store.dispatch('notification/restore', {
           trash_item_type: 'field',

@@ -9,8 +9,8 @@ from baserow.core.managers import (
     TrashedManager,
     GroupParentNonTrashedManager,
     GroupParentTrashedManager,
-    GroupFieldNonTrashedManager,
-    GroupFieldTrashedManager,
+    FieldParentNonTrashedManager,
+    FieldParentTrashedManager,
 )
 
 
@@ -193,8 +193,8 @@ class ParentFieldTrashableModelMixin(models.Model):
     rows whose parent group is trashed.
     """
 
-    objects = GroupFieldNonTrashedManager()
-    trash = GroupFieldTrashedManager()
+    objects = FieldParentNonTrashedManager()
+    trash = FieldParentTrashedManager()
     objects_and_trash = Manager()
 
     class Meta:

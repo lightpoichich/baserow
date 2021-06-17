@@ -26,7 +26,11 @@ from baserow.core.exceptions import (
     TrashItemDoesNotExist,
 )
 from baserow.core.trash.handler import TrashHandler
-from .errors import ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD
+from .errors import (
+    ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
+    ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
+    ERROR_PARENT_ID_MUST_BE_PROVIDED,
+)
 from .serializers import (
     TrashContentsSerializer,
     TrashStructureSerializer,
@@ -34,6 +38,8 @@ from .serializers import (
 )
 from ...core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
+    ParentIdMustNotBeSpecifiedException,
+    ParentIdMustBeSpecifiedException,
 )
 
 
@@ -52,6 +58,8 @@ class TrashItemView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_TRASH_ITEM_DOES_NOT_EXIST",
                     "ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD",
+                    "ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED",
+                    "ERROR_PARENT_ID_MUST_BE_PROVIDED",
                 ]
             ),
         },
@@ -62,6 +70,8 @@ class TrashItemView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TrashItemDoesNotExist: ERROR_TRASH_ITEM_DOES_NOT_EXIST,
             CannotRestoreChildBeforeParent: ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
+            ParentIdMustNotBeSpecifiedException: ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
+            ParentIdMustBeSpecifiedException: ERROR_PARENT_ID_MUST_BE_PROVIDED,
         }
     )
     def patch(self, request, data):

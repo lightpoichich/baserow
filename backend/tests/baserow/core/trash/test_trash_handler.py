@@ -208,7 +208,6 @@ def test_an_app_marked_for_perm_deletion_no_longer_shows_up_in_trash_structure(
 def test_perm_deleting_a_parent_with_a_trashed_child_also_cleans_up_the_child_entry(
     data_fixture,
 ):
-    # TODO TrashEntry: Add case for table and row!
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user, group=group)
@@ -242,7 +241,6 @@ def test_perm_deleting_a_parent_with_a_trashed_child_also_cleans_up_the_child_en
 def test_perm_deleting_a_table_with_a_trashed_row_also_cleans_up_the_row_entry(
     data_fixture,
 ):
-    # TODO TrashEntry: Add case for table and row!
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user, group=group)

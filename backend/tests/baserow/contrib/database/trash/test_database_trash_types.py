@@ -5,6 +5,10 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
+from baserow.core.trash.exceptions import (
+    ParentIdMustBeSpecifiedException,
+    ParentIdMustNotBeSpecifiedException,
+)
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -352,3 +356,145 @@ def test_trashing_a_row_hides_it_from_a_link_row_field_pointing_at_it(
     assert list(
         getattr(row, f"field_{link_field_1.id}").values_list("id", flat=True)
     ) == [jane_row.id]
+
+
+@pytest.mark.django_db
+def test_a_trashed_linked_row_pointing_at_a_trashed_row_is_restored_correctly(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    cars_table = data_fixture.create_database_table(name="Cars", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    john_row = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    jane_row = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Jane"},
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=cars_table,
+        type_name="link_row",
+        name="customer",
+        link_row_table=customers_table,
+    )
+    # Create a primary field and some example data for the cars table.
+    cars_primary_field = field_handler.create_field(
+        user=user, table=cars_table, type_name="text", name="Name", primary=True
+    )
+    linked_row_pointing_at_john = row_handler.create_row(
+        user=user,
+        table=cars_table,
+        values={
+            f"field_{cars_primary_field.id}": "BMW",
+            f"field_{link_field_1.id}": [john_row.id],
+        },
+    )
+    row_handler.create_row(
+        user=user,
+        table=cars_table,
+        values={
+            f"field_{cars_primary_field.id}": "Audi",
+            f"field_{link_field_1.id}": [jane_row.id],
+        },
+    )
+
+    TrashHandler.trash(
+        user,
+        database.group,
+        database,
+        linked_row_pointing_at_john,
+        parent_id=cars_table.id,
+    )
+    TrashHandler.trash(
+        user, database.group, database, john_row, parent_id=customers_table.id
+    )
+    TrashHandler.restore_item(
+        user, "row", linked_row_pointing_at_john.id, parent_trash_item_id=cars_table.id
+    )
+
+    row = RowHandler().get_row(user, cars_table, linked_row_pointing_at_john.id)
+    assert list(getattr(row, f"field_{link_field_1.id}").all()) == []
+
+    TrashHandler.restore_item(
+        user, "row", john_row.id, parent_trash_item_id=customers_table.id
+    )
+
+    row = RowHandler().get_row(user, cars_table, linked_row_pointing_at_john.id)
+    assert list(
+        getattr(row, f"field_{link_field_1.id}").values_list("id", flat=True)
+    ) == [john_row.id]
+
+
+@pytest.mark.django_db
+def test_a_parent_id_must_be_provided_when_trashing_or_restoring_a_row(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    john_row = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+
+    with pytest.raises(ParentIdMustBeSpecifiedException):
+        TrashHandler.trash(
+            user,
+            database.group,
+            database,
+            john_row,
+        )
+
+    TrashHandler.trash(
+        user, database.group, database, john_row, parent_id=customers_table.id
+    )
+
+    with pytest.raises(ParentIdMustBeSpecifiedException):
+        TrashHandler.restore_item(user, "row", john_row.id)
+
+
+@pytest.mark.django_db
+def test_a_parent_id_must_not_be_provided_when_trashing_or_restoring_an_app(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    with pytest.raises(ParentIdMustNotBeSpecifiedException):
+        TrashHandler.trash(
+            user, database.group, database, database, parent_id=database.group.id
+        )
+
+    TrashHandler.trash(user, database.group, database, database)
+
+    with pytest.raises(ParentIdMustNotBeSpecifiedException):
+        TrashHandler.restore_item(
+            user, "application", database.id, parent_trash_item_id=database.group.id
+        )

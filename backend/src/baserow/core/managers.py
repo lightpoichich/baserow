@@ -1,45 +1,39 @@
 from django.db import models
 
 
-class ParentNonTrashedManager(models.Manager):
-    """ Query only objects which do not have a trashed parent object. """
+def _make_trashed_manager(trashed, parent=None):
+    """
+    Constructs a Django Queryset Manager which filters down it's base queryset according
+    to the provided parameters.
 
-    def get_queryset(self):
-        return super().get_queryset().filter(**{f"{self.parent}__trashed": False})
+    We need to use a method to construct a closed class rather than say, __init__
+    parameters given to a single base class as Django will init a models managers
+    without providing any kwargs breaking things horribly. This way django can init
+    the manager without providing any kwargs and it will still filter correctly.
 
+    :param trashed: If true the manager will only return trashed entries, if false then
+        only returns non-trashed entries.
+    :param parent: If specified will use the trashed column in a related model where
+        parent is the name of the FK to the related model.
+    :return: A manager with an override get_queryset filtered accordingly.
+    """
+    filter_kwargs = {}
 
-class ParentTrashedManager(models.Manager):
-    """ Query only objects which do have a trashed parent object. """
+    if parent is None:
+        filter_kwargs["trashed"] = trashed
+    else:
+        filter_kwargs[f"{parent}__trashed"] = trashed
 
-    def get_queryset(self):
-        return super().get_queryset().filter(**{f"{self.parent}__trashed": True})
+    class Manager(models.Manager):
+        def get_queryset(self):
+            return super().get_queryset().filter(**filter_kwargs)
 
-
-class NonTrashedManager(models.Manager):
-    """ Query only objects which have not been trashed. """
-
-    def get_queryset(self):
-        return super().get_queryset().filter(trashed=False)
-
-
-class TrashedManager(models.Manager):
-    """ Query only objects which have been trashed. """
-
-    def get_queryset(self):
-        return super().get_queryset().filter(trashed=True)
-
-
-class GroupParentNonTrashedManager(ParentNonTrashedManager):
-    parent = "group"
+    return Manager
 
 
-class GroupParentTrashedManager(ParentTrashedManager):
-    parent = "group"
-
-
-class GroupFieldNonTrashedManager(ParentNonTrashedManager):
-    parent = "field"
-
-
-class GroupFieldTrashedManager(ParentTrashedManager):
-    parent = "field"
+TrashedManager = _make_trashed_manager(trashed=True)
+NonTrashedManager = _make_trashed_manager(trashed=False)
+GroupParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="group")
+GroupParentTrashedManager = _make_trashed_manager(trashed=True, parent="group")
+FieldParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="field")
+FieldParentTrashedManager = _make_trashed_manager(trashed=True, parent="field")

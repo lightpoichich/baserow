@@ -98,7 +98,9 @@ class FieldsView(APIView):
             request.user, raise_error=True, allow_if_template=True
         )
 
-        TokenHandler().check_table_permissions(request, "read", table, False)
+        TokenHandler().check_table_permissions(
+            request, ["read", "create", "update"], table, False
+        )
 
         fields = Field.objects.filter(table=table).select_related("content_type")
 
@@ -164,7 +166,9 @@ class FieldsView(APIView):
         table = TableHandler().get_table(table_id)
         table.database.group.has_user(request.user, raise_error=True)
 
-        TokenHandler().check_table_permissions(request, "create", table, False)
+        # field_create permission doesn't exists yet so any call of this
+        # endpoint with a token will be rejected.
+        TokenHandler().check_table_permissions(request, "field_create", table, False)
 
         # Because each field type can raise custom exceptions while creating the
         # field we need to be able to map those to the correct API exceptions which are

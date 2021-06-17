@@ -28,7 +28,9 @@ def test_list_fields(api_client, data_fixture):
 
     token = TokenHandler().create_token(user, table_1.database.group, "Good")
     wrong_token = TokenHandler().create_token(user, table_1.database.group, "Wrong")
-    TokenHandler().update_token_permissions(user, wrong_token, True, False, True, True)
+    TokenHandler().update_token_permissions(
+        user, wrong_token, False, False, False, True
+    )
 
     # Test access with JWT token
     response = api_client.get(
@@ -114,7 +116,7 @@ def test_create_field(api_client, data_fixture):
 
     token = TokenHandler().create_token(user, table.database.group, "Good")
     wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
-    TokenHandler().update_token_permissions(user, wrong_token, False, True, True, True)
+    TokenHandler().update_token_permissions(user, wrong_token, True, True, True, True)
 
     # Test operation with JWT token
     response = api_client.post(
@@ -197,13 +199,16 @@ def test_create_field(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
     assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
 
+    # Even with a token that have all permissions, the call should be rejected
+    # for now.
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
         {"name": "Test 1", "type": "text"},
         format="json",
         HTTP_AUTHORIZATION=f"Token {token.key}",
     )
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
 
 
 @pytest.mark.django_db

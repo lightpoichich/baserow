@@ -45,11 +45,11 @@ def test_group_restored(mock_broadcast_to_users, data_fixture):
     member_call = args[1][0]
     admin_call = args[0][0]
     assert member_call[0] == [member_user.id]
-    assert member_call[1]["type"] == "group_created"
+    assert member_call[1]["type"] == "group_restored"
     assert member_call[1]["group"]["id"] == member_group_user.group_id
     assert member_call[1]["group"]["permissions"] == "MEMBER"
     assert admin_call[0] == [user.id]
-    assert admin_call[1]["type"] == "group_created"
+    assert admin_call[1]["type"] == "group_restored"
     assert admin_call[1]["group"]["id"] == group_user.group_id
     assert admin_call[1]["group"]["permissions"] == "ADMIN"
 

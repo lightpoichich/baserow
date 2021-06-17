@@ -615,7 +615,10 @@ export const actions = {
    * update search highlighting if a new activeSearchTerm and hideRowsNotMatchingSearch
    * are provided in the refreshEvent.
    */
-  refresh({ dispatch, commit, getters }, { fields, primary }) {
+  refresh(
+    { dispatch, commit, getters },
+    { fields, primary, includeFieldOptions = false }
+  ) {
     const gridId = getters.getLastGridId
     if (lastRefreshRequest !== null) {
       lastRefreshRequestSource.cancel('Cancelled in favor of new request')
@@ -644,6 +647,7 @@ export const actions = {
             gridId,
             offset,
             limit,
+            includeFieldOptions,
             cancelToken: lastRefreshRequestSource.token,
             search: getters.getServerSearchTerm,
           })
@@ -667,6 +671,9 @@ export const actions = {
           bufferLimit: data.results.length,
         })
         dispatch('updateSearch', { fields, primary })
+        if (includeFieldOptions) {
+          commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
+        }
         lastRefreshRequest = null
       })
       .catch((error) => {

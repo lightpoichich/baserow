@@ -57,6 +57,7 @@ export const registerRealtimeEvents = (realtime) => {
       store.dispatch('field/forceCreate', { table, values: data.field })
       app.$bus.$emit('table-refresh', {
         tableId: store.getters['table/getSelectedId'],
+        includeFieldOptions: true,
       })
     }
   })

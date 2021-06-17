@@ -66,7 +66,7 @@ def group_restored(sender, group_user, user, **kwargs):
         lambda: broadcast_to_users.delay(
             [group_user.user_id],
             {
-                "type": "group_created",
+                "type": "group_restored",
                 "group_id": group_user.group_id,
                 "group": GroupUserGroupSerializer(group_user).data,
             },

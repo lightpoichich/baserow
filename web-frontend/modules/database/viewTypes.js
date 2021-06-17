@@ -193,10 +193,18 @@ export class GridViewType extends ViewType {
     })
   }
 
-  async refresh({ store }, view, fields, primary, storePrefix = '') {
+  async refresh(
+    { store },
+    view,
+    fields,
+    primary,
+    storePrefix = '',
+    includeFieldOptions = false
+  ) {
     await store.dispatch(storePrefix + 'view/grid/refresh', {
       fields,
       primary,
+      includeFieldOptions,
     })
   }
 

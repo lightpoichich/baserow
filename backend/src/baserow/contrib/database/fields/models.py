@@ -57,6 +57,10 @@ class Field(
     """
 
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
+    """
+    WARNING: Field.order is deprecated and not used for anything. Instead the views
+    themselves contain the ordering information for fields. See GridViewFieldOptions.
+    """
     order = models.PositiveIntegerField(help_text="Lowest first.")
     name = models.CharField(max_length=255)
     primary = models.BooleanField(

@@ -13,7 +13,6 @@ from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_USER_NOT_IN_GROUP,
-    ERROR_TRASH_ITEM_DOES_NOT_EXIST,
 )
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
@@ -30,6 +29,7 @@ from .errors import (
     ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
     ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
     ERROR_PARENT_ID_MUST_BE_PROVIDED,
+    ERROR_TRASH_ITEM_DOES_NOT_EXIST,
 )
 from .serializers import (
     TrashContentsSerializer,
@@ -38,8 +38,8 @@ from .serializers import (
 )
 from ...core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
-    ParentIdMustNotBeSpecifiedException,
-    ParentIdMustBeSpecifiedException,
+    ParentIdMustNotBeProvidedException,
+    ParentIdMustBeProvidedException,
 )
 
 
@@ -47,7 +47,7 @@ class TrashItemView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        tags=["TrashEntry"],
+        tags=["Trash"],
         operation_id="restore",
         description="Restores the specified trashed item back into baserow.",
         request=TrashEntryRequestSerializer,
@@ -70,8 +70,8 @@ class TrashItemView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TrashItemDoesNotExist: ERROR_TRASH_ITEM_DOES_NOT_EXIST,
             CannotRestoreChildBeforeParent: ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
-            ParentIdMustNotBeSpecifiedException: ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
-            ParentIdMustBeSpecifiedException: ERROR_PARENT_ID_MUST_BE_PROVIDED,
+            ParentIdMustNotBeProvidedException: ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
+            ParentIdMustBeProvidedException: ERROR_PARENT_ID_MUST_BE_PROVIDED,
         }
     )
     def patch(self, request, data):
@@ -80,14 +80,11 @@ class TrashItemView(APIView):
         in the items group.
         """
 
-        trash_item_type = data["trash_item_type"]
-        parent_trash_item_id = data.get("parent_trash_item_id", None)
-
         TrashHandler.restore_item(
             request.user,
-            trash_item_type,
+            data["trash_item_type"],
             data["trash_item_id"],
-            parent_trash_item_id=parent_trash_item_id,
+            parent_trash_item_id=data.get("parent_trash_item_id", None),
         )
         return Response(status=204)
 
@@ -114,10 +111,10 @@ class TrashContentsView(APIView):
                 name="page",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
-                description="Defines which page of trash contents should be returned.",
+                description="Selects which page of trash contents should be returned.",
             ),
         ],
-        tags=["TrashEntry"],
+        tags=["Trash"],
         operation_id="get_contents",
         description="Responds with trash contents for a group optionally "
         "filtered to a specific application.",
@@ -143,9 +140,8 @@ class TrashContentsView(APIView):
     )
     def get(self, request, group_id):
         """
-        Responds with the requested trash entry if the user is in the group for that
-        entry's trash item. Filters any results down to a specific application if the
-        application_id get parameter is provided.
+        Responds with any trashed items in the group or application, including an
+        entry for the group/app if they themselves are trashed.
         """
 
         application_id = request.GET.get("application_id", None)
@@ -175,7 +171,7 @@ class TrashContentsView(APIView):
                 "for this application in the group.",
             ),
         ],
-        tags=["TrashEntry"],
+        tags=["Trash"],
         operation_id="empty_contents",
         description="Empties the specified group and/or application of trash, including"
         " the group and application themselves if they are trashed also.",
@@ -214,7 +210,7 @@ class TrashStructureView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        tags=["TrashEntry"],
+        tags=["Trash"],
         operation_id="get_trash_structure",
         description="Responds with the groups and applications available for the "
         "requesting user to inspect the trash contents of.",

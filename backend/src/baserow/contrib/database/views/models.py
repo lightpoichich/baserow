@@ -11,6 +11,7 @@ from baserow.core.mixins import (
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
     ParentFieldTrashableModelMixin,
+    ParentTableTrashableModelMixin,
 )
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))
@@ -25,7 +26,11 @@ def get_default_view_content_type():
 
 
 class View(
-    CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin, models.Model
+    ParentTableTrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    models.Model,
 ):
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()

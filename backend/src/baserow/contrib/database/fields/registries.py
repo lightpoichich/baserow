@@ -618,8 +618,8 @@ class FieldType(
 
     def get_human_readable_value(self, value: Any, field_object) -> str:
         """
-        Should convert the value of the provided field and it's value to a human
-        readable string for display purposes.
+        Should convert the value of the provided field to a human readable string for
+        display purposes.
 
         :param value: The value of the field extracted from a row to convert to human
             readable form.

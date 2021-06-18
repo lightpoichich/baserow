@@ -19,8 +19,3 @@ ERROR_HOSTNAME_IS_NOT_ALLOWED = (
     HTTP_400_BAD_REQUEST,
     "Only the hostname of the web frontend is allowed.",
 )
-ERROR_TRASH_ITEM_DOES_NOT_EXIST = (
-    "ERROR_TRASH_ITEM_DOES_NOT_EXIST",
-    HTTP_404_NOT_FOUND,
-    "The requested trash item does not exist.",
-)

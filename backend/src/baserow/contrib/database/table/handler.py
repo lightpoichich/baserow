@@ -38,14 +38,15 @@ class TableHandler:
         :rtype: Table
         """
 
-        # Raise DoesNotExist if parent group or app has been deleted
-
         if not base_queryset:
             base_queryset = Table.objects
 
         try:
             table = base_queryset.select_related("database__group").get(id=table_id)
         except Table.DoesNotExist:
+            raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
+
+        if not TrashHandler.check_all_parents_arent_trashed(table):
             raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 
         return table

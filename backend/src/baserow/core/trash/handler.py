@@ -15,8 +15,8 @@ from baserow.core.exceptions import (
 from baserow.core.models import TrashEntry, Application, Group
 from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
-    ParentIdMustBeSpecifiedException,
-    ParentIdMustNotBeSpecifiedException,
+    ParentIdMustBeProvidedException,
+    ParentIdMustNotBeProvidedException,
 )
 from baserow.core.trash.registry import trash_item_type_registry, TrashableItemType
 
@@ -108,9 +108,11 @@ class TrashHandler:
 
             items_to_restore = trashable_item_type.get_items_to_trash(trash_item)
 
-            _check_all_parents_arent_trashed(
-                trash_entry, trash_item, trashable_item_type
-            )
+            if not TrashHandler.check_all_parents_arent_trashed(
+                trash_item,
+                parent_id=trash_entry.parent_trash_item_id,
+            ):
+                raise CannotRestoreChildBeforeParent()
 
             trash_entry.delete()
 
@@ -233,9 +235,9 @@ class TrashHandler:
             the provided application.
         """
 
-        group = TrashHandler._get_group(group_id, user)
+        group = _get_group(group_id, user)
 
-        application = TrashHandler._get_application(application_id, group, user)
+        application = _get_application(application_id, group, user)
 
         trash_contents = TrashEntry.objects.filter(
             group=group, should_be_permanently_deleted=False
@@ -245,44 +247,78 @@ class TrashHandler:
         return trash_contents.order_by("-trashed_at")
 
     @staticmethod
-    def _get_application(application_id, group, user):
-        if application_id is not None:
-            try:
-                application = Application.objects_and_trash.get(id=application_id)
-            except Application.DoesNotExist:
-                raise ApplicationDoesNotExist()
+    def check_all_parents_arent_trashed(item, parent_id=None, check_item=False):
+        """
+        Given an instance of a model which is trashable (item) checks all of it's
+        parents are not trashed. Returns True if all parents are not trashed, False if
+        one is trashed.
 
-            try:
-                trash_entry = _get_trash_entry(
-                    user, "application", None, application.id
-                )
-                if trash_entry.should_be_permanently_deleted:
-                    raise ApplicationDoesNotExist
-            except TrashItemDoesNotExist:
-                pass
+        :param check_item: If true also checks if the provided item itself is trashed
+            and returns false if so.
+        :param item: An instance of a trashable model to check.
+        :param parent_id: If the trashable type of the provided instance requires an
+            id to lookup it's parent it must be provided here.
+        :return: If all of the item's parents are not trashed.
+        """
+        trash_item_type = trash_item_type_registry.get_by_model(item)
 
-            if application.group != group:
-                raise ApplicationNotInGroup()
-        else:
-            application = None
-        return application
+        if check_item and item.trashed:
+            return False
 
-    @staticmethod
-    def _get_group(group_id, user):
-        try:
-            group = Group.objects_and_trash.get(id=group_id)
-        except Group.DoesNotExist:
+        while True:
+            _check_parent_id_valid(parent_id, trash_item_type)
+            parent = trash_item_type.get_parent(item, parent_id)
+            if parent is None:
+                return True
+            elif parent.trashed:
+                return False
+            else:
+                item = parent
+                # Right now only row the lowest item in the "trash hierarchy" requires
+                # a parent id. Hence we know that as we go up into parents we will
+                # no longer need parent id's to do the lookups. However if in the future
+                # there is an intermediary trashable item which also requires a
+                # parent_id this method will not work and will need to be changed.
+                parent_id = None
+                trash_item_type = trash_item_type_registry.get_by_model(item)
+
+
+def _get_group(group_id, user):
+    try:
+        group = Group.objects_and_trash.get(id=group_id)
+    except Group.DoesNotExist:
+        raise GroupDoesNotExist
+    # Check that the group is not marked for perm deletion, if so we don't want
+    # to display it's contents anymore as it should be permanently deleted soon.
+    try:
+        trash_entry = _get_trash_entry(user, "group", None, group.id)
+        if trash_entry.should_be_permanently_deleted:
             raise GroupDoesNotExist
-        # Check that the group is not marked for perm deletion, if so we don't want
-        # to display it's contents anymore as it should be permanently deleted soon.
+    except TrashItemDoesNotExist:
+        pass
+    group.has_user(user, raise_error=True, include_trash=True)
+    return group
+
+
+def _get_application(application_id, group, user):
+    if application_id is not None:
         try:
-            trash_entry = _get_trash_entry(user, "group", None, group.id)
+            application = Application.objects_and_trash.get(id=application_id)
+        except Application.DoesNotExist:
+            raise ApplicationDoesNotExist()
+
+        try:
+            trash_entry = _get_trash_entry(user, "application", None, application.id)
             if trash_entry.should_be_permanently_deleted:
-                raise GroupDoesNotExist
+                raise ApplicationDoesNotExist
         except TrashItemDoesNotExist:
             pass
-        group.has_user(user, raise_error=True, include_trash=True)
-        return group
+
+        if application.group != group:
+            raise ApplicationNotInGroup()
+    else:
+        application = None
+    return application
 
 
 def _check_parent_id_valid(
@@ -304,9 +340,9 @@ def _check_parent_id_valid(
     :return:
     """
     if trashable_item_type.requires_parent_id and parent_trash_item_id is None:
-        raise ParentIdMustBeSpecifiedException()
+        raise ParentIdMustBeProvidedException()
     if not trashable_item_type.requires_parent_id and parent_trash_item_id is not None:
-        raise ParentIdMustNotBeSpecifiedException()
+        raise ParentIdMustNotBeProvidedException()
 
 
 def _get_groups_excluding_perm_deleted(user):
@@ -334,20 +370,6 @@ def _get_applications_excluding_perm_deleted(group):
         .order_by("order", "id")
     )
     return applications
-
-
-def _check_all_parents_arent_trashed(trash_entry, trash_item, trash_item_type):
-    parent_id = trash_entry.parent_trash_item_id
-    while True:
-        parent = trash_item_type.get_parent(trash_item, parent_id)
-        if parent is None:
-            break
-        elif parent.trashed:
-            raise CannotRestoreChildBeforeParent()
-        else:
-            trash_item = parent
-            parent_id = None
-            trash_item_type = trash_item_type_registry.get_by_model(trash_item)
 
 
 def _get_trash_entry(

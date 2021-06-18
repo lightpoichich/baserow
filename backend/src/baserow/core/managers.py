@@ -37,3 +37,5 @@ GroupParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="grou
 GroupParentTrashedManager = _make_trashed_manager(trashed=True, parent="group")
 FieldParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="field")
 FieldParentTrashedManager = _make_trashed_manager(trashed=True, parent="field")
+TableParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="table")
+TableParentTrashedManager = _make_trashed_manager(trashed=True, parent="table")

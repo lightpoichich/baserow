@@ -119,8 +119,6 @@ class ExportHandler:
         :return: An updated ExportJob instance with the exported file name.
         """
 
-        # TODO Recheck if table still exists and group or app still exists
-
         # Ensure the user still has permissions when the export job runs.
         job.table.database.group.has_user(job.user, raise_error=True)
         try:

@@ -1,6 +1,10 @@
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-
+ERROR_TRASH_ITEM_DOES_NOT_EXIST = (
+    "ERROR_TRASH_ITEM_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The requested trash item does not exist.",
+)
 ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD = (
     "ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD",
     HTTP_400_BAD_REQUEST,

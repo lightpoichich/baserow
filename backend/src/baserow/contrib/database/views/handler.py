@@ -4,6 +4,7 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     ViewDoesNotExist,
@@ -55,8 +56,6 @@ class ViewHandler:
         :return:
         """
 
-        # TODO raise DoesNotExist if table, group or app does not exist
-
         if not view_model:
             view_model = View
 
@@ -68,6 +67,11 @@ class ViewHandler:
                 pk=view_id
             )
         except View.DoesNotExist:
+            raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
+
+        if not TrashHandler.check_all_parents_arent_trashed(
+            view.table, check_item=True
+        ):
             raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
 
         return view

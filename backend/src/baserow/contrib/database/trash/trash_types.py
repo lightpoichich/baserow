@@ -7,7 +7,6 @@ from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.signals import field_restored
 from baserow.contrib.database.rows.signals import row_created
-from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.core.models import Application, TrashEntry
@@ -113,7 +112,7 @@ class RowTrashableItemType(TrashableItemType):
 
     @staticmethod
     def _get_table(parent_id):
-        return TableHandler().get_table(parent_id, Table.objects_and_trash)
+        return Table.objects_and_trash.get(id=parent_id)
 
     def get_name(self, trashed_item) -> str:
         return str(trashed_item.id)

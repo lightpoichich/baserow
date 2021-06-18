@@ -26,6 +26,7 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -60,6 +61,16 @@ def test_get_view(data_fixture):
         handler.get_view(
             view_id=grid.id, base_queryset=View.objects.prefetch_related("UNKNOWN")
         )
+
+    # If the table is trashed the view should not be available.
+    TrashHandler.trash(user, grid.table.database.group, grid.table.database, grid.table)
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_view(view_id=grid.id, view_model=GridView)
+
+    # Restoring the table should restore the view
+    TrashHandler.restore_item(user, "table", grid.table.id)
+    view = handler.get_view(view_id=grid.id, view_model=GridView)
+    assert view.id == grid.id
 
 
 @pytest.mark.django_db

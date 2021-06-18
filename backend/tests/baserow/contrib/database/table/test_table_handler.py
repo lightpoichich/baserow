@@ -21,6 +21,7 @@ from baserow.contrib.database.fields.models import (
     BooleanField,
 )
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -41,6 +42,17 @@ def test_get_database_table(data_fixture):
 
     table_copy = handler.get_table(table_id=table.id)
     assert table_copy.id == table.id
+
+    TrashHandler.trash(user, table.database.group, table.database, table.database)
+
+    with pytest.raises(TableDoesNotExist):
+        handler.get_table(table_id=table.id)
+
+    TrashHandler.restore_item(user, "application", table.database.id)
+
+    TrashHandler.trash(user, table.database.group, None, table.database.group)
+    with pytest.raises(TableDoesNotExist):
+        handler.get_table(table_id=table.id)
 
 
 @pytest.mark.django_db

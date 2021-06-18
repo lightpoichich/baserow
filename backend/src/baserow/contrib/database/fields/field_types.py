@@ -530,21 +530,23 @@ class LinkRowFieldType(FieldType):
         self, field_object, value, map_func: Callable[[Any, Dict[str, Any]], Any]
     ):
         """
-        Helper function which given a linked row field point at another model,
-        constructs a list of the rows linked to primary key values mapped by the
-        provided function.
+        Helper function which given a linked row field pointing at another model,
+        constructs a list of the related row's primary key values which are mapped by
+        the provided map_func function.
 
         For example, Table A has Field 1 which links to Table B. Table B has a text
-        primary key column. This function takes the contents of Field 1 (field_object)
-        for a single row (value), which is a number of rows in Table B. It then gets
-        the primary key column values for those rows in Table B and applied map_func
-        to each individual value. Finally returning those mapped values as a list.
+        primary key column. This function takes the value for a single row of of
+        Field 1, which is a number of related rows in Table B. It then gets
+        the primary key column values for those related rows in Table B and applies
+        map_func to each individual value. Finally it returns those mapped values as a
+        list.
 
         :param value: The value of the link field in a specific row.
         :param field_object: The field object for the link field.
         :param map_func: A function to apply to each linked primary key value.
         :return: A list of mapped linked primary key values.
         """
+
         instance = field_object["field"]
         if hasattr(instance, "_related_model"):
             related_model = instance._related_model
@@ -573,9 +575,9 @@ class LinkRowFieldType(FieldType):
     @staticmethod
     def _is_unnamed_primary_field_value(primary_field_value):
         """
-        Checks if the value for a linked primary field is considered "empty".
+        Checks if the value for a linked primary field is considered "unnamed".
         :param primary_field_value: The value of a primary field row in a linked table.
-        :return: If this value is considered an empty primary field value.
+        :return: If this value is considered an unnamed primary field value.
         """
 
         if isinstance(primary_field_value, list):

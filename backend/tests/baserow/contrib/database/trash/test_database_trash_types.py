@@ -8,8 +8,8 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.trash.exceptions import (
-    ParentIdMustBeSpecifiedException,
-    ParentIdMustNotBeSpecifiedException,
+    ParentIdMustBeProvidedException,
+    ParentIdMustNotBeProvidedException,
 )
 from baserow.core.trash.handler import TrashHandler
 
@@ -467,7 +467,7 @@ def test_a_parent_id_must_be_provided_when_trashing_or_restoring_a_row(
         values={f"field_{customers_primary_field.id}": "John"},
     )
 
-    with pytest.raises(ParentIdMustBeSpecifiedException):
+    with pytest.raises(ParentIdMustBeProvidedException):
         TrashHandler.trash(
             user,
             database.group,
@@ -479,7 +479,7 @@ def test_a_parent_id_must_be_provided_when_trashing_or_restoring_a_row(
         user, database.group, database, john_row, parent_id=customers_table.id
     )
 
-    with pytest.raises(ParentIdMustBeSpecifiedException):
+    with pytest.raises(ParentIdMustBeProvidedException):
         TrashHandler.restore_item(user, "row", john_row.id)
 
 
@@ -489,14 +489,14 @@ def test_a_parent_id_must_not_be_provided_when_trashing_or_restoring_an_app(
 ):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
-    with pytest.raises(ParentIdMustNotBeSpecifiedException):
+    with pytest.raises(ParentIdMustNotBeProvidedException):
         TrashHandler.trash(
             user, database.group, database, database, parent_id=database.group.id
         )
 
     TrashHandler.trash(user, database.group, database, database)
 
-    with pytest.raises(ParentIdMustNotBeSpecifiedException):
+    with pytest.raises(ParentIdMustNotBeProvidedException):
         TrashHandler.restore_item(
             user, "application", database.id, parent_trash_item_id=database.group.id
         )

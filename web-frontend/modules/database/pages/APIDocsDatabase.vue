@@ -314,7 +314,8 @@
             <p class="api-docs__content">
               To list fields of the {{ table.name }} table a
               <code class="api-docs__code">GET</code> request has to be made to
-              the {{ table.name }} fields endpoint.
+              the {{ table.name }} fields endpoint. It's only possible to list
+              the fields if the token has read, create or update permissions.
             </p>
             <h4 class="api-docs__heading-4">Result field properties</h4>
             <ul class="api-docs__parameters">

@@ -317,8 +317,8 @@ class TokenHandler:
         :param token: The token instance.
         :type token: Token
         :param type_name: The CRUD operation, create, read, update or delete to check
-            the permissions for. Can be a list if you want to check at least one
-            of listed operation.
+            the permissions for. Can be a list if you want to check at least one of the
+            listed operation.
         :type type_name: str | list
         :param table: The table object to check the permissions for.
         :type table: Table
@@ -357,8 +357,8 @@ class TokenHandler:
             extracted from the request. Otherwise a token object is expected.
         :type request_or_token: Request or Token
         :param type_name: The CRUD operation, create, read, update or delete to check
-            the permissions for. Can be a list if you want to check at least one
-            of listed operation.
+            the permissions for. Can be a list if you want to check at least one of the
+            listed operation.
         :type type_name: str | list
         :param table: The table object to check the permissions for.
         :type table: Table

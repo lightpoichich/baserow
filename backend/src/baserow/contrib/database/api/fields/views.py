@@ -166,8 +166,8 @@ class FieldsView(APIView):
         table = TableHandler().get_table(table_id)
         table.database.group.has_user(request.user, raise_error=True)
 
-        # field_create permission doesn't exists yet so any call of this
-        # endpoint with a token will be rejected.
+        # field_create permission doesn't exists, so any call of this endpoint with a
+        # token will be rejected.
         TokenHandler().check_table_permissions(request, "field_create", table, False)
 
         # Because each field type can raise custom exceptions while creating the

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Made it possible to list table field meta-data with access token
+* Made it possible to list table field meta-data with a token.
 
 ## Released (2021-06-02)
 

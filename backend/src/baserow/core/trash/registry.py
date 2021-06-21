@@ -35,11 +35,16 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
     A TrashableItemType specifies a baserow model which can be trashed.
     """
 
-    def lookup_trashed_item(self, trashed_entry: TrashEntry):
+    def lookup_trashed_item(
+        self, trashed_entry: TrashEntry, trash_item_lookup_cache=None
+    ):
         """
         Returns the actual instance of the trashed item. By default simply does a get
         on the model_class's trash manager.
 
+        :param trash_item_lookup_cache: A dictionary which can be used to store
+            expensive objects used to lookup this item which could be re-used when
+            looking up other items of this type.
         :param trashed_entry: The entry to get the real trashed instance for.
         :return: An instance of the model_class with trashed_item_id
         """
@@ -57,6 +62,7 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
 
         :param trashed_item: The item to delete permanently.
         """
+
         pass
 
     @property
@@ -73,7 +79,6 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         Returns the parent for this item.
 
         :param trashed_item: The item to lookup a parent for.
-        :param trash_entry: The trash entry for this item to lookup a parent for.
         :returns Either the parent item or None if this item has no parent.
         """
         pass

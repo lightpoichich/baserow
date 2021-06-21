@@ -104,7 +104,7 @@ class TrashHandler:
                 user, trash_item_type, parent_trash_item_id, trash_item_id
             )
 
-            trash_item = trashable_item_type.lookup_trashed_item(trash_entry)
+            trash_item = trashable_item_type.lookup_trashed_item(trash_entry, {})
 
             items_to_restore = trashable_item_type.get_items_to_trash(trash_item)
 
@@ -185,6 +185,7 @@ class TrashHandler:
         Looks up every trash item marked for permanent deletion and removes them
         irreversibly from the database along with their corresponding trash entries.
         """
+        trash_item_lookup_cache = {}
         with transaction.atomic():
             for trash_entry in TrashEntry.objects.filter(
                 should_be_permanently_deleted=True
@@ -194,7 +195,9 @@ class TrashHandler:
                 )
 
                 try:
-                    to_delete = trash_item_type.lookup_trashed_item(trash_entry)
+                    to_delete = trash_item_type.lookup_trashed_item(
+                        trash_entry, trash_item_lookup_cache
+                    )
                     trash_item_type.permanently_delete_item(to_delete)
                 except TrashItemDoesNotExist:
                     # When a parent item is deleted it should also delete all of it's

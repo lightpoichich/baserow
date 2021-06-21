@@ -7,6 +7,7 @@ from baserow.contrib.database.fields.models import Field, TextField, LinkRowFiel
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import (
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
@@ -27,6 +28,56 @@ def test_delete_row(data_fixture):
 
     TrashHandler.permanently_delete(row)
     assert model.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    handler = RowHandler()
+    model = table.get_model()
+    row_1 = handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_1, parent_id=table.id
+    )
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 1
+    assert TrashEntry.objects.count() == 1
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    with django_assert_num_queries(9):
+        TrashHandler.permanently_delete_marked_trash()
+
+    row_2 = handler.create_row(user=user, table=table)
+    row_3 = handler.create_row(user=user, table=table)
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_2, parent_id=table.id
+    )
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_3, parent_id=table.id
+    )
+
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 2
+    assert TrashEntry.objects.count() == 2
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    # We only want three more queries when deleting 2 rows instead of 1 compared to
+    # above:
+    # 1. A query to lookup the extra row we are deleting
+    # 2. A query to delete said row
+    # 3. A query to delete it's trash entry.
+    # If we weren't caching the table models an extra number of queries would be first
+    # performed to lookup the table information which breaks this assertion.
+    with django_assert_num_queries(12):
+        TrashHandler.permanently_delete_marked_trash()
 
 
 @pytest.mark.django_db

@@ -139,23 +139,42 @@ class RowTrashableItemType(TrashableItemType):
     def permanently_delete_item(self, row):
         row.delete()
 
-    def lookup_trashed_item(self, trashed_entry: TrashEntry):
+    def lookup_trashed_item(
+        self, trashed_entry: TrashEntry, trash_item_lookup_cache=None
+    ):
         """
         Returns the actual instance of the trashed item. By default simply does a get
         on the model_class's trash manager.
 
+        :param trash_item_lookup_cache: A cache dict used to store the generated models
+            for a given table so if looking up many rows from the same table we only
+            need to lookup the tables fields etc once.
         :param trashed_entry: The entry to get the real trashed instance for.
         :return: An instance of the model_class with trashed_item_id
         """
 
-        table = self._get_table(trashed_entry.parent_trash_item_id)
-
-        model = table.get_model()
+        if trash_item_lookup_cache is not None:
+            model_cache = trash_item_lookup_cache.setdefault(
+                "row_table_model_cache", {}
+            )
+            try:
+                model = model_cache[trashed_entry.parent_trash_item_id]
+            except KeyError:
+                model = model_cache.setdefault(
+                    trashed_entry.parent_trash_item_id,
+                    self._get_table_model(trashed_entry.parent_trash_item_id),
+                )
+        else:
+            model = self._get_table_model(trashed_entry.parent_trash_item_id)
 
         try:
             return model.trash.get(id=trashed_entry.trash_item_id)
         except model.DoesNotExist:
             raise TrashItemDoesNotExist()
+
+    def _get_table_model(self, table_id):
+        table = self._get_table(table_id)
+        return table.get_model()
 
     # noinspection PyMethodMayBeStatic
     def get_extra_description(self, trashed_item: Any, table) -> Optional[str]:

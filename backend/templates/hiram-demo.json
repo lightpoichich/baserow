@@ -1,0 +1,221 @@
+{
+    "baserow_template_version": 1,
+    "name": "Hiram's Demo",
+    "icon": "file",
+    "keywords": ["Example", "Template", "For", "Search", "hiram", "demo"],
+    "categories": ["Test category 1", "Demos", "Tests"],
+    "export": [
+        {
+            "id": 8,
+            "name": "Hiram's company",
+            "order": 1,
+            "type": "database",
+            "tables": [
+                {
+                    "id": 27,
+                    "name": "Customers",
+                    "order": 1,
+                    "fields": [
+                        {
+                            "id": 156,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 157,
+                            "type": "text",
+                            "name": "Last name",
+                            "order": 1,
+                            "primary": false,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 158,
+                            "type": "long_text",
+                            "name": "Notes",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 159,
+                            "type": "boolean",
+                            "name": "Active",
+                            "order": 3,
+                            "primary": false
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 33,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "field_options": [
+                                {
+                                    "id": 210,
+                                    "field_id": 156,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 211,
+                                    "field_id": 157,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 207,
+                                    "field_id": 158,
+                                    "width": 400,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 208,
+                                    "field_id": 159,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_156": "Elon",
+                            "field_157": "Musk",
+                            "field_158": null,
+                            "field_159": "true"
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_156": "Bill",
+                            "field_157": "Gates",
+                            "field_158": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce dignissim, urna eget rutrum sollicitudin, sapien diam interdum nisi, quis malesuada nibh eros a est.",
+                            "field_159": "false"
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_156": "Mark",
+                            "field_157": "Zuckerburg",
+                            "field_158": null,
+                            "field_159": "true"
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "field_156": "Jeffrey",
+                            "field_157": "Bezos",
+                            "field_158": null,
+                            "field_159": "true"
+                        }
+                    ]
+                },
+                {
+                    "id": 28,
+                    "name": "Projects",
+                    "order": 2,
+                    "fields": [
+                        {
+                            "id": 160,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 161,
+                            "type": "date",
+                            "name": "Started",
+                            "order": 1,
+                            "primary": false,
+                            "date_format": "EU",
+                            "date_include_time": false,
+                            "date_time_format": "24"
+                        },
+                        {
+                            "id": 162,
+                            "type": "boolean",
+                            "name": "Active",
+                            "order": 2,
+                            "primary": false
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 34,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "field_options": [
+                                {
+                                    "id": 212,
+                                    "field_id": 160,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 213,
+                                    "field_id": 161,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 209,
+                                    "field_id": 162,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_160": "Tesla",
+                            "field_161": "2020-06-01",
+                            "field_162": "true"
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_160": "SpaceX",
+                            "field_161": null,
+                            "field_162": "false"
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_160": "Amazon",
+                            "field_161": "2018-01-01",
+                            "field_162": "false"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+

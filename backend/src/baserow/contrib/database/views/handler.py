@@ -337,6 +337,13 @@ class ViewHandler:
                 f"The view filter with id {view_filter_id} does not exist."
             )
 
+        if not TrashHandler.check_all_parents_arent_trashed(
+            view_filter.view.table, check_item=True
+        ):
+            raise ViewFilterDoesNotExist(
+                f"The view filter with id {view_filter_id} does not exist."
+            )
+
         group = view_filter.view.table.database.group
         group.has_user(user, raise_error=True)
 
@@ -563,6 +570,13 @@ class ViewHandler:
         except ViewSort.DoesNotExist:
             raise ViewSortDoesNotExist(
                 f"The view sort with id {view_sort_id} does not exist."
+            )
+
+        if not TrashHandler.check_all_parents_arent_trashed(
+            view_sort.view.table, check_item=True
+        ):
+            raise ViewSortDoesNotExist(
+                f"The view filter with id {view_sort_id} does not exist."
             )
 
         group = view_sort.view.table.database.group

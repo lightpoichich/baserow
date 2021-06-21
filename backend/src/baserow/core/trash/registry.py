@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, List
 
+from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import Group, Application, TrashEntry
 from baserow.core.registries import application_type_registry
 from baserow.core.registry import (
@@ -43,7 +44,10 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         :return: An instance of the model_class with trashed_item_id
         """
 
-        return self.model_class.trash.get(id=trashed_entry.trash_item_id)
+        try:
+            return self.model_class.trash.get(id=trashed_entry.trash_item_id)
+        except self.model_class.DoesNotExist:
+            raise TrashItemDoesNotExist()
 
     @abstractmethod
     def permanently_delete_item(self, trashed_item: Any):

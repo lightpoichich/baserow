@@ -9,6 +9,7 @@ from baserow.contrib.database.fields.signals import field_restored
 from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
+from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import Application, TrashEntry
 from baserow.core.trash.registry import TrashableItemType
 
@@ -112,7 +113,12 @@ class RowTrashableItemType(TrashableItemType):
 
     @staticmethod
     def _get_table(parent_id):
-        return Table.objects_and_trash.get(id=parent_id)
+        try:
+            return Table.objects_and_trash.get(id=parent_id)
+        except Table.DoesNotExist:
+            # The parent table must have been actually deleted, in which case the
+            # row itself no longer exits.
+            raise TrashItemDoesNotExist()
 
     def get_name(self, trashed_item) -> str:
         return str(trashed_item.id)
@@ -146,7 +152,10 @@ class RowTrashableItemType(TrashableItemType):
 
         model = table.get_model()
 
-        return model.trash.get(id=trashed_entry.trash_item_id)
+        try:
+            return model.trash.get(id=trashed_entry.trash_item_id)
+        except model.DoesNotExist:
+            raise TrashItemDoesNotExist()
 
     # noinspection PyMethodMayBeStatic
     def get_extra_description(self, trashed_item: Any, table) -> Optional[str]:

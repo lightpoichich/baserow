@@ -250,18 +250,20 @@ def test_perm_deleting_a_table_with_a_trashed_row_also_cleans_up_the_row_entry(
     row = table_model.objects.create(**{f"field_{field.id}": "Test"})
 
     with freeze_time("2020-01-01 12:00"):
+        TrashHandler.trash(user, group, database, database)
         TrashHandler.trash(user, group, database, row, parent_id=table.id)
         TrashHandler.trash(user, group, database, table)
 
     TrashHandler.empty(user, group.id, database.id)
 
-    assert TrashEntry.objects.count() == 2
+    assert TrashEntry.objects.count() == 3
 
     TrashHandler.permanently_delete_marked_trash()
 
     assert TrashEntry.objects.count() == 0
     assert Table.objects_and_trash.count() == 0
     assert Field.objects_and_trash.count() == 0
+    assert Application.objects_and_trash.count() == 0
     assert f"database_table_{table.id}" not in connection.introspection.table_names()
 
 

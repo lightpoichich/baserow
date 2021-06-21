@@ -155,7 +155,7 @@ class GridView(View):
         return field_options
 
 
-class GridViewFieldOptions(models.Model):
+class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
     grid_view = models.ForeignKey(GridView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     # The defaults should be the same as in the `fieldCreated` of the `GridViewType`

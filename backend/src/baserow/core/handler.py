@@ -575,8 +575,6 @@ class CoreHandler:
         :rtype: Application
         """
 
-        # TODO Raise does not exist if group or self trashed
-
         if not base_queryset:
             base_queryset = Application.objects
 
@@ -585,6 +583,11 @@ class CoreHandler:
                 id=application_id
             )
         except Application.DoesNotExist:
+            raise ApplicationDoesNotExist(
+                f"The application with id {application_id} does not exist."
+            )
+
+        if not TrashHandler.check_all_parents_arent_trashed(application):
             raise ApplicationDoesNotExist(
                 f"The application with id {application_id} does not exist."
             )

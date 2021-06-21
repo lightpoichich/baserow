@@ -37,7 +37,7 @@
         :entry-count="totalServerSideTrashContentsCount"
         @empty="onEmpty"
         @restore="onRestore"
-        @load-next-page="loadTrashContentsPage"
+        @load-next-page="loadNextPage"
       ></TrashContent>
     </template>
   </Modal>
@@ -89,11 +89,9 @@ export default {
 
       this.loading = true
       this.groups = []
-      this.trashContents = []
       this.selectedGroup = null
       this.selectedApplication = null
       this.hideError()
-      this.totalServerSideTrashContentsCount = 0
 
       try {
         const { data } = await TrashService(this.$client).fetchStructure()
@@ -112,7 +110,6 @@ export default {
        */
       this.hideError()
       try {
-        this.loadingNextPage = true
         const { data } = await TrashService(this.$client).fetchContents({
           page: nextPage,
           groupId: this.selectedGroup.id,
@@ -126,7 +123,6 @@ export default {
       } catch (error) {
         this.handleError(error, 'trash')
       }
-      this.loadingNextPage = false
     },
     selectGroupOrApp({ group, application = null }) {
       /**
@@ -135,7 +131,21 @@ export default {
        */
       this.selectedGroup = group
       this.selectedApplication = application
-      this.loadTrashContentsPage(0)
+      this.loadingContents = true
+      this.trashContents = []
+      this.totalServerSideTrashContentsCount = 0
+      this.loadTrashContentsPage(1)
+      this.loadingContents = false
+    },
+    loadNextPage(nextPage) {
+      /**
+       * Loads another page of contents in after we have already loaded the initial
+       * page of contents, hence we want to use a different loading indicator as it is
+       * ok to say, restore an item whilst we are loading in another page.
+       */
+      this.loadingNextPage = true
+      this.loadTrashContentsPage(nextPage)
+      this.loadingNextPage = false
     },
     async onRestore(trashEntry) {
       /**

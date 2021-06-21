@@ -30,6 +30,28 @@ def test_delete_row(data_fixture):
 
 
 @pytest.mark.django_db
+def test_delete_row_when_in_separate_user_db(data_fixture, user_tables_in_separate_db):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    handler = RowHandler()
+    row = handler.create_row(user=user, table=table)
+    handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row, parent_id=table.id
+    )
+    model = table.get_model()
+    assert model.objects.all().count() == 1
+    assert model.trash.all().count() == 1
+
+    TrashHandler.permanently_delete(row)
+    assert model.objects.all().count() == 1
+    assert model.trash.all().count() == 0
+
+
+@pytest.mark.django_db
 def test_perm_delete_table(data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)

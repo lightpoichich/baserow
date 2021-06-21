@@ -44,8 +44,6 @@ class FieldHandler:
         :rtype: Field
         """
 
-        # TODO raise DoesNotExist if parent group, table or app does not exist
-
         if not field_model:
             field_model = Field
 
@@ -57,6 +55,11 @@ class FieldHandler:
                 id=field_id
             )
         except Field.DoesNotExist:
+            raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
+
+        if not TrashHandler.check_all_parents_arent_trashed(
+            field.table, check_item=True
+        ):
             raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
 
         return field

@@ -5,6 +5,7 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_204_NO_CONTENT,
 )
 
 from django.shortcuts import reverse
@@ -73,6 +74,21 @@ def test_list_fields(api_client, data_fixture):
     url = reverse("api:database:fields:list", kwargs={"table_id": table_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
+
+    response = api_client.delete(
+        reverse(
+            "api:groups:item",
+            kwargs={"group_id": table_1.database.group.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+    response = api_client.get(
+        reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db
@@ -170,6 +186,19 @@ def test_get_field(api_client, data_fixture):
     assert response_json["name"] == text.name
     assert response_json["table_id"] == text.table_id
     assert not response_json["text_default"]
+
+    response = api_client.delete(
+        reverse(
+            "api:groups:item",
+            kwargs={"group_id": table.database.group.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+    url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db

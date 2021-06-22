@@ -126,6 +126,11 @@ export class ViewType extends Registerable {
   fieldUpdated(context, field, oldField, fieldType, storePrefix) {}
 
   /**
+   * Method that is called when the field options of a view are updated.
+   */
+  fieldOptionsUpdated(context, view, fieldOptions, storePrefix) {}
+
+  /**
    * Event that is called when a row is created from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
@@ -250,6 +255,16 @@ export class GridViewType extends ViewType {
         fields: rootGetters['field/getAll'],
         primary: rootGetters['field/getPrimary'],
       },
+      {
+        root: true,
+      }
+    )
+  }
+
+  async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
+    await store.dispatch(
+      storePrefix + 'view/grid/forceUpdateAllFieldOptions',
+      fieldOptions,
       {
         root: true,
       }

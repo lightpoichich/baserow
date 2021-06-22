@@ -132,8 +132,3 @@ def get_example_row_serializer_class(add_id=False):
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
     get_example_row_serializer_class(True)
 )
-example_pagination_row_serializer_class_with_field_options = (
-    get_example_pagination_serializer_class(
-        get_example_row_serializer_class(True), add_field_options=True
-    )
-)

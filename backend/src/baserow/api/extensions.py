@@ -2,6 +2,35 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.plumbing import force_instance
 
 
+class MappingSerializerExtension(OpenApiSerializerExtension):
+    """
+    This OpenAPI serializer extension makes it possible to easily define a mapping of
+    serializers. The anyOf attribute will be used, which will give users the option
+    to choose a response type without having a discriminator field. It can be used
+    for a response and request.
+    """
+
+    target_class = "baserow.api.utils.MappingSerializer"
+
+    def get_name(self):
+        return self.target.component_name
+
+    def map_serializer(self, auto_schema, direction):
+        return self._map_serializer(auto_schema, direction, self.target.mapping)
+
+    def _map_serializer(self, auto_schema, direction, mapping):
+        sub_components = []
+
+        for key, serializer_class in mapping.items():
+            sub_serializer = force_instance(serializer_class)
+            resolved_sub_serializer = auto_schema.resolve_serializer(
+                sub_serializer, direction
+            )
+            sub_components.append((key, resolved_sub_serializer.ref))
+
+        return {"anyOf": [ref for _, ref in sub_components]}
+
+
 class PolymorphicMappingSerializerExtension(OpenApiSerializerExtension):
     """
     This OpenAPI serializer extension makes it possible to easily define polymorphic
@@ -14,7 +43,7 @@ class PolymorphicMappingSerializerExtension(OpenApiSerializerExtension):
                     'ExampleName',
                     {
                         'car': CarSerializer,
-                        'boat': BoarSerializer
+                        'boat': BoatSerializer
                     },
                     many=True
                 ),

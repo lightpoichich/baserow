@@ -232,6 +232,19 @@ def get_serializer_class(model, field_names, field_overrides=None, base_class=No
     return type(str(model_.__name__ + "Serializer"), (base_class,), attrs)
 
 
+class MappingSerializer:
+    """
+    A placeholder class for the `MappingSerializerExtension` extension class.
+    """
+
+    def __init__(self, component_name, mapping, name, many=False):
+        self.read_only = False
+        self.component_name = component_name
+        self.mapping = mapping
+        self.name = name
+        self.many = many
+
+
 class PolymorphicCustomFieldRegistrySerializer:
     """
     A placeholder class for the `PolymorphicCustomFieldRegistrySerializerExtension`

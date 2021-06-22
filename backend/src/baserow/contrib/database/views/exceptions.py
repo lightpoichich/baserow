@@ -79,3 +79,7 @@ class ViewSortFieldAlreadyExist(Exception):
 
 class ViewSortFieldNotSupported(Exception):
     """Raised when a field does not supports sorting in a view."""
+
+
+class ViewDoesNotSupportFieldOptions(Exception):
+    """Raised when a view type does not support field options."""

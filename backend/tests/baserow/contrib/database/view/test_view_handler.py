@@ -22,6 +22,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortNotSupported,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
+    ViewDoesNotSupportFieldOptions,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -244,8 +245,8 @@ def test_delete_view(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.views.signals.grid_view_field_options_updated.send")
-def test_update_grid_view_field_options(send_mock, data_fixture):
+@patch("baserow.contrib.database.views.signals.view_field_options_updated.send")
+def test_update_field_options(send_mock, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
@@ -254,50 +255,61 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
     field_3 = data_fixture.create_text_field()
 
     with pytest.raises(ValueError):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=user,
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 "strange_format": {"height": 150},
             },
         )
 
     with pytest.raises(UserNotInGroup):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=data_fixture.create_user(),
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 "strange_format": {"height": 150},
             },
         )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=user,
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 99999: {"width": 150},
             },
         )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=user,
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 field_3.id: {"width": 150},
             },
         )
 
-    ViewHandler().update_grid_view_field_options(
+    with pytest.raises(ViewDoesNotSupportFieldOptions):
+        ViewHandler().update_field_options(
+            user=user,
+            # The View object does not have the `field_options` field, so we expect
+            # it to fail.
+            view=View.objects.get(pk=grid_view.id),
+            field_options={
+                field_1.id: {"width": 150},
+            },
+        )
+
+    ViewHandler().update_field_options(
         user=user,
-        grid_view=grid_view,
+        view=grid_view,
         field_options={str(field_1.id): {"width": 150}, field_2.id: {"width": 250}},
     )
     options_4 = grid_view.get_field_options()
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["grid_view"].id == grid_view.id
+    assert send_mock.call_args[1]["view"].id == grid_view.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert len(options_4) == 2
     assert options_4[0].width == 150
@@ -306,9 +318,9 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
     assert options_4[1].field_id == field_2.id
 
     field_4 = data_fixture.create_text_field(table=table)
-    ViewHandler().update_grid_view_field_options(
+    ViewHandler().update_field_options(
         user=user,
-        grid_view=grid_view,
+        view=grid_view,
         field_options={field_2.id: {"width": 300}, field_4.id: {"width": 50}},
     )
     options_4 = grid_view.get_field_options()

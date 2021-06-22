@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Made it possible to list table field meta-data with a token.
+* Added form view.
 
 ## Released (2021-06-02)
 

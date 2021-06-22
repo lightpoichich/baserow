@@ -350,7 +350,7 @@ def test_list_filtered_rows(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_patch_grid_view(api_client, data_fixture):
+def test_patch_grid_view_field_options(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -362,9 +362,8 @@ def test_patch_grid_view(api_client, data_fixture):
     # so that the GridViewFieldOptions entry is not created. This should
     # automatically be created when the page is fetched.
     number_field = data_fixture.create_number_field(table=table)
-    grid_2 = data_fixture.create_grid_view()
 
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
         {"field_options": {text_field.id: {"width": 300, "hidden": True}}},
@@ -391,7 +390,7 @@ def test_patch_grid_view(api_client, data_fixture):
     assert options[1].hidden is False
     assert options[1].order == 32767
 
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
         {
@@ -418,7 +417,7 @@ def test_patch_grid_view(api_client, data_fixture):
     assert options[1].field_id == number_field.id
     assert options[1].hidden is True
 
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
         {
@@ -449,13 +448,13 @@ def test_patch_grid_view(api_client, data_fixture):
     assert options[1].field_id == number_field.id
     assert options[1].hidden is False
 
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
-        url, {}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+        url, {"field_options": {}}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
     assert response.status_code == HTTP_200_OK
 
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
         {"field_options": {"RANDOM_FIELD": "TEST"}},
@@ -467,29 +466,7 @@ def test_patch_grid_view(api_client, data_fixture):
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response_json["detail"]["field_options"][0]["code"] == "invalid_key"
 
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
-    response = api_client.patch(
-        url,
-        {"field_options": {99999: {"width": 100}}},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_UNRELATED_FIELD"
-
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
-    response = api_client.patch(
-        url,
-        {"field_options": {99999: {"hidden": True}}},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_UNRELATED_FIELD"
-
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
         {"field_options": {1: {"width": "abc"}}},
@@ -501,7 +478,7 @@ def test_patch_grid_view(api_client, data_fixture):
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response_json["detail"]["field_options"][0]["code"] == "invalid_value"
 
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
         {"field_options": {1: {"hidden": "abc"}}},
@@ -512,13 +489,3 @@ def test_patch_grid_view(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response_json["detail"]["field_options"][0]["code"] == "invalid_value"
-
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": 999})
-    response = api_client.patch(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
-    assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_GRID_DOES_NOT_EXIST"
-
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_2.id})
-    response = api_client.patch(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"

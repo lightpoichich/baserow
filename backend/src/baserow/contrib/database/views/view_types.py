@@ -1,13 +1,22 @@
 from django.urls import path, include
 
+from baserow.contrib.database.api.views.grid.serializers import (
+    GridViewFieldOptionsSerializer,
+)
+from baserow.contrib.database.api.views.form.serializers import (
+    FormViewFieldOptionsSerializer,
+)
+
 from .handler import ViewHandler
-from .models import GridView, GridViewFieldOptions
+from .models import GridView, GridViewFieldOptions, FormView, FormViewFieldOptions
 from .registries import ViewType
 
 
 class GridViewType(ViewType):
     type = "grid"
     model_class = GridView
+    field_options_model_class = GridViewFieldOptions
+    field_options_serializer_class = GridViewFieldOptionsSerializer
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.grid import urls as api_urls
@@ -84,3 +93,34 @@ class GridViewType(ViewType):
         for field_id in ordered_visible_fields:
             ordered_field_objects.append(model._field_objects[field_id])
         return ordered_field_objects, model
+
+
+class FormViewType(ViewType):
+    type = "form"
+    model_class = FormView
+    field_options_model_class = FormViewFieldOptions
+    field_options_serializer_class = FormViewFieldOptionsSerializer
+    allowed_fields = [
+        "public",
+        "password",
+        "title",
+        "description",
+        "cover_image",
+        "logo_image",
+        "submit_action",
+        "submit_action_message",
+        "submit_action_redirect_url",
+        "submit_email_confirmation",
+    ]
+    serializer_field_names = [
+        "public",
+        "password",
+        "title",
+        "description",
+        "cover_image",
+        "logo_image",
+        "submit_action",
+        "submit_action_message",
+        "submit_action_redirect_url",
+        "submit_email_confirmation",
+    ]

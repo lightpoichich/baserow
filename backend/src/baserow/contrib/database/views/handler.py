@@ -1,10 +1,15 @@
 from django.db.models import F
+from django.core.exceptions import FieldDoesNotExist
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.core.utils import (
+    extract_allowed,
+    set_allowed_attrs,
+    get_model_reference_field_name,
+)
 from .exceptions import (
     ViewDoesNotExist,
     ViewNotInTable,
@@ -16,8 +21,9 @@ from .exceptions import (
     ViewSortNotSupported,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
+    ViewDoesNotSupportFieldOptions,
 )
-from .models import View, GridViewFieldOptions, ViewFilter, ViewSort
+from .models import View, ViewFilter, ViewSort
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created,
@@ -30,7 +36,7 @@ from .signals import (
     view_sort_created,
     view_sort_updated,
     view_sort_deleted,
-    grid_view_field_options_updated,
+    view_field_options_updated,
 )
 
 
@@ -192,14 +198,12 @@ class ViewHandler:
 
         view_deleted.send(self, view_id=view_id, view=view, user=user)
 
-    def update_grid_view_field_options(
-        self, user, grid_view, field_options, fields=None
-    ):
+    def update_field_options(self, user, view, field_options, fields=None):
         """
         Updates the field options with the provided values if the field id exists in
-        the table related to the grid view.
+        the table related to the view.
 
-        :param user: The user on whose behalf the request is made.
+        param user: The user on whose behalf the request is made.
         :type user: User
         :param grid_view: The grid view for which the field options need to be updated.
         :type grid_view: GridView
@@ -213,22 +217,38 @@ class ViewHandler:
             provided view.
         """
 
-        grid_view.table.database.group.has_user(user, raise_error=True)
+        view.table.database.group.has_user(user, raise_error=True)
 
         if not fields:
-            fields = Field.objects.filter(table=grid_view.table)
+            fields = Field.objects.filter(table=view.table)
+
+        try:
+            model = view._meta.get_field("field_options").remote_field.through
+        except FieldDoesNotExist:
+            raise ViewDoesNotSupportFieldOptions(
+                "This view does not support field options."
+            )
+
+        field_name = get_model_reference_field_name(model, View)
+
+        if not field_name:
+            raise ValueError(
+                "The model doesn't have a relationship with the View model or any "
+                "descendants."
+            )
 
         allowed_field_ids = [field.id for field in fields]
         for field_id, options in field_options.items():
             if int(field_id) not in allowed_field_ids:
+                print("going to raise error")
                 raise UnrelatedFieldError(
-                    f"The field id {field_id} is not related to " f"the grid view."
+                    f"The field id {field_id} is not related to the view."
                 )
-            GridViewFieldOptions.objects.update_or_create(
-                grid_view=grid_view, field_id=field_id, defaults=options
+            model.objects.update_or_create(
+                field_id=field_id, defaults=options, **{field_name: view}
             )
 
-        grid_view_field_options_updated.send(self, grid_view=grid_view, user=user)
+        view_field_options_updated.send(self, view=view, user=user)
 
     def field_type_changed(self, field):
         """

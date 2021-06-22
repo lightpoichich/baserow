@@ -29,7 +29,9 @@
       <a
         :href="
           'https://twitter.com/intent/tweet?text=' +
-          encodeURI('Check out https://baserow.io!')
+          encodeURI(
+            'Check out https://baserow.io an open source no-code database tool and Airtable alternative!'
+          )
         "
         class="button button--primary dashboard__alert-button"
       >
@@ -37,8 +39,7 @@
       </a>
       <a
         :href="
-          'https://www.reddit.com/submit?url=' +
-          encodeURI('https://baserow.io!')
+          'https://www.reddit.com/submit?url=' + encodeURI('https://baserow.io')
         "
         class="button button--primary dashboard__alert-button"
       >

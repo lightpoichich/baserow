@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Made it possible to list table field meta-data with a token.
 * Add trash where deleted apps, groups, tables, fields and rows can be restored 
   deletion.
 * API Change: Creating or updating a row which has a linked field now raises a 500 error

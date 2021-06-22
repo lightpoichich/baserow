@@ -45,7 +45,7 @@
           :color="''"
         ></FieldSingleSelectDropdownItem>
         <FieldSingleSelectDropdownItem
-          v-for="option in options"
+          v-for="option in orderedOptions"
           :key="option.id"
           :name="option.value"
           :value="option.id"
@@ -99,6 +99,9 @@ export default {
     },
     selectedColor() {
       return this.getSelectedProperty(this.value, 'color')
+    },
+    orderedOptions() {
+      return this.options.slice().sort((a, b) => a.order - b.order)
     },
   },
   methods: {

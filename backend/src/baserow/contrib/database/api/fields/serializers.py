@@ -38,6 +38,7 @@ class SelectOptionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
     value = serializers.CharField(max_length=255, required=True)
     color = serializers.CharField(max_length=255, required=True)
+    order = serializers.IntegerField(min_value=0, required=False)
 
 
 class CreateFieldSerializer(serializers.ModelSerializer):

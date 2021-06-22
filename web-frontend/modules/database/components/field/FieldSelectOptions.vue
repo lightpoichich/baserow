@@ -1,27 +1,33 @@
 <template>
-  <div class="select-options">
-    <div
-      v-for="(item, index) in value"
-      :key="item.id"
-      class="select-options__item"
-    >
-      <a
-        :ref="'color-select-' + index"
-        :class="'select-options__color' + ' background-color--' + item.color"
-        @click="openColor(index)"
+  <div>
+    <div class="select-options">
+      <div
+        v-for="(item, index) in orderedValues"
+        :key="item.id"
+        v-sortable="{
+          id: item.id,
+          update: order,
+        }"
+        :class="['select-options__item']"
       >
-        <i class="fas fa-caret-down"></i>
-      </a>
-      <input
-        v-model="item.value"
-        class="input select-options__value"
-        :class="{ 'input--error': $v.value.$each[index].value.$error }"
-        @input="$emit('input', value)"
-        @blur="$v.value.$each[index].value.$touch()"
-      />
-      <a class="select-options__remove" @click.stop.prevent="remove(index)">
-        <i class="fas fa-times"></i>
-      </a>
+        <a
+          :ref="'color-select-' + index"
+          :class="'select-options__color' + ' background-color--' + item.color"
+          @click="openColor(index)"
+        >
+          <i class="fas fa-caret-down"></i>
+        </a>
+        <input
+          v-model="item.value"
+          class="input select-options__value"
+          :class="{ 'input--error': $v.value.$each[index].value.$error }"
+          @input="$emit('input', value)"
+          @blur="$v.value.$each[index].value.$touch()"
+        />
+        <a class="select-options__remove" @click.stop.prevent="remove(index)">
+          <i class="fas fa-times"></i>
+        </a>
+      </div>
     </div>
     <a class="add" @click="add()">
       <i class="fas fa-plus add__icon"></i>
@@ -54,6 +60,11 @@ export default {
       colorContextSelected: -1,
     }
   },
+  computed: {
+    orderedValues() {
+      return this.value.slice().sort((a, b) => a.order - b.order)
+    },
+  },
   methods: {
     remove(index) {
       this.$refs.colorContext.hide()
@@ -79,6 +90,15 @@ export default {
     },
     updateColor(index, color) {
       this.value[index].color = color
+      this.$emit('input', this.value)
+    },
+    order(newOrder, oldOrder) {
+      console.log(JSON.stringify(this.value))
+      this.value.forEach((option) => {
+        const index = newOrder.findIndex((value) => value === option.id)
+        option.order = index === -1 ? 0 : index + 1
+      })
+      console.log(JSON.stringify(this.value))
       this.$emit('input', this.value)
     },
   },

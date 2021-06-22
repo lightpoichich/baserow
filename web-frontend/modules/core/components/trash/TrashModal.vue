@@ -34,7 +34,9 @@
         :trash-contents="trashContents"
         :loading-contents="loadingContents"
         :loading-next-page="loadingNextPage"
-        :entry-count="totalServerSideTrashContentsCount"
+        :total-server-side-trash-contents-count="
+          totalServerSideTrashContentsCount
+        "
         @empty="onEmpty"
         @restore="onRestore"
         @load-next-page="loadNextPage"
@@ -124,7 +126,7 @@ export default {
         this.handleError(error, 'trash')
       }
     },
-    selectGroupOrApp({ group, application = null }) {
+    async selectGroupOrApp({ group, application = null }) {
       /**
        * Switches to a different group or application to display the trash contents for
        * and triggers the fetch for the first page of contents.
@@ -134,17 +136,17 @@ export default {
       this.loadingContents = true
       this.trashContents = []
       this.totalServerSideTrashContentsCount = 0
-      this.loadTrashContentsPage(1)
+      await this.loadTrashContentsPage(1)
       this.loadingContents = false
     },
-    loadNextPage(nextPage) {
+    async loadNextPage(nextPage) {
       /**
        * Loads another page of contents in after we have already loaded the initial
        * page of contents, hence we want to use a different loading indicator as it is
        * ok to say, restore an item whilst we are loading in another page.
        */
       this.loadingNextPage = true
-      this.loadTrashContentsPage(nextPage)
+      await this.loadTrashContentsPage(nextPage)
       this.loadingNextPage = false
     },
     async onRestore(trashEntry) {

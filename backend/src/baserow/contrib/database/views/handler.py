@@ -574,7 +574,7 @@ class ViewHandler:
             view_sort.view.table, check_item_also=True
         ):
             raise ViewSortDoesNotExist(
-                f"The view filter with id {view_sort_id} does not exist."
+                f"The view sort with id {view_sort_id} does not exist."
             )
 
         group = view_sort.view.table.database.group

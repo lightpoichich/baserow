@@ -153,6 +153,8 @@ class RowTrashableItemType(TrashableItemType):
         :return: An instance of the model_class with trashed_item_id
         """
 
+        # Cache the expensive table.get_model function call if we are looking up
+        # many trash items at once.
         if trash_item_lookup_cache is not None:
             model_cache = trash_item_lookup_cache.setdefault(
                 "row_table_model_cache", {}

@@ -8,10 +8,8 @@
       </div>
       <div class="alert__title">We need your help!</div>
       <p class="alert__content">
-        Do you like Baserow and where the product is headed? Do you want to see
-        new features sooner? By becoming a sponsor you will allow us to spend
-        more time on the development of Baserow which means you will get new
-        features faster. Your help is much appreciated.
+        If you find Baserow useful then sponsoring, staring or sharing us is
+        greatly appreciated:
       </p>
       <a
         href="https://github.com/sponsors/bram2w"
@@ -20,6 +18,37 @@
       >
         Become a GitHub sponsor
         <i class="fa fa-heart"></i>
+      </a>
+      <a
+        href="https://gitlab.com/bramw/baserow"
+        class="button button--primary dashboard__alert-button"
+      >
+        Star us on Gitlab
+        <i class="fab fa-gitlab"></i>
+      </a>
+      <a
+        :href="
+          'https://twitter.com/intent/tweet?text=' +
+          encodeURI('Check out https://baserow.io!')
+        "
+        class="button button--primary dashboard__alert-button"
+      >
+        <i class="fab fa-twitter"></i>
+      </a>
+      <a
+        :href="
+          'https://www.reddit.com/submit?url=' +
+          encodeURI('https://baserow.io!')
+        "
+        class="button button--primary dashboard__alert-button"
+      >
+        <i class="fab fa-reddit"></i>
+      </a>
+      <a
+        href="https://www.linkedin.com/sharing/share-offsite/?url=https://baserow.io"
+        class="button button--primary dashboard__alert-button"
+      >
+        <i class="fab fa-linkedin"></i>
       </a>
     </div>
     <GroupInvitation

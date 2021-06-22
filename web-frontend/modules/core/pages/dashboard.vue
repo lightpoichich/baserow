@@ -38,9 +38,7 @@
         <i class="fab fa-twitter"></i>
       </a>
       <a
-        :href="
-          'https://www.reddit.com/submit?url=' + encodeURI('https://baserow.io')
-        "
+        href="https://www.reddit.com/submit?url=https://baserow.io"
         class="button button--primary dashboard__alert-button"
       >
         <i class="fab fa-reddit"></i>

@@ -22,17 +22,11 @@ PRINT_WARNING=true
 new_tab() {
   TAB_NAME=$1
   COMMAND=$2
-  NEW_WINDOW=${3:-false}
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     if [ -x "$(command -v gnome-terminal)" ]; then
-      if [ "$NEW_WINDOW" = true ] ; then
-        gnome-terminal \
-        --title="$TAB_NAME" --working-directory="$(pwd)" -- /bin/bash -c "$COMMAND"
-      else
-        gnome-terminal \
-        --tab --title="$TAB_NAME" --working-directory="$(pwd)" -- /bin/bash -c "$COMMAND"
-      fi
+      gnome-terminal \
+      --tab --title="$TAB_NAME" --working-directory="$(pwd)" -- /bin/bash -c "$COMMAND"
     else
       if $PRINT_WARNING; then
           echo -e "\n${YELLOW}./dev.sh WARNING${NC}: gnome-terminal is the only currently supported way of opening
@@ -252,11 +246,6 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
   new_tab "Web frontend" \
           "docker logs web-frontend && docker attach web-frontend"
 
-  new_tab "Backend pytest watch" \
-          "docker exec -it backend /bin/bash /baserow/backend/docker/docker-entrypoint.sh ptw" \
-          true
-
-  new_tab "Backend lint watch" \
-          "docker exec -it backend /bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-watch" \
-          true
+  new_tab "Web frontend lint" \
+          "docker exec -it web-frontend /bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
 fi

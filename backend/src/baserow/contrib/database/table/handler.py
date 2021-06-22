@@ -46,7 +46,7 @@ class TableHandler:
         except Table.DoesNotExist:
             raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 
-        if not TrashHandler.check_all_parents_arent_trashed(table):
+        if TrashHandler.item_has_a_trashed_parent(table):
             raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 
         return table

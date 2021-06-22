@@ -1,7 +1,7 @@
 from django.db import models
 
 
-def _make_trashed_manager(trashed, parent=None):
+def make_trash_manager(trashed, parent=None):
     """
     Constructs a Django Queryset Manager which filters down it's base queryset according
     to the provided parameters.
@@ -31,11 +31,5 @@ def _make_trashed_manager(trashed, parent=None):
     return Manager
 
 
-TrashedManager = _make_trashed_manager(trashed=True)
-NonTrashedManager = _make_trashed_manager(trashed=False)
-GroupParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="group")
-GroupParentTrashedManager = _make_trashed_manager(trashed=True, parent="group")
-FieldParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="field")
-FieldParentTrashedManager = _make_trashed_manager(trashed=True, parent="field")
-TableParentNonTrashedManager = _make_trashed_manager(trashed=False, parent="table")
-TableParentTrashedManager = _make_trashed_manager(trashed=True, parent="table")
+TrashOnlyManager = make_trash_manager(trashed=True)
+NoTrashManager = make_trash_manager(trashed=False)

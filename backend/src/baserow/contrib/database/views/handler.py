@@ -69,9 +69,7 @@ class ViewHandler:
         except View.DoesNotExist:
             raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
 
-        if not TrashHandler.check_all_parents_arent_trashed(
-            view.table, check_item=True
-        ):
+        if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
             raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
 
         return view
@@ -337,8 +335,8 @@ class ViewHandler:
                 f"The view filter with id {view_filter_id} does not exist."
             )
 
-        if not TrashHandler.check_all_parents_arent_trashed(
-            view_filter.view.table, check_item=True
+        if TrashHandler.item_has_a_trashed_parent(
+            view_filter.view.table, check_item_also=True
         ):
             raise ViewFilterDoesNotExist(
                 f"The view filter with id {view_filter_id} does not exist."
@@ -572,8 +570,8 @@ class ViewHandler:
                 f"The view sort with id {view_sort_id} does not exist."
             )
 
-        if not TrashHandler.check_all_parents_arent_trashed(
-            view_sort.view.table, check_item=True
+        if TrashHandler.item_has_a_trashed_parent(
+            view_sort.view.table, check_item_also=True
         ):
             raise ViewSortDoesNotExist(
                 f"The view filter with id {view_sort_id} does not exist."

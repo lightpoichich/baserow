@@ -111,7 +111,7 @@ class TrashHandler:
 
             items_to_restore = trashable_item_type.get_items_to_trash(trash_item)
 
-            if not TrashHandler.check_all_parents_arent_trashed(
+            if TrashHandler.item_has_a_trashed_parent(
                 trash_item,
                 parent_id=trash_entry.parent_trash_item_id,
             ):
@@ -253,31 +253,32 @@ class TrashHandler:
         return trash_contents.order_by("-trashed_at")
 
     @staticmethod
-    def check_all_parents_arent_trashed(item, parent_id=None, check_item=False):
+    def item_has_a_trashed_parent(item, parent_id=None, check_item_also=False):
         """
-        Given an instance of a model which is trashable (item) checks all of it's
-        parents are not trashed. Returns True if all parents are not trashed, False if
-        one is trashed.
+        Given an instance of a model which is trashable (item) checks if it has a parent
+        which is trashed. Returns True if it's parent, or parent's parent (and so on)
+        is trashed, False if no parent is trashed.
 
-        :param check_item: If true also checks if the provided item itself is trashed
-            and returns false if so.
+        :param check_item_also: If true also checks if the provided item itself is
+            trashed and returns True if so.
         :param item: An instance of a trashable model to check.
         :param parent_id: If the trashable type of the provided instance requires an
             id to lookup it's parent it must be provided here.
-        :return: If all of the item's parents are not trashed.
+        :return: If the provided item has a trashed parent or not.
         """
+
         trash_item_type = trash_item_type_registry.get_by_model(item)
 
-        if check_item and item.trashed:
-            return False
+        if check_item_also and item.trashed:
+            return True
 
         while True:
             _check_parent_id_valid(parent_id, trash_item_type)
             parent = trash_item_type.get_parent(item, parent_id)
             if parent is None:
-                return True
-            elif parent.trashed:
                 return False
+            elif parent.trashed:
+                return True
             else:
                 item = parent
                 # Right now only row the lowest item in the "trash hierarchy" requires

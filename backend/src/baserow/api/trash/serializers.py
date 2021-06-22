@@ -8,12 +8,6 @@ from baserow.core.models import TrashEntry, Application
 from baserow.core.trash.registry import trash_item_type_registry
 
 
-class TrashStructureApplicationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Application
-        fields = ("id", "name", "trashed")
-
-
 class TrashEntryRequestSerializer(
     UnknownFieldRaisesExceptionSerializerMixin, serializers.Serializer
 ):
@@ -24,6 +18,12 @@ class TrashEntryRequestSerializer(
     trash_item_type = fields.ChoiceField(
         choices=lazy(trash_item_type_registry.get_types, list)(),
     )
+
+
+class TrashStructureApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Application
+        fields = ("id", "name", "trashed")
 
 
 class TrashStructureGroupSerializer(serializers.Serializer):

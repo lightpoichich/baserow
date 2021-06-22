@@ -5,12 +5,14 @@ ERROR_TRASH_ITEM_DOES_NOT_EXIST = (
     HTTP_404_NOT_FOUND,
     "The requested trash item does not exist.",
 )
+
 ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD = (
     "ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD",
     HTTP_400_BAD_REQUEST,
     "Cannot restore a trashed item if it's parent is also trashed, please restore the "
     "parent first.",
 )
+
 ERROR_PARENT_ID_MUST_BE_PROVIDED = (
     "ERROR_PARENT_ID_MUST_BE_PROVIDED",
     HTTP_400_BAD_REQUEST,

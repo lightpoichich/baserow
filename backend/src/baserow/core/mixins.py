@@ -5,14 +5,9 @@ from django.db.models.fields import NOT_PROVIDED
 from django.utils.functional import cached_property
 
 from baserow.core.managers import (
-    NonTrashedManager,
-    TrashedManager,
-    GroupParentNonTrashedManager,
-    GroupParentTrashedManager,
-    FieldParentNonTrashedManager,
-    FieldParentTrashedManager,
-    TableParentNonTrashedManager,
-    TableParentTrashedManager,
+    make_trash_manager,
+    NoTrashManager,
+    TrashOnlyManager,
 )
 
 
@@ -175,46 +170,33 @@ class CreatedAndUpdatedOnMixin(models.Model):
         abstract = True
 
 
-class ParentGroupTrashableModelMixin(models.Model):
+def make_trashable_mixin(parent):
     """
-    Returns a mixin which overrides the models object's attribute to filter out
-    rows whose parent group is trashed.
-    """
+    Constructs a mixin class which overrides a models managers to ensure trashed entries
+    are not available via objects, but instead via the new trash manager.
 
-    objects = GroupParentNonTrashedManager()
-    trash = GroupParentTrashedManager()
-    objects_and_trash = Manager()
-
-    class Meta:
-        abstract = True
-
-
-class ParentFieldTrashableModelMixin(models.Model):
-    """
-    Returns a mixin which overrides the models object's attribute to filter out
-    rows whose parent field is trashed.
+    :param parent: If specified will use the trashed column in a related model where
+        parent is the name of the FK to the related model.
+    :return: A mixin with overridden managers which correctly filter out trashed rows.
     """
 
-    objects = FieldParentNonTrashedManager()
-    trash = FieldParentTrashedManager()
-    objects_and_trash = Manager()
+    no_trash_manager = make_trash_manager(trashed=False, parent=parent)
+    trash_only_manager = make_trash_manager(trashed=True, parent=parent)
 
-    class Meta:
-        abstract = True
+    class TrashableMixin(models.Model):
+        objects = no_trash_manager()
+        trash = trash_only_manager()
+        objects_and_trash = Manager()
+
+        class Meta:
+            abstract = True
+
+    return TrashableMixin
 
 
-class ParentTableTrashableModelMixin(models.Model):
-    """
-    Returns a mixin which overrides the models object's attribute to filter out
-    rows whose parent table is trashed.
-    """
-
-    objects = TableParentNonTrashedManager()
-    trash = TableParentTrashedManager()
-    objects_and_trash = Manager()
-
-    class Meta:
-        abstract = True
+ParentGroupTrashableModelMixin = make_trashable_mixin("group")
+ParentFieldTrashableModelMixin = make_trashable_mixin("field")
+ParentTableTrashableModelMixin = make_trashable_mixin("table")
 
 
 class TrashableModelMixin(models.Model):
@@ -225,8 +207,8 @@ class TrashableModelMixin(models.Model):
 
     trashed = models.BooleanField(default=False)
 
-    objects = NonTrashedManager()
-    trash = TrashedManager()
+    objects = NoTrashManager()
+    trash = TrashOnlyManager()
     objects_and_trash = Manager()
 
     class Meta:

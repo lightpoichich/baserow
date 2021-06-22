@@ -587,7 +587,7 @@ class CoreHandler:
                 f"The application with id {application_id} does not exist."
             )
 
-        if not TrashHandler.check_all_parents_arent_trashed(application):
+        if TrashHandler.item_has_a_trashed_parent(application):
             raise ApplicationDoesNotExist(
                 f"The application with id {application_id} does not exist."
             )

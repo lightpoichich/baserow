@@ -57,9 +57,7 @@ class FieldHandler:
         except Field.DoesNotExist:
             raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
 
-        if not TrashHandler.check_all_parents_arent_trashed(
-            field.table, check_item=True
-        ):
+        if TrashHandler.item_has_a_trashed_parent(field.table, check_item_also=True):
             raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
 
         return field

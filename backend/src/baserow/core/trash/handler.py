@@ -77,6 +77,9 @@ class TrashHandler:
                 name=trash_item_type.get_name(trash_item),
                 parent_name=parent_name,
                 parent_trash_item_id=parent_id,
+                # If we ever introduce the ability to trash many rows at once this
+                # call will generate a model per row currently, instead a model cache
+                # should be added so generated models can be shared.
                 extra_description=trash_item_type.get_extra_description(
                     trash_item, parent
                 ),

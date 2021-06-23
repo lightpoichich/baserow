@@ -32,11 +32,11 @@
       <a
         v-tooltip="'Tweet about Baserow'"
         :href="
-          'https://twitter.com/intent/tweet?text=' +
+          'https://twitter.com/intent/tweet?url=https://baserow.io' +
+          '&hashtags=opensource,nocode,database,baserow&text=' +
           encodeURI(
             'Check out @baserow an open source no-code database tool and Airtable alternative!'
-          ) +
-          '&url=https://baserow.io&hashtags=opensource,nocode,database,baserow'
+          )
         "
         target="_blank"
         rel="noopener noreferrer"

@@ -397,7 +397,7 @@ class FieldHandler:
         for order, select_option in enumerate(select_options):
             if "instance" in select_option:
                 instance = select_option["instance"]
-                instance.order = select_option["order"]
+                instance.order = order
                 instance.value = select_option["value"]
                 instance.color = select_option["color"]
                 instance.save()
@@ -405,7 +405,7 @@ class FieldHandler:
                 to_create.append(
                     SelectOption(
                         field=field,
-                        order=select_option["order"],
+                        order=order,
                         value=select_option["value"],
                         color=select_option["color"],
                     )

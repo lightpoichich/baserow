@@ -2,7 +2,7 @@
   <div>
     <div class="select-options">
       <div
-        v-for="(item, index) in orderedValues"
+        v-for="(item, index) in value"
         :key="item.id"
         v-sortable="{
           id: item.id,
@@ -60,11 +60,6 @@ export default {
       colorContextSelected: -1,
     }
   },
-  computed: {
-    orderedValues() {
-      return this.value.slice().sort((a, b) => a.order - b.order)
-    },
-  },
   methods: {
     remove(index) {
       this.$refs.colorContext.hide()
@@ -93,13 +88,16 @@ export default {
       this.$emit('input', this.value)
     },
     order(newOrder, oldOrder) {
-      console.log(JSON.stringify(this.value))
+      const idToOrder = {}
       this.value.forEach((option) => {
         const index = newOrder.findIndex((value) => value === option.id)
-        option.order = index === -1 ? 0 : index + 1
+        idToOrder[option.id] = index === -1 ? 0 : index + 1
       })
-      console.log(JSON.stringify(this.value))
-      this.$emit('input', this.value)
+      const sortedValue = this.value
+        .slice()
+        .sort((a, b) => idToOrder[a.id] - idToOrder[b.id])
+
+      this.$emit('input', sortedValue)
     },
   },
   validations: {

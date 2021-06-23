@@ -34,8 +34,9 @@
         :href="
           'https://twitter.com/intent/tweet?text=' +
           encodeURI(
-            'Check out @baserow (https://baserow.io) an #opensource #nocode #database tool and #airtable alternative!'
-          )
+            'Check out @baserow an open source nocode database tool and airtable alternative!'
+          ) +
+          '&url=https://baserow.io&hashtags=opensource,nocode,database,baserow'
         "
         target="_blank"
         rel="noopener noreferrer"

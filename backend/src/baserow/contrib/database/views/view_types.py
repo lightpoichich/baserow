@@ -98,6 +98,8 @@ class GridViewType(ViewType):
 class FormViewType(ViewType):
     type = "form"
     model_class = FormView
+    can_filter = False
+    can_sort = False
     field_options_model_class = FormViewFieldOptions
     field_options_serializer_class = FormViewFieldOptionsSerializer
     allowed_fields = [

@@ -240,7 +240,6 @@ class ViewHandler:
         allowed_field_ids = [field.id for field in fields]
         for field_id, options in field_options.items():
             if int(field_id) not in allowed_field_ids:
-                print("going to raise error")
                 raise UnrelatedFieldError(
                     f"The field id {field_id} is not related to the view."
                 )

@@ -4,7 +4,13 @@ from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import View, GridView, ViewFilter, ViewSort
+from baserow.contrib.database.views.models import (
+    View,
+    GridView,
+    FormView,
+    ViewFilter,
+    ViewSort,
+)
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
@@ -65,7 +71,7 @@ def test_get_view(data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_created.send")
-def test_create_view(send_mock, data_fixture):
+def test_create_grid_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -136,7 +142,7 @@ def test_create_view(send_mock, data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_updated.send")
-def test_update_view(send_mock, data_fixture):
+def test_update_grid_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -166,6 +172,162 @@ def test_update_view(send_mock, data_fixture):
     grid.refresh_from_db()
     assert grid.filter_type == "OR"
     assert grid.filters_disabled
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_deleted.send")
+def test_delete_grid_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.delete_view(user=user_2, view=grid)
+
+    with pytest.raises(ValueError):
+        handler.delete_view(user=user_2, view=object())
+
+    view_id = grid.id
+
+    assert View.objects.all().count() == 1
+    handler.delete_view(user=user, view=grid)
+    assert View.objects.all().count() == 0
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view_id"] == view_id
+    assert send_mock.call_args[1]["view"].id == view_id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_created.send")
+def test_create_form_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_file_1 = data_fixture.create_user_file()
+    user_file_2 = data_fixture.create_user_file()
+    table = data_fixture.create_database_table(user=user)
+
+    handler = ViewHandler()
+    view = handler.create_view(user=user, table=table, type_name="form", name="Form")
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view"].id == view.id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+    assert View.objects.all().count() == 1
+    assert FormView.objects.all().count() == 1
+
+    form = FormView.objects.all().first()
+    assert form.name == "Form"
+    assert form.order == 1
+    assert form.table == table
+    assert form.public is False
+    assert form.password == ""
+    assert form.title == ""
+    assert form.description == ""
+    assert form.cover_image is None
+    assert form.logo_image is None
+    assert form.submit_action == "MESSAGE"
+    assert form.submit_action_redirect_url == ""
+    assert form.submit_email_confirmation == ""
+
+    form = handler.create_view(
+        user=user,
+        table=table,
+        type_name="form",
+        name="Form 2",
+        public=True,
+        password="test",
+        title="Test form",
+        description="Test form description",
+        cover_image=user_file_1,
+        logo_image=user_file_2,
+        submit_action="REDIRECT",
+        submit_action_redirect_url="https://localhost",
+        submit_email_confirmation="bram@test.nl",
+    )
+
+    assert View.objects.all().count() == 2
+    assert FormView.objects.all().count() == 2
+    assert form.name == "Form 2"
+    assert form.order == 2
+    assert form.table == table
+    assert form.public is True
+    assert form.password == "test"
+    assert form.title == "Test form"
+    assert form.description == "Test form description"
+    assert form.cover_image_id == user_file_1.id
+    assert form.logo_image_id == user_file_2.id
+    assert form.submit_action == "REDIRECT"
+    assert form.submit_action_redirect_url == "https://localhost"
+    assert form.submit_email_confirmation == "bram@test.nl"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_updated.send")
+def test_update_form_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(table=table)
+    user_file_1 = data_fixture.create_user_file()
+    user_file_2 = data_fixture.create_user_file()
+
+    handler = ViewHandler()
+    view = handler.update_view(
+        user=user,
+        view=form,
+        name="Form 2",
+        public=True,
+        password="test",
+        title="Test form",
+        description="Test form description",
+        cover_image=user_file_1,
+        logo_image=user_file_2,
+        submit_action="REDIRECT",
+        submit_action_redirect_url="https://localhost",
+        submit_email_confirmation="bram@test.nl",
+    )
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view"].id == view.id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+    form.refresh_from_db()
+    assert form.name == "Form 2"
+    assert form.table == table
+    assert form.public is True
+    assert form.password == "test"
+    assert form.title == "Test form"
+    assert form.description == "Test form description"
+    assert form.cover_image_id == user_file_1.id
+    assert form.logo_image_id == user_file_2.id
+    assert form.submit_action == "REDIRECT"
+    assert form.submit_action_redirect_url == "https://localhost"
+    assert form.submit_email_confirmation == "bram@test.nl"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_deleted.send")
+def test_delete_form_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(table=table)
+    form = data_fixture.create_form_view(table=table)
+
+    handler = ViewHandler()
+    view_id = form.id
+
+    assert View.objects.all().count() == 1
+    handler.delete_view(user=user, view=form)
+    assert View.objects.all().count() == 0
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view_id"] == view_id
+    assert send_mock.call_args[1]["view"].id == view_id
+    assert send_mock.call_args[1]["user"].id == user.id
 
 
 @pytest.mark.django_db
@@ -214,34 +376,6 @@ def test_order_views(send_mock, data_fixture):
     assert grid_1.order == 1
     assert grid_2.order == 0
     assert grid_3.order == 0
-
-
-@pytest.mark.django_db
-@patch("baserow.contrib.database.views.signals.view_deleted.send")
-def test_delete_view(send_mock, data_fixture):
-    user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    grid = data_fixture.create_grid_view(table=table)
-
-    handler = ViewHandler()
-
-    with pytest.raises(UserNotInGroup):
-        handler.delete_view(user=user_2, view=grid)
-
-    with pytest.raises(ValueError):
-        handler.delete_view(user=user_2, view=object())
-
-    view_id = grid.id
-
-    assert View.objects.all().count() == 1
-    handler.delete_view(user=user, view=grid)
-    assert View.objects.all().count() == 0
-
-    send_mock.assert_called_once()
-    assert send_mock.call_args[1]["view_id"] == view_id
-    assert send_mock.call_args[1]["view"].id == view_id
-    assert send_mock.call_args[1]["user"].id == user.id
 
 
 @pytest.mark.django_db

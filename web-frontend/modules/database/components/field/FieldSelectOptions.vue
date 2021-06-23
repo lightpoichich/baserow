@@ -8,7 +8,7 @@
           id: item.id,
           update: order,
         }"
-        :class="['select-options__item']"
+        class="select-options__item"
       >
         <a
           :ref="'color-select-' + index"
@@ -88,14 +88,11 @@ export default {
       this.$emit('input', this.value)
     },
     order(newOrder, oldOrder) {
-      const idToOrder = {}
       this.value.forEach((option) => {
         const index = newOrder.findIndex((value) => value === option.id)
-        idToOrder[option.id] = index === -1 ? 0 : index + 1
+        option.order = index === -1 ? 0 : index + 1
       })
-      const sortedValue = this.value
-        .slice()
-        .sort((a, b) => idToOrder[a.id] - idToOrder[b.id])
+      const sortedValue = this.value.slice().sort((a, b) => a.order - b.order)
 
       this.$emit('input', sortedValue)
     },

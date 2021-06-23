@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from baserow.api.user_files.serializers import UserFileField
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
@@ -126,3 +127,7 @@ class FormViewType(ViewType):
         "submit_action_redirect_url",
         "submit_email_confirmation",
     ]
+    serializer_field_overrides = {
+        "cover_image": UserFileField(allow_null=True, required=False),
+        "logo_image": UserFileField(allow_null=True, required=False),
+    }

@@ -3,6 +3,8 @@
 ## Unreleased
 
 * Made it possible to list table field meta-data with a token.
+* The email field's validation is now consistent and only accepts standard email 
+  addresses.
 
 ## Released (2021-06-02)
 

@@ -63,10 +63,15 @@ class CharFieldMatchingRegexFieldType(FieldType, ABC):
     """
     This is an abstract FieldType you can extend to create a field which is a CharField
     but restricted to only allow values passing a regex. Please implement the regex,
-    max_length and random_value properties. After which this abstract class will handle
-    all the various places that this regex needs to be used (the model field,
-    the serializer field, the prepare_value_for_db logic and finally the alter column
-    field conversion sql.
+    max_length and random_value properties.
+
+    This abstract class will then handle all the various places that this regex needs to
+    be used:
+        - by setting the char field's validator
+        - by setting the serializer field's validator
+        - checking values passed to prepare_value_for_db pass the regex
+        - by checking and only converting column values which match the regex when
+          altering a column to being an email type.
     """
 
     @property

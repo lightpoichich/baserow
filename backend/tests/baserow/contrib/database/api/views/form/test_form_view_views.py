@@ -68,7 +68,7 @@ def test_create_form_view(api_client, data_fixture):
             "logo_image": {"name": user_file_2.name},
             "submit_action": "REDIRECT",
             "submit_action_redirect_url": "https://localhost",
-            "submit_email_confirmation": "bram@test.nl"
+            "submit_email_confirmation": "bram@test.nl",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -124,7 +124,7 @@ def test_update_form_view(api_client, data_fixture):
             "logo_image": {"name": user_file_2.name},
             "submit_action": "REDIRECT",
             "submit_action_redirect_url": "https://localhost",
-            "submit_email_confirmation": "bram@test.nl"
+            "submit_email_confirmation": "bram@test.nl",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",

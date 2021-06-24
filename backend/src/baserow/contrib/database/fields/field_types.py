@@ -60,6 +60,15 @@ from .registries import FieldType, field_type_registry
 
 
 class CharFieldMatchingRegexFieldType(FieldType, ABC):
+    """
+    This is an abstract FieldType you can extend to create a field which is a CharField
+    but restricted to only allow values passing a regex. Please implement the regex,
+    max_length and random_value properties. After which this abstract class will handle
+    all the various places that this regex needs to be used (the model field,
+    the serializer field, the prepare_value_for_db logic and finally the alter column
+    field conversion sql.
+    """
+
     @property
     @abstractmethod
     def regex(self):

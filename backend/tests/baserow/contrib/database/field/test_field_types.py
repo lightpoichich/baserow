@@ -5,7 +5,9 @@ from faker import Faker
 
 from django.core.exceptions import ValidationError
 
-from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
+from baserow.contrib.database.fields.field_types import (
+    PhoneNumberFieldType,
+)
 from baserow.contrib.database.fields.models import (
     LongTextField,
     URLField,

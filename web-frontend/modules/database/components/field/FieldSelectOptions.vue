@@ -8,6 +8,7 @@
           id: item.id,
           update: order,
           handle: '[data-sortable-handle]',
+          marginTop: -3,
         }"
         class="select-options__item"
       >

@@ -7,9 +7,11 @@
         v-sortable="{
           id: item.id,
           update: order,
+          handle: '[data-sortable-handle]',
         }"
         class="select-options__item"
       >
+        <div class="select-options__drag-handle" data-sortable-handle></div>
         <a
           :ref="'color-select-' + index"
           :class="'select-options__color' + ' background-color--' + item.color"
@@ -88,12 +90,13 @@ export default {
       this.$emit('input', this.value)
     },
     order(newOrder, oldOrder) {
-      this.value.forEach((option) => {
-        const index = newOrder.findIndex((value) => value === option.id)
-        option.order = index === -1 ? 0 : index + 1
-      })
-      const sortedValue = this.value.slice().sort((a, b) => a.order - b.order)
-
+      const sortedValue = this.value
+        .slice()
+        .sort(
+          (a, b) =>
+            newOrder.findIndex((id) => id === a.id) -
+            newOrder.findIndex((id) => id === b.id)
+        )
       this.$emit('input', sortedValue)
     },
   },

@@ -223,6 +223,17 @@ def test_email_field_type(data_fixture):
             user=user, table=table, values={"email": "invalid@email"}, model=model
         )
 
+    with pytest.raises(ValidationError):
+        too_long_email = "test@" + "a" * 246 + ".com"
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={
+                "email": too_long_email,
+            },
+            model=model,
+        )
+
     row_handler.create_row(
         user=user,
         table=table,
@@ -265,6 +276,14 @@ def test_email_field_type(data_fixture):
         },
         model=model,
     )
+    row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            "email": "test@" + "a" * 245 + ".com",
+        },
+        model=model,
+    )
     row_handler.create_row(user=user, table=table, values={}, model=model)
 
     # Convert the text field to a url field so we can check how the conversion of
@@ -300,8 +319,12 @@ def test_email_field_type(data_fixture):
     assert rows[5].number == ""
 
     assert rows[6].name == ""
-    assert rows[6].email == ""
+    assert len(rows[6].email) == 254
     assert rows[6].number == ""
+
+    assert rows[7].name == ""
+    assert rows[7].email == ""
+    assert rows[7].number == ""
 
     field_handler.delete_field(user=user, field=field_2)
     assert len(EmailField.objects.all()) == 2

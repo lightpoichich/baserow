@@ -359,6 +359,17 @@ class RowView(APIView):
                 type=OpenApiTypes.INT,
                 description="Returns the row related the provided value.",
             ),
+            OpenApiParameter(
+                name="attribute_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description=(
+                    "When set to true the field names returned by this endpoint will "
+                    "be the names set by the user and not the internal field_XX names "
+                    ". Duplicate names will be postfixed with an _1, _2 etc for each"
+                    "duplicate in turn."
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="get_database_table_row",
@@ -399,7 +410,8 @@ class RowView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "read", table, False)
 
-        model = table.get_model()
+        attribute_names = request.GET.get("attribute_names", False)
+        model = table.get_model(attribute_names=attribute_names)
         row = RowHandler().get_row(request.user, table, row_id, model)
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True

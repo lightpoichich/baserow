@@ -1122,16 +1122,16 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     data_fixture.create_boolean_field(name="Name", table=table)
 
     model = table.get_model(attribute_names=True)
-    model.objects.create(
+    row_1 = model.objects.create(
         **{
             "name_1": "name 1",
             "price": 2,
             "name_2": False,
         }
     )
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
-        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {"attribute_names": True},
+        f"{url}?attribute_names=True",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -1146,3 +1146,21 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "order": "1.00000000000000000000",
         }
     ]
+
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.get(
+        f"{url}?attribute_names=True",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "id": 1,
+        "name_1": "name 1",
+        "name_2": False,
+        "order": "1.00000000000000000000",
+        "price": "2",
+    }

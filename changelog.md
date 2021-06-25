@@ -3,8 +3,8 @@
 ## Unreleased
 
 * Made it possible to list table field meta-data with a token.
-* The email field's validation is now consistent and only accepts standard email 
-  addresses.
+* The email field's validation is now consistent and much more permissive allowing most 
+  values which look like email addresses.
 * Fix the create group invite endpoint failing when no message provided.
 * Single select options can now be ordered by drag and drop. 
 

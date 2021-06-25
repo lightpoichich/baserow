@@ -3,7 +3,7 @@
 ## Unreleased
 
 * Made it possible to list table field meta-data with a token.
-* Fix create invite endpoint failing if no message is supplied.
+* Fix create group invite endpoint failing if no message was supplied.
 
 ## Released (2021-06-02)
 

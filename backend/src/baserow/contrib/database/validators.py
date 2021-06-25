@@ -1,8 +1,8 @@
+import regex
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 from django.utils.functional import SimpleLazyObject
-from django.utils.translation import gettext_lazy as _, ngettext_lazy
-import regex
+from django.utils.translation import gettext_lazy as _
 
 
 def _lazy_re_compile(regex_value, flags=0):

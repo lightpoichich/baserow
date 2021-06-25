@@ -9,7 +9,7 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.core.validators import URLValidator, RegexValidator
+from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL

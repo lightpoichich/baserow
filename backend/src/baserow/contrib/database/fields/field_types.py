@@ -976,8 +976,8 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
         lookahead = rf"(?=^.{{3,{self.max_length}}}$)"
         # See wikipedia for allowed punctuation etc:
         # https://en.wikipedia.org/wiki/Email_address#Local-part
-        matcher = r"[-\.\[\]!#$&*+/=?^_`{|}~\w]+"
-        return rf"(?i){lookahead}^{matcher}@{matcher}$"
+        local_and_domain = r"[-\.\[\]!#$&*+/=?^_`{|}~\w]+"
+        return rf"(?i){lookahead}^{local_and_domain}@{local_and_domain}$"
 
     @property
     def max_length(self):

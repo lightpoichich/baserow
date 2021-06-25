@@ -55,7 +55,22 @@ export const isValidEmail = (str) => {
   // Instead we match all unicode letters including ones with modifiers by using the
   // regex \p{L}\p{M}* taken from https://www.regular-expressions.info/unicode.html
   // Unicode Categories section.
-  const pattern = /(?=^.{3,254}$)^(\p{L}\p{M}*|[-.[\]!#$&*+/=?^_`{|}~0-9])+@(\p{L}\p{M}*|[-.[\]!#$&*+/=?^_`{|}~0-9])+$/iu
+  const lookahead = /(?=^.{3,254}$)/
+  // The regex property escapes below are supported as of ES 2018.
+  const localAndDomain = /(\p{L}\p{M}*|[-.[\]!#$&*+/=?^_`{|}~0-9])+/
+  const start = /^/
+  const at = /@/
+  const end = /$/
+  const pattern = new RegExp(
+    lookahead.source +
+      start.source +
+      localAndDomain.source +
+      at.source +
+      localAndDomain.source +
+      end.source,
+    'iu'
+  )
+
   return !!pattern.test(str)
 }
 

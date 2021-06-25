@@ -52,6 +52,8 @@ describe('test string utils', () => {
   test('test isValidEmail', () => {
     const invalidEmails = [
       'test@' + 'a'.repeat(246) + '.com',
+      '@a',
+      'a@',
       'not-an-email',
       'bram.test.nl',
       'invalid_email',
@@ -62,6 +64,7 @@ describe('test string utils', () => {
 
     const validEmails = [
       'test@' + 'a'.repeat(245) + '.com',
+      'a@a',
       '用户@例子.广告',
       'अजय@डाटा.भारत',
       'квіточка@пошта.укр',
@@ -77,7 +80,6 @@ describe('test string utils', () => {
     ]
 
     for (const invalidEmail of invalidEmails) {
-      console.log(invalidEmail)
       expect(isValidEmail(invalidEmail)).toBe(false)
     }
     for (const validEmail of validEmails) {

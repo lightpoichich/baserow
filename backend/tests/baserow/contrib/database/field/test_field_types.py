@@ -206,6 +206,8 @@ def test_valid_email(data_fixture):
 
     invalid_emails = [
         "test@" + "a" * 246 + ".com",
+        "@a",
+        "a@",
         "not-an-email",
         "bram.test.nl",
         "invalid_email",
@@ -223,6 +225,7 @@ def test_valid_email(data_fixture):
 
     valid_emails = [
         "test@" + "a" * 245 + ".com",
+        "a@a",
         "用户@例子.广告",
         "अजय@डाटा.भारत",
         "квіточка@пошта.укр",

@@ -205,8 +205,10 @@ def test_valid_email(data_fixture):
     model = table.get_model(attribute_names=True)
 
     invalid_emails = [
-        "invalid_email",
         "test@" + "a" * 246 + ".com",
+        "not-an-email",
+        "bram.test.nl",
+        "invalid_email",
         "invalid@invalid@com",
         "\nhello@gmail.com",
         "asdds asdd@gmail.com",
@@ -228,8 +230,11 @@ def test_valid_email(data_fixture):
         "Dörte@Sörensen.example.com",
         "коля@пример.рф",
         "bram@localhost",
+        "bram@localhost.nl",
         "first_part_underscores_ok@hyphens-ok.com",
         "wierd@[1.1.1.1]",
+        "bram.test.test@sub.domain.nl",
+        "BRAM.test.test@sub.DOMAIN.nl",
     ]
     for email in valid_emails:
         row_handler.create_row(

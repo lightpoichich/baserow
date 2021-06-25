@@ -210,15 +210,14 @@ def test_valid_email(data_fixture):
         "invalid@invalid@com",
         "\nhello@gmail.com",
         "asdds asdd@gmail.com",
-        "however@underscores_cant_be_in_domains.com",
     ]
 
-    # for invalid_email in invalid_emails:
-    #     with pytest.raises(ValidationError):
-    #         print(invalid_email)
-    #         row_handler.create_row(
-    #             user=user, table=table, values={"email": invalid_email}, model=model
-    #         )
+    for invalid_email in invalid_emails:
+        with pytest.raises(ValidationError):
+            print(invalid_email)
+            row_handler.create_row(
+                user=user, table=table, values={"email": invalid_email}, model=model
+            )
 
     valid_emails = [
         "test@" + "a" * 245 + ".com",

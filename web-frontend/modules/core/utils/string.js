@@ -51,7 +51,11 @@ export const isValidURL = (str) => {
 export const isValidEmail = (str) => {
   // Please keep these regex in sync with the backend
   // See baserow.contrib.database.fields.field_types.EmailFieldType
-  const pattern = /(?=^.{3,254}$)^(\p{L}\p{M}*|[+.-_])+@(\p{L}\p{M}*|[+.-_])+$/iu
+  // Javascript does not support using \w to match unicode letters like python.
+  // Instead we match all unicode letters including ones with modifiers by using the
+  // regex \p{L}\p{M}* taken from https://www.regular-expressions.info/unicode.html
+  // Unicode Categories section.
+  const pattern = /(?=^.{3,254}$)^(\p{L}\p{M}*|[-.[\]!#$&*+/=?^_`{|}~0-9])+@(\p{L}\p{M}*|[-.[\]!#$&*+/=?^_`{|}~0-9])+$/iu
   return !!pattern.test(str)
 }
 

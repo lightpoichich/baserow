@@ -1,20 +1,18 @@
 import pytest
-
+from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 from faker import Faker
-
-from django.core.exceptions import ValidationError
 
 from baserow.contrib.database.fields.field_types import (
     PhoneNumberFieldType,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     LongTextField,
     URLField,
     EmailField,
     PhoneNumberField,
 )
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 
@@ -194,6 +192,78 @@ def test_url_field_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_valid_email(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_database_table(user=user, database=table.database)
+    field = data_fixture.create_text_field(table=table, order=1, name="name")
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    field_handler.create_field(user=user, table=table, type_name="email", name="email")
+
+    model = table.get_model(attribute_names=True)
+
+    invalid_emails = [
+        "invalid_email",
+        "test@" + "a" * 246 + ".com",
+        "invalid@invalid@com",
+        "\nhello@gmail.com",
+        "asdds asdd@gmail.com",
+        "however@underscores_cant_be_in_domains.com",
+    ]
+
+    # for invalid_email in invalid_emails:
+    #     with pytest.raises(ValidationError):
+    #         print(invalid_email)
+    #         row_handler.create_row(
+    #             user=user, table=table, values={"email": invalid_email}, model=model
+    #         )
+
+    valid_emails = [
+        "test@" + "a" * 245 + ".com",
+        "用户@例子.广告",
+        "अजय@डाटा.भारत",
+        "квіточка@пошта.укр",
+        "χρήστης@παράδειγμα.ελ",
+        "Dörte@Sörensen.example.com",
+        "коля@пример.рф",
+        "bram@localhost",
+        "first_part_underscores_ok@hyphens-ok.com",
+        "wierd@[1.1.1.1]",
+    ]
+    for email in valid_emails:
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={"email": email, "name": email},
+            model=model,
+        )
+    for bad_email in invalid_emails:
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={"email": "", "name": bad_email},
+            model=model,
+        )
+
+    # Convert the text field to a email field so we can check how the conversion of
+    # values went.
+    field_handler.update_field(user=user, field=field, new_type_name="email")
+    rows = model.objects.all()
+    i = 0
+    for email in valid_emails:
+        assert rows[i].email == email
+        assert rows[i].name == email
+        i += 1
+
+    for _ in invalid_emails:
+        assert rows[i].email == ""
+        assert rows[i].name == ""
+        i += 1
+
+
+@pytest.mark.django_db
 def test_email_field_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -212,27 +282,6 @@ def test_email_field_type(data_fixture):
 
     assert len(EmailField.objects.all()) == 1
     model = table.get_model(attribute_names=True)
-
-    with pytest.raises(ValidationError):
-        row_handler.create_row(
-            user=user, table=table, values={"email": "invalid_email"}, model=model
-        )
-
-    with pytest.raises(ValidationError):
-        row_handler.create_row(
-            user=user, table=table, values={"email": "invalid@email"}, model=model
-        )
-
-    with pytest.raises(ValidationError):
-        too_long_email = "test@" + "a" * 246 + ".com"
-        row_handler.create_row(
-            user=user,
-            table=table,
-            values={
-                "email": too_long_email,
-            },
-            model=model,
-        )
 
     row_handler.create_row(
         user=user,
@@ -276,15 +325,6 @@ def test_email_field_type(data_fixture):
         },
         model=model,
     )
-    row_handler.create_row(
-        user=user,
-        table=table,
-        values={
-            "email": "test@" + "a" * 245 + ".com",
-        },
-        model=model,
-    )
-    row_handler.create_row(user=user, table=table, values={}, model=model)
 
     # Convert the text field to a url field so we can check how the conversion of
     # values went.
@@ -317,14 +357,6 @@ def test_email_field_type(data_fixture):
     assert rows[5].name == ""
     assert rows[5].email == ""
     assert rows[5].number == ""
-
-    assert rows[6].name == ""
-    assert len(rows[6].email) == 254
-    assert rows[6].number == ""
-
-    assert rows[7].name == ""
-    assert rows[7].email == ""
-    assert rows[7].number == ""
 
     field_handler.delete_field(user=user, field=field_2)
     assert len(EmailField.objects.all()) == 2

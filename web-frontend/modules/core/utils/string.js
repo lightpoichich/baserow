@@ -51,7 +51,7 @@ export const isValidURL = (str) => {
 export const isValidEmail = (str) => {
   // Please keep these regex in sync with the backend
   // See baserow.contrib.database.fields.field_types.EmailFieldType
-  const pattern = /(?=^.{6,254}$)[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
+  const pattern = /(?=^.{3,254}$)^(\p{L}\p{M}*|[+.-_])+@(\p{L}\p{M}*|[+.-_])+$/iu
   return !!pattern.test(str)
 }
 

@@ -78,14 +78,15 @@ class PostgresqlLenientDatabaseSchemaEditor:
 
             quoted_column_name = self.quote_name(new_field.column)
             self.execute(self.sql_drop_try_cast)
+            value_ = self.sql_create_try_cast % {
+                "column": quoted_column_name,
+                "type": new_type,
+                "alter_column_prepare_old_value": alter_column_prepare_old_value,
+                "alter_column_prepare_new_value": alter_column_prepare_new_value,
+            }
+            print(value_)
             self.execute(
-                self.sql_create_try_cast
-                % {
-                    "column": quoted_column_name,
-                    "type": new_type,
-                    "alter_column_prepare_old_value": alter_column_prepare_old_value,
-                    "alter_column_prepare_new_value": alter_column_prepare_new_value,
-                },
+                value_,
                 variables,
             )
 

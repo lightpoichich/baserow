@@ -57,6 +57,7 @@ from .models import (
     PhoneNumberField,
 )
 from .registries import FieldType, field_type_registry
+from ..validators import UnicodeRegexValidator
 
 
 class CharFieldMatchingRegexFieldType(FieldType, ABC):
@@ -86,7 +87,7 @@ class CharFieldMatchingRegexFieldType(FieldType, ABC):
 
     @property
     def validator(self):
-        return RegexValidator(regex=self.regex)
+        return UnicodeRegexValidator(regex_value=self.regex)
 
     def prepare_value_for_db(self, instance, value):
         if value == "" or value is None:
@@ -967,8 +968,20 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
     def regex(self):
         # Use a lookahead to validate entire string length does exceed max length
         # as we are matching multiple different tokens in the following regex.
-        lookahead_length_validator = rf"(?i)(?=^.{{6,{self.max_length}}}$)"
-        return lookahead_length_validator + rf"[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{{2,}}"
+        lookahead = rf"(?=^.{{3,{self.max_length}}}$)"
+        # Match all unicode letters including ones with modifiers
+        # See https://www.regular-expressions.info/unicode.html Unicode Categories
+        # section.
+        unicode_letter_matcher = r"\w"
+        # See wikipedia for allowed punctuation etc:
+        # https://en.wikipedia.org/wiki/Email_address#Local-part
+        # local_punctuation = r"[!#$%&\'*+-/=?^_`{|}~0-9]"
+        local_punctuation = r"[0-9_a-zA-Z]"
+        local_matcher = rf"({unicode_letter_matcher}|{local_punctuation})+"
+        # domain_punctuation = r"[-\.\[\]0-9]"
+        domain_punctuation = r"[0-9_a-zA-Z]"
+        domain_matcher = rf"({unicode_letter_matcher}|{domain_punctuation})+"
+        return rf"(?i){lookahead}^{local_matcher}@{domain_matcher}$"
 
     @property
     def max_length(self):

@@ -3,7 +3,7 @@
 ## Unreleased
 
 * Made it possible to list table field meta-data with a token.
-* Fix create group invite endpoint failing if no message was supplied.
+* Fix the create group invite endpoint failing when no message provided.
 * Single select options can now be ordered by drag and drop. 
 
 ## Released (2021-06-02)

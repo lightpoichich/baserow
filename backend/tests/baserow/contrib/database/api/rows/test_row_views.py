@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import pytest
-
+from django.shortcuts import reverse
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -9,11 +9,9 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
-
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.tokens.handler import TokenHandler
 
 
 @pytest.mark.django_db
@@ -1111,3 +1109,40 @@ def test_delete_row(api_client, data_fixture):
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"Token {token.key}")
     assert response.status_code == 204
     assert model.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_list_rows_with_attribute_names(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(name="Name", table=table, primary=True)
+    data_fixture.create_number_field(name="Price", table=table)
+    data_fixture.create_boolean_field(name="Name", table=table)
+
+    model = table.get_model(attribute_names=True)
+    model.objects.create(
+        **{
+            "name_1": "name 1",
+            "price": 2,
+            "name_2": False,
+        }
+    )
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {"attribute_names": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            "name_1": "name 1",
+            "price": "2",
+            "name_2": False,
+            "id": 1,
+            "order": "1.00000000000000000000",
+        }
+    ]

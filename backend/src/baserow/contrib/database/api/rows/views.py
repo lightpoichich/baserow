@@ -153,6 +153,17 @@ class RowsView(APIView):
                     "response."
                 ),
             ),
+            OpenApiParameter(
+                name="attribute_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description=(
+                    "When set to true the field names returned by this endpoint will "
+                    "be the names set by the user and not the internal field_XX names "
+                    ". Duplicate names will be postfixed with an _1, _2 etc for each"
+                    "duplicate in turn."
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="list_database_table_rows",
@@ -213,9 +224,14 @@ class RowsView(APIView):
         order_by = request.GET.get("order_by")
         include = request.GET.get("include")
         exclude = request.GET.get("exclude")
+        attribute_names = request.GET.get("attribute_names", False)
         fields = RowHandler().get_include_exclude_fields(table, include, exclude)
 
-        model = table.get_model(fields=fields, field_ids=[] if fields else None)
+        model = table.get_model(
+            fields=fields,
+            field_ids=[] if fields else None,
+            attribute_names=attribute_names,
+        )
         queryset = model.objects.all().enhance_by_fields()
 
         if search:

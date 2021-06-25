@@ -123,8 +123,8 @@ def test_get_table_model(data_fixture):
     model = table.get_model(attribute_names=True)
     field_names = [f.name for f in model._meta.get_fields()]
     assert len(field_names) == 5 + default_model_fields_count
-    assert f"{text_field.model_attribute_name}_field_{text_field.id}" in field_names
-    assert f"{text_field_2.model_attribute_name}_field_{text_field.id}" in field_names
+    assert f"{text_field.model_attribute_name}_1" in field_names
+    assert f"{text_field_2.model_attribute_name}_2" in field_names
 
     # Test if the fields are also returns if requested.
     model = table.get_model()

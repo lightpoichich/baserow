@@ -57,7 +57,7 @@ export const isValidEmail = (str) => {
   // Unicode Categories section.
   const lookahead = /(?=^.{3,254}$)/
   // The regex property escapes below are supported as of ES 2018.
-  const localAndDomain = /(\p{L}\p{M}*|[-.[\]!#$&*+/=?^_`{|}~0-9])+/
+  const localAndDomain = /([-.[\]!#$&*+/=?^_`{|}~0-9]|\p{L}\p{M}*)+/
   const start = /^/
   const at = /@/
   const end = /$/

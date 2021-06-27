@@ -1,0 +1,389 @@
+//.form-view {
+//
+//}
+
+.form-view__sidebar {
+  @include absolute(0, auto, 0, 0);
+
+  width: 300px;
+  overflow: auto;
+}
+
+.form-view__fields {
+  padding: 30px;
+}
+
+.form-view__fields-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-view__fields-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.form-view__fields-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: inline;
+
+    &:not(:last-child) {
+      margin-right: 12px;
+    }
+  }
+}
+
+.form-view__fields-description {
+  font-size: 13px;
+  color: $color-primary-900;
+  margin: 18px 0;
+}
+
+.form-view__fields-list {
+  margin: 18px 0;
+}
+
+.form-view__fields-item {
+  position: relative;
+  display: flex;
+  border: solid 1px $color-neutral-300;
+  border-radius: 3px;
+  background-color: $white;
+  padding: 0 30px 0 12px;
+
+  &:not(:last-child) {
+    margin-bottom: 12px;
+  }
+
+  &:hover {
+    text-decoration: none;
+
+    &::after {
+      @extend .fas;
+
+      content: fa-content($fa-var-arrow-right);
+      width: 24px;
+      line-height: 14px;
+      text-align: center;
+      color: $color-primary-900;
+      margin-top: -7px;
+
+      @include absolute(50%, 0, auto, auto);
+    }
+  }
+}
+
+.form-view__fields-icon {
+  flex: 0 0 20px;
+  line-height: 36px;
+  font-size: 13px;
+  color: $color-neutral-700;
+}
+
+.form-view__fields-name {
+  @extend %ellipsis;
+
+  width: 100%;
+  line-height: 36px;
+  font-size: 13px;
+  color: $color-primary-900;
+}
+
+.form-view__preview {
+  @include absolute(0, 0, 0, 300px);
+
+  overflow: auto;
+  padding: 30px 30px 0 30px;
+}
+
+.form-view__page {
+  min-height: 100%;
+  background-color: $white;
+  overflow: hidden;
+
+  &.form-view__page--rounded {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+}
+
+.form-view__file {
+  display: inline-block;
+  line-height: 48px;
+  padding: 0 40px;
+  background-color: $color-neutral-100;
+  border: 2px dashed $color-neutral-300;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 12px;
+  color: $color-neutral-600;
+
+  &:hover {
+    text-decoration: none;
+    background-color: darken($color-neutral-100, 2%);
+  }
+}
+
+.form-view__edit {
+  font-size: 14px;
+  line-height: 14px;
+  color: $color-neutral-500;
+  padding-left: 8px;
+
+  &:hover {
+    color: $color-primary-900;
+  }
+
+  &::after {
+    @extend .fas;
+
+    content: fa-content($fa-var-pencil-alt);
+  }
+}
+
+.form-view__cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: $color-neutral-200;
+}
+
+.form-view__body {
+  padding: 20px;
+  max-width: 100%;
+  width: 680px;
+  margin: 0 auto;
+}
+
+.form-view__heading {
+  padding: 20px 20px 10px 20px;
+}
+
+.form_view__logo {
+  margin-bottom: 40px;
+}
+
+.form_view__logo-img {
+  display: block;
+  max-width: 180px;
+}
+
+.form-view__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.form-view__description {
+  font-size: 16px;
+  margin: 0;
+}
+
+.form-view__field {
+  margin: 14px 0;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &.form-view__field--editable {
+    border: 1px solid transparent;
+
+    &.form-view__field--selected {
+      border-color: $color-neutral-200;
+    }
+
+    &:not(.form-view__field--selected) {
+      &:hover {
+        cursor: pointer;
+        background-color: $color-neutral-100;
+      }
+    }
+  }
+}
+
+.form-view__field-head {
+  display: none;
+  background-color: $color-neutral-100;
+  line-height: 40px;
+  padding: 0 20px;
+  width: 100%;
+  justify-content: center;
+
+  .form-view__field--selected & {
+    display: flex;
+  }
+}
+
+.form-view__field-head-icon {
+  flex: 0 0 22px;
+  font-size: 13px;
+  color: $color-neutral-600;
+}
+
+.form-view__field-head-name {
+  @extend %ellipsis;
+
+  max-width: 100%;
+  font-size: 13px;
+  color: $color-primary-900;
+}
+
+.form-view__field-head-options {
+  margin: 0 12px 0 8px;
+  color: $color-neutral-600;
+
+  &:hover {
+    color: $color-primary-900;
+  }
+}
+
+.form-view__field-head-hide {
+  margin-left: auto;
+  color: $color-neutral-600;
+
+  &:hover {
+    color: $color-primary-900;
+  }
+}
+
+.form-view__field-inner {
+  padding: 20px;
+}
+
+.form-view__field-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.form-view__field-description {
+  font-size: 14px;
+  line-height: 160%;
+  margin-bottom: 20px;
+  color: $color-neutral-500;
+}
+
+.form-view__field-options {
+  display: none;
+  margin-top: 20px;
+
+  .form-view__field--selected & {
+    display: block;
+  }
+}
+
+.form-view__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  font-size: 13px;
+}
+
+.form-view__powered-by {
+  display: flex;
+  justify-content: center;
+}
+
+.form-view__powered-by-logo {
+  max-width: 92px;
+  margin-left: 8px;
+}
+
+.form-view__meta {
+  border-top: solid 1px $color-neutral-200;
+}
+
+.form-view__meta-email {
+  padding-left: 36px;
+  margin-top: 4px;
+}
+
+.form-view__meta-controls {
+  padding: 20px;
+}
+
+.view-form__create-link {
+  display: block;
+  line-height: 56px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 20px;
+  color: $color-primary-900;
+  border-radius: 6px;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.view-form__create-link-icon {
+  margin-right: 20px;
+  color: $color-warning-500;
+}
+
+.view-form__shared-link {
+  padding: 30px 25px;
+}
+
+.view-form__shared-link-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.view-form__shared-link-description {
+  margin-bottom: 15px;
+}
+
+.view-form__shared-link-content {
+  display: flex;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.view-form__shared-link-box {
+  width: 100%;
+  border-radius: 3px;
+  background-color: $color-neutral-100;
+  line-height: 32px;
+  padding: 0 10px;
+}
+
+.view-form__shared-link-action {
+  flex: 0 0 32px;
+  margin-left: 8px;
+  line-height: 32px;
+  color: $color-primary-900;
+  font-size: 11px;
+  text-align: center;
+  border-radius: 3px;
+
+  &:hover {
+    color: $color-primary-900;
+    background-color: $color-neutral-100;
+  }
+}
+
+.view-form__shared-link-password {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.view-form__shared-link-password-input {
+  margin-left: 16px;
+}
+
+.view-form__shared-link-disable {
+  color: $color-error-500;
+}

@@ -2,6 +2,8 @@ import { Registerable } from '@baserow/modules/core/registry'
 import ViewForm from '@baserow/modules/database/components/view/ViewForm'
 import GridView from '@baserow/modules/database/components/view/grid/GridView'
 import GridViewHeader from '@baserow/modules/database/components/view/grid/GridViewHeader'
+import FormView from '@baserow/modules/database/components/view/form/FormView'
+import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 
 export class ViewType extends Registerable {
   /**
@@ -12,6 +14,13 @@ export class ViewType extends Registerable {
    */
   getIconClass() {
     return null
+  }
+
+  /**
+   * @TODO docs
+   */
+  getColorClass() {
+    return 'color-primary'
   }
 
   /**
@@ -41,6 +50,7 @@ export class ViewType extends Registerable {
     super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
+    this.colorClass = this.getColorClass()
     this.name = this.getName()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
@@ -158,6 +168,7 @@ export class ViewType extends Registerable {
     return {
       type: this.type,
       iconClass: this.iconClass,
+      colorClass: this.colorClass,
       name: this.name,
       canFilter: this.canFilter,
       canSort: this.canSort,
@@ -343,5 +354,47 @@ export class GridViewType extends ViewType {
         primary,
       })
     }
+  }
+}
+
+export class FormViewType extends ViewType {
+  static getType() {
+    return 'form'
+  }
+
+  getIconClass() {
+    return 'edit'
+  }
+
+  getColorClass() {
+    return 'color-warning'
+  }
+
+  getName() {
+    return 'Form'
+  }
+
+  canFilter() {
+    return false
+  }
+
+  canSort() {
+    return false
+  }
+
+  getHeaderComponent() {
+    return FormViewHeader
+  }
+
+  getComponent() {
+    return FormView
+  }
+
+  fetch({ store }, view, fields, primary, storePrefix = '') {
+    console.log('@TODO fetch field options')
+  }
+
+  fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
+    console.log('@TODO field options updated')
   }
 }

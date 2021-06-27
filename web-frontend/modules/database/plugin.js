@@ -1,5 +1,5 @@
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
-import { GridViewType } from '@baserow/modules/database/viewTypes'
+import { GridViewType, FormViewType } from '@baserow/modules/database/viewTypes'
 import {
   TextFieldType,
   LongTextFieldType,
@@ -57,6 +57,7 @@ export default ({ store, app }) => {
 
   app.$registry.register('application', new DatabaseApplicationType())
   app.$registry.register('view', new GridViewType())
+  app.$registry.register('view', new FormViewType())
   app.$registry.register('viewFilter', new EqualViewFilterType())
   app.$registry.register('viewFilter', new NotEqualViewFilterType())
   app.$registry.register('viewFilter', new DateEqualViewFilterType())

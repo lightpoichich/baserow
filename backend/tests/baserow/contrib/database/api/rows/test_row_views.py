@@ -1117,21 +1117,21 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         email="test@test.nl", password="password", first_name="Test1"
     )
     table = data_fixture.create_database_table(user=user)
-    data_fixture.create_text_field(name="Name", table=table, primary=True)
-    data_fixture.create_number_field(name="Price", table=table)
-    data_fixture.create_boolean_field(name="Name", table=table)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_number_field(name="Price", table=table)
+    field_3 = data_fixture.create_boolean_field(name="Name", table=table)
 
-    model = table.get_model(attribute_names=True)
+    model = table.get_model()
     row_1 = model.objects.create(
         **{
-            "name_1": "name 1",
-            "price": 2,
-            "name_2": False,
+            f"field_{field_1.id}": "name 1",
+            f"field_{field_2.id}": 2,
+            f"field_{field_3.id}": False,
         }
     )
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
-        f"{url}?attribute_names=True",
+        f"{url}?user_field_names=true",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -1139,9 +1139,9 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["results"] == [
         {
-            "name_1": "name 1",
-            "price": "2",
-            "name_2": False,
+            "Name_1": "name 1",
+            "Price": "2",
+            "Name_2": False,
             "id": 1,
             "order": "1.00000000000000000000",
         }
@@ -1151,7 +1151,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_1.id}
     )
     response = api_client.get(
-        f"{url}?attribute_names=True",
+        f"{url}?user_field_names=true",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -1159,8 +1159,8 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json == {
         "id": 1,
-        "name_1": "name 1",
-        "name_2": False,
+        "Name_1": "name 1",
+        "Name_2": False,
         "order": "1.00000000000000000000",
-        "price": "2",
+        "Price": "2",
     }

@@ -196,7 +196,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     )
     number_field = data_fixture.create_number_field(table=table, order=1, name="Color")
     boolean_field = data_fixture.create_boolean_field(
-        table=table, order=2, name="For sale"
+        table=table, order=2, name="1 For sale"
     )
     grid = data_fixture.create_grid_view(table=table)
 
@@ -211,7 +211,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
 
     url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
     response = api_client.get(
-        f"{url}?attribute_names=true", **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+        f"{url}?user_field_names=true", **{"HTTP_AUTHORIZATION": f"JWT {token}"}
     )
     response_json = response.json()
     assert response_json == {
@@ -220,9 +220,9 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         "previous": None,
         "results": [
             {
-                "color_1": "Green",
-                "color_2": "10",
-                "for_sale": False,
+                "Color_1": "Green",
+                "Color_2": "10",
+                "1 For sale": False,
                 "id": row_1.id,
                 "order": "1.00000000000000000000",
             }

@@ -1,12 +1,15 @@
-import pytest
+from collections import OrderedDict
 
+import pytest
 from rest_framework import serializers
 
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     get_example_row_serializer_class,
+    RowSerializer,
 )
+from baserow.contrib.database.fields.registries import field_type_registry
+from test_utils import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -195,3 +198,118 @@ def test_get_example_row_serializer_class():
     assert isinstance(
         response_serializer._declared_fields["field_1"], serializers.CharField
     )
+
+
+def c(d):
+    if isinstance(d, OrderedDict):
+        return {k: c(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return [c(v) for v in d]
+    else:
+        return d
+
+
+@pytest.mark.django_db
+def test_get_row_serializer_with_user_field_names(data_fixture):
+    table, user, row = setup_interesting_test_table(data_fixture)
+    model = table.get_model()
+    queryset = model.objects.all().enhance_by_fields()
+    serializer_class = get_row_serializer_class(
+        model, RowSerializer, is_response=True, user_field_names=True
+    )
+    serializer_instance = serializer_class(queryset, many=True)
+    assert c(serializer_instance.data[1]) == {
+        "boolean": True,
+        "date_eu": "2020-02-01",
+        "date_us": "2020-02-01",
+        "datetime_eu": "2020-02-01T01:23:00Z",
+        "datetime_us": "2020-02-01T01:23:00Z",
+        "decimal_link_row": [
+            {"id": 1, "value": "1.234"},
+            {"id": 2, "value": "-123.456"},
+            {"id": 3, "value": None},
+        ],
+        "email": "test@example.com",
+        "file": [
+            {
+                "image_height": 0,
+                "image_width": 0,
+                "is_image": False,
+                "mime_type": "text/plain",
+                "name": "hashed_name.txt",
+                "size": 0,
+                "thumbnails": None,
+                "uploaded_at": "2020-02-01 01:23",
+                "url": "http://localhost:8000/media/user_files/hashed_name.txt",
+                "visible_name": "a.txt",
+            },
+            {
+                "image_height": 0,
+                "image_width": 0,
+                "is_image": False,
+                "mime_type": "text/plain",
+                "name": "other_name.txt",
+                "size": 0,
+                "thumbnails": None,
+                "uploaded_at": "2020-02-01 01:23",
+                "url": "http://localhost:8000/media/user_files/other_name.txt",
+                "visible_name": "b.txt",
+            },
+        ],
+        "file_link_row": [
+            {
+                "id": 1,
+                "value": "[{'name': 'test_hash.txt', 'size': 100, "
+                "'is_image': False, 'mime_type': 'text/plain', "
+                "'image_width': None, 'uploaded_at': "
+                "'2020-01-01T12:00:00+00:00', 'image_height': "
+                "None, 'visible_name': 'name.txt'}]",
+            },
+            {"id": 2, "value": "[]"},
+        ],
+        "id": 2,
+        "link_row": [
+            {"id": 1, "value": "linked_row_1"},
+            {"id": 2, "value": "linked_row_2"},
+            {"id": 3, "value": None},
+        ],
+        "long_text": "long_text",
+        "negative_decimal": "-1.2",
+        "negative_int": "-1",
+        "order": "1.00000000000000000000",
+        "phone_number": "+4412345678",
+        "positive_decimal": "1.2",
+        "positive_int": "1",
+        "single_select": {"color": "red", "id": 1, "value": "A"},
+        "text": "text",
+        "url": "https://www.google.com",
+    }
+
+
+@pytest.mark.django_db
+def test_user_named_field_clashing_with_id_and_order(data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+    clashing_order_field = data_fixture.create_text_field(
+        table=table, order=0, name="order", text_default="white"
+    )
+    clashing_id_field = data_fixture.create_text_field(
+        table=table, order=0, name="id", text_default="white"
+    )
+    model = table.get_model()
+    row_1 = model.objects.create(
+        **{
+            f"field_{clashing_id_field.id}": "CLASH",
+            f"field_{clashing_order_field.id}": "CLASH",
+        }
+    )
+    queryset = model.objects.all().enhance_by_fields()
+    serializer_class = get_row_serializer_class(
+        model, RowSerializer, is_response=True, user_field_names=True
+    )
+    serializer_instance = serializer_class(queryset, many=True)
+    assert c(serializer_instance.data[0]) == {
+        "id": row_1.id,
+        "order": "1.00000000000000000000",
+        "order_1": "CLASH",
+        "id_1": "CLASH",
+    }

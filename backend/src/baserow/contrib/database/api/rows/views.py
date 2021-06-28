@@ -154,14 +154,14 @@ class RowsView(APIView):
                 ),
             ),
             OpenApiParameter(
-                name="attribute_names",
+                name="user_field_names",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.BOOL,
+                type=OpenApiTypes.NONE,
                 description=(
-                    "When set to true the field names returned by this endpoint will "
-                    "be the names set by the user and not the internal field_XX names "
-                    ". Duplicate names will be postfixed with an _1, _2 etc for each"
-                    "duplicate in turn."
+                    "If provided the returned json will use the user specified field "
+                    "names instead of internal Baserow field names (field_123 etc). "
+                    "Fields with duplicate user names will have _1,_2 etc appended to "
+                    "name."
                 ),
             ),
         ],
@@ -224,13 +224,12 @@ class RowsView(APIView):
         order_by = request.GET.get("order_by")
         include = request.GET.get("include")
         exclude = request.GET.get("exclude")
-        attribute_names = request.GET.get("attribute_names", False)
+        user_field_names = "user_field_names" in request.GET
         fields = RowHandler().get_include_exclude_fields(table, include, exclude)
 
         model = table.get_model(
             fields=fields,
             field_ids=[] if fields else None,
-            attribute_names=attribute_names,
         )
         queryset = model.objects.all().enhance_by_fields()
 
@@ -251,7 +250,7 @@ class RowsView(APIView):
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(page, many=True)
 
@@ -360,14 +359,14 @@ class RowView(APIView):
                 description="Returns the row related the provided value.",
             ),
             OpenApiParameter(
-                name="attribute_names",
+                name="user_field_names",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.BOOL,
+                type=OpenApiTypes.NONE,
                 description=(
-                    "When set to true the field names returned by this endpoint will "
-                    "be the names set by the user and not the internal field_XX names "
-                    ". Duplicate names will be postfixed with an _1, _2 etc for each"
-                    "duplicate in turn."
+                    "If provided the returned json will use the user specified field "
+                    "names instead of internal Baserow field names (field_123 etc). "
+                    "Fields with duplicate user names will have _1,_2 etc appended to "
+                    "name."
                 ),
             ),
         ],
@@ -410,11 +409,11 @@ class RowView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "read", table, False)
 
-        attribute_names = request.GET.get("attribute_names", False)
-        model = table.get_model(attribute_names=attribute_names)
+        user_field_names = "user_field_names" in request.GET
+        model = table.get_model()
         row = RowHandler().get_row(request.user, table, row_id, model)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
 

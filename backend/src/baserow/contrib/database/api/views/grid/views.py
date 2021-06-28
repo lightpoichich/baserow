@@ -101,6 +101,17 @@ class GridViewView(APIView):
                 description="If provided only rows with data that matches the search "
                 "query are going to be returned.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "If provided the returned json will use the user specified field "
+                    "names instead of internal Baserow field names (field_123 etc). "
+                    "Fields with duplicate user names will have _1,_2 etc appended to "
+                    "name."
+                ),
+            ),
         ],
         tags=["Database table grid view"],
         operation_id="list_database_table_grid_view_rows",
@@ -145,7 +156,7 @@ class GridViewView(APIView):
         """
 
         search = request.GET.get("search")
-        attribute_names = request.GET.get("attribute_names", False)
+        user_field_names = "user_field_names" in request.GET
 
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
@@ -153,7 +164,7 @@ class GridViewView(APIView):
         view.table.database.group.has_user(
             request.user, raise_error=True, allow_if_template=True
         )
-        model = view.table.get_model(attribute_names=attribute_names)
+        model = view.table.get_model()
         queryset = view_handler.get_queryset(view, search, model)
 
         if "count" in request.GET:
@@ -166,7 +177,7 @@ class GridViewView(APIView):
 
         page = paginator.paginate_queryset(queryset, request, self)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(page, many=True)
 

@@ -19,7 +19,9 @@ class RowSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}, "order": {"read_only": True}}
 
 
-def get_row_serializer_class(model, base_class=None, is_response=False, field_ids=None):
+def get_row_serializer_class(
+    model, base_class=None, is_response=False, field_ids=None, user_field_names=False
+):
     """
     Generates a Django rest framework model serializer based on the available fields
     that belong to this model. For each table field, used to generate this serializer,
@@ -44,18 +46,48 @@ def get_row_serializer_class(model, base_class=None, is_response=False, field_id
     """
 
     field_objects = model._field_objects
+
+    field_name_overrides = {}
+    if user_field_names:
+        next_duplicate_id = {"id": 0, "order": 0}
+        for field in field_objects.values():
+            name = field["field"].name
+            if name in next_duplicate_id:
+                next_duplicate_id[name] = 1
+            else:
+                next_duplicate_id[name] = 0
+
+        for field in field_objects.values():
+            name = field["field"].name
+            field_id = field["field"].id
+            next_id = next_duplicate_id[name]
+            if next_id > 0:
+                next_duplicate_id[name] += 1
+                name = f"{name}_{next_id}"
+            field_name_overrides[field_id] = name
+
     field_names = [
-        field["name"]
+        field_name_overrides.get(field["field"].id, field["name"])
         for field in field_objects.values()
         if field_ids is None or field["field"].id in field_ids
     ]
-    field_overrides = {
-        field["name"]: field["type"].get_response_serializer_field(field["field"])
-        if is_response
-        else field["type"].get_serializer_field(field["field"])
-        for field in field_objects.values()
-        if field_ids is None or field["field"].id in field_ids
-    }
+    field_overrides = {}
+    for field in field_objects.values():
+        if field_ids is None or field["field"].id in field_ids:
+            name = field_name_overrides.get(field["field"].id, field["name"])
+            extra_kwargs = {}
+            if field["name"] != name:
+                extra_kwargs["source"] = field["name"]
+            if is_response:
+                serializer = field["type"].get_response_serializer_field(
+                    field["field"], **extra_kwargs
+                )
+            else:
+                serializer = field["type"].get_serializer_field(
+                    field["field"], **extra_kwargs
+                )
+            field_overrides[name] = serializer
+
     return get_serializer_class(model, field_names, field_overrides, base_class)
 
 

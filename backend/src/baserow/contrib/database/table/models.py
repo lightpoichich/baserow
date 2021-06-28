@@ -284,16 +284,9 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         # table.
         fields = list(fields) + [field for field in fields_query]
 
-        # If there are duplicate field names we have to store them in a dict so we know
+        # If there are duplicate field names we have to store them in a list so we know
         # later which ones are duplicate.
-        duplicate_field_names = {}
-        seen_names = set()
-        if attribute_names:
-            for field in fields:
-                field_name = field.model_attribute_name
-                if field_name in seen_names:
-                    duplicate_field_names[field_name] = 1
-                seen_names.add(field_name)
+        duplicate_field_names = []
 
         # We will have to add each field to with the correct field name and model field
         # to the attribute list in order for the model to work.
@@ -307,10 +300,12 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
                 field_name = field.model_attribute_name
                 # If the field name already exists we will append '_field_{id}' to each
                 # entry that is a duplicate.
+                if field_name in attrs:
+                    duplicate_field_names.append(field_name)
+                    replaced_field_name = f"{field_name}_{attrs[field_name].db_column}"
+                    attrs[replaced_field_name] = attrs.pop(field_name)
                 if field_name in duplicate_field_names:
-                    index = duplicate_field_names[field_name]
-                    duplicate_field_names[field_name] = index + 1
-                    field_name = f"{field_name}_{index}"
+                    field_name = f"{field_name}_{field.db_column}"
 
             # Add the generated objects and information to the dict that optionally can
             # be returned.

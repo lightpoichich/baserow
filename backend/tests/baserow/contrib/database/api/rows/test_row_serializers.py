@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import pytest
 from rest_framework import serializers
 
@@ -209,7 +207,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         model, RowSerializer, is_response=True, user_field_names=True
     )
     serializer_instance = serializer_class(queryset, many=True)
-    assert c(serializer_instance.data[1]) == {
+    assert serializer_instance.data[1] == {
         "boolean": True,
         "date_eu": "2020-02-01",
         "date_us": "2020-02-01",
@@ -298,7 +296,7 @@ def test_user_named_field_clashing_with_id_and_order(data_fixture):
         model, RowSerializer, is_response=True, user_field_names=True
     )
     serializer_instance = serializer_class(queryset, many=True)
-    assert c(serializer_instance.data[0]) == {
+    assert serializer_instance.data[0] == {
         "id": row_1.id,
         "order": "1.00000000000000000000",
         "order_1": "CLASH",

@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
@@ -206,8 +208,8 @@ class GridViewFieldOptions(models.Model):
 class FormView(View):
     field_options = models.ManyToManyField(Field, through="FormViewFieldOptions")
     slug = models.UUIDField(
+        default=uuid.uuid4,
         help_text="The unique slug where the form can be accessed publicly on.",
-        null=True,
         unique=True,
         db_index=True,
     )
@@ -266,6 +268,9 @@ class FormView(View):
         help_text="If provided, then an email confirmation containing the form "
         "contents will be sent to this address when a visitors fills out the form.",
     )
+
+    def rotate_slug(self):
+        self.slug = uuid.uuid4()
 
 
 class FormViewFieldOptions(models.Model):

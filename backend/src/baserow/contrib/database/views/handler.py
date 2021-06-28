@@ -23,7 +23,7 @@ from .exceptions import (
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
 )
-from .models import View, ViewFilter, ViewSort
+from .models import View, ViewFilter, ViewSort, FormView
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created,
@@ -742,3 +742,28 @@ class ViewHandler:
         if search is not None:
             queryset = queryset.search_all_fields(search)
         return queryset
+
+    def rotate_form_view_slug(self, user, form):
+        """
+        Rotates the slug of the provided form view.
+
+        :param user: The user on whose behalf the form view is updated.
+        :type user: User
+        :param form: The form view instance that needs to be updated.
+        :type form: View
+        :return: The updated view instance.
+        :rtype: View
+        """
+
+        if not isinstance(form, FormView):
+            raise ValueError("The provided form is not an instance of FormView.")
+
+        group = form.table.database.group
+        group.has_user(user, raise_error=True)
+
+        form.rotate_slug()
+        form.save()
+
+        view_updated.send(self, view=form, user=user)
+
+        return form

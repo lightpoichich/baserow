@@ -1,5 +1,7 @@
 from django.urls import path, include
 
+from rest_framework.serializers import CharField
+
 from baserow.api.user_files.serializers import UserFileField
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
@@ -116,6 +118,7 @@ class FormViewType(ViewType):
         "submit_email_confirmation",
     ]
     serializer_field_names = [
+        "slug",
         "public",
         "password",
         "title",
@@ -128,6 +131,14 @@ class FormViewType(ViewType):
         "submit_email_confirmation",
     ]
     serializer_field_overrides = {
+        "slug": CharField(read_only=True),
         "cover_image": UserFileField(allow_null=True, required=False),
         "logo_image": UserFileField(allow_null=True, required=False),
     }
+
+    def get_api_urls(self):
+        from baserow.contrib.database.api.views.form import urls as api_urls
+
+        return [
+            path("form/", include(api_urls, namespace=self.type)),
+        ]

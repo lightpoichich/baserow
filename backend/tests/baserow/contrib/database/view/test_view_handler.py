@@ -221,6 +221,7 @@ def test_create_form_view(send_mock, data_fixture):
     assert FormView.objects.all().count() == 1
 
     form = FormView.objects.all().first()
+    assert len(str(form.slug)) == 36
     assert form.name == "Form"
     assert form.order == 1
     assert form.table == table
@@ -238,6 +239,7 @@ def test_create_form_view(send_mock, data_fixture):
         user=user,
         table=table,
         type_name="form",
+        slug="test-slug",
         name="Form 2",
         public=True,
         password="test",
@@ -252,6 +254,8 @@ def test_create_form_view(send_mock, data_fixture):
 
     assert View.objects.all().count() == 2
     assert FormView.objects.all().count() == 2
+    assert form.slug != "test-slug"
+    assert len(str(form.slug)) == 36
     assert form.name == "Form 2"
     assert form.order == 2
     assert form.table == table
@@ -279,6 +283,7 @@ def test_update_form_view(send_mock, data_fixture):
     view = handler.update_view(
         user=user,
         view=form,
+        slug="Test slug",
         name="Form 2",
         public=True,
         password="test",
@@ -296,6 +301,8 @@ def test_update_form_view(send_mock, data_fixture):
     assert send_mock.call_args[1]["user"].id == user.id
 
     form.refresh_from_db()
+    assert form.slug != "test-slug"
+    assert len(str(form.slug)) == 36
     assert form.name == "Form 2"
     assert form.table == table
     assert form.public is True
@@ -1160,3 +1167,31 @@ def test_delete_sort(send_mock, data_fixture):
 
     assert ViewSort.objects.all().count() == 1
     assert ViewSort.objects.filter(pk=sort_1.pk).count() == 0
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_updated.send")
+def test_rotate_form_view_slug(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(table=table)
+    old_slug = str(form.slug)
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.rotate_form_view_slug(user=user_2, form=form)
+
+    with pytest.raises(ValueError):
+        handler.rotate_form_view_slug(user=user, form=object())
+
+    handler.rotate_form_view_slug(user=user, form=form)
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view"].id == form.id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+    form.refresh_from_db()
+    assert str(form.slug) != old_slug
+    assert len(str(form.slug)) == 36

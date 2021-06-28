@@ -1,6 +1,6 @@
 import pytest
 
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from django.shortcuts import reverse
 
@@ -25,6 +25,7 @@ def test_create_form_view(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
+    assert len(response_json["slug"]) == 36
     assert response_json["type"] == "form"
     assert response_json["name"] == "Test Form"
     assert response_json["table_id"] == table.id
@@ -42,6 +43,7 @@ def test_create_form_view(api_client, data_fixture):
     assert response_json["id"] == form.id
     assert response_json["name"] == form.name
     assert response_json["order"] == form.order
+    assert response_json["slug"] == str(form.slug)
     assert form.table_id == table.id
     assert form.public is False
     assert form.password == ""
@@ -58,6 +60,7 @@ def test_create_form_view(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:views:list", kwargs={"table_id": table.id}),
         {
+            "slug": "Test",
             "name": "Test Form 2",
             "type": "form",
             "public": True,
@@ -75,6 +78,7 @@ def test_create_form_view(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
+    assert response_json["slug"] != "Test"
     assert response_json["name"] == "Test Form 2"
     assert response_json["type"] == "form"
     assert response_json["public"] is True
@@ -114,6 +118,7 @@ def test_update_form_view(api_client, data_fixture):
     response = api_client.patch(
         url,
         {
+            "slug": "test",
             "name": "Test Form 2",
             "type": "form",
             "public": True,
@@ -131,6 +136,8 @@ def test_update_form_view(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
+    assert response_json["slug"] != "test"
+    assert response_json["slug"] == str(view.slug)
     assert response_json["name"] == "Test Form 2"
     assert response_json["type"] == "form"
     assert response_json["public"] is True
@@ -155,3 +162,32 @@ def test_update_form_view(api_client, data_fixture):
     assert form.submit_action == "REDIRECT"
     assert form.submit_action_redirect_url == "https://localhost"
     assert form.submit_email_confirmation == "bram@test.nl"
+
+
+@pytest.mark.django_db
+def test_rotate_slug(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_form_view(table=table)
+    view_2 = data_fixture.create_form_view()
+    old_slug = str(view.slug)
+
+    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": view_2.id})
+    response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": 99999})
+    response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": view.id})
+    response = api_client.post(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["slug"] != old_slug
+    assert len(response_json["slug"]) == 36

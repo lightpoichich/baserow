@@ -51,3 +51,11 @@ def test_view_get_field_options(data_fixture):
     assert field_options[0].field_id == field_1.id
     assert field_options[1].field_id == field_2.id
     assert field_options[2].field_id == field_3.id
+
+
+@pytest.mark.django_db
+def test_rotate_form_view_slug(data_fixture):
+    form_view = data_fixture.create_form_view()
+    old_slug = str(form_view.slug)
+    form_view.rotate_slug()
+    assert str(form_view.slug) != old_slug

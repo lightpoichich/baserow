@@ -9,7 +9,7 @@ from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
-from test_utils import setup_interesting_test_table
+from tests.test_utils import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -198,15 +198,6 @@ def test_get_example_row_serializer_class():
     assert isinstance(
         response_serializer._declared_fields["field_1"], serializers.CharField
     )
-
-
-def c(d):
-    if isinstance(d, OrderedDict):
-        return {k: c(v) for k, v in d.items()}
-    elif isinstance(d, list):
-        return [c(v) for v in d]
-    else:
-        return d
 
 
 @pytest.mark.django_db

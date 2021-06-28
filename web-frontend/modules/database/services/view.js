@@ -37,6 +37,9 @@ export default (client) => {
     delete(viewId) {
       return client.delete(`/database/views/${viewId}/`)
     },
+    fetchFieldOptions(viewId) {
+      return client.get(`/database/views/${viewId}/field-options/`)
+    },
     updateFieldOptions({ viewId, values }) {
       return client.patch(`/database/views/${viewId}/field-options/`, values)
     },

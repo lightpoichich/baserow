@@ -282,7 +282,7 @@ class FormViewFieldOptions(models.Model):
         help_text="If provided, then this value be will be shown under the field.",
     )
     enabled = models.BooleanField(
-        default=True, help_text="Indicates whether the field is included in the form."
+        default=False, help_text="Indicates whether the field is included in the form."
     )
     required = models.BooleanField(
         default=True,

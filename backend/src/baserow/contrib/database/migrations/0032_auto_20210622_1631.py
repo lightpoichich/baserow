@@ -182,7 +182,7 @@ class Migration(migrations.Migration):
                 (
                     "enabled",
                     models.BooleanField(
-                        default=True,
+                        default=False,
                         help_text="Indicates whether the field is included in the "
                                   "form.",
                     ),

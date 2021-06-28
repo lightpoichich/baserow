@@ -5,6 +5,8 @@ import GridViewHeader from '@baserow/modules/database/components/view/grid/GridV
 import FormView from '@baserow/modules/database/components/view/form/FormView'
 import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 
+export const maxPossibleOrderValue = 32767
+
 export class ViewType extends Registerable {
   /**
    * The font awesome 5 icon name that is used as convenience for the user to
@@ -177,10 +179,6 @@ export class ViewType extends Registerable {
 }
 
 export class GridViewType extends ViewType {
-  static getMaxPossibleOrderValue() {
-    return 32767
-  }
-
   static getType() {
     return 'grid'
   }
@@ -232,7 +230,7 @@ export class GridViewType extends ViewType {
         values: {
           width: 200,
           hidden: false,
-          order: GridViewType.getMaxPossibleOrderValue(),
+          order: maxPossibleOrderValue,
         },
       },
       { root: true }
@@ -390,11 +388,43 @@ export class FormViewType extends ViewType {
     return FormView
   }
 
-  fetch({ store }, view, fields, primary, storePrefix = '') {
-    console.log('@TODO fetch field options')
+  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+    await dispatch(
+      storePrefix + 'view/form/setFieldOptionsOfField',
+      {
+        field,
+        // The default values should be the same as in the `FormViewFieldOptions`
+        // model in the backend to stay consistent.
+        values: {
+          name: '',
+          description: '',
+          enabled: false,
+          required: true,
+          order: maxPossibleOrderValue,
+        },
+      },
+      { root: true }
+    )
   }
 
-  fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
-    console.log('@TODO field options updated')
+  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+    await dispatch(
+      storePrefix + 'view/form/forceDeleteFieldOptions',
+      field.id,
+      { root: true }
+    )
+  }
+
+  async fetch({ store }, view, fields, primary, storePrefix = '') {
+    await store.dispatch(storePrefix + 'view/form/fetchInitial', {
+      formId: view.id,
+    })
+  }
+
+  async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
+    await store.dispatch(
+      storePrefix + 'view/form/forceUpdateAllFieldOptions',
+      fieldOptions
+    )
   }
 }

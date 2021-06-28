@@ -145,6 +145,7 @@ class GridViewView(APIView):
         """
 
         search = request.GET.get("search")
+        attribute_names = request.GET.get("attribute_names", False)
 
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
@@ -152,7 +153,7 @@ class GridViewView(APIView):
         view.table.database.group.has_user(
             request.user, raise_error=True, allow_if_template=True
         )
-        model = view.table.get_model()
+        model = view.table.get_model(attribute_names=attribute_names)
         queryset = view_handler.get_queryset(view, search, model)
 
         if "count" in request.GET:

@@ -2,8 +2,6 @@ from django.conf import settings
 
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from baserow.contrib.database.fields.handler import RESERVED_BASEROW_FIELD_NAMES
-
 ERROR_TABLE_DOES_NOT_EXIST = (
     "ERROR_TABLE_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,

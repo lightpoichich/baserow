@@ -1,12 +1,49 @@
 <template>
   <div class="form-view__preview">
     <div class="form-view__page form-view__page--rounded">
-      <div class="form-view__cover">
-        <a class="form-view__file">Add a cover image</a>
+      <div
+        class="form-view__cover"
+        :style="{
+          'background-image': view.cover_image
+            ? `url(${view.cover_image.url})`
+            : null,
+        }"
+      >
+        <FormViewImageUpload
+          v-if="!view.cover_image"
+          @uploaded="updateForm({ cover_image: $event })"
+          >Add a cover image
+        </FormViewImageUpload>
+        <a
+          v-else
+          class="form_view__file-delete"
+          @click="updateForm({ cover_image: null })"
+        >
+          <i class="fas fa-times"></i>
+          Remove
+        </a>
       </div>
       <div class="form-view__body">
         <div class="form-view__heading">
-          <a class="form-view__file">Add a logo</a>
+          <div v-if="view.logo_image !== null" class="form_view__logo">
+            <img
+              class="form_view__logo-img"
+              :src="view.logo_image.url"
+              width="200"
+            />
+            <a
+              class="form_view__file-delete"
+              @click="updateForm({ logo_image: null })"
+            >
+              <i class="fas fa-times"></i>
+              Remove
+            </a>
+          </div>
+          <FormViewImageUpload
+            v-else
+            @uploaded="updateForm({ logo_image: $event })"
+            >Add a logo
+          </FormViewImageUpload>
           <h1 class="form-view__title">
             <Editable
               ref="title"
@@ -77,11 +114,12 @@
 <script>
 import FormViewField from '@baserow/modules/database/components/view/form/FormViewField'
 import FormViewMeta from '@baserow/modules/database/components/view/form/FormViewMeta'
+import FormViewImageUpload from '@baserow/modules/database/components/view/form/FormViewImageUpload'
 import formViewHelpers from '@baserow/modules/database/mixins/formViewHelpers'
 
 export default {
   name: 'FormViewPreview',
-  components: { FormViewField, FormViewMeta },
+  components: { FormViewField, FormViewMeta, FormViewImageUpload },
   mixins: [formViewHelpers],
   props: {
     table: {

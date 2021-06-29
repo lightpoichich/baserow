@@ -113,6 +113,7 @@
 }
 
 .form-view__file {
+  position: relative;
   display: inline-block;
   line-height: 48px;
   padding: 0 40px;
@@ -122,10 +123,79 @@
   font-weight: 600;
   border-radius: 12px;
   color: $color-neutral-600;
+  overflow: hidden;
 
   &:hover {
     text-decoration: none;
     background-color: darken($color-neutral-100, 2%);
+  }
+
+  * {
+    pointer-events: none;
+  }
+
+  &.form-view__file--dragging,
+  &.form-view__file--uploading {
+    color: darken($color-neutral-100, 2%);
+    background-color: darken($color-neutral-100, 2%);
+  }
+}
+
+.form-view__file-progress {
+  @include absolute(auto, auto, 0, 0);
+
+  height: 6px;
+  background-color: $color-primary-500;
+}
+
+.form-view__file-dragging,
+.form-view__file-uploading {
+  @include absolute(50%, auto, auto, 50%);
+
+  display: none;
+  width: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
+  margin-left: -50px;
+  margin-top: -6.5px;
+  color: $color-primary-900;
+}
+
+.form-view__file-dragging {
+  .form-view__file--dragging & {
+    display: block;
+  }
+}
+
+.form-view__file-uploading {
+  .form-view__file--uploading & {
+    display: block;
+  }
+}
+
+.form_view__file-delete {
+  @include absolute(0, 0, 0, 0);
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: $color-error-500;
+  font-size: 14px;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  :hover > & {
+    display: flex;
+  }
+
+  i {
+    margin-right: 6px;
   }
 }
 
@@ -151,6 +221,7 @@
 }
 
 .form-view__cover {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -173,6 +244,8 @@
 }
 
 .form_view__logo {
+  position: relative;
+  display: inline-block;
   margin-bottom: 40px;
 }
 

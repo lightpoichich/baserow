@@ -5,7 +5,10 @@ from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
-from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.handler import (
+    FieldHandler,
+    RESERVED_BASEROW_FIELD_NAMES,
+)
 from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
 from baserow.contrib.database.fields.field_types import (
     LongTextFieldType,
@@ -159,6 +162,27 @@ class TableHandler:
 
         for i in range(len(fields), largest_column_count):
             fields.append(f"Field {i + 1}")
+
+        # Stripping whitespace from field names is already done by
+        # TableCreateSerializer  however we repeat to ensure that non API usages of
+        # this method is consistent with api usage.
+        field_name_set = {name.strip() for name in fields}
+
+        if len(field_name_set) != len(fields):
+            raise InvalidInitialTableData("The imported field names must be unique")
+
+        if len(field_name_set.intersection(RESERVED_BASEROW_FIELD_NAMES)) > 0:
+            raise InvalidInitialTableData(
+                f"The field names {','.join(RESERVED_BASEROW_FIELD_NAMES)} are "
+                f"reserved and cannot be used. Please rename your field names which "
+                f"match any of the reserved values before importing."
+            )
+
+        if "" in field_name_set:
+            raise InvalidInitialTableData(
+                "A blank field name was provided which is not allowed, please "
+                "give all field names a non blank value."
+            )
 
         for row in data:
             for i in range(len(row), largest_column_count):

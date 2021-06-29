@@ -62,9 +62,14 @@
           @click="$refs.description.edit()"
         ></a>
       </div>
-      <div class="form-view__field-control">
-        <input type="text" name="" value="" class="input input--large" />
-      </div>
+      <component
+        :is="getFieldComponent()"
+        ref="field"
+        :field="field"
+        :value="value"
+        :read-only="false"
+        @update="updateValue"
+      />
       <div class="form-view__field-options">
         <SwitchInput
           :value="fieldOptions.required"
@@ -105,7 +110,33 @@ export default {
     return {
       editingTitle: false,
       editingDescription: false,
+      value: null,
     }
+  },
+  watch: {
+    field: {
+      deep: true,
+      handler() {
+        this.resetValue()
+      },
+    },
+  },
+  created() {
+    this.resetValue()
+  },
+  methods: {
+    updateValue(value) {
+      this.value = value
+    },
+    getFieldType() {
+      return this.$registry.get('field', this.field.type)
+    },
+    getFieldComponent() {
+      return this.getFieldType().getRowEditFieldComponent()
+    },
+    resetValue() {
+      this.value = this.getFieldType().getEmptyValue(this.field)
+    },
   },
 }
 </script>

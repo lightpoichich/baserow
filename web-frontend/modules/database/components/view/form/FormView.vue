@@ -54,7 +54,9 @@ export default {
   },
   computed: {
     sortedFields() {
-      return this.fields.slice().sort((a, b) => {
+      const fields = this.fields.slice()
+      fields.unshift(this.primary)
+      return fields.sort((a, b) => {
         const orderA = this.getFieldOption(a.id, 'order', maxPossibleOrderValue)
         const orderB = this.getFieldOption(b.id, 'order', maxPossibleOrderValue)
 

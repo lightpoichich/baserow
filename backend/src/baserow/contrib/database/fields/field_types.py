@@ -708,12 +708,16 @@ class LinkRowFieldType(FieldType):
         if field.link_row_related_field:
             return
 
-        field.link_row_related_field = FieldHandler().create_field(
+        handler = FieldHandler()
+        related_field_name = handler.find_next_unused_field_name(
+            field.link_row_table, field.table.name
+        )
+        field.link_row_related_field = handler.create_field(
             user=user,
             table=field.link_row_table,
             type_name=self.type,
             do_schema_change=False,
-            name=field.table.name,
+            name=related_field_name,
             link_row_table=field.table,
             link_row_related_field=field,
             link_row_relation_id=field.link_row_relation_id,

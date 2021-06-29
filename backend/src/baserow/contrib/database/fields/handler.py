@@ -15,12 +15,45 @@ from .exceptions import (
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
     MaxFieldLimitExceeded,
+    FieldWithSameNameAlreadyExists,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
 )
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
 from .signals import field_created, field_updated, field_deleted
 
 logger = logging.getLogger(__name__)
+
+RESERVED_BASEROW_FIELD_NAMES = {"id", "order"}
+
+
+def _validate_field_name(
+    field_values, table, existing_field=None, raise_if_name_missing=True
+):
+    if "name" not in field_values:
+        if raise_if_name_missing:
+            raise InvalidBaserowFieldName()
+        else:
+            return
+
+    name = field_values["name"]
+    if existing_field is not None and existing_field.name == name:
+        return
+
+    if name.strip() == "":
+        raise InvalidBaserowFieldName()
+
+    if Field.objects.filter(table=table, name=name).exists():
+        raise FieldWithSameNameAlreadyExists(
+            f"A field already exists for table '{table.name}' with the name '{name}'."
+        )
+
+    if name in RESERVED_BASEROW_FIELD_NAMES:
+        raise ReservedBaserowFieldNameException(
+            f"A field named {name} cannot be created as it already exists as a "
+            f"reserved Baserow field name."
+        )
 
 
 class FieldHandler:
@@ -111,6 +144,8 @@ class FieldHandler:
                 f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
             )
 
+        _validate_field_name(field_values, table)
+
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_create(
             table, primary, field_values, last_order, user
@@ -188,6 +223,10 @@ class FieldHandler:
 
         allowed_fields = ["name"] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
+
+        _validate_field_name(
+            field_values, field.table, field, raise_if_name_missing=False
+        )
 
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_update(old_field, field_values, user)
@@ -413,3 +452,22 @@ class FieldHandler:
 
         if len(to_create) > 0:
             SelectOption.objects.bulk_create(to_create)
+
+    def find_next_unused_field_name(self, table, field_name):
+        """
+        Finds a unused field name in the provided table starting with field_name.
+        If field_name is not taken then it will be returned, if it is taken then the
+        next name appended with an _X where X is a positive integer which is free will
+        be returned.
+
+        :param table: The table whose fields to search.
+        :param field_name: The field_name to find a unused name for.
+        :return: A free field name starting with field_name possibly followed by an
+            _X where X is a positive integer.
+        """
+        original_field_name = field_name
+        i = 2
+        while Field.objects.filter(table=table, name=field_name).exists():
+            field_name = f"{original_field_name}_{i}"
+            i += 1
+        return field_name

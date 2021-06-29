@@ -15,6 +15,8 @@ from baserow.contrib.database.fields.exceptions import (
     IncompatiblePrimaryFieldTypeError,
     CannotChangeFieldType,
     MaxFieldLimitExceeded,
+    FieldWithSameNameAlreadyExists,
+    ReservedBaserowFieldNameException,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -246,6 +248,17 @@ def test_create_field(send_mock, data_fixture):
     assert NumberField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 1
 
+    with pytest.raises(FieldWithSameNameAlreadyExists):
+        handler.create_field(
+            user=user, table=table, type_name="boolean", name=boolean_field.name
+        )
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.create_field(user=user, table=table, type_name="boolean", name="order")
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.create_field(user=user, table=table, type_name="boolean", name="id")
+
     field_limit = settings.MAX_FIELD_LIMIT
     settings.MAX_FIELD_LIMIT = 2
 
@@ -276,20 +289,26 @@ def test_create_primary_field(data_fixture):
 
     with pytest.raises(PrimaryFieldAlreadyExists):
         handler = FieldHandler()
-        handler.create_field(user=user, table=table_1, type_name="text", primary=True)
+        handler.create_field(
+            user=user, table=table_1, type_name="text", primary=True, name="test"
+        )
 
     handler = FieldHandler()
     field = handler.create_field(
-        user=user, table=table_2, type_name="text", primary=True
+        user=user, table=table_2, type_name="text", primary=True, name="primary"
     )
 
     assert field.primary
 
     with pytest.raises(PrimaryFieldAlreadyExists):
-        handler.create_field(user=user, table=table_2, type_name="text", primary=True)
+        handler.create_field(
+            user=user, table=table_2, type_name="text", primary=True, name="new_primary"
+        )
 
     # Should be able to create a regular field when there is already a primary field.
-    handler.create_field(user=user, table=table_2, type_name="text", primary=False)
+    handler.create_field(
+        user=user, table=table_2, type_name="text", primary=False, name="non_primary"
+    )
 
 
 @pytest.mark.django_db
@@ -399,6 +418,16 @@ def test_update_field(send_mock, data_fixture):
     assert getattr(rows[0], f"field_{field.id}") is False
     assert getattr(rows[1], f"field_{field.id}") is False
     assert getattr(rows[2], f"field_{field.id}") is False
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.update_field(user=user, field=field, name="order")
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.update_field(user=user, field=field, name="id")
+
+    field_2 = data_fixture.create_text_field(table=table, order=1)
+    with pytest.raises(FieldWithSameNameAlreadyExists):
+        handler.update_field(user=user, field=field_2, name=field.name)
 
 
 @pytest.mark.django_db

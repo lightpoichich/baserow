@@ -225,7 +225,9 @@ class RowsView(APIView):
         include = request.GET.get("include")
         exclude = request.GET.get("exclude")
         user_field_names = "user_field_names" in request.GET
-        fields = RowHandler().get_include_exclude_fields(table, include, exclude)
+        fields = RowHandler().get_include_exclude_fields(
+            table, include, exclude, user_field_names=user_field_names
+        )
 
         model = table.get_model(
             fields=fields,

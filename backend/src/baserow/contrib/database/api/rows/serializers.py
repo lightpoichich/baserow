@@ -5,6 +5,7 @@ from rest_framework import serializers
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import get_user_field_name_overrides
 from baserow.core.utils import model_default_values, dict_to_object
 
 logger = logging.getLogger(__name__)
@@ -49,22 +50,7 @@ def get_row_serializer_class(
 
     field_name_overrides = {}
     if user_field_names:
-        next_duplicate_id = {"id": 0, "order": 0}
-        for field in field_objects.values():
-            name = field["field"].name
-            if name in next_duplicate_id:
-                next_duplicate_id[name] = 1
-            else:
-                next_duplicate_id[name] = 0
-
-        for field in field_objects.values():
-            name = field["field"].name
-            field_id = field["field"].id
-            next_id = next_duplicate_id[name]
-            if next_id > 0:
-                next_duplicate_id[name] += 1
-                name = f"{name}_{next_id}"
-            field_name_overrides[field_id] = name
+        field_name_overrides = get_user_field_name_overrides(field_objects)
 
     field_names = [
         field_name_overrides.get(field["field"].id, field["name"])

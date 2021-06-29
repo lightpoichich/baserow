@@ -152,7 +152,7 @@ class GridViewView(APIView):
         else the page number pagination.
 
         Optionally the field options can also be included in the response if the the
-        `field_options` are provided in the include GET parameter.
+        `field_options` are provided in the value GET parameter.
         """
 
         search = request.GET.get("search")

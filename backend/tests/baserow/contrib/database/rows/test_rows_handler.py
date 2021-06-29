@@ -446,3 +446,63 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
+
+
+@pytest.mark.django_db
+def test_get_include_exclude_fields_with_user_field_names(data_fixture):
+    table = data_fixture.create_database_table()
+    field_1 = data_fixture.create_text_field(name="id", table=table, order=1)
+    field_2 = data_fixture.create_text_field(name="Test", table=table, order=2)
+    field_3 = data_fixture.create_text_field(name="Test", table=table, order=3)
+    field_4 = data_fixture.create_text_field(name="With Space", table=table, order=3)
+
+    row_handler = RowHandler()
+
+    assert (
+        row_handler.get_include_exclude_fields(
+            table, include=None, exclude=None, user_field_names=True
+        )
+        is None
+    )
+
+    assert (
+        row_handler.get_include_exclude_fields(
+            table, include="", exclude="", user_field_names=True
+        )
+        is None
+    )
+
+    fields = row_handler.get_include_exclude_fields(
+        table, include=f"Test_2", user_field_names=True
+    )
+    assert len(fields) == 1
+    assert fields[0].id == field_3.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table, f"id_1,field_9999,Test_1", user_field_names=True
+    )
+    assert len(fields) == 2
+    assert fields[0].id == field_1.id
+    assert fields[1].id == field_2.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table, None, f"id_1,field_9999", user_field_names=True
+    )
+    assert len(fields) == 3
+    assert fields[0].id == field_2.id
+    assert fields[1].id == field_3.id
+    assert fields[2].id == field_4.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table, f"id_1,Test_1", f"id_1", user_field_names=True
+    )
+    assert len(fields) == 1
+    assert fields[0].id == field_2.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table, 'id_1,"With Space",Test_1', user_field_names=True
+    )
+    assert len(fields) == 3
+    assert fields[0].id == field_1.id
+    assert fields[1].id == field_2.id
+    assert fields[2].id == field_4.id

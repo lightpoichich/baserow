@@ -1,3 +1,4 @@
+import csv
 import re
 from math import floor, ceil
 from decimal import Decimal
@@ -83,9 +84,11 @@ class RowHandler:
             if any(c.isdigit() for c in v)
         ]
 
-    def get_include_exclude_fields(self, table, include=None, exclude=None):
+    def get_include_exclude_fields(
+        self, table, include=None, exclude=None, user_field_names=False
+    ):
         """
-        Returns a field queryset containing the requested fields based on the include
+        Returns a field queryset containing the requested fields based on the value
         and exclude parameter.
 
         :param table: The table where to select the fields from. Field id's that are
@@ -101,12 +104,27 @@ class RowHandler:
         :type exclude: str
         :return: A Field's QuerySet containing the allowed fields based on the provided
             input.
+        :param user_field_names: If true then the value and exclude parameters are
+            retreated as a comma separated list of user field names instead of id's
+        :type user_field_names: bool
         :rtype: QuerySet
         """
 
         queryset = Field.objects.filter(table=table)
-        include_ids = self.extract_field_ids_from_string(include)
-        exclude_ids = self.extract_field_ids_from_string(exclude)
+
+        if not user_field_names:
+            include_ids = self.extract_field_ids_from_string(include)
+            exclude_ids = self.extract_field_ids_from_string(exclude)
+        else:
+            model = table.get_model()
+            field_name_overrides = get_user_field_name_overrides(model._field_objects)
+            field_name_to_id = dict((v, k) for k, v in field_name_overrides.items())
+            include_ids = self.extract_field_ids_from_user_field_name_string(
+                field_name_to_id, include
+            )
+            exclude_ids = self.extract_field_ids_from_user_field_name_string(
+                field_name_to_id, exclude
+            )
 
         if len(include_ids) == 0 and len(exclude_ids) == 0:
             return None
@@ -118,6 +136,17 @@ class RowHandler:
             queryset = queryset.filter(~Q(id__in=exclude_ids))
 
         return queryset
+
+    def extract_field_ids_from_user_field_name_string(self, field_name_to_id, value):
+        if not value:
+            return []
+
+        split_value = next(csv.reader([value], delimiter=",", quotechar='"'))
+        ids = []
+        for user_field_name in split_value:
+            if user_field_name in field_name_to_id:
+                ids.append(field_name_to_id[user_field_name])
+        return ids
 
     def extract_manytomany_values(self, values, model):
         """
@@ -416,3 +445,38 @@ class RowHandler:
             model=model,
             before_return=before_return,
         )
+
+
+def get_user_field_name_overrides(field_objects):
+    """
+    Generates a map of field id to the user specified field name if that name is unique
+    and does not clash with any built-in row fields. If the user field name is not
+    unique or has the same name as "id" or "order" then an _1,_2,_3 etc will be appended
+    on the field name to ensure it is unique.
+
+    :param field_objects: The list of field objects to generate the map for.
+    :return: A dictionary of field id to a unique field name.
+    """
+
+    field_name_overrides = {}
+
+    # First figure out which fields have duplicate or clashing names.
+    next_duplicate_id = {"id": 0, "order": 0}
+    for field in field_objects.values():
+        name = field["field"].name
+        if name in next_duplicate_id:
+            next_duplicate_id[name] = 1
+        else:
+            next_duplicate_id[name] = 0
+
+    # Then go over and generate the name overrides with the correct post-fix if need be.
+    for field in field_objects.values():
+        name = field["field"].name
+        field_id = field["field"].id
+        next_id = next_duplicate_id[name]
+        if next_id > 0:
+            next_duplicate_id[name] += 1
+            name = f"{name}_{next_id}"
+        field_name_overrides[field_id] = name
+
+    return field_name_overrides

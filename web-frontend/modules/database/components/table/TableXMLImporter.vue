@@ -154,9 +154,15 @@ export default {
         return
       }
 
-      this.values.data = JSON.stringify(xmlData)
-      this.error = ''
-      this.preview = this.getPreview(xmlData, hasHeader)
+      try {
+        this.values.data = JSON.stringify(xmlData)
+        this.error = ''
+        this.preview = this.getPreview(xmlData, hasHeader)
+      } catch (error) {
+        this.values.data = ''
+        this.error = error.message
+        this.preview = {}
+      }
     },
   },
 }

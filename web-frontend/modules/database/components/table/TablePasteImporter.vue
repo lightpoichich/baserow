@@ -99,9 +99,18 @@ export default {
           // If parsed successfully and it is not empty then the initial data can be
           // prepared for creating the table. We store the data stringified because it
           // doesn't need to be reactive.
-          this.values.data = JSON.stringify(data.data)
-          this.error = ''
-          this.preview = this.getPreview(data.data, this.values.firstRowHeader)
+          try {
+            this.values.data = JSON.stringify(data.data)
+            this.error = ''
+            this.preview = this.getPreview(
+              data.data,
+              this.values.firstRowHeader
+            )
+          } catch (e) {
+            this.values.data = ''
+            this.error = e.message
+            this.preview = {}
+          }
           this.$emit('input', this.value)
         },
         error(error) {

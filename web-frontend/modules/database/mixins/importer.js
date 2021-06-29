@@ -34,6 +34,23 @@ export default {
         remaining = data.length - rows.length
       }
 
+      const headSet = new Set()
+      for (const column of head) {
+        const trimmedColumn = column.trim()
+        if (trimmedColumn === '') {
+          throw new Error('Blank field names are not allowed.')
+        }
+        if (['id', 'order'].includes(trimmedColumn)) {
+          throw new Error(
+            `${column} is a reserved baserow field name and cannot be used.`
+          )
+        }
+        headSet.add(trimmedColumn)
+      }
+      if (headSet.size !== head.length) {
+        throw new Error('Field names must be unique.')
+      }
+
       head = fill(head, columns)
       rows.map((row) => fill(row, columns))
 

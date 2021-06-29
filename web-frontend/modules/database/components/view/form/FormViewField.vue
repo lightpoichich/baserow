@@ -2,7 +2,7 @@
   <div
     class="form-view__field form-view__field--editable"
     :class="{ 'form-view__field--selected': selected }"
-    @click="$emit('selected', field)"
+    @click="select()"
   >
     <div class="form-view__field-head">
       <div class="form-view__field-head-icon">
@@ -83,16 +83,13 @@
 </template>
 
 <script>
+import { isElement } from '@baserow/modules/core/utils/dom'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 
 export default {
   name: 'FormViewField',
   components: { FieldContext },
   props: {
-    selected: {
-      type: Boolean,
-      required: true,
-    },
     table: {
       type: Object,
       required: true,
@@ -108,6 +105,7 @@ export default {
   },
   data() {
     return {
+      selected: false,
       editingTitle: false,
       editingDescription: false,
       value: null,
@@ -125,6 +123,19 @@ export default {
     this.resetValue()
   },
   methods: {
+    select() {
+      this.selected = true
+      this.$el.clickOutsideEvent = (event) => {
+        if (this.selected && !isElement(this.$el, event.target)) {
+          this.unselect()
+        }
+      }
+      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+    },
+    unselect() {
+      this.selected = false
+      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+    },
     updateValue(value) {
       this.value = value
     },

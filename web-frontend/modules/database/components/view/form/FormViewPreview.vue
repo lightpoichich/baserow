@@ -41,11 +41,9 @@
         <FormViewField
           v-for="field in fields"
           :key="field.id"
-          :selected="selectedField === field.id"
           :table="table"
           :field="field"
           :field-options="fieldOptions[field.id]"
-          @selected="selectField(field)"
           @hide="updateFieldOptionsOfField(view, field, { enabled: false })"
           @updated-field-options="
             updateFieldOptionsOfField(view, field, $event)
@@ -101,17 +99,9 @@ export default {
   },
   data() {
     return {
-      selectedField: -1,
       editingTitle: false,
       editingDescription: false,
     }
-  },
-  methods: {
-    selectField(field) {
-      if (this.fieldOptions[field.id].enabled) {
-        this.selectedField = field.id
-      }
-    },
   },
 }
 </script>

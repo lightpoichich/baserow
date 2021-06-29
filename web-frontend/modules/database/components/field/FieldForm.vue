@@ -120,10 +120,10 @@ export default {
       if (this.existingFieldId) {
         fields = fields.filter((f) => f.id !== this.existingFieldId)
       }
-      return !fields.map((f) => f.name).includes(param)
+      return !fields.map((f) => f.name).includes(param.trim())
     },
     mustNotClashWithReservedName(param) {
-      return !['id', 'order'].includes(param)
+      return !['id', 'order'].includes(param.trim())
     },
     getFormComponent(type) {
       return this.$registry.get('field', type).getFormComponent()

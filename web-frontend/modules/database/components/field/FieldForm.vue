@@ -117,7 +117,7 @@ export default {
   methods: {
     mustHaveUniqueFieldName(param) {
       let fields = this.fields
-      if (this.existingFieldId) {
+      if (this.existingFieldId !== null) {
         fields = fields.filter((f) => f.id !== this.existingFieldId)
       }
       return !fields.map((f) => f.name).includes(param.trim())

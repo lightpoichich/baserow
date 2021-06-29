@@ -253,7 +253,11 @@ export const getters = {
     return state.items
   },
   getAllWithPrimary(state) {
-    return [state.primary, ...state.items]
+    if (state.primary !== null) {
+      return [state.primary, ...state.items]
+    } else {
+      return state.items
+    }
   },
 }
 

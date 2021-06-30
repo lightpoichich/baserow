@@ -3,7 +3,7 @@
     <div class="form-view__sidebar-fields">
       <div class="form-view__sidebar-fields-head">
         <div class="form-view__sidebar-fields-title">Fields</div>
-        <ul class="form-view__sidebar-fields-actions">
+        <ul v-if="!readOnly" class="form-view__sidebar-fields-actions">
           <li v-show="fields.length > 0">
             <a @click="updateFieldOptionsOfAllFields(view, { enabled: true })"
               >add all</a
@@ -21,6 +21,7 @@
           v-for="field in fields"
           :key="field.id"
           v-sortable="{
+            enabled: !readOnly,
             id: field.id,
             update: order,
           }"
@@ -28,7 +29,11 @@
         >
           <a
             class="form-view__sidebar-fields-item"
-            @click="updateFieldOptionsOfField(view, field, { enabled: true })"
+            :class="{ 'form-view__sidebar-fields-item--disabled': readOnly }"
+            @click="
+              !readOnly &&
+                updateFieldOptionsOfField(view, field, { enabled: true })
+            "
           >
             <i
               class="form-view__sidebar-fields-icon fas"
@@ -43,7 +48,7 @@
       <p v-else class="form-view__sidebar-fields-description">
         All the fields are in the form.
       </p>
-      <div>
+      <div v-if="!readOnly">
         <a
           ref="createFieldContextLink"
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
@@ -83,6 +88,10 @@ export default {
     },
     enabledFields: {
       type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

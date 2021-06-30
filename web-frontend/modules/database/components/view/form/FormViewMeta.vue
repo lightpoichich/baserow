@@ -5,13 +5,17 @@
         <div class="control">
           <label class="control__label">When the form is submitted</label>
           <div class="control__elements">
-            <ul class="choice-items choice-items--inline">
+            <ul class="choice-items choice-items--inline" z>
               <li>
                 <a
                   class="choice-items__link"
-                  :class="{ active: view.submit_action === 'MESSAGE' }"
+                  :class="{
+                    active: view.submit_action === 'MESSAGE',
+                    disabled: readOnly,
+                  }"
                   @click="
-                    view.submit_action !== 'MESSAGE' &&
+                    !readOnly &&
+                      view.submit_action !== 'MESSAGE' &&
                       $emit('updated-form', { submit_action: 'MESSAGE' })
                   "
                   >Show a message</a
@@ -20,9 +24,13 @@
               <li>
                 <a
                   class="choice-items__link"
-                  :class="{ active: view.submit_action === 'REDIRECT' }"
+                  :class="{
+                    active: view.submit_action === 'REDIRECT',
+                    disabled: readOnly,
+                  }"
                   @click="
-                    view.submit_action !== 'REDIRECT' &&
+                    !readOnly &&
+                      view.submit_action !== 'REDIRECT' &&
                       $emit('updated-form', { submit_action: 'REDIRECT' })
                   "
                   >Redirect to URL</a
@@ -39,6 +47,7 @@
               class="input form-view__meta-message-textarea"
               placeholder="The message"
               rows="3"
+              :disabled="readOnly"
             />
           </div>
         </div>
@@ -50,6 +59,7 @@
               type="text"
               class="input"
               placeholder="The URL"
+              :disabled="readOnly"
               @blur="
                 ;[
                   $v.submit_action_redirect_url.$touch(),
@@ -73,6 +83,7 @@
               type="text"
               class="input"
               placeholder="Leave blank if no email must be sent"
+              :disabled="readOnly"
               @blur="
                 ;[
                   $v.submit_email_confirmation.$touch(),
@@ -101,6 +112,10 @@ export default {
   props: {
     view: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

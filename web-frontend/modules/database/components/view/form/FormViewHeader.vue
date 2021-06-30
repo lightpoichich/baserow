@@ -14,7 +14,8 @@
         <a
           v-if="!view.public"
           class="view-form__create-link"
-          @click.stop="updateForm({ public: true })"
+          :class="{ 'view-form__create-link--disabled': readOnly }"
+          @click.stop="!readOnly && updateForm({ public: true })"
         >
           <i class="fas fa-share-square view-form__create-link-icon"></i>
           Create a private shareable link to the form
@@ -35,8 +36,9 @@
               class="view-form__shared-link-action"
               :class="{
                 'view-form__shared-link-action--loading': rotateSlugLoading,
+                'view-form__shared-link-action--disabled': readOnly,
               }"
-              @click="rotateSlug()"
+              @click="!readOnly && rotateSlug()"
             >
               <i class="fas fa-sync"></i>
             </a>
@@ -50,6 +52,7 @@
             </a>
           </div>
           <a
+            v-if="!readOnly"
             class="view-form__shared-link-disable"
             @click.stop="updateForm({ public: false })"
           >

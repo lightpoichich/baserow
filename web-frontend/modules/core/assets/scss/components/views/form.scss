@@ -77,6 +77,14 @@
       @include absolute(50%, 0, auto, auto);
     }
   }
+
+  &.form-view__sidebar-fields-item--disabled {
+    cursor: inherit;
+
+    &::after {
+      display: none;
+    }
+  }
 }
 
 .form-view__sidebar-fields-icon {
@@ -318,7 +326,7 @@
   line-height: 40px;
   padding: 0 20px;
   width: 100%;
-  justify-content: center;
+  justify-content: left;
   border-top-left-radius: 13px;
   border-top-right-radius: 13px;
 
@@ -454,11 +462,24 @@
     text-decoration: none;
     background-color: $color-neutral-100;
   }
+
+  &.view-form__create-link--disabled {
+    color: $color-neutral-500;
+    background-color: transparent;
+
+    &:hover {
+      cursor: inherit;
+    }
+  }
 }
 
 .view-form__create-link-icon {
   margin-right: 20px;
   color: $color-warning-500;
+
+  .view-form__create-link--disabled & {
+    color: $color-neutral-500;
+  }
 }
 
 .view-form__shared-link {
@@ -501,7 +522,6 @@
   border-radius: 3px;
 
   &:not(.view-form__shared-link-action--loading):hover {
-    color: $color-primary-900;
     background-color: $color-neutral-100;
   }
 
@@ -517,6 +537,15 @@
 
       @include loading(14px);
       @include absolute(50%, auto, auto, 50%);
+    }
+  }
+
+  &.view-form__shared-link-action--disabled {
+    color: $color-primary-900;
+    background-color: transparent;
+
+    &:hover {
+      cursor: inherit;
     }
   }
 }

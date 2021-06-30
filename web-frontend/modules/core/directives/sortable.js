@@ -52,6 +52,10 @@ export default {
       : el
 
     el.mousedownEvent = (event) => {
+      if (!el.sortableEnabled) {
+        return
+      }
+
       el.sortableMoved = false
       el.sortableStartClientX = event.clientX
       el.sortableStartClientY = event.clientY
@@ -94,6 +98,8 @@ export default {
   },
   update(el, binding) {
     el.sortableId = binding.value.id
+    el.sortableEnabled =
+      binding.value.enabled || binding.value.enabled === undefined
     el.sortableMarginLeft = binding.value.marginLeft
     el.sortableMarginRight = binding.value.marginRight
     el.sortableMarginTop = binding.value.marginTop

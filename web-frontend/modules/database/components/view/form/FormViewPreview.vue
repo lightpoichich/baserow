@@ -9,19 +9,21 @@
             : null,
         }"
       >
-        <FormViewImageUpload
-          v-if="!view.cover_image"
-          @uploaded="updateForm({ cover_image: $event })"
-          >Add a cover image
-        </FormViewImageUpload>
-        <a
-          v-else
-          class="form_view__file-delete"
-          @click="updateForm({ cover_image: null })"
-        >
-          <i class="fas fa-times"></i>
-          Remove
-        </a>
+        <template v-if="!readOnly">
+          <FormViewImageUpload
+            v-if="!view.cover_image"
+            @uploaded="updateForm({ cover_image: $event })"
+            >Add a cover image
+          </FormViewImageUpload>
+          <a
+            v-else
+            class="form_view__file-delete"
+            @click="updateForm({ cover_image: null })"
+          >
+            <i class="fas fa-times"></i>
+            Remove
+          </a>
+        </template>
       </div>
       <div class="form-view__body">
         <div class="form-view__heading">
@@ -32,6 +34,7 @@
               width="200"
             />
             <a
+              v-if="!readOnly"
               class="form_view__file-delete"
               @click="updateForm({ logo_image: null })"
             >
@@ -40,7 +43,7 @@
             </a>
           </div>
           <FormViewImageUpload
-            v-else
+            v-else-if="!readOnly"
             @uploaded="updateForm({ logo_image: $event })"
             >Add a logo
           </FormViewImageUpload>
@@ -52,6 +55,7 @@
               @editing="editingTitle = $event"
             ></Editable>
             <a
+              v-if="!readOnly"
               class="form-view__edit"
               :class="{ 'form-view__edit--hidden': editingTitle }"
               @click="$refs.title.edit()"
@@ -65,6 +69,7 @@
               @editing="editingDescription = $event"
             ></Editable>
             <a
+              v-if="!readOnly"
               class="form-view__edit"
               :class="{ 'form-view__edit--hidden': editingDescription }"
               @click="$refs.description.edit()"
@@ -80,6 +85,7 @@
             v-for="field in fields"
             :key="field.id"
             v-sortable="{
+              enabled: !readOnly,
               id: field.id,
               update: order,
               handle: '[data-field-handle]',
@@ -87,6 +93,7 @@
             :table="table"
             :field="field"
             :field-options="fieldOptions[field.id]"
+            :read-only="readOnly"
             @hide="updateFieldOptionsOfField(view, field, { enabled: false })"
             @updated-field-options="
               updateFieldOptionsOfField(view, field, $event)
@@ -112,6 +119,7 @@
       </div>
       <FormViewMeta
         :view="view"
+        :read-only="readOnly"
         @updated-form="updateForm($event)"
       ></FormViewMeta>
     </div>
@@ -139,6 +147,10 @@ export default {
     },
     fields: {
       type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

@@ -5,6 +5,7 @@
       :view="view"
       :fields="disabledFields"
       :enabled-fields="enabledFields"
+      :read-only="readOnly"
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"
     ></FormViewSidebar>
@@ -12,6 +13,7 @@
       :table="table"
       :view="view"
       :fields="enabledFields"
+      :read-only="readOnly"
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"
     ></FormViewPreview>

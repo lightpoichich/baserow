@@ -6,12 +6,17 @@
       @click="select()"
     >
       <div class="form-view__field-head">
-        <a class="form-view__field-head-handle" data-field-handle></a>
+        <a
+          v-show="!readOnly"
+          class="form-view__field-head-handle"
+          data-field-handle
+        ></a>
         <div class="form-view__field-head-icon">
           <i class="fas fa-fw" :class="'fa-' + field._.type.iconClass"></i>
         </div>
         <div class="form-view__field-head-name">{{ field.name }}</div>
         <a
+          v-if="!readOnly"
           ref="fieldContextLink"
           class="form-view__field-head-options"
           @click="
@@ -31,7 +36,11 @@
           :field="field"
           @update="$event.callback()"
         ></FieldContext>
-        <a class="form-view__field-head-hide" @click="$emit('hide', field)">
+        <a
+          v-if="!readOnly"
+          class="form-view__field-head-hide"
+          @click="$emit('hide', field)"
+        >
           <i class="fas fa-eye-slash"></i>
         </a>
       </div>
@@ -44,6 +53,7 @@
             @editing="editingTitle = $event"
           ></Editable>
           <a
+            v-if="!readOnly"
             class="form-view__edit form-view-field-edit"
             :class="{ 'form-view__edit--hidden': editingTitle }"
             @click="$refs.title.edit()"
@@ -59,6 +69,7 @@
             @editing="editingDescription = $event"
           ></Editable>
           <a
+            v-if="!readOnly"
             class="form-view__edit form-view-field-edit"
             :class="{ 'form-view__edit--hidden': editingDescription }"
             @click="$refs.description.edit()"
@@ -69,13 +80,14 @@
           ref="field"
           :field="field"
           :value="value"
-          :read-only="false"
+          :read-only="readOnly"
           @update="updateValue"
         />
         <div class="form-view__field-options">
           <SwitchInput
             :value="fieldOptions.required"
             :large="true"
+            :disabled="readOnly"
             @input="$emit('updated-field-options', { required: $event })"
             >required</SwitchInput
           >
@@ -103,6 +115,10 @@ export default {
     },
     fieldOptions: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

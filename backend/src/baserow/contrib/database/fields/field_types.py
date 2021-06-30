@@ -709,8 +709,14 @@ class LinkRowFieldType(FieldType):
             return
 
         handler = FieldHandler()
+        # First just try the tables name, so if say the Client table is linking to the
+        # Address table, the new field in the Address table will just be called 'Client'
+        # . However say we then add another link from the Client to Address table with
+        # a field name of "Bank Address", the new field in the Address table will be
+        # called 'Client - Bank Address'.
         related_field_name = handler.find_next_unused_field_name(
-            field.link_row_table, f"{field.table.name} - {field.name}"
+            field.link_row_table,
+            [f"{field.table.name}", f"{field.table.name} - " f"{field.name}"],
         )
         field.link_row_related_field = handler.create_field(
             user=user,

@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from django.conf import settings
 from django.db import connections
@@ -472,21 +472,26 @@ class FieldHandler:
         if len(to_create) > 0:
             SelectOption.objects.bulk_create(to_create)
 
-    def find_next_unused_field_name(self, table, field_name):
+    def find_next_unused_field_name(self, table, field_names_to_try: List[str]):
         """
-        Finds a unused field name in the provided table starting with field_name.
-        If field_name is not taken then it will be returned, if it is taken then the
-        next name appended with an _X where X is a positive integer which is free will
-        be returned.
+        Finds a unused field name in the provided table. If no names in the provided
+        field_names_to_try list are available then the last field name in that list will
+        have a number appended which ensures it is an available unique field name.
 
         :param table: The table whose fields to search.
-        :param field_name: The field_name to find a unused name for.
-        :return: A free field name starting with field_name possibly followed by an
-            _X where X is a positive integer.
+        :param field_names_to_try: The field_names to try in order before starting to
+            append a number.
+        :return: An available field name
         """
-        original_field_name = field_name
+
+        for field_name in field_names_to_try:
+            if not Field.objects.filter(table=table, name=field_name).exists():
+                return field_name
+
+        original_field_name = field_names_to_try[-1]
         i = 2
-        while Field.objects.filter(table=table, name=field_name).exists():
+        while True:
             field_name = f"{original_field_name} {i}"
             i += 1
-        return field_name
+            if not Field.objects.filter(table=table, name=field_name).exists():
+                return field_name

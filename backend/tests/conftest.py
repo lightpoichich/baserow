@@ -1,12 +1,11 @@
 from __future__ import print_function
 
-import uuid
+import sys
 
 import psycopg2
 import pytest
 from django.db import connections
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import sys
 
 
 @pytest.fixture

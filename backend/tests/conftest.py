@@ -1,4 +1,7 @@
 from __future__ import print_function
+
+import uuid
+
 import psycopg2
 import pytest
 from django.db import connections

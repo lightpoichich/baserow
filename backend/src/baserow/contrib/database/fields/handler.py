@@ -1,5 +1,6 @@
 import logging
 from copy import deepcopy
+from typing import Dict, Any, Optional
 
 from django.conf import settings
 from django.db import connections
@@ -22,6 +23,7 @@ from .exceptions import (
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
 from .signals import field_created, field_updated, field_deleted
+from ..table.models import Table
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +31,24 @@ RESERVED_BASEROW_FIELD_NAMES = {"id", "order"}
 
 
 def _validate_field_name(
-    field_values, table, existing_field=None, raise_if_name_missing=True
+    field_values: Dict[str, Any],
+    table: Table,
+    existing_field: Optional[Field] = None,
+    raise_if_name_missing: bool = True,
 ):
+    """
+    Raises various exceptions if the provided field name is invalid.
+
+    :param field_values: The dictionary which should contain a name key.
+    :param table: The table to check that this field name is valid for.
+    :param existing_field: If this is name change for an existing field then the
+        existing field instance must be provided here.
+    :param raise_if_name_missing: When True raises a InvalidBaserowFieldName if the
+        name key is not in field_values. When False does not return and immediately
+        returns if the key is missing.
+    :raises InvalidBaserowFieldName: If "name" is
+    :return:
+    """
     if "name" not in field_values:
         if raise_if_name_missing:
             raise InvalidBaserowFieldName()

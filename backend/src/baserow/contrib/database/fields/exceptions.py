@@ -84,7 +84,7 @@ class IncompatiblePrimaryFieldTypeError(Exception):
 
 class FieldWithSameNameAlreadyExists(Exception):
     """Raised when a field is created or updated with a name that matches an
-    existing fields name."""
+    existing fields name in the same table."""
 
 
 class ReservedBaserowFieldNameException(Exception):

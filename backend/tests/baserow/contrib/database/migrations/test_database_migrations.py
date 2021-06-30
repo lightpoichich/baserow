@@ -1,14 +1,18 @@
 import pytest
 
-
 # noinspection PyPep8Naming
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+
+migrate_from = [("database", "0031_fix_url_field_max_length")]
+migrate_to = [("database", "0032_unique_field_names")]
+
+
 @pytest.mark.django_db
 def test_migration_fixes_duplicate_field_names(
-    migrator, data_fixture, user_tables_in_separate_db
+    data_fixture, transactional_db, user_tables_in_separate_db
 ):
-    old_state = migrator.apply_initial_migration(
-        ("database", "0031_fix_url_field_max_length")
-    )
+    old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
@@ -66,7 +70,7 @@ def test_migration_fixes_duplicate_field_names(
         content_type_id=content_type_id,
     )
 
-    new_state = migrator.apply_tested_migration(("database", "0032_unique_field_names"))
+    new_state = migrate(migrate_to)
     # After the initial migration is done, we can use the model state:
     Field = new_state.apps.get_model("database", "Field")
     assert Field.objects.get(id=first_dupe_field.id).name == "Duplicate"
@@ -86,12 +90,9 @@ def test_migration_fixes_duplicate_field_names(
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_handles_existing_fields_with_underscore_number(
-    migrator, data_fixture, user_tables_in_separate_db
+    data_fixture, transactional_db, user_tables_in_separate_db
 ):
-    old_state = migrator.apply_initial_migration(
-        ("database", "0031_fix_url_field_max_length")
-    )
-
+    old_state = migrate(migrate_from)
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
     user = data_fixture.create_user()
@@ -125,8 +126,8 @@ def test_migration_handles_existing_fields_with_underscore_number(
         primary=False,
         content_type_id=content_type_id,
     )
-    new_state = migrator.apply_tested_migration(("database", "0032_unique_field_names"))
 
+    new_state = migrate(migrate_to)
     Field = new_state.apps.get_model("database", "Field")
     assert Field.objects.get(id=first_dupe_field.id).name == "Duplicate"
     assert Field.objects.get(id=first_dupe_field.id).old_name is None
@@ -140,12 +141,10 @@ def test_migration_handles_existing_fields_with_underscore_number(
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_backwards_migration_restores_field_names(
-    migrator, data_fixture, user_tables_in_separate_db
+    data_fixture, transactional_db, user_tables_in_separate_db
 ):
-    old_state = migrator.apply_initial_migration(
-        ("database", "0032_unique_field_names")
-    )
 
+    old_state = migrate(migrate_to)
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
     user = data_fixture.create_user()
@@ -182,10 +181,8 @@ def test_backwards_migration_restores_field_names(
         primary=False,
         content_type_id=content_type_id,
     )
-    new_state = migrator.apply_tested_migration(
-        ("database", "0031_fix_url_field_max_length")
-    )
 
+    new_state = migrate(migrate_from)
     Field = new_state.apps.get_model("database", "Field")
     assert Field.objects.get(id=first_dupe_field.id).name == "Duplicate"
     assert Field.objects.get(id=second_dupe_field.id).name == "Duplicate"
@@ -195,11 +192,9 @@ def test_backwards_migration_restores_field_names(
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_fixes_duplicate_field_names_and_reserved_names(
-    migrator, data_fixture, user_tables_in_separate_db
+    data_fixture, transactional_db, user_tables_in_separate_db
 ):
-    old_state = migrator.apply_initial_migration(
-        ("database", "0031_fix_url_field_max_length")
-    )
+    old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
@@ -278,7 +273,10 @@ def test_migration_fixes_duplicate_field_names_and_reserved_names(
         primary=False,
         content_type_id=content_type_id,
     )
-    new_state = migrator.apply_tested_migration(("database", "0032_unique_field_names"))
+
+    # Run the migration to test
+    new_state = migrate(migrate_to)
+
     # After the initial migration is done, we can use the model state:
     Field = new_state.apps.get_model("database", "Field")
     assert Field.objects.get(id=first_dupe_field.id).name == "Duplicate"
@@ -299,3 +297,11 @@ def test_migration_fixes_duplicate_field_names_and_reserved_names(
     assert Field.objects.get(id=normal_field_1.id).old_name is None
     assert Field.objects.get(id=normal_field_2.id).name == "Id"
     assert Field.objects.get(id=normal_field_2.id).old_name is None
+
+
+def migrate(target):
+    executor = MigrationExecutor(connection)
+    executor.loader.build_graph()  # reload.
+    executor.migrate(target)
+    new_state = executor.loader.project_state(target)
+    return new_state

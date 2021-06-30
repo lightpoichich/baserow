@@ -9,22 +9,22 @@
   overflow: auto;
 }
 
-.form-view__fields {
+.form-view__sidebar-fields {
   padding: 30px;
 }
 
-.form-view__fields-head {
+.form-view__sidebar-fields-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.form-view__fields-title {
+.form-view__sidebar-fields-title {
   font-size: 16px;
   font-weight: 700;
 }
 
-.form-view__fields-actions {
+.form-view__sidebar-fields-actions {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -38,27 +38,28 @@
   }
 }
 
-.form-view__fields-description {
+.form-view__sidebar-fields-description {
   font-size: 13px;
   color: $color-primary-900;
   margin: 18px 0;
 }
 
-.form-view__fields-list {
-  margin: 18px 0;
+.form-view__sidebar-fields-list {
+  position: relative;
+  margin: 12px 0;
 }
 
-.form-view__fields-item {
+.form-view__sidebar-fields-item-wrapper {
+  padding: 6px 0;
+}
+
+.form-view__sidebar-fields-item {
   position: relative;
   display: flex;
   border: solid 1px $color-neutral-300;
   border-radius: 3px;
   background-color: $white;
   padding: 0 30px 0 12px;
-
-  &:not(:last-child) {
-    margin-bottom: 12px;
-  }
 
   &:hover {
     text-decoration: none;
@@ -78,14 +79,14 @@
   }
 }
 
-.form-view__fields-icon {
+.form-view__sidebar-fields-icon {
   flex: 0 0 20px;
   line-height: 36px;
   font-size: 13px;
   color: $color-neutral-700;
 }
 
-.form-view__fields-name {
+.form-view__sidebar-fields-name {
   @extend %ellipsis;
 
   width: 100%;
@@ -275,9 +276,16 @@
   line-height: 160%;
 }
 
+.form-view__fields {
+  position: relative;
+}
+
+.form-view__field-wrapper {
+  padding: 7px 0;
+}
+
 .form-view__field {
   position: relative;
-  margin: 14px 0;
   border-radius: 12px;
 
   &.form-view__field--editable {
@@ -316,6 +324,19 @@
 
   .form-view__field--selected & {
     display: flex;
+  }
+}
+
+.form-view__field-head-handle {
+  width: 12px;
+  height: 20px;
+  background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
+  background-size: 4px 4px;
+  background-repeat: repeat;
+  margin: 10px 10px 0 0;
+
+  &:hover {
+    background-image: radial-gradient($color-neutral-500 40%, transparent 40%);
   }
 }
 

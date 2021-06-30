@@ -75,7 +75,10 @@ export const actions = {
    * Updates the order of all the available field options. The provided order parameter
    * should be an array containing the field ids in the correct order.
    */
-  async updateFieldOptionsOrder({ commit, getters, dispatch }, { order }) {
+  async updateFieldOptionsOrder(
+    { commit, getters, dispatch },
+    { form, order }
+  ) {
     const oldFieldOptions = clone(getters.getAllFieldOptions)
     const newFieldOptions = clone(getters.getAllFieldOptions)
 
@@ -98,6 +101,7 @@ export const actions = {
     })
 
     return await dispatch('updateAllFieldOptions', {
+      form,
       oldFieldOptions,
       newFieldOptions,
     })

@@ -75,18 +75,25 @@
             sidebar to add one.
           </div>
         </div>
-        <FormViewField
-          v-for="field in fields"
-          :key="field.id"
-          :table="table"
-          :field="field"
-          :field-options="fieldOptions[field.id]"
-          @hide="updateFieldOptionsOfField(view, field, { enabled: false })"
-          @updated-field-options="
-            updateFieldOptionsOfField(view, field, $event)
-          "
-        >
-        </FormViewField>
+        <div class="form-view__fields">
+          <FormViewField
+            v-for="field in fields"
+            :key="field.id"
+            v-sortable="{
+              id: field.id,
+              update: order,
+              handle: '[data-field-handle]',
+            }"
+            :table="table"
+            :field="field"
+            :field-options="fieldOptions[field.id]"
+            @hide="updateFieldOptionsOfField(view, field, { enabled: false })"
+            @updated-field-options="
+              updateFieldOptionsOfField(view, field, $event)
+            "
+          >
+          </FormViewField>
+        </div>
         <div class="form-view__actions">
           <div class="form-view__powered-by">
             Powered by
@@ -140,6 +147,11 @@ export default {
       editingTitle: false,
       editingDescription: false,
     }
+  },
+  methods: {
+    order(order) {
+      this.$emit('ordered-fields', order)
+    },
   },
 }
 </script>

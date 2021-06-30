@@ -1,9 +1,9 @@
 <template>
   <div class="form-view__sidebar">
-    <div class="form-view__fields">
-      <div class="form-view__fields-head">
-        <div class="form-view__fields-title">Fields</div>
-        <ul class="form-view__fields-actions">
+    <div class="form-view__sidebar-fields">
+      <div class="form-view__sidebar-fields-head">
+        <div class="form-view__sidebar-fields-title">Fields</div>
+        <ul class="form-view__sidebar-fields-actions">
           <li v-show="fields.length > 0">
             <a @click="updateFieldOptionsOfAllFields(view, { enabled: true })"
               >add all</a
@@ -16,24 +16,34 @@
           </li>
         </ul>
       </div>
-      <div v-if="fields.length > 0" class="form-view__fields-list">
-        <a
+      <div v-if="fields.length > 0" class="form-view__sidebar-fields-list">
+        <div
           v-for="field in fields"
           :key="field.id"
-          class="form-view__fields-item"
-          @click="updateFieldOptionsOfField(view, field, { enabled: true })"
+          v-sortable="{
+            id: field.id,
+            update: order,
+          }"
+          class="form-view__sidebar-fields-item-wrapper"
         >
-          <i
-            class="form-view__fields-icon fas"
-            :class="'fa-' + field._.type.iconClass"
-          ></i>
-          <div class="form-view__fields-name">{{ field.name }}</div>
-        </a>
+          <a
+            class="form-view__sidebar-fields-item"
+            @click="updateFieldOptionsOfField(view, field, { enabled: true })"
+          >
+            <i
+              class="form-view__sidebar-fields-icon fas"
+              :class="'fa-' + field._.type.iconClass"
+            ></i>
+            <div class="form-view__sidebar-fields-name">
+              {{ field.name }}
+            </div>
+          </a>
+        </div>
       </div>
-      <p v-else class="form-view__fields-description">
+      <p v-else class="form-view__sidebar-fields-description">
         All the fields are in the form.
       </p>
-      <div class="form-view__fields-create">
+      <div>
         <a
           ref="createFieldContextLink"
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
@@ -74,6 +84,11 @@ export default {
     enabledFields: {
       type: Array,
       required: true,
+    },
+  },
+  methods: {
+    order(order) {
+      this.$emit('ordered-fields', order)
     },
   },
 }

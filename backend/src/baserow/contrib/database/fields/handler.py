@@ -487,6 +487,6 @@ class FieldHandler:
         original_field_name = field_name
         i = 2
         while Field.objects.filter(table=table, name=field_name).exists():
-            field_name = f"{original_field_name}_{i}"
+            field_name = f"{original_field_name} {i}"
             i += 1
         return field_name

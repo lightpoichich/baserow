@@ -111,8 +111,8 @@ def test_link_row_field_type(data_fixture):
         link_row_table=customers_table,
     )
 
-    assert link_field_1.link_row_related_field.name == "Example"
-    assert link_field_2.link_row_related_field.name == "Example_2"
+    assert link_field_1.link_row_related_field.name == "Example - Customer"
+    assert link_field_2.link_row_related_field.name == "Example - Customer 2"
 
     connection = connections["default"]
     tables = connection.introspection.table_names()
@@ -527,7 +527,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json["name"] == "Example"
+    assert response_json["name"] == "Example - Link 1"
     assert response_json["link_row_table"] == table.id
     assert response_json["link_row_related_field"] == field.id
 

@@ -710,7 +710,7 @@ class LinkRowFieldType(FieldType):
 
         handler = FieldHandler()
         related_field_name = handler.find_next_unused_field_name(
-            field.link_row_table, field.table.name
+            field.link_row_table, f"{field.table.name} - {field.name}"
         )
         field.link_row_related_field = handler.create_field(
             user=user,

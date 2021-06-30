@@ -104,6 +104,11 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      rotateSlugLoading: false,
+    }
+  },
   computed: {
     formUrl() {
       return (
@@ -117,11 +122,6 @@ export default {
     ...mapState({
       tableLoading: (state) => state.table.loading,
     }),
-  },
-  data() {
-    return {
-      rotateSlugLoading: false,
-    }
   },
   methods: {
     copyFormUrlToClipboard() {

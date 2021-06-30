@@ -145,7 +145,20 @@ export default {
     select() {
       this.selected = true
       this.$el.clickOutsideEvent = (event) => {
-        if (this.selected && !isElement(this.$el, event.target)) {
+        if (
+          this.selected &&
+          // If the user not clicked inside the field.
+          !isElement(this.$el, event.target) &&
+          // If the user has not clicked inside the field context.
+          !isElement(this.$refs.fieldContext.$el, event.target) &&
+          // If the user has not clicked inside a child of the field context that has been
+          // moved to the body, for example a sub context menu.
+          !this.$refs.fieldContext
+            .getRootContext()
+            .moveToBody.children.some((child) => {
+              return isElement(child.$el, event.target)
+            })
+        ) {
           this.unselect()
         }
       }

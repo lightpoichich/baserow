@@ -19,7 +19,9 @@ class RowSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}, "order": {"read_only": True}}
 
 
-def get_row_serializer_class(model, base_class=None, is_response=False, field_ids=None):
+def get_row_serializer_class(
+    model, base_class=None, is_response=False, field_ids=None, field_kwargs=None
+):
     """
     Generates a Django rest framework model serializer based on the available fields
     that belong to this model. For each table field, used to generate this serializer,
@@ -43,6 +45,9 @@ def get_row_serializer_class(model, base_class=None, is_response=False, field_id
     :rtype: ModelSerializer
     """
 
+    if not field_kwargs:
+        field_kwargs = {}
+
     field_objects = model._field_objects
     field_names = [
         field["name"]
@@ -50,9 +55,13 @@ def get_row_serializer_class(model, base_class=None, is_response=False, field_id
         if field_ids is None or field["field"].id in field_ids
     ]
     field_overrides = {
-        field["name"]: field["type"].get_response_serializer_field(field["field"])
+        field["name"]: field["type"].get_response_serializer_field(
+            field["field"], **field_kwargs.get(field["name"], {})
+        )
         if is_response
-        else field["type"].get_serializer_field(field["field"])
+        else field["type"].get_serializer_field(
+            field["field"], **field_kwargs.get(field["name"], {})
+        )
         for field in field_objects.values()
         if field_ids is None or field["field"].id in field_ids
     }

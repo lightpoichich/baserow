@@ -272,6 +272,14 @@ class FormView(View):
     def rotate_slug(self):
         self.slug = uuid.uuid4()
 
+    @property
+    def active_field_options(self):
+        return (
+            FormViewFieldOptions.objects.filter(form_view=self, enabled=True)
+            .select_related("field")
+            .order_by("order")
+        )
+
 
 class FormViewFieldOptions(models.Model):
     form_view = models.ForeignKey(FormView, on_delete=models.CASCADE)

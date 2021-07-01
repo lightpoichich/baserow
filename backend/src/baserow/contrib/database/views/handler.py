@@ -1,10 +1,12 @@
 from django.db.models import F
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ValidationError
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.signals import row_created
 from baserow.core.utils import (
     extract_allowed,
     set_allowed_attrs,
@@ -23,7 +25,7 @@ from .exceptions import (
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
 )
-from .models import View, ViewFilter, ViewSort, FormView
+from .models import View, ViewFilter, ViewSort, FormView, FormViewFieldOptions
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created,
@@ -767,3 +769,82 @@ class ViewHandler:
         view_updated.send(self, view=form, user=user)
 
         return form
+
+    def get_public_form_view_by_slug(self, user, slug):
+        """
+        Returns the form view related to the provided slug, if the provided slug is
+        public or if the user has access to the group.
+
+        :param user: The user on whose behalf the form is requested.
+        :type user: User
+        :param slug: The slug of the form view.
+        :type slug: str
+        :return: The requested form view that belongs to the form with the slug.
+        :rtype: FormView
+        """
+
+        try:
+            form = FormView.objects.get(slug=slug)
+        except (FormView.DoesNotExist, ValidationError):
+            raise ViewDoesNotExist("The form does not exist.")
+
+        if not form.public and (
+            not user or not form.table.database.group.has_user(user)
+        ):
+            raise ViewDoesNotExist("The form does not exist.")
+
+        return form
+
+    def submit_form_view(self, form, values, model=None):
+        """
+        Handles when a form is submitted. It will validate the data by checking if
+        the required fields are provided and not empty and it will create a new row
+        based on those values.
+
+        :param form: The form view that is submitted.
+        :type form: FormView
+        :param values: The submitted values that need to be used when creating the row.
+        :type values: dict
+        :param model: If the model is already generated, it can be provided here.
+        :type model: Model | None
+        :return: The newly created row.
+        :rtype: Model
+        """
+
+        table = form.table
+
+        if not model:
+            model = table.get_model()
+
+        enabled_field_options = FormViewFieldOptions.objects.filter(
+            form_view=form, enabled=True
+        )
+        allowed_field_names = []
+        field_errors = {}
+
+        # Loop over all field options, find the name in the model and check if the
+        # required values are provided. If not, a validation error is raised.
+        for field in enabled_field_options:
+            field_name = model._field_objects[field.field_id]["name"]
+            allowed_field_names.append(field_name)
+            field_instance = model._meta.get_field(field_name)
+
+            if field.required and (
+                field_name not in values
+                or values[field_name] in field_instance.empty_values
+            ):
+                field_errors[field_name] = ["This field is required"]
+
+        if len(field_errors) > 0:
+            raise ValidationError(field_errors)
+
+        allowed_values = extract_allowed(values, allowed_field_names)
+        instance = RowHandler()._create_row(table, allowed_values, model)
+
+        row_created.send(
+            self, row=instance, before=None, user=None, table=table, model=model
+        )
+
+        # @TODO sent email confirmation if an address is provided.
+
+        return instance

@@ -191,3 +191,205 @@ def test_rotate_slug(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["slug"] != old_slug
     assert len(response_json["slug"]) == 36
+
+
+@pytest.mark.django_db
+def test_meta_submit_form_view(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    user_file_1 = data_fixture.create_user_file()
+    user_file_2 = data_fixture.create_user_file()
+    form = data_fixture.create_form_view(
+        table=table,
+        title="Title",
+        description="Description",
+        cover_image=user_file_1,
+        logo_image=user_file_2,
+    )
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    disabled_field = data_fixture.create_text_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form,
+        text_field,
+        name="Text field title",
+        description="Text field description",
+        required=True,
+        enabled=True,
+        order=1,
+    )
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=False, enabled=True, order=2
+    )
+    data_fixture.create_form_view_field_option(
+        form, disabled_field, required=False, enabled=False, order=3
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": "NOT_EXISTING"})
+    response = api_client.get(url, format="json")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.get(url, format="json")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token_2}")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_200_OK
+
+    form.public = True
+    form.save()
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.get(url, format="json")
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json["title"] == "Title"
+    assert response_json["description"] == "Description"
+    assert response_json["cover_image"]["name"] == user_file_1.name
+    assert response_json["logo_image"]["name"] == user_file_2.name
+    assert len(response_json["fields"]) == 2
+    assert response_json["fields"][0] == {
+        "name": "Text field title",
+        "description": "Text field description",
+        "required": True,
+        "order": 1,
+        "field": {"type": "text", "text_default": ""},
+    }
+    assert response_json["fields"][1] == {
+        "name": "",
+        "description": "",
+        "required": False,
+        "order": 2,
+        "field": {
+            "type": "number",
+            "number_type": "INTEGER",
+            "number_decimal_places": 1,
+            "number_negative": False,
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_submit_form_view(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(
+        table=table,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    disabled_field = data_fixture.create_text_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True, order=1
+    )
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=False, enabled=True, order=2
+    )
+    data_fixture.create_form_view_field_option(
+        form, disabled_field, required=False, enabled=False, order=3
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": "NOT_EXISTING"})
+    response = api_client.post(url, {}, format="json")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(url, {}, format="json")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url, {}, format="json", HTTP_AUTHORIZATION=f"JWT" f" {token_2}"
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {
+            # We do not provide the text field value, but that one is required and we
+            # provide a wrong value for the number field, so we expect two errors.
+            f"field_{number_field.id}": {},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 2
+    assert response_json["detail"][f"field_{text_field.id}"][0]["code"] == "required"
+    assert response_json["detail"][f"field_{number_field.id}"][0]["code"] == "invalid"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "Valid",
+            f"field_{number_field.id}": 0,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "submit_action": "MESSAGE",
+        "submit_action_message": "Test",
+        "submit_action_redirect_url": "https://baserow.io",
+    }
+
+    model = table.get_model()
+    all = model.objects.all()
+    assert len(all) == 1
+    assert getattr(all[0], f"field_{text_field.id}") == "Valid"
+    assert getattr(all[0], f"field_{number_field.id}") == 0
+
+    form.public = True
+    form.save()
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 1
+    assert response_json["detail"][f"field_{text_field.id}"][0]["code"] == "required"
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "A value",
+            f"field_{disabled_field.id}": "Value",
+        },
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    model = table.get_model()
+    all = model.objects.all()
+    assert len(all) == 2
+    assert getattr(all[1], f"field_{text_field.id}") == "A value"
+    assert getattr(all[1], f"field_{number_field.id}") is None
+    assert getattr(all[1], f"field_{disabled_field.id}") is None

@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import patch
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
+
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import (
@@ -1195,3 +1197,91 @@ def test_rotate_form_view_slug(send_mock, data_fixture):
     form.refresh_from_db()
     assert str(form.slug) != old_slug
     assert len(str(form.slug)) == 36
+
+
+@pytest.mark.django_db
+def test_get_public_form_view_by_slug(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    form = data_fixture.create_form_view(user=user)
+
+    handler = ViewHandler()
+
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_public_form_view_by_slug(user_2, "not_existing")
+
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_public_form_view_by_slug(
+            user_2, "a3f1493a-9229-4889-8531-6a65e745602e"
+        )
+
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_public_form_view_by_slug(user_2, form.slug)
+
+    form2 = handler.get_public_form_view_by_slug(user, form.slug)
+    assert form.id == form2.id
+
+    form.public = True
+    form.save()
+
+    form2 = handler.get_public_form_view_by_slug(user_2, form.slug)
+    assert form.id == form2.id
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.row_created.send")
+def test_submit_form_view(send_mock, data_fixture):
+    table = data_fixture.create_database_table()
+    form = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    boolean_field = data_fixture.create_boolean_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=False, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, boolean_field, required=True, enabled=False
+    )
+
+    handler = ViewHandler()
+
+    with pytest.raises(ValidationError) as e:
+        handler.submit_form_view(form=form, values={})
+
+    with pytest.raises(ValidationError) as e:
+        handler.submit_form_view(form=form, values={f"field_{number_field.id}": 0})
+
+    assert f"field_{text_field.id}" in e.value.error_dict
+
+    instance = handler.submit_form_view(
+        form=form, values={f"field_{text_field.id}": "Text value"}
+    )
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["row"].id == instance.id
+    assert send_mock.call_args[1]["user"] is None
+    assert send_mock.call_args[1]["table"].id == table.id
+    assert send_mock.call_args[1]["before"] is None
+    assert send_mock.call_args[1]["model"]._generated_table_model
+
+    handler.submit_form_view(
+        form=form,
+        values={
+            f"field_{text_field.id}": "Another value",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        },
+    )
+
+    model = table.get_model()
+    all = model.objects.all()
+    assert len(all) == 2
+    assert getattr(all[0], f"field_{text_field.id}") == "Text value"
+    assert getattr(all[0], f"field_{number_field.id}") is None
+    assert not getattr(all[0], f"field_{boolean_field.id}")
+    assert getattr(all[1], f"field_{text_field.id}") == "Another value"
+    assert getattr(all[1], f"field_{number_field.id}") == 10
+    assert not getattr(all[1], f"field_{boolean_field.id}")

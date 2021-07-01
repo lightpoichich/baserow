@@ -907,3 +907,19 @@ def test_update_select_options(data_fixture):
 
     assert SelectOption.objects.all().count() == 2
     assert field_2.select_options.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_find_next_free_field_name(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(table=table, order=0)
+
+    data_fixture.create_text_field(name="test", table=table, order=1)
+    data_fixture.create_text_field(name="field", table=table, order=1)
+    data_fixture.create_text_field(name="field 2", table=table, order=1)
+    handler = FieldHandler()
+
+    assert handler.find_next_unused_field_name(table, ["test"]) == "test 2"
+    assert handler.find_next_unused_field_name(table, ["test", "other"]) == "other"
+    assert handler.find_next_unused_field_name(table, ["field"]) == "field 3"

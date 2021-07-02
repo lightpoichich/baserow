@@ -1,15 +1,14 @@
 import csv
 import re
-from math import floor, ceil
 from decimal import Decimal
+from math import floor, ceil
 
-from django.db import transaction
-from django.db.models import Max, F, Q
-from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
+from django.db import transaction
+from django.db.models import Max, F
+from django.db.models.fields.related import ManyToManyField
 
 from baserow.contrib.database.fields.models import Field
-
 from .exceptions import RowDoesNotExist
 from .signals import (
     before_row_update,
@@ -97,11 +96,11 @@ class RowHandler:
         :param include: The field ids that must be included. Only the provided ones
             are going to be in the returned queryset. Multiple can be provided
             separated by comma
-        :type include: str
+        :type include: Optional[str]
         :param exclude: The field ids that must be excluded. Only the ones that are not
             provided are going to be in the returned queryset. Multiple can be provided
             separated by comma.
-        :type exclude: str
+        :type exclude: Optional[str]
         :return: A Field's QuerySet containing the allowed fields based on the provided
             input.
         :param user_field_names: If true then the value and exclude parameters are
@@ -115,38 +114,31 @@ class RowHandler:
         if not user_field_names:
             include_ids = self.extract_field_ids_from_string(include)
             exclude_ids = self.extract_field_ids_from_string(exclude)
+            filter_type = "id__in"
         else:
-            model = table.get_model()
-            field_name_overrides = get_user_field_name_overrides(model._field_objects)
-            field_name_to_id = dict((v, k) for k, v in field_name_overrides.items())
-            include_ids = self.extract_field_ids_from_user_field_name_string(
-                field_name_to_id, include
-            )
-            exclude_ids = self.extract_field_ids_from_user_field_name_string(
-                field_name_to_id, exclude
-            )
+            include_ids = self.extract_field_names_from_string(include)
+            exclude_ids = self.extract_field_names_from_string(exclude)
+            filter_type = "name__in"
 
         if len(include_ids) == 0 and len(exclude_ids) == 0:
             return None
 
         if len(include_ids) > 0:
-            queryset = queryset.filter(id__in=include_ids)
+            queryset = queryset.filter(**{filter_type: include_ids})
 
         if len(exclude_ids) > 0:
-            queryset = queryset.filter(~Q(id__in=exclude_ids))
+            queryset = queryset.exclude(**{filter_type: exclude_ids})
 
+        print(queryset.query)
         return queryset
 
-    def extract_field_ids_from_user_field_name_string(self, field_name_to_id, value):
+    def extract_field_names_from_string(self, value):
         if not value:
             return []
 
+        # Use python's csv handler as it knows how to handle quoted csv values etc.
         split_value = next(csv.reader([value], delimiter=",", quotechar='"'))
-        ids = []
-        for user_field_name in split_value:
-            if user_field_name in field_name_to_id:
-                ids.append(field_name_to_id[user_field_name])
-        return ids
+        return split_value
 
     def extract_manytomany_values(self, values, model):
         """
@@ -445,38 +437,3 @@ class RowHandler:
             model=model,
             before_return=before_return,
         )
-
-
-def get_user_field_name_overrides(field_objects):
-    """
-    Generates a map of field id to the user specified field name if that name is unique
-    and does not clash with any built-in row fields. If the user field name is not
-    unique or has the same name as "id" or "order" then an _1,_2,_3 etc will be appended
-    on the field name to ensure it is unique.
-
-    :param field_objects: The list of field objects to generate the map for.
-    :return: A dictionary of field id to a unique field name.
-    """
-
-    field_name_overrides = {}
-
-    # First figure out which fields have duplicate or clashing names.
-    next_duplicate_id = {"id": 0, "order": 0}
-    for field in field_objects.values():
-        name = field["field"].name
-        if name in next_duplicate_id:
-            next_duplicate_id[name] = 1
-        else:
-            next_duplicate_id[name] = 0
-
-    # Then go over and generate the name overrides with the correct post-fix if need be.
-    for field in field_objects.values():
-        name = field["field"].name
-        field_id = field["field"].id
-        next_id = next_duplicate_id[name]
-        if next_id > 0:
-            next_duplicate_id[name] += 1
-            name = f"{name}_{next_id}"
-        field_name_overrides[field_id] = name
-
-    return field_name_overrides

@@ -273,32 +273,3 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         "text": "text",
         "url": "https://www.google.com",
     }
-
-
-@pytest.mark.django_db
-def test_user_named_field_clashing_with_id_and_order(data_fixture):
-    table = data_fixture.create_database_table(name="Cars")
-    clashing_order_field = data_fixture.create_text_field(
-        table=table, order=0, name="order", text_default="white"
-    )
-    clashing_id_field = data_fixture.create_text_field(
-        table=table, order=0, name="id", text_default="white"
-    )
-    model = table.get_model()
-    row_1 = model.objects.create(
-        **{
-            f"field_{clashing_id_field.id}": "CLASH",
-            f"field_{clashing_order_field.id}": "CLASH",
-        }
-    )
-    queryset = model.objects.all().enhance_by_fields()
-    serializer_class = get_row_serializer_class(
-        model, RowSerializer, is_response=True, user_field_names=True
-    )
-    serializer_instance = serializer_class(queryset, many=True)
-    assert serializer_instance.data[0] == {
-        "id": row_1.id,
-        "order": "1.00000000000000000000",
-        "order_1": "CLASH",
-        "id_1": "CLASH",
-    }

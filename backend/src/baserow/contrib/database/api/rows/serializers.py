@@ -5,7 +5,6 @@ from rest_framework import serializers
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.rows.handler import get_user_field_name_overrides
 from baserow.core.utils import model_default_values, dict_to_object
 
 logger = logging.getLogger(__name__)
@@ -48,19 +47,15 @@ def get_row_serializer_class(
 
     field_objects = model._field_objects
 
-    field_name_overrides = {}
-    if user_field_names:
-        field_name_overrides = get_user_field_name_overrides(field_objects)
-
     field_names = [
-        field_name_overrides.get(field["field"].id, field["name"])
+        field["field"].name if user_field_names else field["name"]
         for field in field_objects.values()
         if field_ids is None or field["field"].id in field_ids
     ]
     field_overrides = {}
     for field in field_objects.values():
         if field_ids is None or field["field"].id in field_ids:
-            name = field_name_overrides.get(field["field"].id, field["name"])
+            name = field["field"].name if user_field_names else field["name"]
             extra_kwargs = {}
             if field["name"] != name:
                 extra_kwargs["source"] = field["name"]

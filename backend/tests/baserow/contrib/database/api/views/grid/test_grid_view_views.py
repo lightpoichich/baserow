@@ -194,7 +194,9 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     text_field = data_fixture.create_text_field(
         table=table, order=0, name="Color", text_default="white"
     )
-    number_field = data_fixture.create_number_field(table=table, order=1, name="Color")
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Color 2"
+    )
     boolean_field = data_fixture.create_boolean_field(
         table=table, order=2, name="1 For sale"
     )
@@ -220,8 +222,8 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         "previous": None,
         "results": [
             {
-                "Color_1": "Green",
-                "Color_2": "10",
+                "Color": "Green",
+                "Color 2": "10",
                 "1 For sale": False,
                 "id": row_1.id,
                 "order": "1.00000000000000000000",

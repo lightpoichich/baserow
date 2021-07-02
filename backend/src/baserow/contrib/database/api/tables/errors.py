@@ -2,7 +2,6 @@ from django.conf import settings
 
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-
 ERROR_TABLE_DOES_NOT_EXIST = (
     "ERROR_TABLE_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,
@@ -16,7 +15,7 @@ ERROR_TABLE_NOT_IN_DATABASE = (
 ERROR_INVALID_INITIAL_TABLE_DATA = (
     "ERROR_INVALID_INITIAL_TABLE_DATA",
     HTTP_400_BAD_REQUEST,
-    "The provided table data must at least contain one row and one column.",
+    "Invalid initial table data provided: {e}",
 )
 ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP = (
     "ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP",

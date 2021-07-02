@@ -107,12 +107,12 @@ def test_link_row_field_type(data_fixture):
         user=user,
         table=table,
         type_name="link_row",
-        name="Customer",
+        name="Customer 2",
         link_row_table=customers_table,
     )
 
     assert link_field_1.link_row_related_field.name == "Example"
-    assert link_field_2.link_row_related_field.name == "Example"
+    assert link_field_2.link_row_related_field.name == "Example - Customer 2"
 
     connection = connections["default"]
     tables = connection.introspection.table_names()
@@ -153,7 +153,9 @@ def test_link_row_field_type(data_fixture):
 
     # Going to change only the name of the field. This should not result in any errors
     # of schema changes.
-    link_field_1 = field_handler.update_field(user, link_field_1, name="Customer 2")
+    link_field_1 = field_handler.update_field(
+        user, link_field_1, name="Customer Renamed"
+    )
 
     with pytest.raises(LinkRowTableNotInSameDatabase):
         field_handler.update_field(user, link_field_1, link_row_table=unrelated_table_1)
@@ -243,6 +245,7 @@ def test_link_row_field_type_rows(data_fixture):
     link_row_field = field_handler.create_field(
         user=user,
         table=example_table,
+        name="Link Row",
         type_name="link_row",
         link_row_table=customers_table,
     )
@@ -376,6 +379,7 @@ def test_link_row_enhance_queryset(data_fixture, django_assert_num_queries):
     link_row_field = field_handler.create_field(
         user=user,
         table=example_table,
+        name="Link Row",
         type_name="link_row",
         link_row_table=customers_table,
     )
@@ -607,6 +611,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     link_row_field = field_handler.create_field(
         user=user,
         table=example_table,
+        name="Link Row",
         type_name="link_row",
         link_row_table=customers_table,
     )
@@ -749,7 +754,11 @@ def test_import_export_link_row_field(data_fixture, user_tables_in_separate_db):
     field_handler = FieldHandler()
     core_handler = CoreHandler()
     link_row_field = field_handler.create_field(
-        user=user, table=table, type_name="link_row", link_row_table=customers_table
+        user=user,
+        table=table,
+        name="Link Row",
+        type_name="link_row",
+        link_row_table=customers_table,
     )
 
     row_handler = RowHandler()

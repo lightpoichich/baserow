@@ -5,6 +5,8 @@
 * Made it possible to list table field meta-data with a token.
 * Fix the create group invite endpoint failing when no message provided.
 * Single select options can now be ordered by drag and drop. 
+* Disallow duplicate field names in the same table, blank field names or field names
+  called 'order' and 'id'. Existing invalid field names will be fixed automatically. 
 
 ## Released (2021-06-02)
 

@@ -40,5 +40,16 @@ ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE = (
     HTTP_400_BAD_REQUEST,
     "The field type {e.field_type} is not compatible with the primary field.",
 )
-
 ERROR_MAX_FIELD_COUNT_EXCEEDED = "ERROR_MAX_FIELD_COUNT_EXCEEDED"
+ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS = (
+    "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
+    HTTP_400_BAD_REQUEST,
+    "You cannot have two fields with the same name in the same table, please choose a "
+    "unique name for each field.",
+)
+ERROR_RESERVED_BASEROW_FIELD_NAME = (
+    "ERROR_RESERVED_BASEROW_FIELD_NAME",
+    HTTP_400_BAD_REQUEST,
+    "The provided field name is a reserved Baserow field name and cannot be used for a"
+    "user created field, please choose different field name.",
+)

@@ -8,6 +8,7 @@ migrate_from = [("database", "0031_fix_url_field_max_length")]
 migrate_to = [("database", "0032_unique_field_names")]
 
 
+# noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_fixes_duplicate_field_names(
     data_fixture, transactional_db, user_tables_in_separate_db
@@ -95,7 +96,14 @@ def test_migration_handles_existing_fields_with_underscore_number(
         [
             "Duplicate",
             "Duplicate",
+            "Duplicate",
             "Duplicate_2",
+            "Duplicate_2",
+            "Duplicate_2",
+            "Duplicate_2_2",
+            "Duplicate_2_2",
+            "Duplicate_3",
+            "Duplicate_3",
         ],
         table.id,
         content_type_id,
@@ -108,8 +116,15 @@ def test_migration_handles_existing_fields_with_underscore_number(
     assert_fields_name_and_old_name_is(
         [
             ("Duplicate", None),
-            ("Duplicate_3", "Duplicate"),
+            ("Duplicate_4", "Duplicate"),
+            ("Duplicate_5", "Duplicate"),
             ("Duplicate_2", None),
+            ("Duplicate_2_3", "Duplicate_2"),
+            ("Duplicate_2_4", "Duplicate_2"),
+            ("Duplicate_2_2", None),
+            ("Duplicate_2_2_2", "Duplicate_2_2"),
+            ("Duplicate_3", None),
+            ("Duplicate_3_2", "Duplicate_3"),
         ],
         table_1_fields,
         MigratedField,

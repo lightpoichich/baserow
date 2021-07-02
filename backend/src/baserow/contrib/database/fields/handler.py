@@ -472,6 +472,7 @@ class FieldHandler:
         if len(to_create) > 0:
             SelectOption.objects.bulk_create(to_create)
 
+    # noinspection PyMethodMayBeStatic
     def find_next_unused_field_name(self, table, field_names_to_try: List[str]):
         """
         Finds a unused field name in the provided table. If no names in the provided
@@ -484,14 +485,41 @@ class FieldHandler:
         :return: An available field name
         """
 
-        for field_name in field_names_to_try:
-            if not Field.objects.filter(table=table, name=field_name).exists():
-                return field_name
+        # Check if any of the names to try are available by finding any existing field
+        # names with the same name.
+        taken_field_names = set(
+            Field.objects.filter(table=table, name__in=field_names_to_try)
+            .values("name")
+            .distinct()
+            .values_list("name", flat=True)
+        )
+        # If there are more names to try than the ones used in the table then there must
+        # be one which isn't used.
+        if len(set(field_names_to_try)) > len(taken_field_names):
+            # Loop over to ensure we maintain the ordering provided by
+            # field_names_to_try, so we always return the first available name and
+            # not any.
+            for field_name in field_names_to_try:
+                if field_name not in taken_field_names:
+                    return field_name
 
+        # None of the names in the param list are available, now using the last one lets
+        # append a number to the name until we find a free one.
         original_field_name = field_names_to_try[-1]
+        # Lookup any existing fields which could potentially collide with our new
+        # field name. This way we can skip these and ensure our new field has a
+        # unique name.
+        existing_field_name_collisions = set(
+            Field.objects.filter(
+                table=table, name__regex=fr"^{original_field_name} \d+$"
+            )
+            .order_by("name")
+            .distinct()
+            .values_list("name", flat=True)
+        )
         i = 2
         while True:
             field_name = f"{original_field_name} {i}"
             i += 1
-            if not Field.objects.filter(table=table, name=field_name).exists():
+            if field_name not in existing_field_name_collisions:
                 return field_name

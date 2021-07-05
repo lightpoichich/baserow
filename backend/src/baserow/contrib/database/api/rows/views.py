@@ -238,7 +238,7 @@ class RowsView(APIView):
             queryset = queryset.search_all_fields(search)
 
         if order_by:
-            queryset = queryset.order_by_fields_string(order_by)
+            queryset = queryset.order_by_fields_string(order_by, user_field_names)
 
         filter_type = (
             FILTER_TYPE_OR

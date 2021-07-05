@@ -397,6 +397,35 @@
                 Defines how many rows should be returned per page.
               </APIDocsParameter>
               <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names returned by this endpoint will be actual names
+                of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then all returned field names will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>. <br />
+                <br />
+                Additionally when
+                <code class="api-docs__code">user_field_names</code>
+                is set then the behaviour of the other GET parameters
+                <code class="api-docs__code">order_by</code>,
+                <code class="api-docs__code">include</code> and
+                <code class="api-docs__code">exclude</code> changes so they
+                instead expect comma separated lists of the actual field names
+                instead of expecting
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field when not set.
+              </APIDocsParameter>
+              <APIDocsParameter
                 name="search"
                 :optional="true"
                 type="string"
@@ -411,12 +440,48 @@
                 type="string"
                 standard="'id'"
               >
-                Optionally the rows can be ordered by provided field ids
-                separated by comma. By default a field is ordered in ascending
-                (A-Z) order, but by prepending the field with a '-' it can be
-                ordered descending (Z-A).
-                <br /><br />
-                For example if you provide the following GET parameter
+                Optionally the rows can be ordered by fields separated by comma.
+                By default or if prepended with a '+' a field is ordered in
+                ascending (A-Z) order, but by prepending the field with a '-' it
+                can be ordered descending (Z-A).
+                <h4>
+                  With <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">order_by</code> should be a comma
+                separated list of the field names to order by. For example if
+                you provide the following GET parameter
+                <code class="api-docs__code"
+                  >order_by=normal_field_name,"-Field Name With Spaces"</code
+                >
+                the rows will ordered by the field called
+                <code class="api-docs__code">normal_field_name</code>
+                in ascending order. If some fields have the same value, that
+                subset will be ordered by the field called
+                <code class="api-docs__code">Field Name With Spaces</code> in
+                descending order.
+                <div class="alert alert--warning">
+                  Please note, if your field's name begins with a
+                  <code class="api-docs__code">-</code> or
+                  <code class="api-docs__code">+</code>, e.g.
+                  <code class="api-docs__code">"-My Wierd Field Name"</code>
+                  then you must always explicitly prepend a
+                  <code class="api-docs__code">-</code> or
+                  <code class="api-docs__code">+</code> to it's field name like
+                  :
+                  <code class="api-docs__code">"+-My Wierd Field Name"</code> or
+                  <code class="api-docs__code">"--My Wierd Field Name"</code> to
+                  order it correctly.
+                </div>
+                <h4>
+                  Without <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">order_by</code> should be a comma
+                separated list of
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field to order by. For example if you provide the following
+                GET parameter
                 <code class="api-docs__code">order_by=field_1,-field_2</code>
                 the rows will ordered by
                 <code class="api-docs__code">field_1</code>
@@ -459,35 +524,62 @@
               </APIDocsParameter>
               <APIDocsParameter name="include" :optional="true" type="string">
                 All the fields are included in the response by default. You can
-                select a subset of fields by providing the include query
-                parameter. If you for example provide the following GET
-                parameter
-                <code class="api-docs__code">include=field_1,field_2</code>
-                then only the fields with id
-                <code class="api-docs__code">1</code> and id
-                <code class="api-docs__code">2</code> are going to be selected
-                and included in the response. If you provide the
-                <code class="api-docs__code">user_field_names</code> flag then
-                instead you should provide the names of the fields like
+                select a subset of fields to include by providing the include
+                query parameter.
+                <h4>
+                  With <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">include</code> should be a comma
+                separated list of field names to be included in results. For
+                example if you provide the following GET param:
                 <code class="api-docs__code"
-                  >include="Field Name",other_field</code
+                  >include="Field Name With Spaces",normal_field_name</code
                 >
-              </APIDocsParameter>
-              <APIDocsParameter name="exclude" :optional="true" type="string">
-                All the fields are included in the response by default. You can
-                select a subset of fields by providing the exclude query
-                parameter. If you for example provide the following GET
-                parameter
+                then only those fields will be included (unless they are
+                explicitly excluded).
+                <h4>
+                  Without <code class="api-docs__code">user_field_names</code>:
+                </h4>
+                <code class="api-docs__code">include</code> should be a comma
+                separated list of
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field to include in the results. For example: If you provide
+                the following GET parameter
                 <code class="api-docs__code">exclude=field_1,field_2</code>
                 then the fields with id
                 <code class="api-docs__code">1</code> and id
-                <code class="api-docs__code">2</code> are going to be excluded
-                from the selection and response. If you provide the
-                <code class="api-docs__code">user_field_names</code> flag then
-                instead you should provide the names of the fields like
+                <code class="api-docs__code">2</code>
+                then only those fields will be included (unless they are
+                explicitly excluded).
+              </APIDocsParameter>
+              <APIDocsParameter name="exclude" :optional="true" type="string">
+                All the fields are included in the response by default. You can
+                select a subset of fields to exclude by providing the exclude
+                query parameter.
+                <h4>
+                  With <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">exclude</code> should be a comma
+                separated list of field names to be excluded from the results.
+                For example if you provide the following GET param:
                 <code class="api-docs__code"
-                  >exclude="Field Name",other_field</code
+                  >exclude="Field Name With Spaces",normal_field_name</code
                 >
+                then those fields will be excluded.
+                <h4>
+                  Without <code class="api-docs__code">user_field_names</code>:
+                </h4>
+                <code class="api-docs__code">exclude</code> should be a comma
+                separated list of
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field to exclude from the results. For example: If you
+                provide the following GET parameter
+                <code class="api-docs__code">exclude=field_1,field_2</code>
+                then the fields with id
+                <code class="api-docs__code">1</code> and id
+                <code class="api-docs__code">2</code> will be excluded.
               </APIDocsParameter>
             </ul>
           </div>

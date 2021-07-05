@@ -550,14 +550,9 @@
   }
 }
 
-.view-form__shared-link-password {
+.view-form__shared-link-foot {
   display: flex;
-  align-items: center;
-  margin: 40px 20px;
-}
-
-.view-form__shared-link-password-input {
-  margin-left: 16px;
+  justify-content: space-between;
 }
 
 .view-form__shared-link-disable {

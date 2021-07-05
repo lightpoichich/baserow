@@ -32,17 +32,6 @@
               {{ formUrl }}
             </div>
             <a
-              v-tooltip="'Refresh the existing URL'"
-              class="view-form__shared-link-action"
-              :class="{
-                'view-form__shared-link-action--loading': rotateSlugLoading,
-                'view-form__shared-link-action--disabled': readOnly,
-              }"
-              @click="!readOnly && rotateSlug()"
-            >
-              <i class="fas fa-sync"></i>
-            </a>
-            <a
               v-tooltip="'Copy URL'"
               class="view-form__shared-link-action"
               @click="copyFormUrlToClipboard()"
@@ -51,14 +40,23 @@
               <Copied ref="copied"></Copied>
             </a>
           </div>
-          <a
-            v-if="!readOnly"
-            class="view-form__shared-link-disable"
-            @click.stop="updateForm({ public: false })"
-          >
-            <i class="fas fa-times"></i>
-            disable shared link
-          </a>
+          <div v-if="!readOnly" class="view-form__shared-link-foot">
+            <a
+              class="view-form__shared-link-disable"
+              @click.stop="updateForm({ public: false })"
+            >
+              <i class="fas fa-times"></i>
+              disable shared link
+            </a>
+            <a @click.prevent="$refs.rotateSlugModal.show()">
+              <i class="fas fa-sync"></i>
+              generate new url
+            </a>
+            <FormViewRotateSlugModal
+              ref="rotateSlugModal"
+              :view="view"
+            ></FormViewRotateSlugModal>
+          </div>
         </div>
       </Context>
     </li>
@@ -81,10 +79,11 @@ import { mapState } from 'vuex'
 
 import formViewHelpers from '@baserow/modules/database/mixins/formViewHelpers'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
-import FormService from '@baserow/modules/database/services/view/form'
+import FormViewRotateSlugModal from '@baserow/modules/database/components/view/form/FormViewRotateSlugModal'
 
 export default {
   name: 'FormViewHeader',
+  components: { FormViewRotateSlugModal },
   mixins: [formViewHelpers],
   props: {
     view: {
@@ -127,15 +126,6 @@ export default {
     copyFormUrlToClipboard() {
       copyToClipboard(this.formUrl)
       this.$refs.copied.show()
-    },
-    async rotateSlug() {
-      this.rotateSlugLoading = true
-      const { data } = await FormService(this.$client).rotateSlug(this.view.id)
-      await this.$store.dispatch('view/forceUpdate', {
-        view: this.view,
-        values: data,
-      })
-      this.rotateSlugLoading = false
     },
   },
 }

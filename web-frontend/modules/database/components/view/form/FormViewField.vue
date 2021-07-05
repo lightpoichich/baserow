@@ -17,27 +17,7 @@
         <div class="form-view__field-head-name">{{ field.name }}</div>
         <a
           v-if="!readOnly"
-          ref="fieldContextLink"
-          class="form-view__field-head-options"
-          @click="
-            $refs.fieldContext.toggle(
-              $refs.fieldContextLink,
-              'bottom',
-              'left',
-              -10
-            )
-          "
-        >
-          <i class="fas fa-caret-down"></i>
-        </a>
-        <FieldContext
-          ref="fieldContext"
-          :table="table"
-          :field="field"
-          @update="$event.callback()"
-        ></FieldContext>
-        <a
-          v-if="!readOnly"
+          v-tooltip="'Remove field'"
           class="form-view__field-head-hide"
           @click="$emit('hide', field)"
         >
@@ -148,16 +128,7 @@ export default {
         if (
           this.selected &&
           // If the user not clicked inside the field.
-          !isElement(this.$el, event.target) &&
-          // If the user has not clicked inside the field context.
-          !isElement(this.$refs.fieldContext.$el, event.target) &&
-          // If the user has not clicked inside a child of the field context that has been
-          // moved to the body, for example a sub context menu.
-          !this.$refs.fieldContext
-            .getRootContext()
-            .moveToBody.children.some((child) => {
-              return isElement(child.$el, event.target)
-            })
+          !isElement(this.$el, event.target)
         ) {
           this.unselect()
         }

@@ -477,3 +477,183 @@ def test_submit_form_view(api_client, data_fixture):
     response_json = response.json()
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert len(response_json["detail"]) == 7
+
+
+@pytest.mark.django_db
+def test_form_view_link_row_lookup_view(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    lookup_table = data_fixture.create_database_table(database=database)
+    form = data_fixture.create_form_view(table=table)
+    form_2 = data_fixture.create_form_view()
+    text_field = data_fixture.create_text_field(table=table)
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=lookup_table
+    )
+    disabled_link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=lookup_table
+    )
+    unrelated_link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=lookup_table
+    )
+    primary_related_field = data_fixture.create_text_field(
+        table=lookup_table, primary=True
+    )
+    data_fixture.create_text_field(table=lookup_table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True, order=1
+    )
+    data_fixture.create_form_view_field_option(
+        form, link_row_field, required=True, enabled=True, order=2
+    )
+    data_fixture.create_form_view_field_option(
+        form, disabled_link_row_field, required=True, enabled=False, order=3
+    )
+    data_fixture.create_form_view_field_option(
+        form_2, unrelated_link_row_field, required=True, enabled=True, order=1
+    )
+
+    lookup_model = lookup_table.get_model()
+    i1 = lookup_model.objects.create(**{f"field_{primary_related_field.id}": "Test 1"})
+    i2 = lookup_model.objects.create(**{f"field_{primary_related_field.id}": "Test 2"})
+    i3 = lookup_model.objects.create(**{f"field_{primary_related_field.id}": "Test 3"})
+
+    # Anonymous, not existing slug.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": "NOT_EXISTING", "field_id": link_row_field.id},
+    )
+    response = api_client.get(url, {})
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    # Anonymous, existing slug, but form is not public.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(url, format="json")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    # user that doesn't have access to the group, existing slug, but form is not public.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token_2}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but invalid wrong field type.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": text_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but invalid wrong field type.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": 0},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but disabled link row field.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": disabled_link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but unrelated link row field.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": unrelated_link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    form.public = True
+    form.save()
+
+    # anonymous, existing slug, public form, correct link row field.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 3
+    assert len(response_json["results"]) == 3
+    assert response_json["results"][0]["id"] == i1.id
+    assert response_json["results"][0]["value"] == "Test 1"
+    assert len(response_json["results"][0]) == 2
+    assert response_json["results"][1]["id"] == i2.id
+    assert response_json["results"][2]["id"] == i3.id
+
+    # same as before only now with search.
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        f"{url}?search=Test 2",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == i2.id
+    assert response_json["results"][0]["value"] == "Test 2"
+
+    # same as before only now with pagination
+    url = reverse(
+        "api:database:views:form:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        f"{url}?size=1&page=2",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 3
+    assert response_json["next"] is not None
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == i2.id
+    assert response_json["results"][0]["value"] == "Test 2"

@@ -291,19 +291,32 @@ class RowHandler:
 
         return instance
 
+    # noinspection PyMethodMayBeStatic
     def map_user_field_name_dict_to_internal(
         self,
         field_objects,
         values,
     ):
+        """
+        Takes the field objects for a model and a dictionary keyed by user specified
+        field names for that model. Then will convert the keys from the user names to
+        the internal Baserow field names which look like field_1, field_2 and
+        corrospond to the actual database column names.
+
+        :param field_objects: The field objects for a model.
+        :param values: A dictionary keyed by user field names to values.
+        :return: A dictionary with the same values but the keys converted to the
+            corresponding internal baserow field name (field_1,field_2 etc)
+        """
         to_internal_name = {}
         for field_object in field_objects.values():
             to_internal_name[field_object["field"].name] = field_object["name"]
-        mapped_back_to_field_name = {}
+
+        mapped_back_to_internal_field_names = {}
         for user_field_name, value in values.items():
             internal_name = to_internal_name[user_field_name]
-            mapped_back_to_field_name[internal_name] = value
-        values = mapped_back_to_field_name
+            mapped_back_to_internal_field_names[internal_name] = value
+        values = mapped_back_to_internal_field_names
         return values
 
     def update_row(

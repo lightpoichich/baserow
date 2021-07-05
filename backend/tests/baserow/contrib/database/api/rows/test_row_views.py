@@ -1099,6 +1099,23 @@ def test_move_row(api_client, data_fixture):
     assert row_2.order == Decimal("2.00000000000000000000")
     assert row_3.order == Decimal("3.00000000000000000000")
 
+    data_fixture.create_text_field(user=user, table=table, name="New Field")
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        f"{url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json_row_1 = response.json()
+    assert response_json_row_1 == {
+        "New Field": None,
+        "id": row_1.id,
+        "order": "4.00000000000000000000",
+    }
+
 
 @pytest.mark.django_db
 def test_delete_row(api_client, data_fixture):

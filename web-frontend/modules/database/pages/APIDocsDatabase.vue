@@ -234,7 +234,7 @@
         </div>
         <div class="api-docs__right">
           <APIDocsExample
-            v-model="exampleType"
+            v-model="exampleData"
             :url="$env.PUBLIC_BACKEND_URL"
             type=""
           ></APIDocsExample>
@@ -353,10 +353,11 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="GET"
               :url="getFieldsURL(table)"
               :response="getResponseFields(table)"
+              :include-user-fields-checkbox="false"
             ></APIDocsExample>
           </div>
         </div>
@@ -465,7 +466,12 @@
                 then only the fields with id
                 <code class="api-docs__code">1</code> and id
                 <code class="api-docs__code">2</code> are going to be selected
-                and included in the response.
+                and included in the response. If you provide the
+                <code class="api-docs__code">user_field_names</code> flag then
+                instead you should provide the names of the fields like
+                <code class="api-docs__code"
+                  >include="Field Name",other_field</code
+                >
               </APIDocsParameter>
               <APIDocsParameter name="exclude" :optional="true" type="string">
                 All the fields are included in the response by default. You can
@@ -476,18 +482,23 @@
                 then the fields with id
                 <code class="api-docs__code">1</code> and id
                 <code class="api-docs__code">2</code> are going to be excluded
-                from the selection and response.
+                from the selection and response. If you provide the
+                <code class="api-docs__code">user_field_names</code> flag then
+                instead you should provide the names of the fields like
+                <code class="api-docs__code"
+                  >exclude="Field Name",other_field</code
+                >
               </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="GET"
-              :url="getListURL(table)"
+              :url="getListURL(table, true)"
               :response="{
                 count: 1024,
-                next: getListURL(table) + '?page=2',
+                next: getListURL(table, false) + '?page=2',
                 previous: null,
                 results: [getResponseItem(table)],
               }"
@@ -515,9 +526,9 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="GET"
-              :url="getItemURL(table)"
+              :url="getItemURL(table, true)"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
             ></APIDocsExample>
@@ -548,9 +559,9 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="POST"
-              :url="getListURL(table)"
+              :url="getListURL(table, true)"
               :request="getRequestExample(table)"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
@@ -590,9 +601,9 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="PATCH"
-              :url="getItemURL(table)"
+              :url="getItemURL(table, true)"
               :request="getRequestExample(table)"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
@@ -633,9 +644,9 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="PATCH"
-              :url="getItemURL(table) + 'move/'"
+              :url="getItemURL(table, false) + 'move/' + userFieldNamesParam"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
             ></APIDocsExample>
@@ -661,9 +672,10 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="DELETE"
-              :url="getItemURL(table)"
+              :url="getItemURL(table, false)"
+              :include-user-fields-checkbox="false"
             ></APIDocsExample>
           </div>
         </div>
@@ -756,7 +768,7 @@
         </div>
         <div class="api-docs__right">
           <APIDocsExample
-            v-model="exampleType"
+            v-model="exampleData"
             :url="$env.PUBLIC_BACKEND_URL"
             type=""
             :response="{
@@ -821,8 +833,11 @@ export default {
   },
   data() {
     return {
-      // Indicates which request example type is shown.
-      exampleType: 'curl',
+      exampleData: {
+        // Indicates which request example type is shown.
+        type: 'curl',
+        userFieldNames: true,
+      },
       // Indicates which navigation item is active.
       navActive: '',
       // Indicates if the databases sidebar is open.
@@ -835,6 +850,9 @@ export default {
     }
   },
   computed: {
+    userFieldNamesParam() {
+      return this.exampleData.userFieldNames ? '?user_field_names=true' : ''
+    },
     viewFilterTypes() {
       return Object.values(this.$registry.getAll('viewFilter'))
     },
@@ -900,7 +918,11 @@ export default {
         const example = response
           ? field._.responseExample
           : field._.requestExample
-        item[`field_${field.id}`] = example
+        if (this.exampleData.userFieldNames) {
+          item[field.name] = example
+        } else {
+          item[`field_${field.id}`] = example
+        }
       })
       return item
     },
@@ -926,18 +948,28 @@ export default {
     getFieldMapping(table) {
       const mapping = {}
       this.fields[table.id].forEach((field) => {
-        mapping[`field_${field.id}`] = field.name
+        if (this.exampleData.userFieldNames) {
+          mapping[field.name] = `field_${field.id}`
+        } else {
+          mapping[`field_${field.id}`] = field.name
+        }
       })
       return mapping
     },
     getFieldsURL(table) {
       return `${this.$env.PUBLIC_BACKEND_URL}/api/database/fields/table/${table.id}/`
     },
-    getListURL(table) {
-      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/`
+    getListURL(table, addUserFieldParam) {
+      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${
+        table.id
+      }/${addUserFieldParam ? this.userFieldNamesParam : ''}`
     },
-    getItemURL(table) {
-      return this.getListURL(table) + '{row_id}/'
+    getItemURL(table, addUserFieldParam) {
+      return (
+        this.getListURL(table) +
+        '{row_id}/' +
+        (addUserFieldParam ? this.userFieldNamesParam : '')
+      )
     },
     getCompatibleFilterTypes(fieldType) {
       return this.viewFilterTypes.filter((filter) =>

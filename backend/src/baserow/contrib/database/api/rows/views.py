@@ -619,6 +619,15 @@ class RowMoveView(APIView):
                 "row related to the provided value. If not provided, "
                 "then the row will be moved to the end.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "If provided the field names will use the user specified field "
+                    "names instead of internal Baserow field names (field_123 etc). "
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="move_database_table_row",
@@ -651,6 +660,8 @@ class RowMoveView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "update", table, False)
 
+        user_field_names = "user_field_names" in request.GET
+
         model = table.get_model()
         before_id = request.GET.get("before_id")
         before = (
@@ -663,7 +674,7 @@ class RowMoveView(APIView):
         )
 
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
         return Response(serializer.data)

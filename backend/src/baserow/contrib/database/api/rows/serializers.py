@@ -59,26 +59,22 @@ def get_row_serializer_class(
     field_objects = model._field_objects
 
     field_names = []
-    for field in field_objects.values():
-        field_id_matches = field_ids is None or (field["field"].id in field_ids)
-        field_name_matches = field_names_to_include is None or (
-            field["field"].name in field_names_to_include
-        )
-        if field_id_matches and field_name_matches:
-            field_names.append(
-                field["field"].name if user_field_names else field["name"]
-            )
     field_overrides = {}
     for field in field_objects.values():
         field_id_matches = field_ids is None or (field["field"].id in field_ids)
         field_name_matches = field_names_to_include is None or (
             field["field"].name in field_names_to_include
         )
+
         if field_id_matches and field_name_matches:
             name = field["field"].name if user_field_names else field["name"]
             extra_kwargs = {}
+
             if field["name"] != name:
+                # If we are building a serializer with names which do not match the
+                # database column then we have to set the source.
                 extra_kwargs["source"] = field["name"]
+
             if is_response:
                 serializer = field["type"].get_response_serializer_field(
                     field["field"], **extra_kwargs
@@ -88,6 +84,7 @@ def get_row_serializer_class(
                     field["field"], **extra_kwargs
                 )
             field_overrides[name] = serializer
+            field_names.append(name)
 
     return get_serializer_class(model, field_names, field_overrides, base_class)
 

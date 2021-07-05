@@ -7,6 +7,9 @@
 * Single select options can now be ordered by drag and drop. 
 * Disallow duplicate field names in the same table, blank field names or field names
   called 'order' and 'id'. Existing invalid field names will be fixed automatically. 
+* Add user_field_names GET flag to various endpoints which switches the API to work
+  using actual field names and not the internal field_1,field_2 etc identifiers.
+ 
 
 ## Released (2021-06-02)
 

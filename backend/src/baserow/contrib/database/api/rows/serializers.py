@@ -73,6 +73,9 @@ def get_row_serializer_class(
             if field["name"] != name:
                 # If we are building a serializer with names which do not match the
                 # database column then we have to set the source.
+                # We don't always do this if user_field_names is True as a user could
+                # have named fields "field_1" etc, in which case if we also set source
+                # DRF would crash as it only wants source set if the db column differs.
                 extra_kwargs["source"] = field["name"]
 
             if is_response:

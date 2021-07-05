@@ -111,34 +111,42 @@ class RowHandler:
 
         queryset = Field.objects.filter(table=table)
 
-        if not user_field_names:
-            include_ids = self.extract_field_ids_from_string(include)
-            exclude_ids = self.extract_field_ids_from_string(exclude)
-            filter_type = "id__in"
-        else:
-            include_ids = self.extract_field_names_from_string(include)
-            exclude_ids = self.extract_field_names_from_string(exclude)
+        if user_field_names:
+            includes = self.extract_field_names_from_string(include)
+            excludes = self.extract_field_names_from_string(exclude)
             filter_type = "name__in"
+        else:
+            includes = self.extract_field_ids_from_string(include)
+            excludes = self.extract_field_ids_from_string(exclude)
+            filter_type = "id__in"
 
-        if len(include_ids) == 0 and len(exclude_ids) == 0:
+        if len(includes) == 0 and len(excludes) == 0:
             return None
 
-        if len(include_ids) > 0:
-            queryset = queryset.filter(**{filter_type: include_ids})
+        if len(includes) > 0:
+            queryset = queryset.filter(**{filter_type: includes})
 
-        if len(exclude_ids) > 0:
-            queryset = queryset.exclude(**{filter_type: exclude_ids})
+        if len(excludes) > 0:
+            queryset = queryset.exclude(**{filter_type: excludes})
 
-        print(queryset.query)
         return queryset
 
+    # noinspection PyMethodMayBeStatic
     def extract_field_names_from_string(self, value):
+        """
+        Given a comma separated string of field names this function will split the
+        string into a list of individual field names. For weird field names containing
+        commas etc the field should be escaped with quotes.
+        :param value: The string to split into a list of field names.
+        :return: A list of field names.
+        """
+
         if not value:
             return []
 
         # Use python's csv handler as it knows how to handle quoted csv values etc.
-        split_value = next(csv.reader([value], delimiter=",", quotechar='"'))
-        return split_value
+        # csv.reader returns an iterator, we use next to get the first split row back.
+        return next(csv.reader([value], delimiter=",", quotechar='"'))
 
     def extract_manytomany_values(self, values, model):
         """

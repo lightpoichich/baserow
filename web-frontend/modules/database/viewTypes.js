@@ -19,7 +19,7 @@ export class ViewType extends Registerable {
   }
 
   /**
-   * @TODO docs
+   * The color class that is added to the icon.
    */
   getColorClass() {
     return 'color-primary'

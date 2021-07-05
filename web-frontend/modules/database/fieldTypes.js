@@ -48,6 +48,8 @@ import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
+import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
+
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
   getDateMomentFormat,
@@ -120,6 +122,14 @@ export class FieldType extends Registerable {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
+  }
+
+  /**
+   * By default the row edit field component is used in the form. This can
+   * optionally be another component if needed.
+   */
+  getFormViewFieldComponent() {
+    return this.getRowEditFieldComponent()
   }
 
   /**
@@ -511,6 +521,10 @@ export class LinkRowFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldLinkRow
+  }
+
+  getFormViewFieldComponent() {
+    return FormViewFieldLinkRow
   }
 
   getEmptyValue(field) {

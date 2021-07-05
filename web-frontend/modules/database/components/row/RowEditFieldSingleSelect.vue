@@ -8,6 +8,7 @@
       :class="{ 'dropdown--error': touched && !valid }"
       @input="updateValue($event, value)"
       @create-option="createOption($event)"
+      @hide="touch()"
     ></FieldSingleSelectDropdown>
     <div v-show="touched && !valid" class="error">
       {{ error }}

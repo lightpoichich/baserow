@@ -92,6 +92,7 @@
               handle: '[data-field-handle]',
             }"
             :table="table"
+            :view="view"
             :field="field"
             :field-options="fieldOptions[field.id]"
             :read-only="readOnly"

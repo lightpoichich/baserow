@@ -55,6 +55,7 @@
             <FormViewRotateSlugModal
               ref="rotateSlugModal"
               :view="view"
+              :store-prefix="storePrefix"
             ></FormViewRotateSlugModal>
           </div>
         </div>

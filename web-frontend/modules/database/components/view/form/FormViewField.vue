@@ -58,6 +58,7 @@
         <component
           :is="getFieldComponent()"
           ref="field"
+          :slug="view.slug"
           :field="field"
           :value="value"
           :read-only="readOnly"
@@ -86,6 +87,10 @@ export default {
   components: { FieldContext },
   props: {
     table: {
+      type: Object,
+      required: true,
+    },
+    view: {
       type: Object,
       required: true,
     },
@@ -146,7 +151,7 @@ export default {
       return this.$registry.get('field', this.field.type)
     },
     getFieldComponent() {
-      return this.getFieldType().getRowEditFieldComponent()
+      return this.getFieldType().getFormViewFieldComponent()
     },
     resetValue() {
       this.value = this.getFieldType().getEmptyValue(this.field)

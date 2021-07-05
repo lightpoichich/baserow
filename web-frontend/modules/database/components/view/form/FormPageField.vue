@@ -11,6 +11,7 @@
         <component
           :is="getFieldComponent()"
           ref="field"
+          :slug="slug"
           :field="field.field"
           :value="value"
           :read-only="false"
@@ -31,6 +32,10 @@ export default {
   name: 'FormPageField',
   components: { FieldContext },
   props: {
+    slug: {
+      type: String,
+      required: true,
+    },
     value: {
       required: true,
       validator: () => true,
@@ -44,7 +49,7 @@ export default {
     getFieldComponent() {
       return this.$registry
         .get('field', this.field.field.type)
-        .getRowEditFieldComponent()
+        .getFormViewFieldComponent()
     },
     focus() {
       this.$el.scrollIntoView({ behavior: 'smooth' })

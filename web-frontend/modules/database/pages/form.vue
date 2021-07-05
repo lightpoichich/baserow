@@ -22,11 +22,12 @@
           <p class="form-view__description">{{ description }}</p>
         </div>
         <FormPageField
-          v-for="field in sortedFields"
+          v-for="field in fields"
           :ref="'field-' + field.field.id"
           :key="field.id"
           v-model="values['field_' + field.field.id]"
           class="form-view__field"
+          :slug="$route.params.slug"
           :field="field"
         ></FormPageField>
         <div class="form-view__actions">
@@ -84,6 +85,26 @@ export default {
       values[`field_${field.field.id}`] = fieldType.getEmptyValue(field.field)
     })
 
+    // Order the fields directly after fetching the results to make sure the form is
+    // serverside rendered in the right order.
+    data.fields = data.fields.sort((a, b) => {
+      // First by order.
+      if (a.order > b.order) {
+        return 1
+      } else if (a.order < b.order) {
+        return -1
+      }
+
+      // Then by id.
+      if (a.id < b.id) {
+        return -1
+      } else if (a.id > b.id) {
+        return 1
+      } else {
+        return 0
+      }
+    })
+
     return {
       title: data.title,
       description: data.description,
@@ -108,27 +129,6 @@ export default {
         class: ['background-white'],
       },
     }
-  },
-  computed: {
-    sortedFields() {
-      return this.fields.slice().sort((a, b) => {
-        // First by order.
-        if (a.order > b.order) {
-          return 1
-        } else if (a.order < b.order) {
-          return -1
-        }
-
-        // Then by id.
-        if (a.id < b.id) {
-          return -1
-        } else if (a.id > b.id) {
-          return 1
-        } else {
-          return 0
-        }
-      })
-    },
   },
   methods: {
     async submit() {

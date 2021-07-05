@@ -612,7 +612,7 @@ class RowMoveView(APIView):
                 description="Moves the row related to the value.",
             ),
             OpenApiParameter(
-                name="before_row_id",
+                name="before_id",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
                 description="Moves the row related to the given `row_id` before the "
@@ -633,8 +633,8 @@ class RowMoveView(APIView):
         operation_id="move_database_table_row",
         description="Moves the row related to given `row_id` parameter to another "
         "position. It is only possible to move the row before another existing row or "
-        "to the end. If the `before_row_id` is provided then the row related to "
-        "the `row_id` parameter is moved before that row. If the `before_row_id` "
+        "to the end. If the `before_id` is provided then the row related to "
+        "the `row_id` parameter is moved before that row. If the `before_id` "
         "parameter is not provided, then the row will be moved to the end.",
         responses={
             200: get_example_row_serializer_class(True),

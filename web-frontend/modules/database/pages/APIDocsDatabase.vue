@@ -785,8 +785,8 @@
             </h3>
             <p class="api-docs__content">
               Moves an existing {{ table.name }} row before another row. If no
-              `before_row_id` is provided, then the row will be moved to the end
-              of the table.
+              `before_id` is provided, then the row will be moved to the end of
+              the table.
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
@@ -815,7 +815,7 @@
                 with an id of <code class="api-docs__code">1</code>.
               </APIDocsParameter>
               <APIDocsParameter
-                name="before_row_id"
+                name="before_id"
                 type="integer"
                 :optional="true"
               >

@@ -237,7 +237,9 @@ class RowHandler:
 
         return row
 
-    def create_row(self, user, table, values=None, model=None, before=None):
+    def create_row(
+        self, user, table, values=None, model=None, before=None, user_field_names=False
+    ):
         """
         Creates a new row for a given table with the provided values.
 
@@ -254,6 +256,9 @@ class RowHandler:
         :param before: If provided the new row will be placed right before that row
             instance.
         :type before: Table
+        :param user_field_names: Whether or not the values are keyed by the internal
+            Baserow field name (field_1,field_2 etc) or by the user field names.
+        :type user_field_names: True
         :return: The created row instance.
         :rtype: Model
         """
@@ -266,6 +271,11 @@ class RowHandler:
 
         if not model:
             model = table.get_model()
+
+        if user_field_names:
+            values = self.map_user_field_name_dict_to_internal(
+                model._field_objects, values
+            )
 
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
@@ -281,7 +291,24 @@ class RowHandler:
 
         return instance
 
-    def update_row(self, user, table, row_id, values, model=None):
+    def map_user_field_name_dict_to_internal(
+        self,
+        field_objects,
+        values,
+    ):
+        to_internal_name = {}
+        for field_object in field_objects.values():
+            to_internal_name[field_object["field"].name] = field_object["name"]
+        mapped_back_to_field_name = {}
+        for user_field_name, value in values.items():
+            internal_name = to_internal_name[user_field_name]
+            mapped_back_to_field_name[internal_name] = value
+        values = mapped_back_to_field_name
+        return values
+
+    def update_row(
+        self, user, table, row_id, values, model=None, user_field_names=False
+    ):
         """
         Updates one or more values of the provided row_id.
 
@@ -296,6 +323,9 @@ class RowHandler:
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
         :type model: Model
+        :param user_field_names: Whether or not the values are keyed by the internal
+            Baserow field name (field_1,field_2 etc) or by the user field names.
+        :type user_field_names: True
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         :rtype: Model
@@ -319,7 +349,10 @@ class RowHandler:
             before_return = before_row_update.send(
                 self, row=row, user=user, table=table, model=model
             )
-
+            if user_field_names:
+                values = self.map_user_field_name_dict_to_internal(
+                    model._field_objects, values
+                )
             values = self.prepare_values(model._field_objects, values)
             values, manytomany_values = self.extract_manytomany_values(values, model)
 

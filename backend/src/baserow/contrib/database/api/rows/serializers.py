@@ -20,7 +20,12 @@ class RowSerializer(serializers.ModelSerializer):
 
 
 def get_row_serializer_class(
-    model, base_class=None, is_response=False, field_ids=None, user_field_names=False
+    model,
+    base_class=None,
+    is_response=False,
+    field_ids=None,
+    field_names_to_include=None,
+    user_field_names=False,
 ):
     """
     Generates a Django rest framework model serializer based on the available fields
@@ -37,24 +42,39 @@ def get_row_serializer_class(
         instead of handling input data. If that is the case other serializer fields
         might be used depending on the field type.
     :type is_response: bool
-    :param field_ids: If provided only the field ids in the list will be included in
-        the serializer. By default all the fields of the model are going to be
-        included. Note that the field id must exist in the model in order to work.
+    :param field_ids: If provided only the field ids in the list will be
+        included in the serializer. By default all the fields of the model are going
+        to be included. Note that the field id must exist in the model in
+        order to work.
     :type field_ids: list or None
+    :param field_names_to_include: If provided only the field names in the list will be
+        included in the serializer. By default all the fields of the model are going
+        to be included. Note that the field name must exist in the model in
+        order to work.
+    :type field_names_to_include: list or None
     :return: The generated serializer.
     :rtype: ModelSerializer
     """
 
     field_objects = model._field_objects
 
-    field_names = [
-        field["field"].name if user_field_names else field["name"]
-        for field in field_objects.values()
-        if field_ids is None or field["field"].id in field_ids
-    ]
+    field_names = []
+    for field in field_objects.values():
+        field_id_matches = field_ids is None or (field["field"].id in field_ids)
+        field_name_matches = field_names_to_include is None or (
+            field["field"].name in field_names_to_include
+        )
+        if field_id_matches and field_name_matches:
+            field_names.append(
+                field["field"].name if user_field_names else field["name"]
+            )
     field_overrides = {}
     for field in field_objects.values():
-        if field_ids is None or field["field"].id in field_ids:
+        field_id_matches = field_ids is None or (field["field"].id in field_ids)
+        field_name_matches = field_names_to_include is None or (
+            field["field"].name in field_names_to_include
+        )
+        if field_id_matches and field_name_matches:
             name = field["field"].name if user_field_names else field["name"]
             extra_kwargs = {}
             if field["name"] != name:

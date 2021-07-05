@@ -158,10 +158,9 @@ class RowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.NONE,
                 description=(
-                    "If provided the returned json will use the user specified field "
-                    "names instead of internal Baserow field names (field_123 etc). "
-                    "Fields with duplicate user names will have _1,_2 etc appended to "
-                    "name."
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
                 ),
             ),
         ],
@@ -274,6 +273,15 @@ class RowsView(APIView):
                 description="If provided then the newly created row will be "
                 "positioned before the row with the provided id.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "If provided the field names will use the user specified field "
+                    "names instead of internal Baserow field names (field_123 etc). "
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="create_database_table_row",
@@ -322,7 +330,11 @@ class RowsView(APIView):
         TokenHandler().check_table_permissions(request, "create", table, False)
         model = table.get_model()
 
-        validation_serializer = get_row_serializer_class(model)
+        user_field_names = "user_field_names" in request.GET
+
+        validation_serializer = get_row_serializer_class(
+            model, user_field_names=user_field_names
+        )
         data = validate_data(validation_serializer, request.data)
 
         before_id = request.GET.get("before")
@@ -332,9 +344,16 @@ class RowsView(APIView):
             else None
         )
 
-        row = RowHandler().create_row(request.user, table, data, model, before=before)
+        row = RowHandler().create_row(
+            request.user,
+            table,
+            data,
+            model,
+            before=before,
+            user_field_names=user_field_names,
+        )
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
 
@@ -365,10 +384,9 @@ class RowView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.NONE,
                 description=(
-                    "If provided the returned json will use the user specified field "
-                    "names instead of internal Baserow field names (field_123 etc). "
-                    "Fields with duplicate user names will have _1,_2 etc appended to "
-                    "name."
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
                 ),
             ),
         ],
@@ -435,6 +453,16 @@ class RowView(APIView):
                 type=OpenApiTypes.INT,
                 description="Updates the row related to the value.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "A flag query parameter which if provided this endpoint will "
+                    "expect and return the user specified field names instead of "
+                    "internal Baserow field names (field_123 etc)."
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="update_database_table_row",
@@ -444,12 +472,16 @@ class RowView(APIView):
             "fields that the table has. For a complete overview of fields use the "
             "**list_database_table_fields** endpoint to list them all. None of the "
             "fields are required, if they are not provided the value is not going to "
-            "be updated. If you want to update a value for the field with for example "
-            "id `10`, the key must be named `field_10`. Of course multiple fields can "
+            "be updated. "
+            "For example if user_field_names is not provided and you want to update a "
+            "value for the field with id `10`, the key must be named `field_10`. If "
+            "user_field_names is provided then instead they key must the name of the "
+            "field."
+            "Multiple different fields to update can "
             "be provided in one request. In the examples below you will find all the "
             "different field types, the numbers/ids in the example are just there for "
             "example purposes, the field_ID must be replaced with the actual id of the "
-            "field."
+            "field or the name of the field if user_field_names is provided."
         ),
         request=get_example_row_serializer_class(False),
         responses={
@@ -482,15 +514,29 @@ class RowView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "update", table, False)
 
-        field_ids = RowHandler().extract_field_ids_from_dict(request.data)
+        user_field_names = "user_field_names" in request.GET
+
+        field_names = None
+        field_ids = None
+        if user_field_names:
+            field_names = request.data.keys()
+        else:
+            field_ids = RowHandler().extract_field_ids_from_dict(request.data)
         model = table.get_model()
-        validation_serializer = get_row_serializer_class(model, field_ids=field_ids)
+        validation_serializer = get_row_serializer_class(
+            model,
+            field_ids=field_ids,
+            field_names_to_include=field_names,
+            user_field_names=user_field_names,
+        )
         data = validate_data(validation_serializer, request.data)
 
-        row = RowHandler().update_row(request.user, table, row_id, data, model)
+        row = RowHandler().update_row(
+            request.user, table, row_id, data, model, user_field_names=user_field_names
+        )
 
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
 

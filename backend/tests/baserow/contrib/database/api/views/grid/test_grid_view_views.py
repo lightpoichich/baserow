@@ -395,6 +395,20 @@ def test_list_filtered_rows(api_client, data_fixture):
     assert f"field_{number_field.id}" in response_json[0]
     assert f"field_{boolean_field.id}" in response_json[0]
 
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    response = api_client.post(
+        f"{url}?user_field_names=true",
+        {"field_names": [number_field.name, boolean_field.name], "row_ids": [row_3.id]},
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == row_3.id
+    assert number_field.name in response_json[0]
+    assert boolean_field.name in response_json[0]
+
 
 @pytest.mark.django_db
 def test_patch_grid_view(api_client, data_fixture):

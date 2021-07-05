@@ -204,7 +204,12 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_model(
-        self, fields=None, field_ids=None, attribute_names=False, manytomany_models=None
+        self,
+        fields=None,
+        field_ids=None,
+        field_names=None,
+        attribute_names=False,
+        manytomany_models=None,
     ):
         """
         Generates a temporary Django model based on available fields that belong to
@@ -218,6 +223,10 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
             added to the model. This can be done to improve speed if for example only a
             single field needs to be mutated.
         :type field_ids: None or list
+        :param field_names: If provided only the fields with the names in the list
+            will be added to the model. This can be done to improve speed if for
+            example only a single field needs to be mutated.
+        :type field_names: None or list
         :param attribute_names: If True, the the model attributes will be based on the
             field name instead of the field id.
         :type attribute_names: bool
@@ -279,6 +288,14 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
                 fields_query = []
             else:
                 fields_query = fields_query.filter(pk__in=field_ids)
+
+        # If the field names are provided we must only fetch the fields of which the
+        # user defined name is in that list.
+        if isinstance(field_names, list):
+            if len(field_names) == 0:
+                fields_query = []
+            else:
+                fields_query = fields_query.filter(name__in=field_names)
 
         # Create a combined list of fields that must be added and belong to the this
         # table.

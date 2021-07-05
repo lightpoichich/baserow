@@ -6,6 +6,7 @@ from baserow.contrib.database.api.rows.serializers import (
     get_example_row_serializer_class,
     RowSerializer,
 )
+from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.fields.registries import field_type_registry
 from tests.test_utils import setup_interesting_test_table
 
@@ -171,6 +172,13 @@ def test_get_table_serializer(data_fixture):
     assert serializer_instance.is_valid()
     assert serializer_instance.data == {"color": "white"}
 
+    serializer_class = get_row_serializer_class(
+        model=model, field_names_to_include=[text_field.name]
+    )
+    serializer_instance = serializer_class(data={})
+    assert serializer_instance.is_valid()
+    assert serializer_instance.data == {"color": "white"}
+
 
 @pytest.mark.django_db
 def test_get_example_row_serializer_class():
@@ -269,7 +277,11 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         "phone_number": "+4412345678",
         "positive_decimal": "1.2",
         "positive_int": "1",
-        "single_select": {"color": "red", "id": 1, "value": "A"},
+        "single_select": {
+            "color": "red",
+            "id": SelectOption.objects.get(value="A").id,
+            "value": "A",
+        },
         "text": "text",
         "url": "https://www.google.com",
     }

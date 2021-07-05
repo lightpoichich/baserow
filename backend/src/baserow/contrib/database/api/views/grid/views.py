@@ -106,10 +106,9 @@ class GridViewView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.NONE,
                 description=(
-                    "If provided the returned json will use the user specified field "
-                    "names instead of internal Baserow field names (field_123 etc). "
-                    "Fields with duplicate user names will have _1,_2 etc appended to "
-                    "name."
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
                 ),
             ),
         ],
@@ -203,21 +202,37 @@ class GridViewView(APIView):
                 required=False,
                 description="Returns only rows that belong to the related view's "
                 "table.",
-            )
+            ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
+                ),
+            ),
         ],
         tags=["Database table grid view"],
         operation_id="filter_database_table_grid_view_rows",
         description=(
             "Lists only the rows and fields that match the request. Only the rows "
-            "with the ids that are in the `row_ids` list are going to be returned. "
-            "Same goes for the fields, only the fields with the ids in the "
-            "`field_ids` are going to be returned. This endpoint could be used to "
-            "refresh data after changes something. For example in the web frontend "
-            "after changing a field type, the data of the related cells will be "
-            "refreshed using this endpoint. In the example all field types are listed, "
-            "but normally  the number in field_{id} key is going to be the id of the "
-            "field. The value is what the user has provided and the format of it "
-            "depends on the fields type."
+            "with the ids that are in the `row_ids` list will be returned. "
+            "The same also goes for the fields, only the fields with the ids in the "
+            "`field_ids` and/or names in the `field_names` will be returned. If both "
+            "`field_ids` and `field_names` are provided then a field must have it's "
+            "id in `field_ids` and it's name in `field_names` to be included. "
+            "Otherwise if only one of `field_ids` or `field_names` is provided then "
+            "only that one will be used to filter down fields."
+            "This endpoint could be used to refresh data after changes something. For "
+            "example in the web frontend after changing a field type, the data of the "
+            "related cells will be refreshed using this endpoint. "
+            "In the example all field types are listed, "
+            "but normally the number in field_{id} key is going to be the id of the "
+            "field or if user_field_names is specified then the keys will be the name "
+            "of the fields. The value is what the user has provided and the format of "
+            "it depends on the fields type."
         ),
         request=GridViewFilterSerializer,
         responses={
@@ -244,11 +259,16 @@ class GridViewView(APIView):
         view = ViewHandler().get_view(view_id, GridView)
         view.table.database.group.has_user(request.user, raise_error=True)
 
-        model = view.table.get_model(field_ids=data["field_ids"])
+        user_field_names = "user_field_names" in request.GET
+
+        model = view.table.get_model(
+            field_names=data.get("field_names", None),
+            field_ids=data.get("field_ids", None),
+        )
         results = model.objects.filter(pk__in=data["row_ids"])
 
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(results, many=True)
         return Response(serializer.data)

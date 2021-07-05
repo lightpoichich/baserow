@@ -573,6 +573,52 @@ def test_create_row(api_client, data_fixture):
     assert getattr(row_4, f"field_{boolean_field.id}") is True
     assert getattr(row_4, f"field_{text_field_2.id}") == ""
 
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.post(
+        f"{url}?user_field_names=true",
+        {
+            f"Color": "Red",
+            f"Horsepower": 480,
+            f"For Sale": False,
+            f"Description": "",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "Color": "Red",
+        "Description": "",
+        "For sale": False,
+        "Horsepower": "480",
+        "id": 6,
+        "order": "5.00000000000000000000",
+    }
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.post(
+        f"{url}?user_field_names=true",
+        {
+            f"INVALID FIELD NAME": "Red",
+            f"Horsepower": 480,
+            f"For Sale": False,
+            f"Description": "",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "Color": "white",  # Has gone to the default value when not specified.
+        "Description": "",
+        "For sale": False,
+        "Horsepower": "480",
+        "id": 7,
+        "order": "6.00000000000000000000",
+    }
+
 
 @pytest.mark.django_db
 def test_get_row(api_client, data_fixture):
@@ -910,6 +956,26 @@ def test_update_row(api_client, data_fixture):
 
     row_3.refresh_from_db()
     assert getattr(row_3, f"field_{decimal_field.id}") == Decimal("10.22")
+    assert getattr(row_2, f"field_{number_field.id}") is None
+    assert getattr(row_2, f"field_{boolean_field.id}") is False
+
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table_3.id, "row_id": row_3.id}
+    )
+    response = api_client.patch(
+        f"{url}?user_field_names=true",
+        {f"Price": 10.01},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f"Price"] == "10.01"
+    assert "Horsepower" not in response_json
+    assert "For sale" not in response_json
+
+    row_3.refresh_from_db()
+    assert getattr(row_3, f"field_{decimal_field.id}") == Decimal("10.01")
     assert getattr(row_2, f"field_{number_field.id}") is None
     assert getattr(row_2, f"field_{boolean_field.id}") is False
 

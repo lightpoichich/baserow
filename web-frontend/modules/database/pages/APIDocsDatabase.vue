@@ -615,6 +615,27 @@
                 The unique identifier of the row that is requested.
               </APIDocsParameter>
             </ul>
+            <h4 class="api-docs__heading-4">Query parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names returned by this endpoint will be actual names
+                of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then all returned field names will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
+            </ul>
           </div>
           <div class="api-docs__right">
             <APIDocsExample
@@ -635,6 +656,31 @@
               Create row
             </h3>
             <p class="api-docs__content">Create a new {{ table.name }} row.</p>
+            <h4 class="api-docs__heading-4">Query parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names expected and returned by this endpoint will be
+                actual names of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then field names expected and returned will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
+              <APIDocsParameter :optional="true" name="before" type="integer">
+                If provided then the newly created row will be positioned before
+                the row with the provided id.
+              </APIDocsParameter>
+            </ul>
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter
@@ -644,6 +690,7 @@
                 :visible-name="field.name"
                 :optional="true"
                 :type="field._.type"
+                :user-field-names="exampleData.userFieldNames"
               >
                 <div v-html="field._.description"></div>
               </APIDocsParameter>
@@ -677,6 +724,31 @@
                 The unique identifier of the row that needs to be updated.
               </APIDocsParameter>
             </ul>
+            <h4 class="api-docs__heading-4">Query parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names expected and returned by this endpoint will be
+                actual names of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then field names expected and returned will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
+              <APIDocsParameter :optional="true" name="before" type="integer">
+                If provided then the newly created row will be positioned before
+                the row with the provided id.
+              </APIDocsParameter>
+            </ul>
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter
@@ -686,6 +758,7 @@
                 :visible-name="field.name"
                 :optional="true"
                 :type="field._.type"
+                :user-field-names="exampleData.userFieldNames"
               >
                 <div v-html="field._.description"></div>
               </APIDocsParameter>
@@ -723,6 +796,24 @@
             </ul>
             <h4 class="api-docs__heading-4">Query parameters</h4>
             <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names returned by this endpoint will be actual names
+                of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then all returned field names will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
               <APIDocsParameter
                 name="before_row_id"
                 type="integer"

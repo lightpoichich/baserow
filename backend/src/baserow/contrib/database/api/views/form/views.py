@@ -15,6 +15,7 @@ from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import FormView, FormViewFieldOptions
 from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.validators import required_validator
 from baserow.core.exceptions import UserNotInGroup
 
 from .errors import ERROR_FORM_DOES_NOT_EXIST
@@ -125,9 +126,8 @@ class SubmitFormViewView(APIView):
         field_kwargs = {
             model._field_objects[option.field_id]["name"]: {
                 "required": True,
-                "allow_null": False,
-                "allow_blank": False,
                 "default": empty,
+                "validators": [required_validator],
             }
             for option in options
             if option.required
@@ -138,5 +138,5 @@ class SubmitFormViewView(APIView):
         )
         data = validate_data(validation_serializer, request.data)
 
-        handler.submit_form_view(form, data, model)
+        handler.submit_form_view(form, data, model, options)
         return Response(FormViewSubmittedSerializer(form).data)

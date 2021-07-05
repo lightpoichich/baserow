@@ -101,6 +101,11 @@ class UserFileField(serializers.Field):
         "invalid_user_file": _("The provided user file does not exist."),
     }
 
+    def __init__(self, *args, **kwargs):
+        allow_null = kwargs.pop("allow_null", True)
+        default = kwargs.pop("default", None)
+        super().__init__(allow_null=allow_null, default=default, *args, **kwargs)
+
     def to_internal_value(self, data):
         if isinstance(data, UserFile):
             return data

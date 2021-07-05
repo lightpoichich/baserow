@@ -18,11 +18,15 @@ class FormViewFieldOptionsSerializer(serializers.ModelSerializer):
 class PublicFormViewFieldSerializer(FieldSerializer):
     class Meta:
         model = Field
-        fields = ("type",)
+        fields = (
+            "id",
+            "type",
+        )
 
 
 class PublicFormViewFieldOptionsSerializer(FieldSerializer):
     field = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = FormViewFieldOptions
@@ -34,6 +38,9 @@ class PublicFormViewFieldOptionsSerializer(FieldSerializer):
         return field_type_registry.get_serializer(
             instance.field, PublicFormViewFieldSerializer
         ).data
+
+    def get_name(self, instance):
+        return instance.name or instance.field.name
 
 
 class PublicFormViewSerializer(serializers.ModelSerializer):

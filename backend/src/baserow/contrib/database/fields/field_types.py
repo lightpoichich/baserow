@@ -65,11 +65,12 @@ class TextFieldType(FieldType):
     serializer_field_names = ["text_default"]
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.CharField(
             **{
-                "required": False,
-                "allow_null": True,
-                "allow_blank": True,
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
                 "default": instance.text_default or None,
                 **kwargs,
             }
@@ -92,8 +93,14 @@ class LongTextFieldType(FieldType):
     model_class = LongTextField
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.CharField(
-            **{"required": False, "allow_null": True, "allow_blank": True, **kwargs}
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -119,8 +126,14 @@ class URLFieldType(FieldType):
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.URLField(
-            **{"required": False, "allow_null": True, "allow_blank": True, **kwargs}
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -166,6 +179,8 @@ class NumberFieldType(FieldType):
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+
         kwargs["decimal_places"] = (
             0
             if instance.number_type == NUMBER_TYPE_INTEGER
@@ -178,8 +193,8 @@ class NumberFieldType(FieldType):
         return serializers.DecimalField(
             **{
                 "max_digits": self.MAX_DIGITS + kwargs["decimal_places"],
-                "required": False,
-                "allow_null": True,
+                "required": required,
+                "allow_null": not required,
                 **kwargs,
             }
         )
@@ -332,13 +347,15 @@ class DateFieldType(FieldType):
         return value.strftime(python_format)
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+
         if instance.date_include_time:
             return serializers.DateTimeField(
-                **{"required": False, "allow_null": False, **kwargs}
+                **{"required": required, "allow_null": not required, **kwargs}
             )
         else:
             return serializers.DateField(
-                **{"required": False, "allow_null": False, **kwargs}
+                **{"required": required, "allow_null": not required, **kwargs}
             )
 
     def get_model_field(self, instance, **kwargs):
@@ -909,8 +926,14 @@ class EmailFieldType(FieldType):
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.EmailField(
-            **{"required": False, "allow_null": True, "allow_blank": True, **kwargs}
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -992,11 +1015,12 @@ class FileFieldType(FieldType):
         return user_files
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.ListSerializer(
             **{
                 "child": FileFieldRequestSerializer(),
-                "required": False,
-                "allow_null": True,
+                "required": required,
+                "allow_null": not required,
                 **kwargs,
             }
         )
@@ -1148,18 +1172,20 @@ class SingleSelectFieldType(FieldType):
         raise ValidationError(f"The provided value is not a valid option.")
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.PrimaryKeyRelatedField(
             **{
                 "queryset": SelectOption.objects.filter(field=instance),
-                "required": False,
-                "allow_null": True,
+                "required": required,
+                "allow_null": not required,
                 **kwargs,
             }
         )
 
     def get_response_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return SelectOptionSerializer(
-            **{"required": False, "allow_null": True, **kwargs}
+            **{"required": required, "allow_null": not required, **kwargs}
         )
 
     def get_serializer_help_text(self, instance):
@@ -1410,12 +1436,15 @@ class PhoneNumberFieldType(FieldType):
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        validators = kwargs.pop("validators", None) or []
+        validators.append(self.simple_phone_number_validator)
         return serializers.CharField(
             **{
-                "required": False,
-                "allow_null": True,
-                "allow_blank": True,
-                "validators": [self.simple_phone_number_validator],
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                "validators": validators,
                 "max_length": self.MAX_PHONE_NUMBER_LENGTH,
                 **kwargs,
             }

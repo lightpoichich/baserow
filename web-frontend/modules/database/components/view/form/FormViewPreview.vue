@@ -44,6 +44,7 @@
           </div>
           <FormViewImageUpload
             v-else-if="!readOnly"
+            class="margin-bottom-3"
             @uploaded="updateForm({ logo_image: $event })"
             >Add a logo
           </FormViewImageUpload>
@@ -102,16 +103,7 @@
           </FormViewField>
         </div>
         <div class="form-view__actions">
-          <div class="form-view__powered-by">
-            Powered by
-            <a href="https://baserow.io" target="_blank">
-              <img
-                class="form-view__powered-by-logo"
-                src="@baserow/modules/core/static/img/logo.svg"
-                alt=""
-              />
-            </a>
-          </div>
+          <FormViewPoweredBy></FormViewPoweredBy>
           <div class="form-view__submit">
             <a class="button button--primary button--large">Submit</a>
           </div>
@@ -131,10 +123,16 @@ import FormViewField from '@baserow/modules/database/components/view/form/FormVi
 import FormViewMeta from '@baserow/modules/database/components/view/form/FormViewMeta'
 import FormViewImageUpload from '@baserow/modules/database/components/view/form/FormViewImageUpload'
 import formViewHelpers from '@baserow/modules/database/mixins/formViewHelpers'
+import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
 
 export default {
   name: 'FormViewPreview',
-  components: { FormViewField, FormViewMeta, FormViewImageUpload },
+  components: {
+    FormViewPoweredBy,
+    FormViewField,
+    FormViewMeta,
+    FormViewImageUpload,
+  },
   mixins: [formViewHelpers],
   props: {
     table: {

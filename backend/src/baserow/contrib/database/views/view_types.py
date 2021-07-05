@@ -132,8 +132,8 @@ class FormViewType(ViewType):
     ]
     serializer_field_overrides = {
         "slug": CharField(read_only=True),
-        "cover_image": UserFileField(allow_null=True, required=False),
-        "logo_image": UserFileField(allow_null=True, required=False),
+        "cover_image": UserFileField(required=False),
+        "logo_image": UserFileField(required=False),
     }
 
     def get_api_urls(self):

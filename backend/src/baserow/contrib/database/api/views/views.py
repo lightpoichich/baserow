@@ -211,7 +211,7 @@ class ViewsView(APIView):
     )
     @transaction.atomic
     @validate_body_custom_fields(
-        view_type_registry, base_serializer_class=CreateViewSerializer
+        view_type_registry, base_serializer_class=CreateViewSerializer, partial=True
     )
     @map_exceptions(
         {
@@ -349,6 +349,7 @@ class ViewView(APIView):
             view_type_registry,
             request.data,
             base_serializer_class=UpdateViewSerializer,
+            partial=True,
         )
 
         view = ViewHandler().update_view(request.user, view, **data)

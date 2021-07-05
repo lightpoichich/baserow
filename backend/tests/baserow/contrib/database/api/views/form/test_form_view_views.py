@@ -105,6 +105,22 @@ def test_create_form_view(api_client, data_fixture):
     assert form.submit_action_redirect_url == "https://localhost"
     assert form.submit_email_confirmation == "bram@test.nl"
 
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table.id}),
+        {
+            "type": "form",
+            "name": "Test",
+            "cover_image": None,
+            "logo_image": {"name": user_file_2.name},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["cover_image"] is None
+    assert response_json["logo_image"]["name"] == user_file_2.name
+
 
 @pytest.mark.django_db
 def test_update_form_view(api_client, data_fixture):
@@ -162,6 +178,35 @@ def test_update_form_view(api_client, data_fixture):
     assert form.submit_action == "REDIRECT"
     assert form.submit_action_redirect_url == "https://localhost"
     assert form.submit_email_confirmation == "bram@test.nl"
+
+    url = reverse("api:database:views:item", kwargs={"view_id": view.id})
+    response = api_client.patch(
+        url,
+        {
+            "cover_image": {"name": user_file_2.name},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["cover_image"]["name"] == user_file_2.name
+    assert response_json["logo_image"]["name"] == user_file_2.name
+
+    url = reverse("api:database:views:item", kwargs={"view_id": view.id})
+    response = api_client.patch(
+        url,
+        {
+            "cover_image": None,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    print(response_json)
+    assert response.status_code == HTTP_200_OK
+    assert response_json["cover_image"] is None
+    assert response_json["logo_image"]["name"] == user_file_2.name
 
 
 @pytest.mark.django_db
@@ -263,14 +308,15 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "description": "Text field description",
         "required": True,
         "order": 1,
-        "field": {"type": "text", "text_default": ""},
+        "field": {"id": text_field.id, "type": "text", "text_default": ""},
     }
     assert response_json["fields"][1] == {
-        "name": "",
+        "name": number_field.name,
         "description": "",
         "required": False,
         "order": 2,
         "field": {
+            "id": number_field.id,
             "type": "number",
             "number_type": "INTEGER",
             "number_decimal_places": 1,
@@ -393,3 +439,58 @@ def test_submit_form_view(api_client, data_fixture):
     assert getattr(all[1], f"field_{text_field.id}") == "A value"
     assert getattr(all[1], f"field_{number_field.id}") is None
     assert getattr(all[1], f"field_{disabled_field.id}") is None
+
+    date_field = data_fixture.create_date_field(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+    url_field = data_fixture.create_url_field(table=table)
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    boolean_field = data_fixture.create_boolean_field(table=table)
+    phone_field = data_fixture.create_phone_number_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, file_field, required=True, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, url_field, required=True, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, single_select_field, required=True, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, boolean_field, required=True, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, date_field, required=True, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, phone_field, required=True, enabled=True
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "",
+            f"field_{date_field.id}": None,
+            f"field_{file_field.id}": [],
+            f"field_{url_field.id}": "",
+            f"field_{single_select_field.id}": "",
+            f"field_{boolean_field.id}": False,
+            f"field_{phone_field.id}": "",
+        },
+        format="json",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 7
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 7

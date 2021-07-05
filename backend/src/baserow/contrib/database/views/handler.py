@@ -25,6 +25,7 @@ from .exceptions import (
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
 )
+from .validators import EMPTY_VALUES
 from .models import View, ViewFilter, ViewSort, FormView, FormViewFieldOptions
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
@@ -795,7 +796,7 @@ class ViewHandler:
 
         return form
 
-    def submit_form_view(self, form, values, model=None):
+    def submit_form_view(self, form, values, model=None, enabled_field_options=None):
         """
         Handles when a form is submitted. It will validate the data by checking if
         the required fields are provided and not empty and it will create a new row
@@ -807,6 +808,9 @@ class ViewHandler:
         :type values: dict
         :param model: If the model is already generated, it can be provided here.
         :type model: Model | None
+        :param enabled_field_options: If the enabled field options have already been
+            fetched, they can be provided here.
+        :type enabled_field_options: QuerySet | list | None
         :return: The newly created row.
         :rtype: Model
         """
@@ -816,9 +820,11 @@ class ViewHandler:
         if not model:
             model = table.get_model()
 
-        enabled_field_options = FormViewFieldOptions.objects.filter(
-            form_view=form, enabled=True
-        )
+        if not enabled_field_options:
+            enabled_field_options = FormViewFieldOptions.objects.filter(
+                form_view=form, enabled=True
+            )
+
         allowed_field_names = []
         field_errors = {}
 
@@ -827,13 +833,11 @@ class ViewHandler:
         for field in enabled_field_options:
             field_name = model._field_objects[field.field_id]["name"]
             allowed_field_names.append(field_name)
-            field_instance = model._meta.get_field(field_name)
 
             if field.required and (
-                field_name not in values
-                or values[field_name] in field_instance.empty_values
+                field_name not in values or values[field_name] in EMPTY_VALUES
             ):
-                field_errors[field_name] = ["This field is required"]
+                field_errors[field_name] = ["This field is required."]
 
         if len(field_errors) > 0:
             raise ValidationError(field_errors)
@@ -844,7 +848,5 @@ class ViewHandler:
         row_created.send(
             self, row=instance, before=None, user=None, table=table, model=model
         )
-
-        # @TODO sent email confirmation if an address is provided.
 
         return instance

@@ -43,11 +43,17 @@
           <label class="control__label">The message</label>
           <div class="control__elements">
             <textarea
+              v-model="submit_action_message"
               type="text"
               class="input form-view__meta-message-textarea"
               placeholder="The message"
               rows="3"
               :disabled="readOnly"
+              @blur="
+                $emit('updated-form', {
+                  submit_action_message,
+                })
+              "
             />
           </div>
         </div>
@@ -121,6 +127,7 @@ export default {
   },
   data() {
     return {
+      submit_action_message: '',
       submit_action_redirect_url: '',
       submit_email_confirmation: '',
     }
@@ -134,6 +141,7 @@ export default {
     },
   },
   created() {
+    this.submit_action_message = this.view.submit_action_message
     this.submit_action_redirect_url = this.view.submit_action_redirect_url
     this.submit_email_confirmation = this.view.submit_email_confirmation
   },

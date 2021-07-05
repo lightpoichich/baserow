@@ -255,7 +255,7 @@
 .form_view__logo {
   position: relative;
   display: inline-block;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .form_view__logo-img {
@@ -266,7 +266,7 @@
 .form-view__title {
   font-size: 22px;
   font-weight: 700;
-  margin-bottom: 20px;
+  margin: 0 0 20px 0;
 }
 
 .form-view__description {
@@ -553,7 +553,7 @@
 .view-form__shared-link-password {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 40px 20px;
 }
 
 .view-form__shared-link-password-input {
@@ -562,4 +562,22 @@
 
 .view-form__shared-link-disable {
   color: $color-error-500;
+}
+
+.form-view__submitted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-view__submitted-message {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 160%;
+  margin-bottom: 40px;
+  text-align: center;
 }

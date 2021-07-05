@@ -131,6 +131,27 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Should return true if the provided value is empty.
+   */
+  isEmpty(field, value) {
+    if (Array.isArray(value) && value.length === 0) {
+      return true
+    }
+    if (typeof val === 'object' && Object.keys(value).length === 0) {
+      return true
+    }
+    return [null, '', false].includes(value)
+  }
+
+  /**
+   * Should return a string containing the error if the value is invalid. If the
+   * value is valid, then null must be returned.
+   */
+  getValidationError(field, value) {
+    return null
+  }
+
+  /**
    * Indicates whether or not it is possible to sort in a view.
    */
   getCanSortInView() {
@@ -643,6 +664,22 @@ export class NumberFieldType extends FieldType {
     }
   }
 
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (isNaN(parseFloat(value)) || !isFinite(value)) {
+      return 'Invalid number'
+    }
+    if (
+      value.split('.')[0].replace('-', '').length >
+      NumberFieldType.getMaxNumberLength()
+    ) {
+      return `Max ${NumberFieldType.getMaxNumberLength()} digits allowed.`
+    }
+    return null
+  }
+
   /**
    * First checks if the value is numeric, if that is the case, the number is going
    * to be formatted.
@@ -929,6 +966,20 @@ export class URLFieldType extends FieldType {
     }
   }
 
+  getEmptyValue(field) {
+    return ''
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (!isValidURL(value)) {
+      return 'Invalid URL'
+    }
+    return null
+  }
+
   getDocsDataType(field) {
     return 'string'
   }
@@ -985,6 +1036,23 @@ export class EmailFieldType extends FieldType {
         ? stringA.localeCompare(stringB)
         : stringB.localeCompare(stringA)
     }
+  }
+
+  getEmptyValue(field) {
+    return ''
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (value.length > 254) {
+      return 'Max 254 chars'
+    }
+    if (!isValidEmail(value)) {
+      return 'Invalid email'
+    }
+    return null
   }
 
   getDocsDataType(field) {
@@ -1271,6 +1339,20 @@ export class PhoneNumberFieldType extends FieldType {
         ? stringA.localeCompare(stringB)
         : stringB.localeCompare(stringA)
     }
+  }
+
+  getEmptyValue(field) {
+    return ''
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (!isSimplePhoneNumber(value)) {
+      return 'Invalid Phone Number'
+    }
+    return null
   }
 
   getSortIndicator() {

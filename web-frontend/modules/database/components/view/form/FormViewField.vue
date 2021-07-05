@@ -47,16 +47,16 @@
       <div class="form-view__field-inner">
         <div class="form-view__field-name">
           <Editable
-            ref="title"
+            ref="name"
             :value="fieldOptions.name || field.name"
-            @change="$emit('updated-field-options', { title: $event.value })"
-            @editing="editingTitle = $event"
+            @change="$emit('updated-field-options', { name: $event.value })"
+            @editing="editingName = $event"
           ></Editable>
           <a
             v-if="!readOnly"
             class="form-view__edit form-view-field-edit"
-            :class="{ 'form-view__edit--hidden': editingTitle }"
-            @click="$refs.title.edit()"
+            :class="{ 'form-view__edit--hidden': editingName }"
+            @click="$refs.name.edit()"
           ></a>
         </div>
         <div class="form-view__field-description">
@@ -125,7 +125,7 @@ export default {
   data() {
     return {
       selected: false,
-      editingTitle: false,
+      editingName: false,
       editingDescription: false,
       value: null,
     }

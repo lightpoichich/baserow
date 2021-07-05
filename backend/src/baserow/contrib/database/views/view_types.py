@@ -107,7 +107,6 @@ class FormViewType(ViewType):
     field_options_serializer_class = FormViewFieldOptionsSerializer
     allowed_fields = [
         "public",
-        "password",
         "title",
         "description",
         "cover_image",
@@ -115,12 +114,10 @@ class FormViewType(ViewType):
         "submit_action",
         "submit_action_message",
         "submit_action_redirect_url",
-        "submit_email_confirmation",
     ]
     serializer_field_names = [
         "slug",
         "public",
-        "password",
         "title",
         "description",
         "cover_image",
@@ -128,7 +125,6 @@ class FormViewType(ViewType):
         "submit_action",
         "submit_action_message",
         "submit_action_redirect_url",
-        "submit_email_confirmation",
     ]
     serializer_field_overrides = {
         "slug": CharField(read_only=True),

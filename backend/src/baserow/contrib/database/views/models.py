@@ -218,12 +218,6 @@ class FormView(View):
         help_text="Indicates whether the form is publicly accessible to visitors and "
         "if they can fill it out.",
     )
-    password = models.CharField(
-        max_length=64,
-        blank=True,
-        help_text="If not empty, then the visitor needs to provide this password "
-        "before he can fill out the form.",
-    )
     title = models.TextField(
         blank=True,
         help_text="The title that is displayed at the beginning of the form.",
@@ -262,11 +256,6 @@ class FormView(View):
         blank=True,
         help_text=f"If the `submit_action` is {FORM_VIEW_SUBMIT_ACTION_REDIRECT},"
         f"then the visitors will be redirected to the this URL.",
-    )
-    submit_email_confirmation = models.EmailField(
-        blank=True,
-        help_text="If provided, then an email confirmation containing the form "
-        "contents will be sent to this address when a visitors fills out the form.",
     )
 
     def rotate_slug(self):

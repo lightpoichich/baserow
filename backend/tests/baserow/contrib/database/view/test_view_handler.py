@@ -227,15 +227,12 @@ def test_create_form_view(send_mock, data_fixture):
     assert form.name == "Form"
     assert form.order == 1
     assert form.table == table
-    assert form.public is False
-    assert form.password == ""
     assert form.title == ""
     assert form.description == ""
     assert form.cover_image is None
     assert form.logo_image is None
     assert form.submit_action == "MESSAGE"
     assert form.submit_action_redirect_url == ""
-    assert form.submit_email_confirmation == ""
 
     form = handler.create_view(
         user=user,
@@ -244,14 +241,12 @@ def test_create_form_view(send_mock, data_fixture):
         slug="test-slug",
         name="Form 2",
         public=True,
-        password="test",
         title="Test form",
         description="Test form description",
         cover_image=user_file_1,
         logo_image=user_file_2,
         submit_action="REDIRECT",
         submit_action_redirect_url="https://localhost",
-        submit_email_confirmation="bram@test.nl",
     )
 
     assert View.objects.all().count() == 2
@@ -262,14 +257,12 @@ def test_create_form_view(send_mock, data_fixture):
     assert form.order == 2
     assert form.table == table
     assert form.public is True
-    assert form.password == "test"
     assert form.title == "Test form"
     assert form.description == "Test form description"
     assert form.cover_image_id == user_file_1.id
     assert form.logo_image_id == user_file_2.id
     assert form.submit_action == "REDIRECT"
     assert form.submit_action_redirect_url == "https://localhost"
-    assert form.submit_email_confirmation == "bram@test.nl"
 
 
 @pytest.mark.django_db
@@ -288,14 +281,12 @@ def test_update_form_view(send_mock, data_fixture):
         slug="Test slug",
         name="Form 2",
         public=True,
-        password="test",
         title="Test form",
         description="Test form description",
         cover_image=user_file_1,
         logo_image=user_file_2,
         submit_action="REDIRECT",
         submit_action_redirect_url="https://localhost",
-        submit_email_confirmation="bram@test.nl",
     )
 
     send_mock.assert_called_once()
@@ -308,14 +299,12 @@ def test_update_form_view(send_mock, data_fixture):
     assert form.name == "Form 2"
     assert form.table == table
     assert form.public is True
-    assert form.password == "test"
     assert form.title == "Test form"
     assert form.description == "Test form description"
     assert form.cover_image_id == user_file_1.id
     assert form.logo_image_id == user_file_2.id
     assert form.submit_action == "REDIRECT"
     assert form.submit_action_redirect_url == "https://localhost"
-    assert form.submit_email_confirmation == "bram@test.nl"
 
 
 @pytest.mark.django_db

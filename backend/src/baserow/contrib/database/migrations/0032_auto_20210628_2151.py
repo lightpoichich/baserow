@@ -46,15 +46,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "password",
-                    models.CharField(
-                        blank=True,
-                        help_text="If not empty, then the visitor needs to provide "
-                                  "this password before he can fill out the form.",
-                        max_length=64,
-                    ),
-                ),
-                (
                     "title",
                     models.TextField(
                         blank=True,
@@ -95,16 +86,6 @@ class Migration(migrations.Migration):
                         blank=True,
                         help_text="If the `submit_action` is REDIRECT,then the "
                                   "visitors will be redirected to the this URL.",
-                    ),
-                ),
-                (
-                    "submit_email_confirmation",
-                    models.EmailField(
-                        blank=True,
-                        help_text="If provided, then an email confirmation containing "
-                                  "the form contents will be sent to this address "
-                                  "when a visitors fills out the form.",
-                        max_length=254,
                     ),
                 ),
                 (

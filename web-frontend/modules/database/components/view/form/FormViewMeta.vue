@@ -81,37 +81,13 @@
             </div>
           </div>
         </div>
-        <div class="control">
-          <label class="control__label">Sent email confirmation to</label>
-          <div class="control__elements">
-            <input
-              v-model="submit_email_confirmation"
-              type="text"
-              class="input"
-              placeholder="Leave blank if no email must be sent"
-              :disabled="readOnly"
-              @blur="
-                ;[
-                  $v.submit_email_confirmation.$touch(),
-                  !$v.submit_email_confirmation.$error &&
-                    $emit('updated-form', {
-                      submit_email_confirmation,
-                    }),
-                ]
-              "
-            />
-            <div v-if="$v.submit_email_confirmation.$error" class="error">
-              Please enter a valid email
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { required, url, email } from 'vuelidate/lib/validators'
+import { required, url } from 'vuelidate/lib/validators'
 
 export default {
   name: 'FormViewMeta',
@@ -129,25 +105,19 @@ export default {
     return {
       submit_action_message: '',
       submit_action_redirect_url: '',
-      submit_email_confirmation: '',
     }
   },
   watch: {
     'view.submit_action_redirect_url'(value) {
       this.submit_action_redirect_url = value
     },
-    'view.submit_email_confirmation'(value) {
-      this.submit_email_confirmation = value
-    },
   },
   created() {
     this.submit_action_message = this.view.submit_action_message
     this.submit_action_redirect_url = this.view.submit_action_redirect_url
-    this.submit_email_confirmation = this.view.submit_email_confirmation
   },
   validations: {
     submit_action_redirect_url: { required, url },
-    submit_email_confirmation: { email },
   },
 }
 </script>

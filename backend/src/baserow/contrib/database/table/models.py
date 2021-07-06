@@ -218,6 +218,9 @@ class Table(
         queryset = Table.objects.filter(database=database)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
+    def get_database_table_name(self):
+        return f"database_table_{self.id}"
+
     def get_model(
         self, fields=None, field_ids=None, attribute_names=False, manytomany_models=None
     ):
@@ -256,7 +259,7 @@ class Table(
             (),
             {
                 "managed": False,
-                "db_table": f"database_table_{self.id}",
+                "db_table": self.get_database_table_name(),
                 "app_label": app_label,
                 "ordering": ["order", "id"],
             },

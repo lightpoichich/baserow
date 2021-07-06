@@ -314,7 +314,7 @@ class TrashEntry(models.Model):
     trash_item_id = models.PositiveIntegerField()
 
     # If the user who trashed something gets deleted we still wish to preserve this
-    # trash record as it is independant of if the user exists or not.
+    # trash record as it is independent of if the user exists or not.
     user_who_trashed = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -331,11 +331,14 @@ class TrashEntry(models.Model):
         Application, on_delete=models.CASCADE, null=True, blank=True
     )
 
-    # When set to true this trash entry will be picked up by a period job and the
-    # underlying item will be actually permanently deleted.
+    # When set to true this trash entry will be picked up by a periodic job and the
+    # underlying item will be actually permanently deleted along with the entry.
     should_be_permanently_deleted = models.BooleanField(default=False)
     trashed_at = models.DateTimeField(auto_now_add=True)
 
+    # The name, name of the parent and any extra description are cached so lookups
+    # of trashed items are simple and do not require joining to many different tables
+    # to simply get these details.
     name = models.TextField()
     parent_name = models.TextField(null=True, blank=True)
     extra_description = models.TextField(null=True, blank=True)

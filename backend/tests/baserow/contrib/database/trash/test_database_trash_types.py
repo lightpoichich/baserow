@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import connection
@@ -69,14 +71,15 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
-    # We only want three more queries when deleting 2 rows instead of 1 compared to
+    # We only want five more queries when deleting 2 rows instead of 1 compared to
     # above:
     # 1. A query to lookup the extra row we are deleting
     # 2. A query to delete said row
     # 3. A query to delete it's trash entry.
+    # 4. Queries to open and close transactions for each deletion
     # If we weren't caching the table models an extra number of queries would be first
     # performed to lookup the table information which breaks this assertion.
-    with django_assert_num_queries(12):
+    with django_assert_num_queries(14):
         TrashHandler.permanently_delete_marked_trash()
 
 
@@ -776,3 +779,51 @@ def test_cannot_update_or_create_a_linked_row_to_point_at_trashed_row(
                 f"field_{link_field_1.id}": [john_row.id],
             },
         )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_can_perm_delete_tables_in_another_user_db(
+    data_fixture,
+    user_tables_in_separate_db,
+):
+    patcher = patch("baserow.core.models.TrashEntry.delete")
+    trash_entry_delete = patcher.start()
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    TrashHandler.trash(user, table.database.group, table.database, table)
+    assert TrashEntry.objects.count() == 1
+    assert (
+        f"database_table_{table.id}"
+        in user_tables_in_separate_db.introspection.table_names()
+    )
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    trash_entry_delete.side_effect = RuntimeError("Force the outer transaction to fail")
+    with pytest.raises(RuntimeError):
+        TrashHandler.permanently_delete_marked_trash()
+
+    assert Table.trash.filter(id=table.id).exists()
+    assert TrashEntry.objects.count() == 1
+    # Even though the transaction rolled back and restored the Table and TrashEntry the
+    # actual table was still deleted as that happened in a different connection!
+    assert (
+        f"database_table_{table.id}"
+        not in user_tables_in_separate_db.introspection.table_names()
+    )
+
+    # Now make it so the deletion will work the second time, as long as it handles
+    # the actual table no longer being there.
+    patcher.stop()
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert not Table.trash.filter(id=table.id).exists()
+    assert TrashEntry.objects.count() == 0
+    assert (
+        f"database_table_{table.id}"
+        not in user_tables_in_separate_db.introspection.table_names()
+    )

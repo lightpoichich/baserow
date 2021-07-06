@@ -189,10 +189,10 @@ class TrashHandler:
         irreversibly from the database along with their corresponding trash entries.
         """
         trash_item_lookup_cache = {}
-        with transaction.atomic():
-            for trash_entry in TrashEntry.objects.filter(
-                should_be_permanently_deleted=True
-            ):
+        for trash_entry in TrashEntry.objects.filter(
+            should_be_permanently_deleted=True
+        ):
+            with transaction.atomic():
                 trash_item_type = trash_item_type_registry.get(
                     trash_entry.trash_item_type
                 )

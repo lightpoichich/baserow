@@ -28,13 +28,24 @@ class TableTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, trashed_item: Application):
+    def permanently_delete_item(self, trashed_item: Table):
         """Deletes the table schema and instance."""
 
         connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
-            model = trashed_item.get_model()
-            schema_editor.delete_model(model)
+            # We are using a different connection, and hence any outer transactions
+            # calling this method using a different connection will not roll back
+            # changes made to the USER_TABLE_DATABASE. Hence it is possible that the
+            # table has already been deleted if this code previously ran, but then the
+            # wrapping transaction failed causing the trashed_item to be restored.
+            # So we check to see if the table no longer exists before attempting to
+            # delete it to avoid a ProgrammingError being thrown by the schema_editor.
+            if (
+                trashed_item.get_database_table_name()
+                in connection.introspection.table_names()
+            ):
+                model = trashed_item.get_model()
+                schema_editor.delete_model(model)
 
         trashed_item.delete()
 

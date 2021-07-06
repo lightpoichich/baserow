@@ -1201,8 +1201,8 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     )
     table = data_fixture.create_database_table(user=user)
     field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
-    field_2 = data_fixture.create_number_field(name="Price", table=table)
-    field_3 = data_fixture.create_boolean_field(name="Name 2", table=table)
+    field_2 = data_fixture.create_number_field(name="Price,", table=table)
+    field_3 = data_fixture.create_boolean_field(name='"Name, 2"', table=table)
 
     model = table.get_model()
     row_1 = model.objects.create(
@@ -1222,9 +1222,9 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["results"] == [
         {
+            '"Name, 2"': False,
             "Name": "name 1",
-            "Price": "2",
-            "Name 2": False,
+            "Price,": "2",
             "id": 1,
             "order": "1.00000000000000000000",
         }
@@ -1243,14 +1243,14 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert response_json == {
         "id": 1,
         "Name": "name 1",
-        "Name 2": False,
+        '"Name, 2"': False,
         "order": "1.00000000000000000000",
-        "Price": "2",
+        "Price,": "2",
     }
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
-        f"{url}?user_field_names=true&include=Name",
+        f'{url}?user_field_names=true&include="\\"Name, 2\\""',
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -1258,7 +1258,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["results"] == [
         {
-            "Name": "name 1",
+            '"Name, 2"': False,
             "id": 1,
             "order": "1.00000000000000000000",
         }

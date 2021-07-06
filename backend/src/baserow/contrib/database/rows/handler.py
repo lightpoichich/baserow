@@ -146,7 +146,7 @@ class RowHandler:
 
         # Use python's csv handler as it knows how to handle quoted csv values etc.
         # csv.reader returns an iterator, we use next to get the first split row back.
-        return next(csv.reader([value], delimiter=",", quotechar='"'))
+        return next(csv.reader([value], delimiter=",", quotechar='"', escapechar="\\"))
 
     def extract_manytomany_values(self, values, model):
         """

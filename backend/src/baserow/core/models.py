@@ -60,6 +60,24 @@ class Settings(models.Model):
     )
 
 
+class UserProfile(models.Model):
+    """
+    User profile to store user specific information that can't be stored in
+    default user model.
+    """
+
+    LANGUAGE = [("en", "English"), ("fr", "French")]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    language = models.TextField(
+        max_length=10,
+        choices=LANGUAGE,
+        default="en",
+        help_text="An ISO 639 language code (with optional variant) "
+        "selected by the user. Ex: en-GB.",
+    )
+
+
 class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=100)
     users = models.ManyToManyField(User, through="GroupUser")

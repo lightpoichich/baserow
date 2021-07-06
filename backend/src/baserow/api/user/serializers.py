@@ -6,16 +6,20 @@ from django.contrib.auth.models import update_last_login
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
-from baserow.api.user.validators import password_validation
+from baserow.api.user.validators import password_validation, language_validation
 from baserow.core.models import Template, UserLogEntry
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    language = serializers.CharField(
+        source="profile.language", required=False, validators=[language_validation]
+    )
+
     class Meta:
         model = User
-        fields = ("first_name", "username", "password", "is_staff", "id")
+        fields = ("first_name", "username", "password", "is_staff", "id", "language")
         extra_kwargs = {
             "password": {"write_only": True},
             "is_staff": {"read_only": True},
@@ -29,6 +33,14 @@ class RegisterSerializer(serializers.Serializer):
         help_text="The email address is also going to be the username."
     )
     password = serializers.CharField(validators=[password_validation])
+    language = serializers.CharField(
+        required=False,
+        default="en",
+        max_length=10,
+        validators=[language_validation],
+        help_text="An ISO 639 language code (with optional variant) "
+        "selected by the user. Ex: en-GB.",
+    )
     authenticate = serializers.BooleanField(
         required=False,
         default=False,

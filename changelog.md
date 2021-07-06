@@ -7,6 +7,8 @@
   deletion.
 * API Change: Creating or updating a row which has a linked field now raises a 500 error
   if an unknown linked row id is provided, instead of filtering out unknown row ids.
+* Fix the create group invite endpoint failing when no message provided.
+* Single select options can now be ordered by drag and drop. 
 
 ## Released (2021-06-02)
 

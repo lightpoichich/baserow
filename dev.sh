@@ -246,6 +246,9 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
   new_tab "Web frontend" \
           "docker logs web-frontend && docker attach web-frontend"
 
-  new_tab "Web frontend lint" \
-          "docker exec -it web-frontend /bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
+  new_tab "Backend pytest watch" \
+          "docker exec -it backend /bin/bash /baserow/backend/docker/docker-entrypoint.sh ptw"
+
+  new_tab "Backend lint watch" \
+          "docker exec -it backend /bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-watch"
 fi

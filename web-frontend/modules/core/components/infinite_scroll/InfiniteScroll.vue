@@ -19,7 +19,6 @@ export default {
   data() {
     return {
       currentPage: 1,
-      scrollHandler: null,
     }
   },
   methods: {
@@ -28,8 +27,8 @@ export default {
     },
     loadNextPage() {
       if (this.items.length < this.maxCount) {
-        const nextPage = this.currentPage + 1
-        this.$emit('load-next-page', nextPage)
+        this.currentPage = this.currentPage + 1
+        this.$emit('load-next-page', this.currentPage)
       }
     },
   },

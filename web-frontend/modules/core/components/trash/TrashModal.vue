@@ -328,15 +328,9 @@ export default {
         // The group was emptied, it might have contained trashed applications hence
         // we need to search through the trash and remove any now deleted applications.
         for (const app of this.selectedTrashGroup.applications.slice()) {
-          const applicationNowDeleted = this.trashContents.find((item) => {
-            return (
-              item.trash_item_id === app.id &&
-              item.trash_item_type === 'application'
-            )
-          })
-          if (applicationNowDeleted !== undefined) {
+          if (app.trashed) {
             const index = this.selectedTrashGroup.applications.findIndex(
-              (i) => i.id === applicationNowDeleted.id
+              (i) => i.id === app.id
             )
             this.selectedTrashGroup.applications.splice(index, 1)
           }

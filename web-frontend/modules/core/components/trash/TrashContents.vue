@@ -7,7 +7,7 @@
           Restore deleted items from the past {{ trashDuration }}
         </h3>
         <a
-          v-show="totalServerSideTrashContentsCount > 0"
+          v-show="totalServerSideTrashContentsCount > 0 && !parentIsTrashed"
           class="button button--error"
           :disabled="loadingContents"
           @click="showEmptyModalIfNotLoading"
@@ -103,6 +103,12 @@ export default {
     },
   },
   computed: {
+    parentIsTrashed() {
+      return (
+        this.selectedTrashApplication !== null &&
+        this.selectedTrashGroup.trashed
+      )
+    },
     selectedItem() {
       return this.selectedTrashApplication === null
         ? this.selectedTrashGroup
@@ -140,7 +146,10 @@ export default {
       const entryIsForSelectedItem =
         entry.trash_item_id === this.selectedItem.id &&
         entry.trash_item_type === selectedItemType
-      return this.selectedItem.trashed && !entryIsForSelectedItem
+      return (
+        this.parentIsTrashed ||
+        (this.selectedItem.trashed && !entryIsForSelectedItem)
+      )
     },
   },
 }

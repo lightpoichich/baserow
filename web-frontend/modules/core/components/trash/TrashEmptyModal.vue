@@ -2,13 +2,13 @@
   <Modal :tiny="true" :close-button="false">
     <h3>
       Are you sure you want to
-      {{ selectedIsTrashed ? 'empty the trash of' : 'permanently delete' }}
+      {{ selectedIsTrashed ? 'permanently delete' : 'empty the trash of' }}
       {{ name }}
     </h3>
     <p>
       This will permanently delete
       {{
-        selectedIsTrashed ? 'the listed items' : 'it and all of its contents'
+        selectedIsTrashed ? 'it and all of its contents' : 'the listed items'
       }}. After which they cannot be recovered.
     </p>
     <div class="actions">
@@ -20,7 +20,7 @@
           class="button button button--error"
           @click.prevent="emitEmptyAndClose"
         >
-          {{ selectedIsTrashed ? 'Empty' : 'Permanently delete' }}
+          {{ selectedIsTrashed ? 'Permanently delete' : 'Empty' }}
         </a>
       </div>
     </div>

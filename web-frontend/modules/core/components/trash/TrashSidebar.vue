@@ -1,12 +1,12 @@
 <template>
-  <div class="trash-side-bar">
+  <div>
     <div class="modal-sidebar__head">
       <div class="tree__link tree__link--group">
         <i class="modal-sidebar__head-icon fas fa-trash"></i>
         <span class="modal-sidebar__head-name">Trash</span>
       </div>
     </div>
-    <div class="modal-sidebar__nav">
+    <div class="trash-sidebar__nav modal-sidebar__nav">
       <ul
         v-for="group in groups"
         :key="'trash-group-' + group.id"

@@ -43,6 +43,7 @@ class TableTrashableItemType(TrashableItemType):
         """
         When trashing a link row field we also want to trash the related link row field.
         """
+
         model = trashed_item.get_model()
         things_to_trash = [trashed_item]
         for field in model._field_objects.values():

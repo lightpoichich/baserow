@@ -16,23 +16,24 @@
           <a
             class="modal-sidebar__nav-link"
             :class="{
-              active: isSelectedGroup(group),
+              active: isSelectedTrashGroup(group),
               'trash__trashed-group-link': group.trashed,
             }"
-            @click="emitIfNotAlreadySelectedGroup(group)"
+            @click="emitIfNotAlreadySelectedTrashGroup(group)"
           >
             <i
               class="modal-sidebar__nav-icon fas"
               :class="{
-                'fa-caret-down': group.id === selectedGroup.id,
-                'fa-caret-right': group.id !== selectedGroup.id,
-                'trash__unselected-group-icon': group.id !== selectedGroup.id,
+                'fa-caret-down': group.id === selectedTrashGroup.id,
+                'fa-caret-right': group.id !== selectedTrashGroup.id,
+                'trash__unselected-group-icon':
+                  group.id !== selectedTrashGroup.id,
               }"
             ></i>
             {{ group.name || 'Unnamed group ' + group.id }}
           </a>
         </li>
-        <template v-if="group.id === selectedGroup.id">
+        <template v-if="group.id === selectedTrashGroup.id">
           <li
             v-for="application in group.applications"
             :key="'trash-application-' + application.id"
@@ -41,7 +42,9 @@
               active: isSelectedApp(application),
               'trash__trashed-group-link': group.trashed || application.trashed,
             }"
-            @click="emitIfNotAlreadySelectedApplication(group, application)"
+            @click="
+              emitIfNotAlreadySelectedTrashApplication(group, application)
+            "
           >
             <span>{{
               application.name || 'Unnamed application ' + application.id
@@ -61,35 +64,36 @@ export default {
       type: Array,
       required: true,
     },
-    selectedGroup: {
+    selectedTrashGroup: {
       type: Object,
       required: false,
       default: null,
     },
-    selectedApplication: {
+    selectedTrashApplication: {
       type: Object,
       required: false,
       default: null,
     },
   },
   methods: {
-    isSelectedGroup(group) {
+    isSelectedTrashGroup(group) {
       return (
-        group.id === this.selectedGroup.id && this.selectedApplication === null
+        group.id === this.selectedTrashGroup.id &&
+        this.selectedTrashApplication === null
       )
     },
     isSelectedApp(app) {
       return (
-        this.selectedApplication !== null &&
-        app.id === this.selectedApplication.id
+        this.selectedTrashApplication !== null &&
+        app.id === this.selectedTrashApplication.id
       )
     },
-    emitIfNotAlreadySelectedGroup(group) {
-      if (!this.isSelectedGroup(group)) {
+    emitIfNotAlreadySelectedTrashGroup(group) {
+      if (!this.isSelectedTrashGroup(group)) {
         this.emitSelected({ group })
       }
     },
-    emitIfNotAlreadySelectedApplication(group, application) {
+    emitIfNotAlreadySelectedTrashApplication(group, application) {
       if (!this.isSelectedApp(application)) {
         this.emitSelected({ group, application })
       }

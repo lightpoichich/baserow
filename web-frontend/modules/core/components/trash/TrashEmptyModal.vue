@@ -1,5 +1,5 @@
 <template>
-  <Modal :very-small="true" :close-button="false">
+  <Modal :tiny="true" :close-button="false">
     <h3>
       Are you sure you want to
       {{ selectedIsTrashed ? 'empty the trash of' : 'permanently delete' }}

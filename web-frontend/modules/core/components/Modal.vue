@@ -11,7 +11,7 @@
         'modal__box--with-sidebar': sidebar,
         'modal__box--full-screen': fullScreen,
         'modal__box--small': small,
-        'modal__box--very-small': verySmall,
+        'modal__box--tiny': tiny,
       }"
     >
       <a v-if="closeButton" class="modal__close" @click="hide()">
@@ -54,7 +54,7 @@ export default {
       default: false,
       required: false,
     },
-    verySmall: {
+    tiny: {
       type: Boolean,
       default: false,
       required: false,

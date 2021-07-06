@@ -3,10 +3,10 @@
     <template #sidebar>
       <div v-if="loading" class="loading-absolute-center"></div>
       <TrashSidebar
-        v-else-if="groups.length > 0"
+        v-else
         :groups="groups"
-        :selected-group="selectedGroup"
-        :selected-application="selectedApplication"
+        :selected-trash-group="selectedTrashGroup"
+        :selected-trash-application="selectedTrashApplication"
         @selected="selectGroupOrApp"
       >
         <a class="modal__close" @click="hide()">
@@ -29,8 +29,8 @@
       </div>
       <TrashContent
         v-else
-        :selected-group="selectedGroup"
-        :selected-application="selectedApplication"
+        :selected-trash-group="selectedTrashGroup"
+        :selected-trash-application="selectedTrashApplication"
         :trash-contents="trashContents"
         :loading-contents="loadingContents"
         :loading-next-page="loadingNextPage"
@@ -52,6 +52,7 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import TrashSidebar from '@baserow/modules/core/components/trash/TrashSidebar'
 import TrashContent from '@baserow/modules/core/components/trash/TrashContents'
 import error from '@baserow/modules/core/mixins/error'
+import { mapState } from 'vuex'
 
 export default {
   name: 'TrashModal',
@@ -76,12 +77,62 @@ export default {
       loadingNextPage: false,
       groups: [],
       trashContents: [],
-      selectedGroup: null,
-      selectedApplication: null,
+      selectedTrashGroup: null,
+      selectedTrashApplication: null,
       totalServerSideTrashContentsCount: 0,
     }
   },
+  computed: {
+    ...mapState({
+      selectedGroup: (state) => state.group.selected,
+      selectedApplication: (state) => state.application.selected,
+    }),
+  },
   methods: {
+    pickInitialGroupToSelect() {
+      /**
+       * Chooses which group to show when the modal is shown.
+       **/
+
+      // The initial or selected groups will not contain the trashed flag as they so
+      // we must look them up in the groups fetched from the trash api.
+      const initialGroupWithTrashInfo = this.initialGroup
+        ? this.groups.find((i) => i.id === this.initialGroup.id)
+        : null
+      const selectedGroupWithTrashInfo = this.selectedGroup
+        ? this.groups.find((i) => i.id === this.selectedGroup.id)
+        : null
+      return (
+        initialGroupWithTrashInfo ||
+        selectedGroupWithTrashInfo ||
+        this.groups[0] || // When all groups are trashed we want to pick the first one.
+        null
+      )
+    },
+    pickInitialApplicationToSelect(firstGroupToShow) {
+      /**
+       * Chooses which app to show when the modal is shown.
+       **/
+
+      if (firstGroupToShow === null) {
+        return null
+      } else {
+        // The initial or selected apps will not contain the trashed flag as they so
+        // we must look them up in the groups fetched from the trash api.
+        const applications = firstGroupToShow.applications
+        if (this.initialApplication || this.initialGroup) {
+          // When either of the initial props are set we have been opened via a context
+          // menu shortcut.
+          return this.initialApplication
+            ? applications.find((i) => i.id === this.initialApplication.id)
+            : null
+        } else {
+          return this.selectedApplication
+            ? applications.find((i) => i.id === this.selectedApplication.id)
+            : null
+        }
+      }
+    },
     async show(...args) {
       /**
        * Loads the structure of the trash modal from the server, selects an initial
@@ -91,15 +142,18 @@ export default {
 
       this.loading = true
       this.groups = []
-      this.selectedGroup = null
-      this.selectedApplication = null
+      this.selectedTrashGroup = null
+      this.selectedTrashApplication = null
       this.hideError()
 
       try {
         const { data } = await TrashService(this.$client).fetchStructure()
         this.groups = data.groups
-        const group = this.initialGroup || this.groups[0]
-        this.selectGroupOrApp({ group, application: this.initialApplication })
+        const initialGroup = this.pickInitialGroupToSelect()
+        await this.selectGroupOrApp({
+          group: initialGroup,
+          application: this.pickInitialApplicationToSelect(initialGroup),
+        })
       } catch (error) {
         notifyIf(error, 'trash')
         this.hide()
@@ -111,13 +165,19 @@ export default {
        * Loads the next page of trash contents for the currently selected application.
        */
       this.hideError()
+      if (
+        this.selectedTrashGroup === null &&
+        this.selectedTrashApplication === null
+      ) {
+        return
+      }
       try {
         const { data } = await TrashService(this.$client).fetchContents({
           page: nextPage,
-          groupId: this.selectedGroup.id,
+          groupId: this.selectedTrashGroup.id,
           applicationId:
-            this.selectedApplication !== null
-              ? this.selectedApplication.id
+            this.selectedTrashApplication !== null
+              ? this.selectedTrashApplication.id
               : null,
         })
         this.totalServerSideTrashContentsCount = data.count
@@ -131,8 +191,8 @@ export default {
        * Switches to a different group or application to display the trash contents for
        * and triggers the fetch for the first page of contents.
        */
-      this.selectedGroup = group
-      this.selectedApplication = application
+      this.selectedTrashGroup = group
+      this.selectedTrashApplication = application
       this.loadingContents = true
       this.trashContents = []
       this.totalServerSideTrashContentsCount = 0
@@ -187,10 +247,10 @@ export default {
         const index = this.groups.findIndex((group) => group.id === trashItemId)
         this.groups[index].trashed = false
       } else if (trashItemType === 'application') {
-        const index = this.selectedGroup.applications.findIndex(
+        const index = this.selectedTrashGroup.applications.findIndex(
           (app) => app.id === trashItemId
         )
-        this.selectedGroup.applications[index].trashed = false
+        this.selectedTrashGroup.applications[index].trashed = false
       }
     },
     async onEmpty() {
@@ -205,9 +265,11 @@ export default {
       this.loadingContents = true
       try {
         const applicationIdOrNull =
-          this.selectedApplication !== null ? this.selectedApplication.id : null
+          this.selectedTrashApplication !== null
+            ? this.selectedTrashApplication.id
+            : null
         await TrashService(this.$client).emptyContents({
-          groupId: this.selectedGroup.id,
+          groupId: this.selectedTrashGroup.id,
           applicationId: applicationIdOrNull,
         })
         this.removeGroupOrAppFromSidebarIfNowPermDeleted()
@@ -219,27 +281,27 @@ export default {
       }
     },
     removeSelectedAppFromSidebar() {
-      const applicationId = this.selectedApplication.id
+      const applicationId = this.selectedTrashApplication.id
 
-      const indexToDelete = this.selectedGroup.applications.findIndex(
+      const indexToDelete = this.selectedTrashGroup.applications.findIndex(
         (app) => app.id === applicationId
       )
-      this.selectedGroup.applications.splice(indexToDelete, 1)
-      if (this.selectedGroup.applications.length > 0) {
-        this.selectedApplication = this.selectedGroup.applications[0]
+      this.selectedTrashGroup.applications.splice(indexToDelete, 1)
+      if (this.selectedTrashGroup.applications.length > 0) {
+        this.selectedTrashApplication = this.selectedTrashGroup.applications[0]
       } else {
-        this.selectedApplication = null
+        this.selectedTrashApplication = null
       }
     },
-    removeSelectedGroupFromSidebar() {
+    removeSelectedTrashGroupFromSidebar() {
       const indexToDelete = this.groups.findIndex(
-        (group) => group.id === this.selectedGroup.id
+        (group) => group.id === this.selectedTrashGroup.id
       )
       this.groups.splice(indexToDelete, 1)
       if (this.groups.length > 0) {
-        this.selectedGroup = this.groups[0]
+        this.selectedTrashGroup = this.groups[0]
       } else {
-        this.selectedGroup = null
+        this.selectedTrashGroup = null
       }
     },
     removeGroupOrAppFromSidebarIfNowPermDeleted() {
@@ -248,24 +310,35 @@ export default {
        * an empty is performed.
        */
       if (
-        this.selectedApplication !== null &&
-        this.selectedApplication.trashed
+        this.selectedTrashApplication !== null &&
+        this.selectedTrashApplication.trashed
       ) {
         this.removeSelectedAppFromSidebar()
-      } else if (this.selectedGroup.trashed) {
-        this.removeSelectedGroupFromSidebar()
-      } else if (this.selectedApplication === null) {
+        this.selectGroupOrApp({
+          group: this.selectedTrashGroup,
+          application: this.selectedTrashApplication,
+        })
+      } else if (this.selectedTrashGroup.trashed) {
+        this.removeSelectedTrashGroupFromSidebar()
+        this.selectGroupOrApp({
+          group: this.selectedTrashGroup,
+          application: this.selectedTrashApplication,
+        })
+      } else if (this.selectedTrashApplication === null) {
         // The group was emptied, it might have contained trashed applications hence
         // we need to search through the trash and remove any now deleted applications.
-        for (const app of this.selectedGroup.applications.slice()) {
-          const index = this.trashContents.findIndex((item) => {
+        for (const app of this.selectedTrashGroup.applications.slice()) {
+          const applicationNowDeleted = this.trashContents.find((item) => {
             return (
               item.trash_item_id === app.id &&
               item.trash_item_type === 'application'
             )
           })
-          if (index !== -1) {
-            this.selectedGroup.applications.splice(index, 1)
+          if (applicationNowDeleted !== undefined) {
+            const index = this.selectedTrashGroup.applications.findIndex(
+              (i) => i.id === applicationNowDeleted.id
+            )
+            this.selectedTrashGroup.applications.splice(index, 1)
           }
         }
       }

@@ -210,7 +210,7 @@ class ViewType(
 
     def get_field_options_serializer_class(self):
         """
-        Generates a serializer that the `field_options` property as a
+        Generates a serializer that has the `field_options` property as a
         `FieldOptionsField`. This serializer can be used by the API to validate or list
         the field options.
 

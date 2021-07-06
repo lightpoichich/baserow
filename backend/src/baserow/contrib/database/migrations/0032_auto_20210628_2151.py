@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                         db_index=True,
                         default=uuid.uuid4,
                         help_text="The unique slug where the form can be accessed "
-                                  "publicly on.",
+                        "publicly on.",
                         unique=True,
                     ),
                 ),
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=False,
                         help_text="Indicates whether the form is publicly accessible "
-                                  "to visitors and if they can fill it out.",
+                        "to visitors and if they can fill it out.",
                     ),
                 ),
                 (
@@ -50,15 +50,15 @@ class Migration(migrations.Migration):
                     models.TextField(
                         blank=True,
                         help_text="The title that is displayed at the beginning of "
-                                  "the form.",
+                        "the form.",
                     ),
                 ),
                 (
                     "description",
                     models.TextField(
                         blank=True,
-                        help_text="The title that is displayed at the beginning of "
-                                  "the form.",
+                        help_text="The description that is displayed at the beginning "
+                        "of the form.",
                     ),
                 ),
                 (
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
                         choices=[("MESSAGE", "Message"), ("REDIRECT", "Redirect")],
                         default="MESSAGE",
                         help_text="The action that must be performed after the visitor "
-                                  "has filled out the form.",
+                        "has filled out the form.",
                         max_length=32,
                     ),
                 ),
@@ -76,8 +76,8 @@ class Migration(migrations.Migration):
                     models.TextField(
                         blank=True,
                         help_text="If the `submit_action` is MESSAGE, then this "
-                                  "message will be shown to the visitor after "
-                                  "submitting the form.",
+                        "message will be shown to the visitor after "
+                        "submitting the form.",
                     ),
                 ),
                 (
@@ -85,7 +85,8 @@ class Migration(migrations.Migration):
                     models.URLField(
                         blank=True,
                         help_text="If the `submit_action` is REDIRECT,then the "
-                                  "visitors will be redirected to the this URL.",
+                        "visitors will be redirected to the this URL after submitting "
+                        "the form.",
                     ),
                 ),
                 (
@@ -96,6 +97,20 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="form_view_cover_image",
                         to="core.UserFile",
+                        help_text="The user file cover image that is displayed at the "
+                        "top of the form.",
+                    ),
+                ),
+                (
+                    "logo_image",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="form_view_logo_image",
+                        to="core.UserFile",
+                        help_text="The user file logo image that is displayed at the "
+                        "top of the form.",
                     ),
                 ),
             ],
@@ -110,7 +125,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 default=False,
                 help_text="Whether or not the field should be hidden in the current "
-                          "view.",
+                "view.",
             ),
         ),
         migrations.AlterField(
@@ -119,8 +134,8 @@ class Migration(migrations.Migration):
             field=models.SmallIntegerField(
                 default=32767,
                 help_text="The position that the field has within the view, lowest "
-                          "first. If there is another field with the same order value "
-                          "then the field with the lowest id must be shown first.",
+                "first. If there is another field with the same order value "
+                "then the field with the lowest id must be shown first.",
             ),
         ),
         migrations.AlterField(
@@ -148,8 +163,8 @@ class Migration(migrations.Migration):
                     models.CharField(
                         blank=True,
                         help_text="By default, the name of the related field will be "
-                                  "shown to the visitor. Optionally another name can "
-                                  "be used by setting this name.",
+                        "shown to the visitor. Optionally another name can "
+                        "be used by setting this name.",
                         max_length=255,
                     ),
                 ),
@@ -158,7 +173,7 @@ class Migration(migrations.Migration):
                     models.TextField(
                         blank=True,
                         help_text="If provided, then this value be will be shown under "
-                                  "the field.",
+                        "the field name.",
                     ),
                 ),
                 (
@@ -166,7 +181,7 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=False,
                         help_text="Indicates whether the field is included in the "
-                                  "form.",
+                        "form.",
                     ),
                 ),
                 (
@@ -174,7 +189,7 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=True,
                         help_text="Indicates whether the field is required for the "
-                                  "visitor to fill out.",
+                        "visitor to fill out.",
                     ),
                 ),
                 (
@@ -182,7 +197,7 @@ class Migration(migrations.Migration):
                     models.SmallIntegerField(
                         default=32767,
                         help_text="The order that the field has in the form. Lower "
-                                  "value is first.",
+                        "value is first.",
                     ),
                 ),
                 (
@@ -208,17 +223,6 @@ class Migration(migrations.Migration):
             name="field_options",
             field=models.ManyToManyField(
                 through="database.FormViewFieldOptions", to="database.Field"
-            ),
-        ),
-        migrations.AddField(
-            model_name="formview",
-            name="logo_image",
-            field=models.ForeignKey(
-                blank=True,
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="form_view_logo_image",
-                to="core.UserFile",
             ),
         ),
     ]

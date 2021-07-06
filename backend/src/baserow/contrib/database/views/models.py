@@ -224,7 +224,7 @@ class FormView(View):
     )
     description = models.TextField(
         blank=True,
-        help_text="The title that is displayed at the beginning of the form.",
+        help_text="The description that is displayed at the beginning of the form.",
     )
     cover_image = models.ForeignKey(
         UserFile,
@@ -232,6 +232,7 @@ class FormView(View):
         null=True,
         on_delete=models.SET_NULL,
         related_name="form_view_cover_image",
+        help_text="The user file cover image that is displayed at the top of the form.",
     )
     logo_image = models.ForeignKey(
         UserFile,
@@ -239,6 +240,7 @@ class FormView(View):
         null=True,
         on_delete=models.SET_NULL,
         related_name="form_view_logo_image",
+        help_text="The user file logo image that is displayed at the top of the form.",
     )
     submit_action = models.CharField(
         max_length=32,
@@ -255,7 +257,8 @@ class FormView(View):
     submit_action_redirect_url = models.URLField(
         blank=True,
         help_text=f"If the `submit_action` is {FORM_VIEW_SUBMIT_ACTION_REDIRECT},"
-        f"then the visitors will be redirected to the this URL.",
+        f"then the visitors will be redirected to the this URL after submitting the "
+        f"form.",
     )
 
     def rotate_slug(self):
@@ -281,7 +284,7 @@ class FormViewFieldOptions(models.Model):
     )
     description = models.TextField(
         blank=True,
-        help_text="If provided, then this value be will be shown under the field.",
+        help_text="If provided, then this value be will be shown under the field name.",
     )
     enabled = models.BooleanField(
         default=False, help_text="Indicates whether the field is included in the form."

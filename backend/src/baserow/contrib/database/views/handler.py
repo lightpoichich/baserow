@@ -26,7 +26,7 @@ from .exceptions import (
     ViewDoesNotSupportFieldOptions,
 )
 from .validators import EMPTY_VALUES
-from .models import View, ViewFilter, ViewSort, FormView, FormViewFieldOptions
+from .models import View, ViewFilter, ViewSort, FormView
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created,
@@ -821,9 +821,7 @@ class ViewHandler:
             model = table.get_model()
 
         if not enabled_field_options:
-            enabled_field_options = FormViewFieldOptions.objects.filter(
-                form_view=form, enabled=True
-            )
+            enabled_field_options = form.active_field_options
 
         allowed_field_names = []
         field_errors = {}

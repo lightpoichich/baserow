@@ -12,8 +12,12 @@ from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import validate_data
 from baserow.api.pagination import PageNumberPagination
+from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.contrib.database.api.views.errors import ERROR_VIEW_DOES_NOT_EXIST
-from baserow.contrib.database.api.rows.serializers import get_row_serializer_class
+from baserow.contrib.database.api.rows.serializers import (
+    get_row_serializer_class,
+    get_example_row_serializer_class,
+)
 from baserow.contrib.database.api.fields.errors import ERROR_FIELD_DOES_NOT_EXIST
 from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
 from baserow.contrib.database.fields.models import LinkRowField
@@ -41,13 +45,16 @@ class RotateFormViewSlugView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 required=True,
-                description="Rotates the slug of the provided value.",
+                description="Rotates the slug of the form view related to the provided "
+                "value.",
             )
         ],
         tags=["Database table form view"],
         operation_id="rotate_database_table_form_view_slug",
         description=(
-            "Rotates the unique slug of the form view by replacing it with a new value."
+            "Rotates the unique slug of the form view by replacing it with a new "
+            "value. This would mean that the publicly shared URL of the form will "
+            "change. Everyone that knew the URL won't have access to the form anymore."
         ),
         responses={
             200: form_view_serializer_class(many=True),
@@ -62,7 +69,7 @@ class RotateFormViewSlugView(APIView):
         }
     )
     def post(self, request, view_id):
-        """Rotates the form slug."""
+        """Rotates the slug of a form view."""
 
         handler = ViewHandler()
         form = ViewHandler().get_view(view_id, FormView)
@@ -80,12 +87,16 @@ class SubmitFormViewView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.STR,
                 required=True,
-                description="The slug related to the form.",
+                description="The slug related to the form form.",
             )
         ],
         tags=["Database table form view"],
         operation_id="get_meta_database_table_form_view",
-        description=("@TODO docs"),
+        description=(
+            "Returns the meta data related to the form view if the form is publicly "
+            "shared or if the user has access to the related group. This data can be "
+            "used to construct a form with the right fields."
+        ),
         responses={
             200: PublicFormViewSerializer,
             404: get_error_schema(["ERROR_FORM_DOES_NOT_EXIST"]),
@@ -113,9 +124,15 @@ class SubmitFormViewView(APIView):
         ],
         tags=["Database table form view"],
         operation_id="submit_database_table_form_view",
-        description=("@TODO docs"),
+        description=(
+            "Submits the form is the form is publicly shared or if the user has "
+            "access to the related group. The provided data will be validated based "
+            "on the fields that are in the form and the rules per field. If valid, "
+            "a new row will be created in the table."
+        ),
+        request=get_example_row_serializer_class(False),
         responses={
-            200: None,
+            200: FormViewSubmittedSerializer,
             404: get_error_schema(["ERROR_FORM_DOES_NOT_EXIST"]),
         },
     )
@@ -129,7 +146,7 @@ class SubmitFormViewView(APIView):
         form = handler.get_public_form_view_by_slug(request.user, slug)
         model = form.table.get_model()
 
-        options = FormViewFieldOptions.objects.filter(form_view=form, enabled=True)
+        options = form.active_field_options
         field_kwargs = {
             model._field_objects[option.field_id]["name"]: {
                 "required": True,
@@ -171,9 +188,16 @@ class FormViewLinkRowFieldLookupView(APIView):
         ],
         tags=["Database table form view"],
         operation_id="database_table_form_view_link_row_field_lookup",
-        description=("@TODO docs"),
+        description=(
+            "If the form is publicly shared or if the authenticated has access to the "
+            "related group, then this endpoint can be used to do a value lookup of the "
+            "link row fields that are included in the form. Normally it is not "
+            "possible for a not authenticated visitor to fetch the rows of a table. "
+            "This endpoint makes it possible to fetch the id and primary field value "
+            "of the related table of a link row included in the form view."
+        ),
         responses={
-            200: None,
+            200: get_example_pagination_serializer_class(LinkRowValueSerializer),
             404: get_error_schema(
                 ["ERROR_FORM_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
             ),

@@ -35,8 +35,8 @@ class FieldOptionsField(serializers.Field):
 
     def to_internal_value(self, data):
         """
-        This method only validates if the provided data dict is in the correct
-        format. Not if the field id actually exists.
+        This method only passes the validation if the provided data dict is in the
+        correct format. Not if the field id actually exists.
 
         Example format:
         {

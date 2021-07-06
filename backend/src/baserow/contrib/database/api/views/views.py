@@ -943,7 +943,8 @@ class ViewFieldOptionsView(APIView):
         ],
         tags=["Database table views"],
         operation_id="get_database_table_view_field_options",
-        description="Responds with the fields options of the provided view.",
+        description="Responds with the fields options of the provided view if the "
+        "authenticated user has access to the related group.",
         responses={
             200: view_field_options_mapping_serializer,
             400: get_error_schema(

@@ -76,9 +76,10 @@ class UserFileSerializer(
 # @TODO show correct API docs.
 class UserFileField(serializers.Field):
     """
-    This field can be used for validating user provided data, which means a user has
-    provided a dict containing the user file name. It will check if that user file
-    exists and returns it as value.
+    This field can be used for validating user provided user files, which means a
+    user has provided a dict containing the user file name. It will check if that
+    user file exists and returns that instance. Vice versa, a user info instance will
+    be serialized when serialized via this field.
 
     Example:
     Serializer(data={
@@ -92,8 +93,6 @@ class UserFileField(serializers.Field):
     Serializer({
         "user_file": UserFile(...)
     }).data == {"user_file": {"name": "filename.jpg", ...}}
-
-    Or this field can be used to serialize a UserFile object. If the
     """
 
     default_error_messages = {

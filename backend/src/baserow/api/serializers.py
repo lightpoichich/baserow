@@ -17,7 +17,7 @@ def get_example_pagination_serializer_class(
         serializer.
     :type additional_fields: dict
     :param serializer_name: The class name of the serializer. Generated serializer
-        should be unique, as serializer with the same class name are reused.
+        should be unique because serializer with the same class name are reused.
     :type serializer_name: str
     :return: The generated pagination serializer.
     :rtype: Serializer

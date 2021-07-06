@@ -10,8 +10,8 @@ from pyinstrument import Profiler
 
 @pytest.mark.django_db
 @pytest.mark.slow
-# You must add --runslow to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow to additional args.
+# You must add --runslow -s to pytest to run this test, you can do this in intellij by
+# editing the run config for this test and adding --runslow -s to additional args.
 def test_deleting_many_of_rows_is_fast(data_fixture):
 
     table, user, row = setup_interesting_test_table(data_fixture)

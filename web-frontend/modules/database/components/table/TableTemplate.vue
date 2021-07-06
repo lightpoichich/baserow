@@ -61,7 +61,7 @@ export default {
       this.table = table
 
       // Fetch and prepare the fields of the given table. The primary field is
-      // emitDeletedIfTrashStructureChanged from the array and moved to a separate object because that is what
+      // extracted from the array and moved to a separate object because that is what
       // the `Table` components expects.
       const { data: fieldsData } = await FieldService(this.$client).fetchAll(
         table.id

@@ -125,7 +125,7 @@ class SubmitFormViewView(APIView):
         tags=["Database table form view"],
         operation_id="submit_database_table_form_view",
         description=(
-            "Submits the form is the form is publicly shared or if the user has "
+            "Submits the form if the form is publicly shared or if the user has "
             "access to the related group. The provided data will be validated based "
             "on the fields that are in the form and the rules per field. If valid, "
             "a new row will be created in the table."

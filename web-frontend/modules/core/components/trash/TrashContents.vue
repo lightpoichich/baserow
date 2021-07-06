@@ -28,18 +28,17 @@
     <div v-else>
       <InfiniteScroll
         :max-count="totalServerSideTrashContentsCount"
-        :items="trashContents"
+        :current-count="trashContents.length"
         @load-next-page="$emit('load-next-page', $event)"
       >
-        <template #default="item">
-          <TrashEntry
-            :key="'trash-item-' + item.id"
-            :trash-entry="item"
-            :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
-            @restore="$emit('restore', $event)"
-          >
-          </TrashEntry>
-        </template>
+        <TrashEntry
+          v-for="item in trashContents"
+          :key="'trash-item-' + item.id"
+          :trash-entry="item"
+          :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
+          @restore="$emit('restore', $event)"
+        >
+        </TrashEntry>
       </InfiniteScroll>
       <div v-if="loadingNextPage" class="trash-contents__loading-box">
         <div class="loading"></div>

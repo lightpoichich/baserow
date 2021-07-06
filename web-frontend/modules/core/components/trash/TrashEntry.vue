@@ -27,7 +27,7 @@
         v-if="!disabled"
         class="trash-entry__action"
         :class="{ 'trash-entry__action--loading': trashEntry.loading }"
-        @click="$emit('restore', trashEntry)"
+        @click="emitRestoreIfNotLoading"
       >
         {{ trashEntry.loading ? '' : 'Restore' }}
       </a>
@@ -73,6 +73,13 @@ export default {
         )
       } else {
         return this.trashEntry.name
+      }
+    },
+  },
+  methods: {
+    emitRestoreIfNotLoading() {
+      if (!this.trashEntry.loading) {
+        this.$emit('restore', this.trashEntry)
       }
     },
   },

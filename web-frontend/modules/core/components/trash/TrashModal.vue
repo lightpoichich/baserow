@@ -181,7 +181,10 @@ export default {
               : null,
         })
         this.totalServerSideTrashContentsCount = data.count
-        this.trashContents = this.trashContents.concat(data.results)
+        data.results.forEach((entry) => {
+          entry.loading = false
+          this.trashContents.push(entry)
+        })
       } catch (error) {
         this.handleError(error, 'trash')
       }

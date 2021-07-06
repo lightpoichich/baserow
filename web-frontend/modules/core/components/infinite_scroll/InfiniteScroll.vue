@@ -1,14 +1,14 @@
 <template>
   <section class="infinite-scroll" @scroll="handleScroll">
-    <slot v-for="item in items" v-bind="item" />
+    <slot />
   </section>
 </template>
 
 <script>
 export default {
   props: {
-    items: {
-      type: Array,
+    currentCount: {
+      type: Number,
       required: true,
     },
     maxCount: {
@@ -26,7 +26,7 @@ export default {
       if (scrollTop + clientHeight >= scrollHeight) this.loadNextPage()
     },
     loadNextPage() {
-      if (this.items.length < this.maxCount) {
+      if (this.currentCount < this.maxCount) {
         this.currentPage = this.currentPage + 1
         this.$emit('load-next-page', this.currentPage)
       }

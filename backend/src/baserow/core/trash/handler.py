@@ -141,6 +141,7 @@ class TrashHandler:
         :return: An ordered list of groups and their applications which could possibly
             have trash contents.
         """
+
         structure = {"groups": []}
         groups = _get_groups_excluding_perm_deleted(user)
         for group in groups:
@@ -162,6 +163,7 @@ class TrashHandler:
         Updates all trash entries which are older than a django setting for permanent
         deletion. Does not perform the deletion itself.
         """
+
         now = timezone.now()
         cutoff = now - timezone.timedelta(
             hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
@@ -176,6 +178,7 @@ class TrashHandler:
         Marks all items in the selected group (or application in the group if
         application_id is provided) as should be permanently deleted.
         """
+
         with transaction.atomic():
             trash_contents = TrashHandler.get_trash_contents(
                 requesting_user, group_id, application_id
@@ -188,6 +191,7 @@ class TrashHandler:
         Looks up every trash item marked for permanent deletion and removes them
         irreversibly from the database along with their corresponding trash entries.
         """
+
         trash_item_lookup_cache = {}
         for trash_entry in TrashEntry.objects.filter(
             should_be_permanently_deleted=True
@@ -216,6 +220,7 @@ class TrashHandler:
         Actually removes the provided trashable item from the database irreversibly.
         :param trashable_item: An instance of a TrashableItemType model_class to delete.
         """
+
         trash_item_type = trash_item_type_registry.get_by_model(trashable_item)
         trash_item_type.permanently_delete_item(trashable_item)
 
@@ -346,6 +351,7 @@ def _check_parent_id_valid(
     :param trashable_item_type: The type to check to see if it needs a parent id or not.
     :return:
     """
+
     if trashable_item_type.requires_parent_id and parent_trash_item_id is None:
         raise ParentIdMustBeProvidedException()
     if not trashable_item_type.requires_parent_id and parent_trash_item_id is not None:

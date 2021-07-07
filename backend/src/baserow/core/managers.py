@@ -17,6 +17,7 @@ def make_trash_manager(trashed, parent=None):
         parent is the name of the FK to the related model.
     :return: A manager with an override get_queryset filtered accordingly.
     """
+
     filter_kwargs = {}
 
     if parent is None:

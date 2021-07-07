@@ -5,7 +5,7 @@ from math import floor, ceil
 from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
-from django.db.models import Q, IntegerField, BooleanField, DateField, DateTimeField
+from django.db.models import Q, IntegerField, BooleanField, DateTimeField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 

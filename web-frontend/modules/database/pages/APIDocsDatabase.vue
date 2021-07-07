@@ -236,6 +236,7 @@
           <APIDocsExample
             v-model="exampleData"
             :url="$env.PUBLIC_BACKEND_URL"
+            :include-user-fields-checkbox="false"
             type=""
           ></APIDocsExample>
         </div>
@@ -403,8 +404,8 @@
               >
                 When any value is provided for the
                 <code class="api-docs__code">user_field_names</code> GET param
-                then field names returned by this endpoint will be actual names
-                of the fields. <br />
+                then field names returned by this endpoint will be the actual
+                names of the fields. <br />
                 <br />
                 If the
                 <code class="api-docs__code">user_field_names</code> GET param
@@ -419,11 +420,9 @@
                 is set then the behaviour of the other GET parameters
                 <code class="api-docs__code">order_by</code>,
                 <code class="api-docs__code">include</code> and
-                <code class="api-docs__code">exclude</code> changes so they
+                <code class="api-docs__code">exclude</code> changes. They
                 instead expect comma separated lists of the actual field names
-                instead of expecting
-                <code class="api-docs__code">field_</code> followed by the id of
-                the field when not set.
+                instead.
               </APIDocsParameter>
               <APIDocsParameter
                 name="search"
@@ -624,8 +623,8 @@
               >
                 When any value is provided for the
                 <code class="api-docs__code">user_field_names</code> GET param
-                then field names returned by this endpoint will be actual names
-                of the fields. <br />
+                then field names returned by this endpoint will be the actual
+                names of the fields. <br />
                 <br />
                 If the
                 <code class="api-docs__code">user_field_names</code> GET param
@@ -803,8 +802,8 @@
               >
                 When any value is provided for the
                 <code class="api-docs__code">user_field_names</code> GET param
-                then field names returned by this endpoint will be actual names
-                of the fields. <br />
+                then field names returned by this endpoint will be the actual
+                names of the fields. <br />
                 <br />
                 If the
                 <code class="api-docs__code">user_field_names</code> GET param

@@ -1,5 +1,5 @@
 <template>
-  <Modal :sidebar="true" :fixed-height="true">
+  <Modal :sidebar="true" :full-height="true">
     <template #sidebar>
       <TrashSidebar
         v-if="!loading"

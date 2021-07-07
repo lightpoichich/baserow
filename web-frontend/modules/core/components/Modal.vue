@@ -8,7 +8,7 @@
     <div
       class="modal__box"
       :class="{
-        'modal__box--full-height': fixedHeight,
+        'modal__box--full-height': fullHeight,
         'modal__box--with-sidebar': sidebar,
         'modal__box--full-screen': fullScreen,
         'modal__box--small': small,
@@ -65,7 +65,7 @@ export default {
       default: true,
       required: false,
     },
-    fixedHeight: {
+    fullHeight: {
       type: Boolean,
       default: false,
       required: false,

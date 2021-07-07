@@ -1264,6 +1264,18 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         }
     ]
 
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f'{url}?user_field_names=true&exclude="\\"Name, 2\\""',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {"Name": "name 1", "Price,": "2", "id": 1, "order": "1.00000000000000000000"}
+    ]
+
     model.objects.create(
         **{
             f"field_{field_1.id}": "name 2",
@@ -1282,17 +1294,42 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["results"] == [
         {
+            '"Name, 2"': False,
             "Name": "name 1",
-            "Name 2": False,
-            "Price": "2",
+            "Price,": "2",
             "id": 1,
             "order": "1.00000000000000000000",
         },
         {
+            '"Name, 2"': True,
             "Name": "name 2",
-            "Name 2": True,
-            "Price": "1",
+            "Price,": "1",
             "id": 2,
+            "order": "1.00000000000000000000",
+        },
+    ]
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f'{url}?user_field_names=true&order_by="-\\"Name, 2\\""',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            '"Name, 2"': True,
+            "Name": "name 2",
+            "Price,": "1",
+            "id": 2,
+            "order": "1.00000000000000000000",
+        },
+        {
+            '"Name, 2"': False,
+            "Name": "name 1",
+            "Price,": "2",
+            "id": 1,
             "order": "1.00000000000000000000",
         },
     ]

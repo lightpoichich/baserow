@@ -1,4 +1,3 @@
-import csv
 import re
 from typing import Dict, Any
 
@@ -19,6 +18,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
+from baserow.core.utils import split_comma_separated_string
 
 deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
 
@@ -94,7 +94,7 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        order_by = next(csv.reader([order_string], delimiter=",", quotechar='"'))
+        order_by = split_comma_separated_string(order_string)
 
         if len(order_by) == 0:
             raise ValueError("At least one field must be provided.")

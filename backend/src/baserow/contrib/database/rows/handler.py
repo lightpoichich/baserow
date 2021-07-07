@@ -1,4 +1,3 @@
-import csv
 import re
 from decimal import Decimal
 from math import floor, ceil
@@ -9,6 +8,7 @@ from django.db.models import Max, F
 from django.db.models.fields.related import ManyToManyField
 
 from baserow.contrib.database.fields.models import Field
+from baserow.core.utils import split_comma_separated_string
 from .exceptions import RowDoesNotExist
 from .signals import (
     before_row_update,
@@ -144,9 +144,7 @@ class RowHandler:
         if not value:
             return []
 
-        # Use python's csv handler as it knows how to handle quoted csv values etc.
-        # csv.reader returns an iterator, we use next to get the first split row back.
-        return next(csv.reader([value], delimiter=",", quotechar='"', escapechar="\\"))
+        return split_comma_separated_string(value)
 
     def extract_manytomany_values(self, values, model):
         """

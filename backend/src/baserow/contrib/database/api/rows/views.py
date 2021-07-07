@@ -94,9 +94,15 @@ class RowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description="Optionally the rows can be ordered by provided field ids "
-                "separated by comma. By default a field is ordered in "
-                "ascending (A-Z) order, but by prepending the field with "
-                "a '-' it can be ordered descending (Z-A). ",
+                "separated by comma. By default a field is ordered in ascending (A-Z) "
+                "order, but by prepending the field with a '-' it can be ordered "
+                "descending (Z-A). "
+                "If the `user_field_names` parameter is provided then "
+                "instead order_by should be a comma separated list of the actual "
+                "field names. For field names with commas you should surround the "
+                'name with quotes like so: `order_by=My Field,"Field With , "`. '
+                "A backslash can be used to escape field names which contain "
+                'double quotes like so: `order_by=My Field,Field with \\"`.',
             ),
             OpenApiParameter(
                 name="filter__{field}__{filter}",
@@ -138,6 +144,12 @@ class RowsView(APIView):
                     "parameter `include=field_1,field_2` then only the fields with"
                     "id `1` and id `2` are going to be selected and included in the "
                     "response. "
+                    "If the `user_field_names` parameter is provided then "
+                    "instead include should be a comma separated list of the actual "
+                    "field names. For field names with commas you should surround the "
+                    'name with quotes like so: `include=My Field,"Field With , "`. '
+                    "A backslash can be used to escape field names which contain "
+                    'double quotes like so: `include=My Field,Field with \\"`.',
                 ),
             ),
             OpenApiParameter(
@@ -150,7 +162,13 @@ class RowsView(APIView):
                     "parameter. If you for example provide the following GET "
                     "parameter `exclude=field_1,field_2` then the fields with id `1` "
                     "and id `2` are going to be excluded from the selection and "
-                    "response."
+                    "response. "
+                    "If the `user_field_names` parameter is provided then "
+                    "instead exclude should be a comma separated list of the actual "
+                    "field names. For field names with commas you should surround the "
+                    'name with quotes like so: `exclude=My Field,"Field With , "`. '
+                    "A backslash can be used to escape field names which contain "
+                    'double quotes like so: `exclude=My Field,Field with \\"`.',
                 ),
             ),
             OpenApiParameter(
@@ -175,8 +193,10 @@ class RowsView(APIView):
             "depends on which fields the table has. For a complete overview of fields "
             "use the **list_database_table_fields** endpoint to list them all. In the "
             "example all field types are listed, but normally the number in "
-            "field_{id} key is going to be the id of the field. The value is what the "
-            "user has provided and the format of it depends on the fields type."
+            "field_{id} key is going to be the id of the field. Or if the GET param"
+            "`user_field_names` is provided then the keys will be the name of the "
+            "field. The value is what the user has provided and the format of it "
+            "depends on the fields type."
         ),
         responses={
             200: example_pagination_row_serializer_class,
@@ -278,8 +298,9 @@ class RowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.NONE,
                 description=(
-                    "If provided the field names will use the user specified field "
-                    "names instead of internal Baserow field names (field_123 etc). "
+                    "A flag query parameter which if provided this endpoint will "
+                    "expect and return the user specified field names instead of "
+                    "internal Baserow field names (field_123 etc)."
                 ),
             ),
         ],
@@ -292,11 +313,13 @@ class RowsView(APIView):
             "**list_database_table_fields** to list them all. None of the fields are "
             "required, if they are not provided the value is going to be `null` or "
             "`false` or some default value is that is set. If you want to add a value "
-            "for the field with for example id `10`, the key must be named "
-            "`field_10`. Of course multiple fields can be provided in one request. In "
-            "the examples below you will find all the different field types, the "
-            "numbers/ids in the example are just there for example purposes, the "
-            "field_ID must be replaced with the actual id of the field."
+            "for the field with for example id `10`, the key must be named `field_10`. "
+            "Or instead if the `user_field_names` GET param is provided the key must "
+            "be the name of the field. Of course multiple fields can be provided in "
+            "one request. In the examples below you will find all the different field "
+            "types, the numbers/ids in the example are just there for example "
+            "purposes, the field_ID must be replaced with the actual id of the field "
+            "or the name of the field if `user_field_names` is provided."
         ),
         request=get_example_row_serializer_class(False),
         responses={
@@ -398,8 +421,10 @@ class RowView(APIView):
             "which fields the table has. For a complete overview of fields use the "
             "**list_database_table_fields** endpoint to list them all. In the example "
             "all field types are listed, but normally the number in field_{id} key is "
-            "going to be the id of the field. The value is what the user has provided "
-            "and the format of it depends on the fields type."
+            "going to be the id of the field of the field. Or if the GET param"
+            "`user_field_names` is provided then the keys will be the name of the "
+            "field. The value is what the user has provided and the format of it "
+            "depends on the fields type."
         ),
         responses={
             200: get_example_row_serializer_class(True),
@@ -473,15 +498,14 @@ class RowView(APIView):
             "**list_database_table_fields** endpoint to list them all. None of the "
             "fields are required, if they are not provided the value is not going to "
             "be updated. "
-            "For example if user_field_names is not provided and you want to update a "
-            "value for the field with id `10`, the key must be named `field_10`. If "
-            "user_field_names is provided then instead they key must the name of the "
-            "field."
-            "Multiple different fields to update can "
-            "be provided in one request. In the examples below you will find all the "
-            "different field types, the numbers/ids in the example are just there for "
-            "example purposes, the field_ID must be replaced with the actual id of the "
-            "field or the name of the field if user_field_names is provided."
+            "If the GET param `user_field_names` is not provided and you want to "
+            "update a value for the field with id `10`, the key must be named "
+            "`field_10`. When it is provided the key must be the name of the field."
+            "Multiple different fields to update can be provided in one request. In "
+            "the examples below you will find all the different field types, the "
+            "numbers/ids in the example are just there for example purposes, "
+            "the field_ID must be replaced with the actual id of the field or the name "
+            "of the field if `user_field_names` is provided."
         ),
         request=get_example_row_serializer_class(False),
         responses={
@@ -624,8 +648,9 @@ class RowMoveView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.NONE,
                 description=(
-                    "If provided the field names will use the user specified field "
-                    "names instead of internal Baserow field names (field_123 etc). "
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
                 ),
             ),
         ],

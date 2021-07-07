@@ -123,7 +123,6 @@ export default {
           trash_item_type: 'application',
           trash_item_id: this.application.id,
         })
-        this.hide()
       } catch (error) {
         notifyIf(error, 'application')
       }

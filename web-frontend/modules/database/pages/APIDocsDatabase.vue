@@ -451,27 +451,28 @@
                 separated list of the field names to order by. For example if
                 you provide the following GET parameter
                 <code class="api-docs__code"
-                  >order_by=normal_field_name,"-Field Name With Spaces"</code
+                  >order_by=My Field,-My Field 2</code
                 >
                 the rows will ordered by the field called
-                <code class="api-docs__code">normal_field_name</code>
+                <code class="api-docs__code">My Field</code>
                 in ascending order. If some fields have the same value, that
                 subset will be ordered by the field called
-                <code class="api-docs__code">Field Name With Spaces</code> in
-                descending order.
-                <div class="alert alert--warning">
-                  Please note, if your field's name begins with a
-                  <code class="api-docs__code">-</code> or
-                  <code class="api-docs__code">+</code>, e.g.
-                  <code class="api-docs__code">"-My Wierd Field Name"</code>
-                  then you must always explicitly prepend a
-                  <code class="api-docs__code">-</code> or
-                  <code class="api-docs__code">+</code> to it's field name like
-                  :
-                  <code class="api-docs__code">"+-My Wierd Field Name"</code> or
-                  <code class="api-docs__code">"--My Wierd Field Name"</code> to
-                  order it correctly.
-                </div>
+                <code class="api-docs__code">My Field 2</code> in descending
+                order.
+                <br />
+                <br />
+                Ensure fields with names starting with a
+                <code class="api-docs__code">+</code> or
+                <code class="api-docs__code">-</code> are explicitly prepended
+                with another <code class="api-docs__code">+</code> or
+                <code class="api-docs__code">-</code>. E.g
+                <code class="api-docs__code">+-Name</code>.
+                <br />
+                <br />
+                Field names containing commas should be surrounded by quotes:
+                <code class="api-docs__code">"Name ,"</code>. Field names
+                including quotes should be escaped using a backslash:
+                <code class="api-docs__code">Name \"</code>.
                 <h4>
                   Without <code class="api-docs__code">user_field_names</code>
                   :
@@ -532,11 +533,15 @@
                 <code class="api-docs__code">include</code> should be a comma
                 separated list of field names to be included in results. For
                 example if you provide the following GET param:
-                <code class="api-docs__code"
-                  >include="Field Name With Spaces",normal_field_name</code
-                >
+                <code class="api-docs__code">include=My Field,-My Field 2</code>
                 then only those fields will be included (unless they are
                 explicitly excluded).
+                <br />
+                <br />
+                Field names containing commas should be surrounded by quotes:
+                <code class="api-docs__code">"Name ,"</code>. Field names
+                including quotes should be escaped using a backslash:
+                <code class="api-docs__code">Name \"</code>.
                 <h4>
                   Without <code class="api-docs__code">user_field_names</code>:
                 </h4>
@@ -563,10 +568,14 @@
                 <code class="api-docs__code">exclude</code> should be a comma
                 separated list of field names to be excluded from the results.
                 For example if you provide the following GET param:
-                <code class="api-docs__code"
-                  >exclude="Field Name With Spaces",normal_field_name</code
-                >
+                <code class="api-docs__code">exclude=My Field,-My Field 2</code>
                 then those fields will be excluded.
+                <br />
+                <br />
+                Field names containing commas should be surrounded by quotes:
+                <code class="api-docs__code">"Name ,"</code>. Field names
+                including quotes should be escaped using a backslash:
+                <code class="api-docs__code">Name \"</code>.
                 <h4>
                   Without <code class="api-docs__code">user_field_names</code>:
                 </h4>

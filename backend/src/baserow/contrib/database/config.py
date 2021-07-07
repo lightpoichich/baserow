@@ -93,6 +93,10 @@ class DatabaseConfig(AppConfig):
             EmptyViewFilterType,
             NotEmptyViewFilterType,
             DateEqualViewFilterType,
+            DateBeforeViewFilterType,
+            DateOnBeforeViewFilterType,
+            DateAfterViewFilterType,
+            DateOnAfterViewFilterType,
             DateNotEqualViewFilterType,
             DateEqualsTodayViewFilterType,
             DateEqualsCurrentMonthViewFilterType,
@@ -115,6 +119,10 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(HigherThanViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
+        view_filter_type_registry.register(DateBeforeViewFilterType())
+        view_filter_type_registry.register(DateOnBeforeViewFilterType())
+        view_filter_type_registry.register(DateAfterViewFilterType())
+        view_filter_type_registry.register(DateOnAfterViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(DateEqualsTodayViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())

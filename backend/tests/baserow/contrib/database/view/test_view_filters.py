@@ -9,6 +9,7 @@ from django.utils.timezone import make_aware, datetime
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.views.view_filters import DateParserMixin
 
 
 @pytest.mark.django_db
@@ -1425,6 +1426,280 @@ def test_date_not_equal_filter_type(data_fixture):
     # If an empty value is provided then the filter will not be applied, so we expect
     # all the rows.
     filter.field = date_time_field
+    filter.value = ""
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+
+def test_date_parser_mixin():
+    date_parser = DateParserMixin()
+    date_string = "2021-07-05"
+    parsed_date = date_parser.parse_date(date_string)
+    assert parsed_date.year == 2021
+    assert parsed_date.month == 7
+    assert parsed_date.day == 5
+
+    date_string = " 2021-07-06 "
+    parsed_date = date_parser.parse_date(date_string)
+    assert parsed_date.year == 2021
+    assert parsed_date.month == 7
+    assert parsed_date.day == 6
+
+    date_string = ""
+    with pytest.raises(ValueError):
+        date_parser.parse_date(date_string)
+
+    date_string = "2021-15-15"
+    with pytest.raises(ValueError):
+        date_parser.parse_date(date_string)
+
+
+@pytest.mark.django_db
+def test_date_before_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    date_time_field = data_fixture.create_date_field(
+        table=table, date_include_time=True
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+    utc = timezone("UTC")
+
+    row = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 5),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 5, 1, 30, 0), utc
+            ),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 6),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 6, 1, 30, 5), utc
+            ),
+        }
+    )
+    row_3 = model.objects.create(
+        **{f"field_{date_field.id}": None, f"field_{date_time_field.id}": None}
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 8, 1),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 8, 1, 2, 45, 45), utc
+            ),
+        }
+    )
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_before", value="2021-07-06"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.field = date_time_field
+    filter.value = "2021-07-06"
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.value = ""
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+
+@pytest.mark.django_db
+def test_date_on_before_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    date_time_field = data_fixture.create_date_field(
+        table=table, date_include_time=True
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+    utc = timezone("UTC")
+
+    row = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 5),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 5, 1, 30, 0), utc
+            ),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 6),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 6, 15, 0, 5), utc
+            ),
+        }
+    )
+    row_3 = model.objects.create(
+        **{f"field_{date_field.id}": None, f"field_{date_time_field.id}": None}
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 8, 1),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 8, 1, 2, 45, 45), utc
+            ),
+        }
+    )
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_on_before", value="2021-07-06"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id in ids
+    assert row_2.id in ids
+
+    filter.field = date_time_field
+    filter.value = "2021-07-06"
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert row.id in ids
+    assert row_2.id in ids
+
+    filter.value = ""
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+
+@pytest.mark.django_db
+def test_date_after_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    date_time_field = data_fixture.create_date_field(
+        table=table, date_include_time=True
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+    utc = timezone("UTC")
+
+    row = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 5),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 5, 1, 30, 0), utc
+            ),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 6),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 6, 2, 40, 5), utc
+            ),
+        }
+    )
+    row_3 = model.objects.create(
+        **{f"field_{date_field.id}": None, f"field_{date_time_field.id}": None}
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 8, 1),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 8, 1, 2, 45, 45), utc
+            ),
+        }
+    )
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_after", value="2021-07-06"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_4.id in ids
+
+    filter.field = date_time_field
+    filter.value = "2021-07-06"
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_4.id in ids
+
+    filter.value = ""
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+
+@pytest.mark.django_db
+def test_date_on_after_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    date_time_field = data_fixture.create_date_field(
+        table=table, date_include_time=True
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+    utc = timezone("UTC")
+
+    row = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 5),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 5, 1, 30, 0), utc
+            ),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 7, 6),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 7, 6, 2, 40, 5), utc
+            ),
+        }
+    )
+    row_3 = model.objects.create(
+        **{f"field_{date_field.id}": None, f"field_{date_time_field.id}": None}
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 8, 1),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2021, 8, 1, 2, 45, 45), utc
+            ),
+        }
+    )
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_on_after", value="2021-07-06"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_4.id in ids
+    assert row_2.id in ids
+
+    filter.field = date_time_field
+    filter.value = "2021-07-06"
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_4.id in ids
+    assert row_2.id in ids
+
     filter.value = ""
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]

@@ -166,7 +166,7 @@ export default {
       default: false,
     },
     response: {
-      type: [Object, Boolean],
+      type: [Object, Boolean, Array],
       required: false,
       default: false,
     },

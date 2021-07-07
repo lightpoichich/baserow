@@ -297,12 +297,12 @@ export class DateBeforeViewFilterType extends ViewFilterType {
       return false
     }
 
-    // parse the provided values as dates because we need those strings as
+    // parse the provided values as moment dates because we need those strings as
     // dates in order to make a comparison
     try {
-      const filterDate = moment(filterValue).format('LL')
-      const rowDate = moment(rowValue).format('LL')
-      const matchCondition = moment(rowDate).isBefore(filterDate)
+      const filterDate = moment.utc(filterValue).date()
+      const rowDate = moment.utc(rowValue).date()
+      const matchCondition = moment(rowDate).isBefore(moment(filterDate))
 
       return matchCondition
     } catch (e) {
@@ -340,12 +340,12 @@ export class DateOnBeforeViewFilterType extends ViewFilterType {
       return false
     }
 
-    // parse the provided values as dates because we need those strings as
+    // parse the provided values as moment dates because we need those strings as
     // dates in order to make a comparison
     try {
-      const filterDate = moment(filterValue).format('LL')
-      const rowDate = moment(rowValue).format('LL')
-      const matchCondition = moment(rowDate).isSameOrBefore(filterDate)
+      const filterDate = moment.utc(filterValue).date()
+      const rowDate = moment.utc(rowValue).date()
+      const matchCondition = moment(rowDate).isSameOrBefore(moment(filterDate))
 
       return matchCondition
     } catch (e) {
@@ -383,12 +383,12 @@ export class DateAfterViewFilterType extends ViewFilterType {
       return false
     }
 
-    // parse the provided values as dates because we need those strings as
+    // parse the provided values as moment dates because we need those strings as
     // dates in order to make a comparison
     try {
-      const filterDate = moment(filterValue).format('LL')
-      const rowDate = moment(rowValue).format('LL')
-      const matchCondition = moment(rowDate).isAfter(filterDate)
+      const filterDate = moment.utc(filterValue).date()
+      const rowDate = moment.utc(rowValue).date()
+      const matchCondition = moment(rowDate).isAfter(moment(filterDate))
 
       return matchCondition
     } catch (e) {
@@ -426,12 +426,12 @@ export class DateOnAfterViewFilterType extends ViewFilterType {
       return false
     }
 
-    // parse the provided values as dates because we need those strings as
+    // parse the provided values as moment dates because we need those strings as
     // dates in order to make a comparison
     try {
-      const filterDate = moment(filterValue).format('LL')
-      const rowDate = moment(rowValue).format('LL')
-      const matchCondition = moment(rowDate).isSameOrAfter(filterDate)
+      const filterDate = moment.utc(filterValue).date()
+      const rowDate = moment.utc(rowValue).date()
+      const matchCondition = moment(rowDate).isSameOrAfter(moment(filterDate))
 
       return matchCondition
     } catch (e) {

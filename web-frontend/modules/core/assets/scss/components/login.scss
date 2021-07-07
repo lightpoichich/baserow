@@ -1,0 +1,13 @@
+.login {
+  position: relative;
+}
+
+.login .language-switcher {
+  width: 150px;
+
+  & .dropdown__selected {
+    text-align: right;
+  }
+
+  @include absolute(0, 0, auto, auto);
+}

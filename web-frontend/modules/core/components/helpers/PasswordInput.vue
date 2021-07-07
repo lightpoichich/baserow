@@ -40,24 +40,50 @@ modules/core/validators.js
       v-if="validationState.$error && !validationState.required"
       class="error"
     >
-      Input is required.
+      {{ $t('error.inputRequired') }}
     </div>
     <div
       v-if="validationState.$error && !validationState.maxLength"
       class="error"
     >
-      A maximum of
-      {{ validationState.$params.maxLength.max }} characters is allowed here.
+      {{
+        $t('error.maxLength', {
+          max: validationState.$params.maxLength.max,
+        })
+      }}
     </div>
     <div
       v-if="validationState.$error && !validationState.minLength"
       class="error"
     >
-      A minimum of
-      {{ validationState.$params.minLength.min }} characters is required here.
+      {{
+        $t('error.minLength', {
+          min: validationState.$params.minLength.min,
+        })
+      }}
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "en":{
+    "error":{
+      "minLength": "A minimum of {min} characters is required here.",
+      "maxLength": "A maximum of {max} characters is allowed here.",
+      "inputRequired": "Input is required."
+
+    }
+  },
+  "fr": {
+    "error":{
+      "minLength": "Un minimum de {min} charactères sont attendus ici.",
+      "maxLength": "Un maximum de {max} charactères sont attendus ici.",
+      "inputRequired": "Ce champ est obligatoire."
+    }
+  }
+}
+</i18n>
 
 <script>
 export default {

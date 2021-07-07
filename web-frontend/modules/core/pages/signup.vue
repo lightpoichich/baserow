@@ -1,14 +1,14 @@
 <template>
   <div>
-    <h1 class="box__title">Sign up</h1>
+    <h1 class="box__title">{{ $t('signup.title') }}</h1>
     <template v-if="!settings.allow_new_signups">
       <div class="alert alert--simple alert--error alert--has-icon">
         <div class="alert__icon">
           <i class="fas fa-exclamation"></i>
         </div>
-        <div class="alert__title">Sign up is disabled</div>
+        <div class="alert__title">{{ $t('signup.disabled') }}</div>
         <p class="alert__content">
-          It's not possible to create an account because it has been disabled.
+          {{ $t('signup.disabledMessage') }}
         </p>
       </div>
       <nuxt-link
@@ -16,7 +16,7 @@
         class="button button--large button--primary"
       >
         <i class="fas fa-arrow-left"></i>
-        Back to login
+        {{ $t('action.backToLogin') }}
       </nuxt-link>
     </template>
     <AuthRegister v-else :invitation="invitation" @success="success">
@@ -24,13 +24,38 @@
         <li>
           <nuxt-link :to="{ name: 'login' }">
             <i class="fas fa-arrow-left"></i>
-            Back
+            {{ $t('action.back') }}
           </nuxt-link>
         </li>
       </ul>
     </AuthRegister>
   </div>
 </template>
+
+<i18n>
+{
+  "en":{
+    "action": {
+      "backToLogin": "Back to login"
+    },
+    "signup": {
+      "title": "Sign up",
+      "disabled": "Sign up is disabled",
+      "disabledMessage": "It's not possible to create an account because it has been disabled."
+    }
+  },
+  "fr":{
+    "action": {
+      "backToLogin": "Retour à l'identification"
+    },
+    "signup": {
+      "title": "Création de compte",
+      "disabled": "Création de compte desactivée",
+      "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée."
+    }
+  }
+}
+</i18n>
 
 <script>
 import { mapGetters } from 'vuex'

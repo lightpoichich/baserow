@@ -269,6 +269,178 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 }
 
+export class DateBeforeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_before'
+  }
+
+  getName() {
+    return 'before date'
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (rowValue === null) {
+      // if the row value is null we can immediately return false since
+      // it does not match the filter
+      return false
+    }
+
+    // parse the provided values as dates because we need those strings as
+    // dates in order to make a comparison
+    try {
+      const filterDate = moment(filterValue).format('LL')
+      const rowDate = moment(rowValue).format('LL')
+      const matchCondition = moment(rowDate).isBefore(filterDate)
+
+      return matchCondition
+    } catch (e) {
+      // if parsing of the dates fails we can return false
+      return false
+    }
+  }
+}
+
+export class DateOnBeforeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_on_before'
+  }
+
+  getName() {
+    return 'on or before date'
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (rowValue === null) {
+      // if the row value is null we can immediately return false since
+      // it does not match the filter
+      return false
+    }
+
+    // parse the provided values as dates because we need those strings as
+    // dates in order to make a comparison
+    try {
+      const filterDate = moment(filterValue).format('LL')
+      const rowDate = moment(rowValue).format('LL')
+      const matchCondition = moment(rowDate).isSameOrBefore(filterDate)
+
+      return matchCondition
+    } catch (e) {
+      // if parsing of the dates fails we can return false
+      return false
+    }
+  }
+}
+
+export class DateAfterViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_after'
+  }
+
+  getName() {
+    return 'after date'
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (rowValue === null) {
+      // if the row value is null we can immediately return false since
+      // it does not match the filter
+      return false
+    }
+
+    // parse the provided values as dates because we need those strings as
+    // dates in order to make a comparison
+    try {
+      const filterDate = moment(filterValue).format('LL')
+      const rowDate = moment(rowValue).format('LL')
+      const matchCondition = moment(rowDate).isAfter(filterDate)
+
+      return matchCondition
+    } catch (e) {
+      // if parsing of the dates fails we can return false
+      return false
+    }
+  }
+}
+
+export class DateOnAfterViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_on_after'
+  }
+
+  getName() {
+    return 'on or after date'
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (rowValue === null) {
+      // if the row value is null we can immediately return false since
+      // it does not match the filter
+      return false
+    }
+
+    // parse the provided values as dates because we need those strings as
+    // dates in order to make a comparison
+    try {
+      const filterDate = moment(filterValue).format('LL')
+      const rowDate = moment(rowValue).format('LL')
+      const matchCondition = moment(rowDate).isSameOrAfter(filterDate)
+
+      return matchCondition
+    } catch (e) {
+      // if parsing of the dates fails we can return false
+      return false
+    }
+  }
+}
+
 export class DateNotEqualViewFilterType extends ViewFilterType {
   static getType() {
     return 'date_not_equal'

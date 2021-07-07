@@ -232,9 +232,9 @@ class GridViewView(APIView):
             "related cells will be refreshed using this endpoint. "
             "In the example all field types are listed, "
             "but normally the number in field_{id} key is going to be the id of the "
-            "field or if user_field_names is specified then the keys will be the name "
-            "of the fields. The value is what the user has provided and the format of "
-            "it depends on the fields type."
+            "field or if `user_field_names` is specified then the keys will be the "
+            "name of the fields. The value is what the user has provided and the "
+            "format of it depends on the fields type."
         ),
         request=GridViewFilterSerializer,
         responses={

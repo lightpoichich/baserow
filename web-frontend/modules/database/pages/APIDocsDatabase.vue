@@ -674,7 +674,7 @@
                 When any value is provided for the
                 <code class="api-docs__code">user_field_names</code> GET param
                 then field names expected and returned by this endpoint will be
-                actual names of the fields. <br />
+                the actual field names. <br />
                 <br />
                 If the
                 <code class="api-docs__code">user_field_names</code> GET param
@@ -742,7 +742,7 @@
                 When any value is provided for the
                 <code class="api-docs__code">user_field_names</code> GET param
                 then field names expected and returned by this endpoint will be
-                actual names of the fields. <br />
+                the actual field names. <br />
                 <br />
                 If the
                 <code class="api-docs__code">user_field_names</code> GET param

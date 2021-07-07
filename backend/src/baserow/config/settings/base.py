@@ -226,6 +226,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Groups"},
         {"name": "Group invitations"},
         {"name": "Templates"},
+        {"name": "Trash"},
         {"name": "Applications"},
         {"name": "Database tables"},
         {"name": "Database table fields"},

@@ -27,7 +27,10 @@
       </li>
       <slot></slot>
       <li v-if="!field.primary">
-        <a @click="deleteField()">
+        <a
+          :class="{ 'context__menu-item--loading': deleteLoading }"
+          @click="deleteField()"
+        >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           Delete field
         </a>
@@ -59,35 +62,32 @@ export default {
   },
   data() {
     return {
-      loading: false,
+      deleteLoading: false,
     }
   },
   methods: {
-    setLoading(field, value) {
-      this.$store.dispatch('field/setItemLoading', { field, value })
-    },
     async deleteField() {
-      this.loading = true
+      this.deleteLoading = true
       const { field } = this
 
       try {
         await this.$store.dispatch('field/deleteCall', field)
         this.$emit('delete')
-        this.$store.dispatch('field/forceDelete', field)
-        this.$store.dispatch('notification/restore', {
+        await this.$store.dispatch('field/forceDelete', field)
+        await this.$store.dispatch('notification/restore', {
           trash_item_type: 'field',
           trash_item_id: field.id,
         })
       } catch (error) {
         if (error.response && error.response.status === 404) {
           this.$emit('delete')
-          this.$store.dispatch('field/forceDelete', field)
+          await this.$store.dispatch('field/forceDelete', field)
         } else {
           notifyIf(error, 'field')
         }
       }
       this.hide()
-      this.loading = false
+      this.deleteLoading = false
     },
   },
 }

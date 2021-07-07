@@ -1,11 +1,13 @@
 <template>
   <div>
-    <div class="box__title trash-box-title">
-      <h2 class="trash-box-title__header">{{ title }}</h2>
-      <div class="trash-sub-header">
-        <h3 class="trash-sub-header__title">
+    <div class="trash__title">
+      <div class="trash__title-left">
+        <h2 class="trash__title-heading">{{ title }}</h2>
+        <div class="trash__title-description">
           Restore deleted items from the past {{ trashDuration }}
-        </h3>
+        </div>
+      </div>
+      <div class="trash__title-right">
         <a
           v-show="totalServerSideTrashContentsCount > 0 && !parentIsTrashed"
           class="button button--error"
@@ -17,15 +19,15 @@
     </div>
     <div v-if="loadingContents" class="loading-overlay"></div>
     <div
-      v-if="totalServerSideTrashContentsCount === 0"
-      class="trash-empty-contents"
+      v-else-if="totalServerSideTrashContentsCount === 0"
+      class="trash__empty"
     >
-      <i class="trash-empty-contents__icon fas fa-recycle"></i>
-      <span class="trash-empty-contents__text"
-        >Nothing has been deleted in the past three days.</span
-      >
+      <i class="trash__empty-icon fas fa-recycle"></i>
+      <div class="trash__empty-text">
+        Nothing has been deleted in the past three days.
+      </div>
     </div>
-    <div v-else>
+    <div v-else class="trash__entries">
       <InfiniteScroll
         :max-count="totalServerSideTrashContentsCount"
         :current-count="trashContents.length"
@@ -37,12 +39,11 @@
           :trash-entry="item"
           :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
           @restore="$emit('restore', $event)"
-        >
-        </TrashEntry>
+        ></TrashEntry>
+        <div v-if="loadingNextPage" class="trash__entries-loading-wrapper">
+          <div class="loading"></div>
+        </div>
       </InfiniteScroll>
-      <div v-if="loadingNextPage" class="trash-contents__loading-box">
-        <div class="loading"></div>
-      </div>
     </div>
     <TrashEmptyModal
       ref="emptyModal"
@@ -70,6 +71,7 @@ import moment from 'moment'
 import TrashEntry from '@baserow/modules/core/components/trash/TrashEntry'
 import InfiniteScroll from '@baserow/modules/core/components/infinite_scroll/InfiniteScroll'
 import TrashEmptyModal from '@baserow/modules/core/components/trash/TrashEmptyModal'
+
 export default {
   name: 'TrashContents',
   components: { InfiniteScroll, TrashEntry, TrashEmptyModal },

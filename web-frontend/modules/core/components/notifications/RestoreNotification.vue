@@ -2,7 +2,10 @@
   <button
     class="button undo-delete-notification"
     :disabled="loading"
-    :class="{ button__loading: loading }"
+    :class="{
+      'button--loading': loading,
+      'undo-delete-notification--pulsing': pulsing,
+    }"
     @click="restore"
   >
     <i class="button__icon fas fa-undo"> </i>
@@ -25,9 +28,13 @@ export default {
   data() {
     return {
       loading: false,
+      pulsing: true,
     }
   },
   mounted() {
+    setTimeout(() => {
+      this.pulsing = false
+    }, 2000)
     setTimeout(() => {
       this.close()
     }, 5000)
@@ -38,6 +45,7 @@ export default {
     },
     async restore() {
       this.loading = true
+      this.pulsing = false
       try {
         await TrashService(this.$client).restore(this.notification.data)
       } catch (error) {

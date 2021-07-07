@@ -1,58 +1,52 @@
 <template>
   <div>
     <div class="modal-sidebar__head">
-      <div class="tree__link tree__link--group">
-        <i class="modal-sidebar__head-icon fas fa-trash"></i>
-        <span class="modal-sidebar__head-name">Trash</span>
+      <div class="modal-sidebar__head-icon-and-name">
+        <i class="modal-sidebar__head-icon-and-name-icon fas fa-trash"></i>
+        Trash
       </div>
     </div>
-    <div class="trash-sidebar__nav modal-sidebar__nav">
-      <ul
+    <ul class="trash-sidebar__groups">
+      <li
         v-for="group in groups"
         :key="'trash-group-' + group.id"
-        class="modal-sidebar__nav"
+        class="trash-sidebar__group"
+        :class="{
+          'trash-sidebar__group--active': isSelectedTrashGroup(group),
+          'trash-sidebar__group--open': isSelectedTrashGroupApplication(group),
+          'trash-sidebar__group--trashed': group.trashed,
+        }"
       >
-        <li>
-          <a
-            class="modal-sidebar__nav-link"
-            :class="{
-              active: isSelectedTrashGroup(group),
-              'trash__trashed-group-link': group.trashed,
-            }"
-            @click="emitIfNotAlreadySelectedTrashGroup(group)"
-          >
-            <i
-              class="modal-sidebar__nav-icon fas"
-              :class="{
-                'fa-caret-down': group.id === selectedTrashGroup.id,
-                'fa-caret-right': group.id !== selectedTrashGroup.id,
-                'trash__unselected-group-icon':
-                  group.id !== selectedTrashGroup.id,
-              }"
-            ></i>
-            {{ group.name || 'Unnamed group ' + group.id }}
-          </a>
-        </li>
-        <template v-if="group.id === selectedTrashGroup.id">
+        <a
+          class="trash-sidebar__group-link"
+          @click="emitIfNotAlreadySelectedTrashGroup(group)"
+        >
+          {{ group.name || 'Unnamed group ' + group.id }}
+        </a>
+        <ul class="trash-sidebar__applications">
           <li
             v-for="application in group.applications"
             :key="'trash-application-' + application.id"
-            class="modal-sidebar__nav-link"
+            class="trash-sidebar__application"
             :class="{
-              active: isSelectedApp(application),
-              'trash__trashed-group-link': group.trashed || application.trashed,
+              'trash-sidebar__application--active': isSelectedApp(application),
+              'trash-sidebar__application--trashed':
+                group.trashed || application.trashed,
             }"
-            @click="
-              emitIfNotAlreadySelectedTrashApplication(group, application)
-            "
           >
-            <span>{{
-              application.name || 'Unnamed application ' + application.id
-            }}</span>
+            <a
+              class="trash-sidebar__application-link"
+              @click="
+                emitIfNotAlreadySelectedTrashApplication(group, application)
+              "
+              >{{
+                application.name || 'Unnamed application ' + application.id
+              }}</a
+            >
           </li>
-        </template>
-      </ul>
-    </div>
+        </ul>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -80,6 +74,11 @@ export default {
       return (
         group.id === this.selectedTrashGroup.id &&
         this.selectedTrashApplication === null
+      )
+    },
+    isSelectedTrashGroupApplication(group) {
+      return group.applications.some((application) =>
+        this.isSelectedApp(application)
       )
     },
     isSelectedApp(app) {

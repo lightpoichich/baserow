@@ -19,23 +19,22 @@
 .undo-delete-notification {
   margin: 5px;
   box-shadow: $color-primary-200;
-  transform: scale(1);
-  animation: pulse 1s 2;
+
+  &.undo-delete-notification--pulsing {
+    animation: pulse 1s 2;
+  }
 }
 
 @keyframes pulse {
   0% {
-    transform: scale(1);
     box-shadow: 0 0 0 0 $color-primary-400;
   }
 
   70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0);
   }
 
   100% {
-    transform: scale(1);
     box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
   }
 }

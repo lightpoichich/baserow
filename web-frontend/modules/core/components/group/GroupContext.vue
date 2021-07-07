@@ -15,18 +15,18 @@
         </a>
       </li>
       <li>
+        <a @click="showGroupTrashModal">
+          <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+          View trash
+        </a>
+      </li>
+      <li>
         <a
           :class="{ 'context__menu-item--loading': loading }"
           @click="deleteGroup"
         >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           Delete group
-        </a>
-      </li>
-      <li>
-        <a @click="showGroupTrashModal">
-          <i class="context__menu-icon fas fa-fw fa-recycle"></i>
-          View trash
         </a>
       </li>
     </ul>

@@ -37,18 +37,18 @@
             </a>
           </li>
           <li>
-            <a
-              :class="{ 'context__menu-item--loading': loading }"
-              @click="deleteApplication"
-            >
-              <i class="context__menu-icon fas fa-fw fa-trash"></i>
-              Delete {{ application._.type.name | lowercase }}
-            </a>
-          </li>
-          <li>
             <a @click="showApplicationTrashModal">
               <i class="context__menu-icon fas fa-fw fa-recycle"></i>
               View trash
+            </a>
+          </li>
+          <li>
+            <a
+              :class="{ 'context__menu-item--loading': deleteLoading }"
+              @click="deleteApplication()"
+            >
+              <i class="context__menu-icon fas fa-fw fa-trash"></i>
+              Delete {{ application._.type.name | lowercase }}
             </a>
           </li>
         </ul>
@@ -83,7 +83,7 @@ export default {
   },
   data() {
     return {
-      loading: false,
+      deleteLoading: false,
     }
   },
   methods: {
@@ -115,7 +115,7 @@ export default {
       this.setLoading(application, false)
     },
     async deleteApplication() {
-      this.loading = true
+      this.deleteLoading = true
 
       try {
         await this.$store.dispatch('application/delete', this.application)
@@ -123,11 +123,12 @@ export default {
           trash_item_type: 'application',
           trash_item_id: this.application.id,
         })
+        this.hide()
       } catch (error) {
         notifyIf(error, 'application')
       }
 
-      this.loading = false
+      this.deleteLoading = false
     },
     showApplicationTrashModal() {
       this.$refs.context.hide()

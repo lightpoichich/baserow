@@ -3,7 +3,7 @@
     <h3>
       Are you sure you want to
       {{ selectedIsTrashed ? 'permanently delete' : 'empty the trash of' }}
-      {{ name }}
+      {{ name }}?
     </h3>
     <p>
       This will permanently delete
@@ -12,17 +12,14 @@
       }}. After which they cannot be recovered.
     </p>
     <div class="actions">
-      <div class="align-right">
-        <a class="trash-confirm-empty__cancel-button" @click.prevent="hide()">
-          Cancel
-        </a>
-        <a
-          class="button button button--error"
-          @click.prevent="emitEmptyAndClose"
-        >
-          {{ selectedIsTrashed ? 'Permanently delete' : 'Empty' }}
-        </a>
-      </div>
+      <ul class="action__links">
+        <li>
+          <a @click.prevent="hide()">Cancel</a>
+        </li>
+      </ul>
+      <a class="button button button--error" @click.prevent="emitEmptyAndClose">
+        {{ selectedIsTrashed ? 'Permanently delete' : 'Empty' }}
+      </a>
     </div>
   </Modal>
 </template>

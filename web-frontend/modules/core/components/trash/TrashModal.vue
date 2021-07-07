@@ -1,21 +1,15 @@
 <template>
-  <Modal :sidebar="true">
+  <Modal :sidebar="true" :fixed-height="true">
     <template #sidebar>
-      <div v-if="loading" class="loading-absolute-center"></div>
       <TrashSidebar
-        v-else
+        v-if="!loading"
         :groups="groups"
         :selected-trash-group="selectedTrashGroup"
         :selected-trash-application="selectedTrashApplication"
         @selected="selectGroupOrApp"
-      >
-        <a class="modal__close" @click="hide()">
-          <i class="fas fa-times"></i>
-        </a>
-      </TrashSidebar>
+      ></TrashSidebar>
     </template>
     <template #content>
-      <Error :error="error"></Error>
       <div v-if="loading" class="loading-absolute-center"></div>
       <div v-else-if="groups.length === 0" class="placeholder">
         <div class="placeholder__icon">
@@ -46,18 +40,18 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 import modal from '@baserow/modules/core/mixins/modal'
-import TrashService from '@baserow/modules/core/services/trash'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import TrashService from '@baserow/modules/core/services/trash'
 import TrashSidebar from '@baserow/modules/core/components/trash/TrashSidebar'
 import TrashContent from '@baserow/modules/core/components/trash/TrashContents'
-import error from '@baserow/modules/core/mixins/error'
-import { mapState } from 'vuex'
 
 export default {
   name: 'TrashModal',
   components: { TrashSidebar, TrashContent },
-  mixins: [modal, error],
+  mixins: [modal],
   props: {
     initialGroup: {
       type: Object,
@@ -89,11 +83,10 @@ export default {
     }),
   },
   methods: {
+    /**
+     * Chooses which group to show when the modal is shown.
+     **/
     pickInitialGroupToSelect() {
-      /**
-       * Chooses which group to show when the modal is shown.
-       **/
-
       // The initial or selected groups will not contain the trashed flag as they so
       // we must look them up in the groups fetched from the trash api.
       const initialGroupWithTrashInfo = this.initialGroup
@@ -109,11 +102,10 @@ export default {
         null
       )
     },
+    /**
+     * Chooses which app to show when the modal is shown.
+     **/
     pickInitialApplicationToSelect(firstGroupToShow) {
-      /**
-       * Chooses which app to show when the modal is shown.
-       **/
-
       if (firstGroupToShow === null) {
         return null
       } else {
@@ -133,18 +125,17 @@ export default {
         }
       }
     },
+    /**
+     * Loads the structure of the trash modal from the server, selects an initial
+     * group or application depending on the props and shows the trash modal.
+     **/
     async show(...args) {
-      /**
-       * Loads the structure of the trash modal from the server, selects an initial
-       * group or application depending on the props and shows the trash modal.
-       **/
       modal.methods.show.call(this, ...args)
 
       this.loading = true
       this.groups = []
       this.selectedTrashGroup = null
       this.selectedTrashApplication = null
-      this.hideError()
 
       try {
         const { data } = await TrashService(this.$client).fetchStructure()
@@ -160,11 +151,10 @@ export default {
       }
       this.loading = false
     },
+    /**
+     * Loads the next page of trash contents for the currently selected application.
+     */
     async loadTrashContentsPage(nextPage) {
-      /**
-       * Loads the next page of trash contents for the currently selected application.
-       */
-      this.hideError()
       if (
         this.selectedTrashGroup === null &&
         this.selectedTrashApplication === null
@@ -186,14 +176,14 @@ export default {
           this.trashContents.push(entry)
         })
       } catch (error) {
-        this.handleError(error, 'trash')
+        notifyIf(error, 'trash')
       }
     },
+    /**
+     * Switches to a different group or application to display the trash contents for
+     * and triggers the fetch for the first page of contents.
+     */
     async selectGroupOrApp({ group, application = null }) {
-      /**
-       * Switches to a different group or application to display the trash contents for
-       * and triggers the fetch for the first page of contents.
-       */
       this.selectedTrashGroup = group
       this.selectedTrashApplication = application
       this.loadingContents = true
@@ -202,23 +192,22 @@ export default {
       await this.loadTrashContentsPage(1)
       this.loadingContents = false
     },
+    /**
+     * Loads another page of contents in after we have already loaded the initial
+     * page of contents, hence we want to use a different loading indicator as it is
+     * ok to say, restore an item whilst we are loading in another page.
+     */
     async loadNextPage(nextPage) {
-      /**
-       * Loads another page of contents in after we have already loaded the initial
-       * page of contents, hence we want to use a different loading indicator as it is
-       * ok to say, restore an item whilst we are loading in another page.
-       */
       this.loadingNextPage = true
       await this.loadTrashContentsPage(nextPage)
       this.loadingNextPage = false
     },
+    /**
+     * Triggered when a user requests a trashEntry be restored. Sends the request to
+     * the server, updates the client side state if successful and updates the trash
+     * structure if say a group or application was restored.
+     */
     async onRestore(trashEntry) {
-      /**
-       * Triggered when a user requests a trashEntry be restored. Sends the request to
-       * the server, updates the client side state if successful and updates the trash
-       * structure if say a group or application was restored.
-       */
-      this.hideError()
       try {
         trashEntry.loading = true
         await TrashService(this.$client).restore({
@@ -256,15 +245,14 @@ export default {
         this.selectedTrashGroup.applications[index].trashed = false
       }
     },
+    /**
+     * Triggered when the user has requested the currently selected group or app
+     * should be emptied. If the selected item is trashed itself the empty operation
+     * will permanently delete the selected item also. Once emptied this method will
+     * ensure that any now permanently deleted groups or apps are removed from the
+     * sidebar.
+     */
     async onEmpty() {
-      /**
-       * Triggered when the user has requested the currently selected group or app
-       * should be emptied. If the selected item is trashed itself the empty operation
-       * will permanently delete the selected item also. Once emptied this method will
-       * ensure that any now permanently deleted groups or apps are removed from the
-       * sidebar.
-       */
-      this.hideError()
       this.loadingContents = true
       try {
         const applicationIdOrNull =
@@ -307,11 +295,11 @@ export default {
         this.selectedTrashGroup = null
       }
     },
+    /**
+     * Updates the trash structure to remove any deleted groups or applications after
+     * an empty is performed.
+     */
     removeGroupOrAppFromSidebarIfNowPermDeleted() {
-      /**
-       * Updates the trash structure to remove any deleted groups or applications after
-       * an empty is performed.
-       */
       if (
         this.selectedTrashApplication !== null &&
         this.selectedTrashApplication.trashed

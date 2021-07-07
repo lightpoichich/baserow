@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 import pytest
-from django.core.exceptions import ValidationError
 from django.db import connection
 
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -699,86 +698,6 @@ def test_trashing_a_field_with_a_sort_trashes_the_sort(
     assert list(
         filtered_qs.values_list(f"field_{customers_primary_field.id}", flat=True)
     ) == ["2", "1"]
-
-
-@pytest.mark.django_db
-def test_cannot_update_or_create_a_linked_row_to_point_at_trashed_row(
-    data_fixture,
-):
-    user = data_fixture.create_user()
-    database = data_fixture.create_database_application(user=user, name="Placeholder")
-    customers_table = data_fixture.create_database_table(
-        name="Customers", database=database
-    )
-    cars_table = data_fixture.create_database_table(name="Cars", database=database)
-
-    field_handler = FieldHandler()
-    row_handler = RowHandler()
-
-    # Create a primary field and some example data for the customers table.
-    customers_primary_field = field_handler.create_field(
-        user=user, table=customers_table, type_name="text", name="Name", primary=True
-    )
-    john_row = row_handler.create_row(
-        user=user,
-        table=customers_table,
-        values={f"field_{customers_primary_field.id}": "John"},
-    )
-
-    link_field_1 = field_handler.create_field(
-        user=user,
-        table=cars_table,
-        type_name="link_row",
-        name="customer",
-        link_row_table=customers_table,
-    )
-    # Create a primary field and some example data for the cars table.
-    cars_primary_field = field_handler.create_field(
-        user=user, table=cars_table, type_name="text", name="Name", primary=True
-    )
-    TrashHandler.trash(
-        user,
-        database.group,
-        database,
-        john_row,
-        parent_id=customers_table.id,
-    )
-
-    with pytest.raises(
-        ValidationError,
-        match="A row id was provided which does not exist in the linked table",
-    ):
-        row_handler.create_row(
-            user=user,
-            table=cars_table,
-            values={
-                f"field_{cars_primary_field.id}": "BMW",
-                f"field_{link_field_1.id}": [john_row.id],
-            },
-        )
-
-    row = row_handler.create_row(
-        user=user,
-        table=cars_table,
-        values={
-            f"field_{cars_primary_field.id}": "BMW",
-            f"field_{link_field_1.id}": [],
-        },
-    )
-
-    with pytest.raises(
-        ValidationError,
-        match="A row id was provided which does not exist in the linked table",
-    ):
-        row_handler.update_row(
-            user=user,
-            table=cars_table,
-            row_id=row.id,
-            values={
-                f"field_{cars_primary_field.id}": "BMW",
-                f"field_{link_field_1.id}": [john_row.id],
-            },
-        )
 
 
 @pytest.mark.django_db(transaction=True)

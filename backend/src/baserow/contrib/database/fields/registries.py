@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from django.db.models import Q
 
@@ -633,6 +633,25 @@ class FieldType(
             return ""
         else:
             return str(human_readable_value)
+
+    # noinspection PyMethodMayBeStatic
+    def get_related_items_to_trash(self, field) -> List[Any]:
+        """
+        When a field of this type is trashed/restored, or the table it is in
+        trashed/restored, this method should return any other trashable items that
+        should be trashed or restored in tandem.
+
+        For example, a link field has an opposing link field in the other table that
+        should also be trashed when it is trashed. And so for link fields this method
+        is overridden to return the related field so it is trashed/restored correctly.
+
+        :param field: The specific instance of the field that is being trashed or whose
+            table is being trashed.
+        :return: A list of related trashable items that should be trashed or restored
+            in tandem with this field or it's table.
+        """
+
+        return []
 
 
 class FieldTypeRegistry(

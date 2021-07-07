@@ -5,7 +5,7 @@ from rest_framework import serializers, fields
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.core.models import TrashEntry, Application
-from baserow.core.trash.registry import trash_item_type_registry
+from baserow.core.trash.registries import trash_item_type_registry
 
 
 class TrashEntryRequestSerializer(

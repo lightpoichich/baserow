@@ -225,10 +225,12 @@ export const mutations = {
   ADD_FIELD_TO_ROWS_IN_BUFFER(state, { field, value }) {
     const name = `field_${field.id}`
     state.rows.forEach((row) => {
-      // We have to use the Vue.set function here to make it reactive immediately.
-      // If we don't do this the value in the field components of the grid and modal
-      // don't have the correct value and will act strange.
-      Vue.set(row, name, value)
+      if (!Object.prototype.hasOwnProperty.call(row, name)) {
+        // We have to use the Vue.set function here to make it reactive immediately.
+        // If we don't do this the value in the field components of the grid and modal
+        // don't have the correct value and will act strange.
+        Vue.set(row, name, value)
+      }
     })
   },
   DECREASE_ORDERS_IN_BUFFER_LOWER_THAN(state, existingOrder) {

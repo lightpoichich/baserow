@@ -127,17 +127,19 @@ export const actions = {
   /**
    * Forcefully create a new field without making a call to the backend.
    */
-  async forceCreate(context, { table, values }) {
+  async forceCreate(context, { table, values, notifyViews = true }) {
     const { commit } = context
     const fieldType = this.$registry.get('field', values.type)
     const data = populateField(values, this.$registry)
     commit('ADD_ITEM', data)
 
-    // Call the field created event on all the registered views because they might
-    // need to change things in loaded data. For example the grid field will add the
-    // field to all of the rows that are in memory.
-    for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldCreated(context, table, data, fieldType, 'page/')
+    if (notifyViews) {
+      // Call the field created event on all the registered views because they might
+      // need to change things in loaded data. For example the grid field will add the
+      // field to all of the rows that are in memory.
+      for (const viewType of Object.values(this.$registry.getAll('view'))) {
+        await viewType.fieldCreated(context, table, data, fieldType, 'page/')
+      }
     }
   },
   /**

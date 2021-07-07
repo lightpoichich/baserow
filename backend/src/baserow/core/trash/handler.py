@@ -18,7 +18,7 @@ from baserow.core.trash.exceptions import (
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
 )
-from baserow.core.trash.registry import trash_item_type_registry, TrashableItemType
+from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 
 User = get_user_model()
 

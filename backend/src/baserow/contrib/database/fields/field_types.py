@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 
 from dateutil import parser
 from dateutil.parser import ParserError
@@ -505,15 +505,6 @@ class LinkRowFieldType(FieldType):
 
         return self._get_and_map_pk_values(field_object, value, map_to_export_value)
 
-    def prepare_value_for_db(self, instance, value):
-        m = instance.link_row_table.get_model()
-        actual = m.objects.filter(id__in=value).count()
-        if actual != len(value):
-            raise ValidationError(
-                "A row id was provided which does not exist in the linked table."
-            )
-        return value
-
     def get_human_readable_value(self, value, field_object):
         def map_to_human_readable_value(inner_value, inner_field_object):
             return inner_field_object["type"].get_human_readable_value(
@@ -930,6 +921,9 @@ class LinkRowFieldType(FieldType):
         self, row, field_name, value, id_mapping, files_zip, storage
     ):
         getattr(row, field_name).set(value)
+
+    def get_related_items_to_trash(self, field) -> List[Any]:
+        return [field.link_row_related_field]
 
 
 class EmailFieldType(FieldType):

@@ -3,7 +3,7 @@ from typing import Optional, Any, List
 from django.conf import settings
 from django.db import connections
 
-from baserow.contrib.database.fields.models import Field, LinkRowField
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.signals import field_restored
 from baserow.contrib.database.rows.signals import row_created
@@ -11,10 +11,14 @@ from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import Application, TrashEntry
-from baserow.core.trash.registry import TrashableItemType
+from baserow.core.trash.registries import TrashableItemType
 
 
 class TableTrashableItemType(TrashableItemType):
+
+    type = "table"
+    model_class = Table
+
     def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
         return trashed_item.database
 
@@ -65,16 +69,15 @@ AND    table_name   = %s
         model = trashed_item.get_model()
         things_to_trash = [trashed_item]
         for field in model._field_objects.values():
-            field = field["field"]
-            if isinstance(field, LinkRowField):
-                things_to_trash.append(field.link_row_related_field)
+            things_to_trash += field["type"].get_related_items_to_trash(field["field"])
         return things_to_trash
-
-    type = "table"
-    model_class = Table
 
 
 class FieldTrashableItemType(TrashableItemType):
+
+    type = "field"
+    model_class = Field
+
     def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
         return trashed_item.table
 
@@ -112,15 +115,19 @@ class FieldTrashableItemType(TrashableItemType):
         """
         When trashing a link row field we also want to trash the related link row field.
         """
-        if isinstance(trashed_item.specific, LinkRowField):
-            return [trashed_item, trashed_item.specific.link_row_related_field]
-        return [trashed_item]
 
-    type = "field"
-    model_class = Field
+        items_to_trash = [trashed_item]
+        field_type = field_type_registry.get_by_model(trashed_item.specific)
+        return items_to_trash + field_type.get_related_items_to_trash(
+            trashed_item.specific
+        )
 
 
 class RowTrashableItemType(TrashableItemType):
+
+    type = "row"
+    model_class = GeneratedTableModel
+
     @property
     def requires_parent_id(self) -> bool:
         # A row is not unique just with its ID. We also need the table id (parent id)
@@ -211,6 +218,3 @@ class RowTrashableItemType(TrashableItemType):
                 return primary_value
 
         return "unknown row"
-
-    type = "row"
-    model_class = GeneratedTableModel

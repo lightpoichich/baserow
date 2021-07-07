@@ -1,6 +1,10 @@
 from django.apps import AppConfig
 
-from baserow.core.registries import plugin_registry, application_type_registry
+from baserow.core.registries import (
+    plugin_registry,
+    application_type_registry,
+)
+from baserow.core.trash.registries import trash_item_type_registry
 from baserow.ws.registries import page_registry
 
 
@@ -142,7 +146,6 @@ class DatabaseConfig(AppConfig):
             RowTrashableItemType,
             FieldTrashableItemType,
         )
-        from baserow.core.trash.registry import trash_item_type_registry
 
         trash_item_type_registry.register(TableTrashableItemType())
         trash_item_type_registry.register(FieldTrashableItemType())

@@ -195,8 +195,6 @@ def make_trashable_mixin(parent):
 
 
 ParentGroupTrashableModelMixin = make_trashable_mixin("group")
-ParentFieldTrashableModelMixin = make_trashable_mixin("field")
-ParentTableTrashableModelMixin = make_trashable_mixin("table")
 
 
 class TrashableModelMixin(models.Model):

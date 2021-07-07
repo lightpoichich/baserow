@@ -6,12 +6,14 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.mixins import (
+    ParentTableTrashableModelMixin,
+    ParentFieldTrashableModelMixin,
+)
 from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
-    ParentFieldTrashableModelMixin,
-    ParentTableTrashableModelMixin,
 )
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))

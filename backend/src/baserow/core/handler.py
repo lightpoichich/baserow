@@ -383,8 +383,6 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        # TODO Raise does not exist if Group has been trashed
-
         if not base_queryset:
             base_queryset = GroupInvitation.objects
 

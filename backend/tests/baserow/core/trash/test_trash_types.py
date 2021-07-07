@@ -5,7 +5,7 @@ from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.core.models import Group, GroupUser
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.trash.registry import GroupTrashableItemType
+from baserow.core.trash.trash_types import GroupTrashableItemType
 
 
 @pytest.mark.django_db

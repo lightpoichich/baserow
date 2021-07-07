@@ -222,7 +222,7 @@ export default {
         this.totalServerSideTrashContentsCount--
         this.updateStructureIfGroupOrAppRestored(trashEntry)
       } catch (error) {
-        this.handleError(error, 'trash')
+        notifyIf(error, 'trash')
       }
       trashEntry.loading = false
     },
@@ -266,10 +266,10 @@ export default {
         this.removeGroupOrAppFromSidebarIfNowPermDeleted()
         this.trashContents = []
         this.totalServerSideTrashContentsCount = 0
-        this.loadingContents = false
       } catch (error) {
-        this.handleError(error, 'trash')
+        notifyIf(error, 'trash')
       }
+      this.loadingContents = false
     },
     removeSelectedAppFromSidebar() {
       const applicationId = this.selectedTrashApplication.id

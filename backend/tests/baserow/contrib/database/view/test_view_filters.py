@@ -1515,6 +1515,10 @@ def test_date_before_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
+    assert row.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+    assert row_4.id in ids
 
 
 @pytest.mark.django_db
@@ -1578,6 +1582,10 @@ def test_date_on_before_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
+    assert row.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+    assert row_4.id in ids
 
 
 @pytest.mark.django_db
@@ -1640,6 +1648,10 @@ def test_date_after_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
+    assert row.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+    assert row_4.id in ids
 
 
 @pytest.mark.django_db
@@ -1704,6 +1716,10 @@ def test_date_on_after_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
+    assert row.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+    assert row_4.id in ids
 
 
 @pytest.mark.django_db

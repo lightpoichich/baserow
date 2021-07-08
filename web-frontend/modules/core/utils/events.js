@@ -1,18 +1,50 @@
-export function isCharacterKeyPress(evt) {
-  if (typeof evt.which === 'undefined') {
-    // This is IE, which only fires keypress events for printable keys
+export function isAlphabeticCharacter(str) {
+  /*
+  This function determines whether the pressed key is a alphabetic character
+   */
+  const charRegex = /^[A-Za-z]$/
+  if (charRegex.test(str)) {
     return true
-  } else if (typeof evt.which === 'number' && evt.which > 0) {
-    // In other browsers except old versions of WebKit, evt.which is
-    // only greater than zero if the keypress is a printable key.
-    // We need to filter out backspace and ctrl/alt/meta key combinations
-    return (
-      !evt.ctrlKey &&
-      !evt.metaKey &&
-      !evt.altKey &&
-      evt.which !== 8 &&
-      evt.which !== 16
-    )
   }
   return false
+}
+
+export function isNumberCharacter(str) {
+  /*
+  This function determines whether the pressed key is a number
+   */
+  const numberRegex = /^\d$/
+  if (numberRegex.test(str)) {
+    return true
+  }
+  return false
+}
+
+export function isSpecialCharacter(str) {
+  /*
+  This function determines whether the pressed key is a special character
+   */
+  const specialCharRegex = /^[<>{}"/|;:.,~!?@#$%=&*§[\]\\´`+'\-_€^]$/
+  if (specialCharRegex.test(str)) {
+    return true
+  }
+  return false
+}
+
+export function isPrintableCharacterKeyPress(event) {
+  /*
+  This function is a helper which determines whether the pressed key
+  is either a
+    CharacterKey or
+    NumberKey or
+    SpecialCharacter
+  hereby defined as a 'printable character'
+   */
+  const { key } = event
+  const isPrintableCharacter =
+    isAlphabeticCharacter(key) ||
+    isNumberCharacter(key) ||
+    isSpecialCharacter(key)
+
+  return isPrintableCharacter
 }

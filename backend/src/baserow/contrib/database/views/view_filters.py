@@ -179,31 +179,6 @@ class LowerThanViewFilterType(ViewFilterType):
         return Q()
 
 
-class DateParserMixin:
-    """
-    Helper class to mix into DateFilterTypes. It provides a method with which
-    an iso date string (e.g. 2021-07-01) can be parsed into a date object.
-    """
-
-    @staticmethod
-    def parse_date(value: str) -> datetime.date:
-        """
-        Parses the provided value string and converts it to a date object.
-        Raises an error if the provided value is an empty string or cannot be parsed
-        to a date object
-        """
-        value = value.strip()
-
-        if value == "":
-            raise ValueError
-
-        try:
-            parsed_date = parser.isoparse(value).date()
-            return parsed_date
-        except ValueError as e:
-            raise e
-
-
 class DateEqualViewFilterType(ViewFilterType):
     """
     The date filter parses the provided value as date and checks if the field value is
@@ -248,17 +223,43 @@ class DateEqualViewFilterType(ViewFilterType):
             return Q(**{field_name: datetime})
 
 
-class DateBeforeViewFilterType(DateParserMixin, ViewFilterType):
+class BaseDateFieldLookupFilterType(ViewFilterType):
     """
-    The before date filter parses the provided value as date and checks if the field
-    value is before date (lower than). It only works if a valid ISO date is provided as
-    value and it is only compatible with models.DateField and models.DateTimeField.
-    It serves as a basis for other lower than or higher than date filters.
+    The base date field lookup filter serves as a base class for DateViewFilters.
+    With it a valid ISO date can be parsed into a date object which subsequently can
+    be used to filter a model.DateField or model.DateTimeField.
+    If the model field in question is a DateTimeField then the get_filter function
+    makes sure to only use the date part of the datetime in order to filter. This means
+    that the time part of a DateTimeField gets completely ignored.
+
+    The 'query_field_lookup' needs to be set on the deriving classes to something like
+    '__lt'
+    '__lte'
+    '__gt'
+    '__gte'
     """
 
-    type = "date_before"
-    query_field_lookup = "__lt"
+    type = "base_date_field_lookup_type"
+    query_field_lookup = ""
     compatible_field_types = [DateFieldType.type]
+
+    @staticmethod
+    def parse_date(value: str) -> datetime.date:
+        """
+        Parses the provided value string and converts it to a date object.
+        Raises an error if the provided value is an empty string or cannot be parsed
+        to a date object
+        """
+        value = value.strip()
+
+        if value == "":
+            raise ValueError
+
+        try:
+            parsed_date = parser.isoparse(value).date()
+            return parsed_date
+        except ValueError as e:
+            raise e
 
     def get_filter(self, field_name, value, model_field, field):
         # in order to only compare the date part of a datetime field
@@ -276,40 +277,27 @@ class DateBeforeViewFilterType(DateParserMixin, ViewFilterType):
             return Q()
 
 
-class DateOnBeforeViewFilterType(DateBeforeViewFilterType):
+class DateBeforeViewFilterType(BaseDateFieldLookupFilterType):
     """
-    The on before date filter parses the provided value as date and checks if the field
-    value is on or before the date (lower than or equal). It only works if a valid ISO
-    date is provided as value and it is only compatible with models.DateField and
-    models.DateTimeField.
+    The date before filter parses the provided filter value as date and checks if the
+    field value is before this date (lower than).
+    It is an extension of the BaseDateFieldLookupFilter
     """
 
-    type = "date_on_before"
-    query_field_lookup = "__lte"
+    type = "date_before"
+    query_field_lookup = "__lt"
+    compatible_field_types = [DateFieldType.type]
 
 
-class DateAfterViewFilterType(DateOnBeforeViewFilterType):
+class DateAfterViewFilterType(BaseDateFieldLookupFilterType):
     """
-    The after date filter parses the provided value as date and checks if the field
-    value is after the date (greater than). It only works if a valid ISO date is
-    provided as value and it is only compatible with models.DateField and
-    models.DateTimeField.
+    The after date filter parses the provided filter value as date and checks if
+    the field value is after this date (greater than).
+    It is an extension of the BaseDateFieldLookupFilter
     """
 
     type = "date_after"
     query_field_lookup = "__gt"
-
-
-class DateOnAfterViewFilterType(DateBeforeViewFilterType):
-    """
-    The on after date filter parses the provided value as date and checks if the field
-    value is on or after the date (lower than or equal). It only works if a valid ISO
-    date is provided as value and it is only compatible with models.DateField and
-    models.DateTimeField.
-    """
-
-    type = "date_on_after"
-    query_field_lookup = "__gte"
 
 
 class DateEqualsTodayViewFilterType(ViewFilterType):

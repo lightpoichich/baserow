@@ -24,7 +24,7 @@ If you haven't already installed docker and docker-compose on your computer you 
 so by following the instructions on https://docs.docker.com/desktop/ and
 https://docs.docker.com/compose/install/.
 
-> Docker version 18.09 is the minimum required to build Baserow. It is strongly
+> Docker version 19.03 is the minimum required to build Baserow. It is strongly
 > advised however that you install the latest version of Docker available: 20.10.
 > Please check that your docker is up to date by running `docker -v`.
 

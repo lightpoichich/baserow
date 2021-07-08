@@ -3,7 +3,7 @@
 Find below a list of FAQs and common operations when working with Baserow's docker
 environment.
 
-> Docker version 18.09 is the minimum required to build Baserow. It is strongly
+> Docker version 19.03 is the minimum required to build Baserow. It is strongly
 > advised however that you install the latest version of Docker available: 20.10.
 > Please check that your docker is up to date by running `docker -v`.
 
@@ -133,7 +133,7 @@ $ ./dev.sh run backend manage sync_templates
 ### Build Error - Service 'backend' failed to build: unable to convert uid/gid chown
 
 This error occurs when attempting to build Baserow's docker images with a version of
-Docker earlier than 18.09. It can also occur when you are attempting to build 
+Docker earlier than 19.03. It can also occur when you are attempting to build 
 Baserow version 1.3 or earlier using a version of Docker less than 20.10. You can check 
 your local docker version by running `docker -v` and fix the error by installing the 
 latest version of Docker from https://docs.docker.com/get-docker/.

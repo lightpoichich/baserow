@@ -27,7 +27,7 @@ RUN usermod -u ${UID} -g ${GID} node || exit 0
 
 USER $UID:$GID
 
-# Create and install the dependencies in separate ADD commands
+# Create and install the dependencies in separate COPY commands
 COPY --chown=$UID:$GID ./web-frontend/package.json ./web-frontend/yarn.lock /baserow/web-frontend/
 
 WORKDIR /baserow/web-frontend

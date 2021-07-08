@@ -1,6 +1,6 @@
-import pytest
-
 from unittest.mock import patch
+
+import pytest
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
@@ -37,7 +37,9 @@ def test_group_restored(mock_broadcast_to_users, data_fixture):
     member_group_user = data_fixture.create_user_group(
         user=member_user, group=group, permissions=GROUP_USER_PERMISSION_MEMBER
     )
+    database = data_fixture.create_database_application(user=user, group=group)
     TrashHandler.trash(user, group, None, group)
+
     TrashHandler.restore_item(user, "group", group.id)
 
     args = mock_broadcast_to_users.delay.call_args_list
@@ -48,10 +50,21 @@ def test_group_restored(mock_broadcast_to_users, data_fixture):
     assert member_call[1]["type"] == "group_restored"
     assert member_call[1]["group"]["id"] == member_group_user.group_id
     assert member_call[1]["group"]["permissions"] == "MEMBER"
+    expected_group_json = {
+        "id": database.id,
+        "name": database.name,
+        "order": 0,
+        "type": "database",
+        "tables": [],
+        "group": {"id": group.id, "name": group.name},
+    }
+    assert member_call[1]["applications"] == [expected_group_json]
     assert admin_call[0] == [user.id]
     assert admin_call[1]["type"] == "group_restored"
     assert admin_call[1]["group"]["id"] == group_user.group_id
     assert admin_call[1]["group"]["permissions"] == "ADMIN"
+    assert admin_call[1]["group"]["id"] == group_user.group_id
+    assert admin_call[1]["applications"] == [expected_group_json]
 
 
 @pytest.mark.django_db(transaction=True)

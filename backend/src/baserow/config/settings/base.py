@@ -316,6 +316,8 @@ DEFAULT_APPLICATION_TEMPLATE = "project-management"
 
 MAX_FIELD_LIMIT = 1500
 
+# If you change this default please also update the default for the web-frontend found
+# in web-frontend/modules/core/module.js:55
 HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = os.getenv(
     "HOURS_UNTIL_TRASH_PERMANENTLY_DELETED", 24 * 3
 )

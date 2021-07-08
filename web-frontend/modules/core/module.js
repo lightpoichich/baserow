@@ -52,6 +52,8 @@ export default function DatabaseModule(options) {
           default: null,
         },
         {
+          // If you change this default please also update the default for the
+          // backend found in src/baserow/config/settings/base.py:321
           key: 'HOURS_UNTIL_TRASH_PERMANENTLY_DELETED',
           default: 24 * 3,
         },

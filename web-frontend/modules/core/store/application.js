@@ -84,23 +84,12 @@ export const actions = {
     commit('SET_ITEM_LOADING', { application, value })
   },
   /**
-   * Fetches all the applications for the provided groupId for the authenticated user.
+   * Force creates a list of applications.
    */
-  async fetchAllForGroup({ commit }, groupId) {
-    commit('SET_LOADING', true)
-
-    try {
-      const { data } = await ApplicationService(this.$client).fetchAll(groupId)
-      data.forEach((part, index, d) => {
-        populateApplication(data[index], this.$registry)
-      })
-      commit('APPEND_ITEMS', data)
-      commit('SET_LOADING', false)
-      commit('SET_LOADED', true)
-    } catch (error) {
-      commit('SET_LOADING', false)
-      throw error
-    }
+  forceCreateAll({ dispatch }, applications) {
+    applications.forEach((app) => {
+      dispatch('forceCreate', app)
+    })
   },
   /**
    * Fetches all the applications for the authenticated user.

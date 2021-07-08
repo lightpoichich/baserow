@@ -198,10 +198,7 @@ export class RealTimeHandler {
 
     this.registerEvent('group_restored', ({ store }, data) => {
       store.dispatch('group/forceCreate', data.group)
-      // The restored group may contain applications we do not know about.
-      // Trigger a re-fetch of the applications to correctly populate the new restored
-      // group's applications.
-      store.dispatch('application/fetchAllForGroup', data.group.id)
+      store.dispatch('application/forceCreateAll', data.applications)
     })
 
     this.registerEvent('group_updated', ({ store }, data) => {

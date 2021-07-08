@@ -32,7 +32,7 @@
         </li>
         <li>
           <a
-            :class="{ 'context__menu-item--loading': loading }"
+            :class="{ 'context__menu-item--loading': deleteLoading }"
             @click="deleteTable()"
           >
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
@@ -64,7 +64,7 @@ export default {
   },
   data() {
     return {
-      loading: false,
+      deleteLoading: false,
     }
   },
   methods: {
@@ -120,7 +120,7 @@ export default {
       this.setLoading(database, false)
     },
     async deleteTable() {
-      this.loading = true
+      this.deleteLoading = true
 
       try {
         await this.$store.dispatch('table/delete', {
@@ -135,7 +135,7 @@ export default {
         notifyIf(error, 'table')
       }
 
-      this.loading = false
+      this.deleteLoading = false
     },
   },
 }

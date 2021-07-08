@@ -1,6 +1,8 @@
 /**
  * Mixin that introduces helper methods for the importer form component.
  */
+import { RESERVED_BASEROW_FIELD_NAMES } from '@baserow/modules/database/utils/constants'
+
 export default {
   methods: {
     /**
@@ -32,39 +34,55 @@ export default {
         }
         rows = data.slice(0, 3)
         remaining = data.length - rows.length
+      } else {
+        head = fill(head, columns)
+        head = this.makeHeaderUniqueAndValid(head)
       }
 
-      this.validateHeader(head)
-
-      head = fill(head, columns)
       rows.map((row) => fill(row, columns))
 
       return { columns, head, rows, remaining }
     },
+    findNextFreeName(originalColumnName, setOfAllColumnNames, startingIndex) {
+      let i = startingIndex
+      while (true) {
+        const nextColumnNameToCheck = `${originalColumnName} ${i}`
+        if (!setOfAllColumnNames.includes(nextColumnNameToCheck)) {
+          return nextColumnNameToCheck
+        }
+        i++
+      }
+    },
+    makeColumnNameUniqueAndValidIfNotAlready(column, setOfAllColumnNames) {
+      if (column === '') {
+        return this.findNextFreeName('Field', setOfAllColumnNames, 1)
+      } else if (RESERVED_BASEROW_FIELD_NAMES.includes(column)) {
+        return this.findNextFreeName(column, setOfAllColumnNames, 2)
+      } else if (setOfAllColumnNames.includes(column)) {
+        return this.findNextFreeName(column, setOfAllColumnNames, 2)
+      } else {
+        return column
+      }
+    },
     /**
-     * Validates that the uploaded field names are unique, non blank and don't use any
+     * Ensures that the uploaded field names are unique, non blank and don't use any
      * reserved Baserow field names.
      * @param {*[]} head An array of field names to be checked.
+     * @return A new array of field names which are guaranteed to be unique and valid.
      */
-    validateHeader(head) {
-      const headSet = new Set()
-      // Please keep in sync with src/baserow/contrib/database/fields/handler.py:30
-      const RESERVED_BASEROW_FIELD_NAMES = ['id', 'order']
+    makeHeaderUniqueAndValid(head) {
+      const headerWithUniqueNames = []
+      const setOfAllColumnNames = new Set()
       for (const column of head) {
         const trimmedColumn = column.trim()
-        if (trimmedColumn === '') {
-          throw new Error('Blank field names are not allowed.')
-        }
-        if (RESERVED_BASEROW_FIELD_NAMES.includes(trimmedColumn)) {
-          throw new Error(
-            `${column} is a reserved baserow field name and cannot be used.`
-          )
-        }
-        headSet.add(trimmedColumn)
+        const uniqueValidName = this.makeColumnNameUniqueAndValidIfNotAlready(
+          trimmedColumn,
+          setOfAllColumnNames
+        )
+        headerWithUniqueNames.push(uniqueValidName)
+        setOfAllColumnNames.add(uniqueValidName)
       }
-      if (headSet.size !== head.length) {
-        throw new Error('Field names must be unique.')
-      }
+      return headerWithUniqueNames
     },
   },
 }

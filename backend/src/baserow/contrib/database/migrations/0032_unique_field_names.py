@@ -75,6 +75,7 @@ def rename_non_unique_names_in_table(
         usually this should be just the field name, but say you want to rename a
         weird field name like " " to "Field_2" etc then set new_name_prefix to "Field".
     """
+
     fields_to_fix = Field.objects.filter(table_id=table_id, name=name_to_fix).order_by(
         "id"
     )
@@ -113,6 +114,7 @@ def find_next_unused_field_name(field_name, start_index, existing_collisions):
     :return: A free field name starting with field_name possibly followed by an
         _X where X is a positive integer.
     """
+
     original_field_name = field_name
     i = start_index
     while True:

@@ -63,6 +63,7 @@ import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import { mapGetters } from 'vuex'
+import { RESERVED_BASEROW_FIELD_NAMES } from '@baserow/modules/database/utils/constants'
 
 // @TODO focus form on open
 export default {
@@ -123,7 +124,7 @@ export default {
       return !fields.map((f) => f.name).includes(param.trim())
     },
     mustNotClashWithReservedName(param) {
-      return !['id', 'order'].includes(param.trim())
+      return !RESERVED_BASEROW_FIELD_NAMES.includes(param.trim())
     },
     getFormComponent(type) {
       return this.$registry.get('field', type).getFormComponent()

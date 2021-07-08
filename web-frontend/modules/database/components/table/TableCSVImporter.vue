@@ -192,18 +192,12 @@ export default {
             // If parsed successfully and it is not empty then the initial data can be
             // prepared for creating the table. We store the data stringified because
             // it doesn't need to be reactive.
-            try {
-              this.preview = this.getPreview(
-                data.data,
-                this.values.firstRowHeader
-              )
-              this.values.data = JSON.stringify(data.data)
-              this.error = ''
-            } catch (e) {
-              this.values.data = ''
-              this.error = e.message
-              this.preview = {}
-            }
+            this.values.data = JSON.stringify(data.data)
+            this.error = ''
+            this.preview = this.getPreview(
+              data.data,
+              this.values.firstRowHeader
+            )
           }
         },
         error(error) {

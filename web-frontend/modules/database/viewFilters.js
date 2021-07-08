@@ -291,67 +291,24 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    if (rowValue === null) {
-      // if the row value is null we can immediately return false since
-      // it does not match the filter
+    // parse the provided string values as moment objects in order to make
+    // date comparisons
+    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
+    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+
+    // if the filter date is not a valid date we can immediately return
+    // true because without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // if the row value is null or the rowDate is not valid we can immediately return
+    // false since it does not match the filter and the row won't be in the resultset
+    if (rowValue === null || !rowDate.isValid()) {
       return false
     }
 
-    // parse the provided values as moment dates because we need those strings as
-    // dates in order to make a comparison
-    try {
-      const filterDate = moment.utc(filterValue).date()
-      const rowDate = moment.utc(rowValue).date()
-      const matchCondition = moment(rowDate).isBefore(moment(filterDate))
-
-      return matchCondition
-    } catch (e) {
-      // if parsing of the dates fails we can return false
-      return false
-    }
-  }
-}
-
-export class DateOnBeforeViewFilterType extends ViewFilterType {
-  static getType() {
-    return 'date_on_before'
-  }
-
-  getName() {
-    return 'on or before date'
-  }
-
-  getExample() {
-    return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
-  }
-
-  getCompatibleFieldTypes() {
-    return ['date']
-  }
-
-  matches(rowValue, filterValue, field, fieldType) {
-    if (rowValue === null) {
-      // if the row value is null we can immediately return false since
-      // it does not match the filter
-      return false
-    }
-
-    // parse the provided values as moment dates because we need those strings as
-    // dates in order to make a comparison
-    try {
-      const filterDate = moment.utc(filterValue).date()
-      const rowDate = moment.utc(rowValue).date()
-      const matchCondition = moment(rowDate).isSameOrBefore(moment(filterDate))
-
-      return matchCondition
-    } catch (e) {
-      // if parsing of the dates fails we can return false
-      return false
-    }
+    return rowDate.isBefore(filterDate)
   }
 }
 
@@ -377,67 +334,24 @@ export class DateAfterViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    if (rowValue === null) {
-      // if the row value is null we can immediately return false since
-      // it does not match the filter
+    // parse the provided string values as moment objects in order to make
+    // date comparisons
+    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
+    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+
+    // if the filter date is not a valid date we can immediately return
+    // true because without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // if the row value is null or the rowDate is not valid we can immediately return
+    // false since it does not match the filter and the row won't be in the resultset
+    if (rowValue === null || !rowDate.isValid()) {
       return false
     }
 
-    // parse the provided values as moment dates because we need those strings as
-    // dates in order to make a comparison
-    try {
-      const filterDate = moment.utc(filterValue).date()
-      const rowDate = moment.utc(rowValue).date()
-      const matchCondition = moment(rowDate).isAfter(moment(filterDate))
-
-      return matchCondition
-    } catch (e) {
-      // if parsing of the dates fails we can return false
-      return false
-    }
-  }
-}
-
-export class DateOnAfterViewFilterType extends ViewFilterType {
-  static getType() {
-    return 'date_on_after'
-  }
-
-  getName() {
-    return 'on or after date'
-  }
-
-  getExample() {
-    return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
-  }
-
-  getCompatibleFieldTypes() {
-    return ['date']
-  }
-
-  matches(rowValue, filterValue, field, fieldType) {
-    if (rowValue === null) {
-      // if the row value is null we can immediately return false since
-      // it does not match the filter
-      return false
-    }
-
-    // parse the provided values as moment dates because we need those strings as
-    // dates in order to make a comparison
-    try {
-      const filterDate = moment.utc(filterValue).date()
-      const rowDate = moment.utc(rowValue).date()
-      const matchCondition = moment(rowDate).isSameOrAfter(moment(filterDate))
-
-      return matchCondition
-    } catch (e) {
-      // if parsing of the dates fails we can return false
-      return false
-    }
+    return rowDate.isAfter(filterDate)
   }
 }
 

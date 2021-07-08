@@ -84,6 +84,12 @@ class TextFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def prepare_value_for_db(self, instance, value):
+        if value == "":
+            value = None
+
+        return value
+
 
 class LongTextFieldType(FieldType):
     type = "long_text"

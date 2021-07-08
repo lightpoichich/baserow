@@ -7,6 +7,7 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
 )
 
 from django.shortcuts import reverse
@@ -469,7 +470,7 @@ def test_create_row(api_client, data_fixture):
     assert response_json_row_2[f"field_{text_field.id}"] == "white"
     assert not response_json_row_2[f"field_{number_field.id}"]
     assert response_json_row_2[f"field_{boolean_field.id}"] is False
-    assert response_json_row_2[f"field_{text_field_2.id}"] == ""
+    assert response_json_row_2[f"field_{text_field_2.id}"] is None
     assert response_json_row_2["order"] == "2.00000000000000000000"
 
     response = api_client.post(
@@ -497,7 +498,7 @@ def test_create_row(api_client, data_fixture):
             f"field_{text_field.id}": "Purple",
             f"field_{number_field.id}": 240,
             f"field_{boolean_field.id}": True,
-            f"field_{text_field_2.id}": "",
+            f"field_{text_field_2.id}": None,
         },
         format="json",
         HTTP_AUTHORIZATION=f"Token {token.key}",
@@ -507,7 +508,7 @@ def test_create_row(api_client, data_fixture):
     assert response_json_row_4[f"field_{text_field.id}"] == "Purple"
     assert response_json_row_4[f"field_{number_field.id}"] == "240"
     assert response_json_row_4[f"field_{boolean_field.id}"]
-    assert response_json_row_4[f"field_{text_field_2.id}"] == ""
+    assert response_json_row_4[f"field_{text_field_2.id}"] is None
     assert response_json_row_4["order"] == "4.00000000000000000000"
 
     token.refresh_from_db()
@@ -520,7 +521,7 @@ def test_create_row(api_client, data_fixture):
             f"field_{text_field.id}": "Red",
             f"field_{number_field.id}": 480,
             f"field_{boolean_field.id}": False,
-            f"field_{text_field_2.id}": "",
+            f"field_{text_field_2.id}": None,
         },
         format="json",
         HTTP_AUTHORIZATION=f"Token {token.key}",
@@ -530,7 +531,7 @@ def test_create_row(api_client, data_fixture):
     assert response_json_row_5[f"field_{text_field.id}"] == "Red"
     assert response_json_row_5[f"field_{number_field.id}"] == "480"
     assert not response_json_row_5[f"field_{boolean_field.id}"]
-    assert response_json_row_5[f"field_{text_field_2.id}"] == ""
+    assert response_json_row_5[f"field_{text_field_2.id}"] is None
     assert response_json_row_5["order"] == "2.99999999999999999999"
 
     token.refresh_from_db()
@@ -552,14 +553,14 @@ def test_create_row(api_client, data_fixture):
     assert getattr(row_2, f"field_{text_field.id}") == "white"
     assert getattr(row_2, f"field_{number_field.id}") is None
     assert getattr(row_2, f"field_{boolean_field.id}") is False
-    assert getattr(row_2, f"field_{text_field_2.id}") == ""
+    assert getattr(row_2, f"field_{text_field_2.id}") is None
 
     row_5 = rows[2]
     assert row_5.id == response_json_row_5["id"]
     assert getattr(row_5, f"field_{text_field.id}") == "Red"
     assert getattr(row_5, f"field_{number_field.id}") == 480
     assert getattr(row_5, f"field_{boolean_field.id}") is False
-    assert getattr(row_5, f"field_{text_field_2.id}") == ""
+    assert getattr(row_5, f"field_{text_field_2.id}") is None
 
     row_3 = rows[3]
     assert row_3.id == response_json_row_3["id"]
@@ -573,7 +574,7 @@ def test_create_row(api_client, data_fixture):
     assert getattr(row_4, f"field_{text_field.id}") == "Purple"
     assert getattr(row_4, f"field_{number_field.id}") == 240
     assert getattr(row_4, f"field_{boolean_field.id}") is True
-    assert getattr(row_4, f"field_{text_field_2.id}") == ""
+    assert getattr(row_4, f"field_{text_field_2.id}") is None
 
 
 @pytest.mark.django_db
@@ -1111,3 +1112,60 @@ def test_delete_row(api_client, data_fixture):
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"Token {token.key}")
     assert response.status_code == 204
     assert model.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_create_row_unique(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Unique Column", text_default="white", unique=True
+    )
+
+    table_2 = data_fixture.create_database_table(user=user)
+    text_field_2 = data_fixture.create_text_field(
+        table=table, order=0, name="Unique Column", text_default="white", unique=False
+    )
+
+    token = TokenHandler().create_token(user, table.database.group, "Good")
+    TokenHandler().update_token_permissions(user, token, False, True, True, True)
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{text_field.id}": "A"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{text_field.id}": "A"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_409_CONFLICT
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{text_field.id}": "B"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table_2.id}),
+        {f"field_{text_field_2.id}": "A"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table_2.id}),
+        {f"field_{text_field_2.id}": "A"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK

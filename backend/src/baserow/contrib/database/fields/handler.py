@@ -101,8 +101,9 @@ class FieldHandler:
         # field type.
         field_type = field_type_registry.get(type_name)
         model_class = field_type.model_class
-        allowed_fields = ["name"] + field_type.allowed_fields
+        allowed_fields = ["name", "unique"] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
+
         last_order = model_class.get_last_order(table)
 
         num_fields = table.field_set.count()
@@ -186,7 +187,8 @@ class FieldHandler:
             # like filters or sortings need to be changed.
             ViewHandler().field_type_changed(field)
 
-        allowed_fields = ["name"] + field_type.allowed_fields
+        allowed_fields = ["name", "unique"] + field_type.allowed_fields
+
         field_values = extract_allowed(kwargs, allowed_fields)
 
         field_values = field_type.prepare_values(field_values, user)

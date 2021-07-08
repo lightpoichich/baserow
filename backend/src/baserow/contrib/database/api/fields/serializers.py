@@ -57,10 +57,8 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("name", "type")
-        extra_kwargs = {
-            "name": {"required": False},
-        }
+        fields = ("name", "type", "unique")
+        extra_kwargs = {"name": {"required": False}, "unique": {"required": False}}
 
 
 class LinkRowValueSerializer(serializers.Serializer):

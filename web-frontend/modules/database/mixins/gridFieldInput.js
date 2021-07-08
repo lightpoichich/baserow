@@ -1,4 +1,4 @@
-import { isCharacterKeyPress } from '@baserow/modules/core/utils/events'
+import { isPrintableCharacterKeyPress } from '@baserow/modules/core/utils/events'
 
 /**
  * This mixin can be used with a grid view field if the field only needs an input. For
@@ -60,9 +60,17 @@ export default {
             // If only selected we will start the editing mode.
             this.edit(null, event)
           }
-        } else if (!this.editing && isCharacterKeyPress(event)) {
-          // If another key was pressed while not editing we want to replace the
-          // exiting value with something new.
+        }
+
+        // If F2 is pressed we want to switch into editing mode
+        // with the current value of the cell
+        if (event.key === 'F2' && !this.editing) {
+          this.edit(null, event)
+        }
+
+        // If a printable key was pressed while not editing we want to replace the
+        // exiting value with something new.
+        if (!this.editing && isPrintableCharacterKeyPress(event.key)) {
           this.edit('', event)
         }
       }
@@ -86,6 +94,7 @@ export default {
      * we want to initiate the editing mode.
      */
     doubleClick(event = null) {
+      console.log('DOUBLE CLICK!!')
       if (!this.editing) {
         this.edit(null, event)
       }
@@ -94,6 +103,14 @@ export default {
      * Method that can be called to initiate the edit state.
      */
     edit(value = null, event = null) {
+      console.log('JAJAJAJAJAJAJ')
+      const { keyCode } = event
+      console.log('HIER DER KEY: ', keyCode)
+      console.log('HIER DER KEY: ', value)
+
+      if (keyCode === 114) {
+        return
+      }
       if (this.readOnly) {
         return
       }

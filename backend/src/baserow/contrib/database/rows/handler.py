@@ -6,10 +6,11 @@ from django.db import transaction
 from django.db.models import Max, F, Q
 from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
+from django.db.utils import IntegrityError
 
 from baserow.contrib.database.fields.models import Field
 
-from .exceptions import RowDoesNotExist
+from .exceptions import RowDoesNotExist, KeyNotFound
 from .signals import (
     before_row_update,
     before_row_delete,
@@ -252,7 +253,13 @@ class RowHandler:
         instance = model.objects.create(**values)
 
         for name, value in manytomany_values.items():
-            getattr(instance, name).set(value)
+            try:
+                getattr(instance, name).set(value)
+            except IntegrityError as e:
+                if "violates foreign key constraint" in str(e):
+                    raise KeyNotFound()
+                else:
+                    raise e
 
         row_created.send(
             self, row=instance, before=before, user=user, table=table, model=model
@@ -308,7 +315,13 @@ class RowHandler:
             row.save()
 
             for name, value in manytomany_values.items():
-                getattr(row, name).set(value)
+                try:
+                    getattr(row, name).set(value)
+                except IntegrityError as e:
+                    if "violates foreign key constraint" in str(e):
+                        raise KeyNotFound()
+                    else:
+                        raise e
 
         row_updated.send(
             self,

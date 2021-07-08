@@ -17,7 +17,10 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_ORDER_BY_FIELD_NOT_FOUND,
     ERROR_FILTER_FIELD_NOT_FOUND,
 )
-from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
+from baserow.contrib.database.api.rows.errors import (
+    ERROR_ROW_DOES_NOT_EXIST,
+    ERROR_KEY_NOT_FOUND,
+)
 from baserow.contrib.database.api.rows.serializers import (
     example_pagination_row_serializer_class,
 )
@@ -33,7 +36,10 @@ from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotPossible,
     FilterFieldNotFound,
 )
-from baserow.contrib.database.rows.exceptions import RowDoesNotExist
+from baserow.contrib.database.rows.exceptions import (
+    RowDoesNotExist,
+    KeyNotFound,
+)
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
@@ -293,6 +299,7 @@ class RowsView(APIView):
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            KeyNotFound: ERROR_KEY_NOT_FOUND,
         }
     )
     def post(self, request, table_id):
@@ -442,6 +449,7 @@ class RowView(APIView):
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
+            KeyNotFound: ERROR_KEY_NOT_FOUND,
         }
     )
     def patch(self, request, table_id, row_id):

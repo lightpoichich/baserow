@@ -167,17 +167,20 @@ export const actions = {
     commit('SET_ITEM_LOADING', { view, value })
   },
   /**
-   * Refreshes the selected view from the server.
+   * Refreshes the provided view from the server.
    */
-  async refreshSelected({ commit, getters }) {
+  async refreshView({ commit, getters }, { view }) {
     commit('SET_LOADING', true)
 
     try {
-      const viewId = getters.getSelectedId
-      if (viewId !== 0) {
-        const { data } = await ViewService(this.$client).get(viewId, true, true)
+      if (view.id !== 0) {
+        const { data } = await ViewService(this.$client).get(
+          view.id,
+          true,
+          true
+        )
         populateView(data, this.$registry)
-        commit('UPDATE_ITEM', { id: viewId, values: data })
+        commit('UPDATE_ITEM', { id: view.id, values: data })
       }
       commit('SET_LOADING', false)
     } catch (error) {

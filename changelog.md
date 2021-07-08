@@ -5,8 +5,9 @@
 * Made it possible to list table field meta-data with a token.
 * Fix the create group invite endpoint failing when no message provided.
 * Single select options can now be ordered by drag and drop. 
-* Support building Baserow out of the box on Ubuntu by lowering the required docker 
-  version to docker 19.03.
+* Added before and after date filters.
+* Support building Baserow out of the box on Ubuntu by lowering the required docker
+  version to build Baserow down to 19.03.
 
 ## Released (2021-06-02)
 

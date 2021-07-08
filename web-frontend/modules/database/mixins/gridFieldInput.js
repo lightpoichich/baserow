@@ -94,7 +94,6 @@ export default {
      * we want to initiate the editing mode.
      */
     doubleClick(event = null) {
-      console.log('DOUBLE CLICK!!')
       if (!this.editing) {
         this.edit(null, event)
       }
@@ -103,10 +102,7 @@ export default {
      * Method that can be called to initiate the edit state.
      */
     edit(value = null, event = null) {
-      console.log('JAJAJAJAJAJAJ')
       const { keyCode } = event
-      console.log('HIER DER KEY: ', keyCode)
-      console.log('HIER DER KEY: ', value)
 
       if (keyCode === 114) {
         return

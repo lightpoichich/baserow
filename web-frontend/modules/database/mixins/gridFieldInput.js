@@ -70,7 +70,7 @@ export default {
 
         // If a printable key was pressed while not editing we want to replace the
         // exiting value with something new.
-        if (!this.editing && isPrintableCharacterKeyPress(event.key)) {
+        if (!this.editing && isPrintableCharacterKeyPress(event)) {
           this.edit('', event)
         }
       }
@@ -102,11 +102,6 @@ export default {
      * Method that can be called to initiate the edit state.
      */
     edit(value = null, event = null) {
-      const { keyCode } = event
-
-      if (keyCode === 114) {
-        return
-      }
       if (this.readOnly) {
         return
       }

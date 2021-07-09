@@ -24,7 +24,7 @@ from .exceptions import (
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
-    InitialTableDataDuplicateNames,
+    InitialTableDataDuplicateName,
 )
 from .models import Table
 from .signals import table_created, table_updated, table_deleted, tables_reordered
@@ -177,7 +177,7 @@ class TableHandler:
         field_name_set = {name.strip() for name in fields}
 
         if len(field_name_set) != len(fields):
-            raise InitialTableDataDuplicateNames()
+            raise InitialTableDataDuplicateName()
 
         if len(field_name_set.intersection(RESERVED_BASEROW_FIELD_NAMES)) > 0:
             raise ReservedBaserowFieldNameException()

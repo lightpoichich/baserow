@@ -28,8 +28,8 @@ ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED = (
     f"The initial table data limit has been exceeded. You can provide a maximum of "
     f"{settings.INITIAL_TABLE_DATA_LIMIT} rows.",
 )
-ERROR_INITIAL_TABLE_DATA_DUPLICATE_NAMES = (
-    "ERROR_INITIAL_TABLE_DATA_DUPLICATE_NAMES",
+ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES = (
+    "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES",
     HTTP_400_BAD_REQUEST,
     "Field names must be unique in Baserow per table however the initial table data "
     "provided contains duplicate field names, please make them unique and try again.",

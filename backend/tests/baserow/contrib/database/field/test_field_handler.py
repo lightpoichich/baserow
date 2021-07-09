@@ -38,6 +38,9 @@ from baserow.core.exceptions import UserNotInGroup
 
 # You must add --runslow to pytest to run this test, you can do this in intellij by
 # editing the run config for this test and adding --runslow to additional args.
+from baserow.core.trash.handler import TrashHandler
+
+
 @pytest.mark.django_db
 @pytest.mark.slow
 def test_can_convert_between_all_fields(data_fixture):
@@ -259,6 +262,15 @@ def test_create_field(send_mock, data_fixture):
     with pytest.raises(ReservedBaserowFieldNameException):
         handler.create_field(user=user, table=table, type_name="boolean", name="id")
 
+    TrashHandler.trash(user, table.database.group, table.database, boolean_field)
+
+    # We cannot create a field with a  trashed field's name, it must be
+    # restored and renamed or perm deleted first.
+    with pytest.raises(FieldWithSameNameAlreadyExists):
+        handler.create_field(
+            user=user, table=table, type_name="boolean", name=boolean_field.name
+        )
+
     field_limit = settings.MAX_FIELD_LIMIT
     settings.MAX_FIELD_LIMIT = 2
 
@@ -428,6 +440,13 @@ def test_update_field(send_mock, data_fixture):
     field_2 = data_fixture.create_text_field(table=table, order=1)
     with pytest.raises(FieldWithSameNameAlreadyExists):
         handler.update_field(user=user, field=field_2, name=field.name)
+
+    TrashHandler.trash(user, table.database.group, table.database, field_2)
+
+    # We cannot change the name of a field to a trashed field's name, it must be
+    # restored and renamed or perm deleted first.
+    with pytest.raises(FieldWithSameNameAlreadyExists):
+        handler.update_field(user=user, field=field, name=field_2.name)
 
 
 @pytest.mark.django_db

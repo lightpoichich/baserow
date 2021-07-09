@@ -25,7 +25,7 @@ from baserow.contrib.database.table.exceptions import (
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
-    InitialTableDataDuplicateNames,
+    InitialTableDataDuplicateName,
 )
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
@@ -36,7 +36,7 @@ from .errors import (
     ERROR_TABLE_NOT_IN_DATABASE,
     ERROR_INVALID_INITIAL_TABLE_DATA,
     ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
-    ERROR_INITIAL_TABLE_DATA_DUPLICATE_NAMES,
+    ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
 )
 from .serializers import (
     TableSerializer,
@@ -118,6 +118,9 @@ class TablesView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_INVALID_INITIAL_TABLE_DATA",
                     "ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED",
+                    "ERROR_RESERVED_BASEROW_FIELD_NAME",
+                    "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES",
+                    "ERROR_INVALID_BASEROW_FIELD_NAME",
                 ]
             ),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
@@ -131,7 +134,7 @@ class TablesView(APIView):
             InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
             InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
             MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
-            InitialTableDataDuplicateNames: ERROR_INITIAL_TABLE_DATA_DUPLICATE_NAMES,
+            InitialTableDataDuplicateName: ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
             ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
         }

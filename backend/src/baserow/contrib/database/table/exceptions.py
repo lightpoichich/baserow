@@ -29,7 +29,7 @@ class InitialTableDataLimitExceeded(Exception):
     """
 
 
-class InitialTableDataDuplicateNames(Exception):
+class InitialTableDataDuplicateName(Exception):
     """
     Raised when the initial table data contains duplicate field names.
     """

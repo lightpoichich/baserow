@@ -64,7 +64,7 @@ def _validate_field_name(
     if name.strip() == "":
         raise InvalidBaserowFieldName()
 
-    if Field.objects.filter(table=table, name=name).exists():
+    if Field.objects_and_trash.filter(table=table, name=name).exists():
         raise FieldWithSameNameAlreadyExists(
             f"A field already exists for table '{table.name}' with the name '{name}'."
         )

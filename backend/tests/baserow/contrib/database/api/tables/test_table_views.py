@@ -317,7 +317,7 @@ def test_create_table_with_data(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_INITIAL_TABLE_DATA_DUPLICATE_NAMES"
+    assert response_json["error"] == "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES"
     assert "unique" in response_json["detail"]
 
     url = reverse("api:database:tables:list", kwargs={"database_id": database.id})

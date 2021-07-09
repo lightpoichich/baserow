@@ -148,6 +148,7 @@ class FieldsView(APIView):
                     "ERROR_MAX_FIELD_COUNT_EXCEEDED",
                     "ERROR_RESERVED_BASEROW_FIELD_NAME",
                     "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
+                    "ERROR_INVALID_BASEROW_FIELD_NAME",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -266,6 +267,7 @@ class FieldView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_RESERVED_BASEROW_FIELD_NAME",
                     "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
+                    "ERROR_INVALID_BASEROW_FIELD_NAME",
                 ]
             ),
             404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),

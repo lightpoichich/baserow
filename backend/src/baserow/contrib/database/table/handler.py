@@ -1,27 +1,32 @@
-from django.db import connections
 from django.conf import settings
+from django.db import connections
 
-from baserow.core.utils import extract_allowed, set_allowed_attrs
-from baserow.contrib.database.fields.models import TextField
-from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.view_types import GridViewType
-from baserow.contrib.database.fields.handler import (
-    FieldHandler,
-    RESERVED_BASEROW_FIELD_NAMES,
+from baserow.contrib.database.fields.exceptions import (
+    MaxFieldLimitExceeded,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
 )
-from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
 from baserow.contrib.database.fields.field_types import (
     LongTextFieldType,
     BooleanFieldType,
 )
-
-from .models import Table
+from baserow.contrib.database.fields.handler import (
+    FieldHandler,
+    RESERVED_BASEROW_FIELD_NAMES,
+)
+from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
+    InitialTableDataDuplicateName,
 )
+from .models import Table
 from .signals import table_created, table_updated, table_deleted, tables_reordered
 
 
@@ -46,6 +51,9 @@ class TableHandler:
         try:
             table = base_queryset.select_related("database__group").get(id=table_id)
         except Table.DoesNotExist:
+            raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
+
+        if TrashHandler.item_has_a_trashed_parent(table):
             raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 
         return table
@@ -169,20 +177,13 @@ class TableHandler:
         field_name_set = {name.strip() for name in fields}
 
         if len(field_name_set) != len(fields):
-            raise InvalidInitialTableData("The imported field names must be unique")
+            raise InitialTableDataDuplicateName()
 
         if len(field_name_set.intersection(RESERVED_BASEROW_FIELD_NAMES)) > 0:
-            raise InvalidInitialTableData(
-                f"The field names {','.join(RESERVED_BASEROW_FIELD_NAMES)} are "
-                f"reserved and cannot be used. Please rename your field names which "
-                f"match any of the reserved values before importing."
-            )
+            raise ReservedBaserowFieldNameException()
 
         if "" in field_name_set:
-            raise InvalidInitialTableData(
-                "A blank field name was provided which is not allowed, please "
-                "give all field names a non blank value."
-            )
+            raise InvalidBaserowFieldName()
 
         for row in data:
             for i in range(len(row), largest_column_count):
@@ -328,16 +329,6 @@ class TableHandler:
         table.database.group.has_user(user, raise_error=True)
         table_id = table.id
 
-        self._delete_table(table)
+        TrashHandler.trash(user, table.database.group, table.database, table)
 
         table_deleted.send(self, table_id=table_id, table=table, user=user)
-
-    def _delete_table(self, table):
-        """Deletes the table schema and instance."""
-
-        connection = connections[settings.USER_TABLE_DATABASE]
-        with connection.schema_editor() as schema_editor:
-            model = table.get_model()
-            schema_editor.delete_model(model)
-
-        table.delete()

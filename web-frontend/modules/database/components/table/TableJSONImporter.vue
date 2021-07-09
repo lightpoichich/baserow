@@ -190,15 +190,10 @@ export default {
 
       data.unshift(header)
 
-      try {
-        this.preview = this.getPreview(data, true)
-        this.values.data = JSON.stringify(data)
-        this.error = ''
-      } catch (error) {
-        this.values.data = ''
-        this.error = error.message
-        this.preview = {}
-      }
+      const dataWithHeader = this.ensureHeaderExistsAndIsValid(data, true)
+      this.values.data = JSON.stringify(dataWithHeader)
+      this.error = ''
+      this.preview = this.getPreview(dataWithHeader)
     },
   },
 }

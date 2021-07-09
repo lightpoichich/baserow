@@ -8,6 +8,8 @@ from django.db.models import Max, F
 from django.db.models.fields.related import ManyToManyField
 
 from baserow.contrib.database.fields.models import Field
+from baserow.core.trash.handler import TrashHandler
+
 from baserow.core.utils import split_comma_separated_string
 from .exceptions import RowDoesNotExist
 from .signals import (
@@ -153,7 +155,7 @@ class RowHandler:
 
         :param values: The values where to extract the manytomany values from.
         :type values: dict
-        :param model: The model containing the fields. They key, which is also the
+        :param model: The model containing the fields. The key, which is also the
             field name, is used to check in the model if the value is a ManyToMany
             value.
         :type model: Model
@@ -478,7 +480,8 @@ class RowHandler:
         )
 
         row_id = row.id
-        row.delete()
+
+        TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
 
         row_deleted.send(
             self,

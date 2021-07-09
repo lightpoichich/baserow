@@ -4,8 +4,8 @@ import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
-migrate_from = [("database", "0031_fix_url_field_max_length")]
-migrate_to = [("database", "0032_unique_field_names")]
+migrate_from = [("database", "0032_trash")]
+migrate_to = [("database", "0033_unique_field_names")]
 
 
 # noinspection PyPep8Naming
@@ -104,6 +104,9 @@ def test_migration_handles_existing_fields_with_underscore_number(
             "Duplicate_2_2",
             "Duplicate_3",
             "Duplicate_3",
+            "Name Like a Regex [0-9]",
+            "Name Like a Regex [0-9]_2",
+            "Name Like a Regex [0-9]",
         ],
         table.id,
         content_type_id,
@@ -125,6 +128,9 @@ def test_migration_handles_existing_fields_with_underscore_number(
             ("Duplicate_2_2_2", "Duplicate_2_2"),
             ("Duplicate_3", None),
             ("Duplicate_3_2", "Duplicate_3"),
+            ("Name Like a Regex [0-9]", None),
+            ("Name Like a Regex [0-9]_2", None),
+            ("Name Like a Regex [0-9]_3", "Name Like a Regex [0-9]"),
         ],
         table_1_fields,
         MigratedField,

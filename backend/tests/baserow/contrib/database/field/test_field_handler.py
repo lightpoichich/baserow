@@ -783,16 +783,13 @@ def test_delete_field(send_mock, data_fixture):
     field_id = text_field.id
     handler.delete_field(user=user, field=text_field)
     assert Field.objects.all().count() == 0
+    assert Field.trash.all().count() == 1
     assert TextField.objects.all().count() == 0
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["field_id"] == field_id
     assert send_mock.call_args[1]["field"].id == field_id
     assert send_mock.call_args[1]["user"].id == user.id
-
-    table_model = table.get_model()
-    field_name = f"field_{text_field.id}"
-    assert field_name not in [field.name for field in table_model._meta.get_fields()]
 
     primary = data_fixture.create_text_field(table=table, primary=True)
     with pytest.raises(CannotDeletePrimaryField):
@@ -916,10 +913,23 @@ def test_find_next_free_field_name(data_fixture):
     data_fixture.create_text_field(table=table, order=0)
 
     data_fixture.create_text_field(name="test", table=table, order=1)
-    data_fixture.create_text_field(name="field", table=table, order=1)
+    field_1 = data_fixture.create_text_field(name="field", table=table, order=1)
     data_fixture.create_text_field(name="field 2", table=table, order=1)
     handler = FieldHandler()
 
     assert handler.find_next_unused_field_name(table, ["test"]) == "test 2"
     assert handler.find_next_unused_field_name(table, ["test", "other"]) == "other"
     assert handler.find_next_unused_field_name(table, ["field"]) == "field 3"
+
+    assert (
+        handler.find_next_unused_field_name(table, ["field"], [field_1.id]) == "field"
+    )
+
+    data_fixture.create_text_field(name="regex like field [0-9]", table=table, order=1)
+    data_fixture.create_text_field(
+        name="regex like field [0-9] 2", table=table, order=1
+    )
+    assert (
+        handler.find_next_unused_field_name(table, ["regex like field [0-9]"])
+        == "regex like field [0-9] 3"
+    )

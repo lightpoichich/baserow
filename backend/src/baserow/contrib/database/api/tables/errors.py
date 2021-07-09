@@ -15,7 +15,7 @@ ERROR_TABLE_NOT_IN_DATABASE = (
 ERROR_INVALID_INITIAL_TABLE_DATA = (
     "ERROR_INVALID_INITIAL_TABLE_DATA",
     HTTP_400_BAD_REQUEST,
-    "Invalid initial table data provided: {e}",
+    "The provided table data must at least contain one row and one column.",
 )
 ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP = (
     "ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP",

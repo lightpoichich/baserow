@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("core", "0007_userlogentry"),
-        ("database", "0031_fix_url_field_max_length"),
+        ("database", "0033_unique_field_names"),
     ]
 
     operations = [

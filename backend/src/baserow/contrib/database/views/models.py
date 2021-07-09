@@ -3,18 +3,22 @@ import uuid
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_AND,
-    FILTER_TYPE_OR,
-)
-from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.utils import get_model_reference_field_name
 from baserow.core.models import UserFile
 from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+)
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
+)
+from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.mixins import (
+    ParentTableTrashableModelMixin,
+    ParentFieldTrashableModelMixin,
 )
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))
@@ -36,7 +40,11 @@ def get_default_view_content_type():
 
 
 class View(
-    CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin, models.Model
+    ParentTableTrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    models.Model,
 ):
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
@@ -123,7 +131,7 @@ class View(
         return field_options
 
 
-class ViewFilter(models.Model):
+class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -151,7 +159,7 @@ class ViewFilter(models.Model):
         ordering = ("id",)
 
 
-class ViewSort(models.Model):
+class ViewSort(ParentFieldTrashableModelMixin, models.Model):
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -179,7 +187,7 @@ class GridView(View):
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
 
 
-class GridViewFieldOptions(models.Model):
+class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
     grid_view = models.ForeignKey(GridView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     # The defaults should be the same as in the `fieldCreated` of the `GridViewType`
@@ -273,7 +281,7 @@ class FormView(View):
         )
 
 
-class FormViewFieldOptions(models.Model):
+class FormViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
     form_view = models.ForeignKey(FormView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     name = models.CharField(

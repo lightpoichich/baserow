@@ -1,17 +1,18 @@
 from django.db.models import F
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 
+from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import (
+    extract_allowed,
+    set_allowed_attrs,
+    get_model_reference_field_name,
+)
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import row_created
-from baserow.core.utils import (
-    extract_allowed,
-    set_allowed_attrs,
-    get_model_reference_field_name,
-)
 from .exceptions import (
     ViewDoesNotExist,
     ViewNotInTable,
@@ -75,6 +76,9 @@ class ViewHandler:
                 pk=view_id
             )
         except View.DoesNotExist:
+            raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
+
+        if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
             raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
 
         return view
@@ -353,6 +357,13 @@ class ViewHandler:
                 f"The view filter with id {view_filter_id} does not exist."
             )
 
+        if TrashHandler.item_has_a_trashed_parent(
+            view_filter.view.table, check_item_also=True
+        ):
+            raise ViewFilterDoesNotExist(
+                f"The view filter with id {view_filter_id} does not exist."
+            )
+
         group = view_filter.view.table.database.group
         group.has_user(user, raise_error=True)
 
@@ -577,6 +588,13 @@ class ViewHandler:
                 "view__table__database__group"
             ).get(pk=view_sort_id)
         except ViewSort.DoesNotExist:
+            raise ViewSortDoesNotExist(
+                f"The view sort with id {view_sort_id} does not exist."
+            )
+
+        if TrashHandler.item_has_a_trashed_parent(
+            view_sort.view.table, check_item_also=True
+        ):
             raise ViewSortDoesNotExist(
                 f"The view sort with id {view_sort_id} does not exist."
             )

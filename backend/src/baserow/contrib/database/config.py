@@ -1,6 +1,10 @@
 from django.apps import AppConfig
 
-from baserow.core.registries import plugin_registry, application_type_registry
+from baserow.core.registries import (
+    plugin_registry,
+    application_type_registry,
+)
+from baserow.core.trash.registries import trash_item_type_registry
 from baserow.ws.registries import page_registry
 
 
@@ -94,6 +98,8 @@ class DatabaseConfig(AppConfig):
             EmptyViewFilterType,
             NotEmptyViewFilterType,
             DateEqualViewFilterType,
+            DateBeforeViewFilterType,
+            DateAfterViewFilterType,
             DateNotEqualViewFilterType,
             DateEqualsTodayViewFilterType,
             DateEqualsCurrentMonthViewFilterType,
@@ -116,6 +122,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(HigherThanViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
+        view_filter_type_registry.register(DateBeforeViewFilterType())
+        view_filter_type_registry.register(DateAfterViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(DateEqualsTodayViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
@@ -137,6 +145,16 @@ class DatabaseConfig(AppConfig):
         from .export.table_exporters.csv_table_exporter import CsvTableExporter
 
         table_exporter_registry.register(CsvTableExporter())
+
+        from .trash.trash_types import (
+            TableTrashableItemType,
+            RowTrashableItemType,
+            FieldTrashableItemType,
+        )
+
+        trash_item_type_registry.register(TableTrashableItemType())
+        trash_item_type_registry.register(FieldTrashableItemType())
+        trash_item_type_registry.register(RowTrashableItemType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

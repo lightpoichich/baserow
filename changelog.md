@@ -8,6 +8,7 @@
 * Added before and after date filters.
 * Support building Baserow out of the box on Ubuntu by lowering the required docker
   version to build Baserow down to 19.03.
+* Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 
 ## Released (2021-06-02)
 

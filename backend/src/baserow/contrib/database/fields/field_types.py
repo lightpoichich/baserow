@@ -58,7 +58,7 @@ from .models import (
     PhoneNumberField,
 )
 from .registries import FieldType, field_type_registry
-from ..validators import UnicodeRegexValidator
+from baserow.contrib.database.validators import UnicodeRegexValidator
 
 
 class CharFieldMatchingRegexFieldType(FieldType, ABC):

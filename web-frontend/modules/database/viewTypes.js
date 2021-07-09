@@ -416,6 +416,19 @@ export class FormViewType extends ViewType {
     return FormView
   }
 
+  async refresh(
+    { store },
+    view,
+    fields,
+    primary,
+    storePrefix = '',
+    includeFieldOptions = false
+  ) {
+    await store.dispatch(storePrefix + 'view/form/fetchInitial', {
+      formId: view.id,
+    })
+  }
+
   async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
     await dispatch(
       storePrefix + 'view/form/setFieldOptionsOfField',

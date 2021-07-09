@@ -1,27 +1,31 @@
-from django.db import connections
 from django.conf import settings
+from django.db import connections
 
-from baserow.core.utils import extract_allowed, set_allowed_attrs
-from baserow.contrib.database.fields.models import TextField
-from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.view_types import GridViewType
-from baserow.contrib.database.fields.handler import (
-    FieldHandler,
-    RESERVED_BASEROW_FIELD_NAMES,
+from baserow.contrib.database.fields.exceptions import (
+    MaxFieldLimitExceeded,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
 )
-from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
 from baserow.contrib.database.fields.field_types import (
     LongTextFieldType,
     BooleanFieldType,
 )
-
-from .models import Table
+from baserow.contrib.database.fields.handler import (
+    FieldHandler,
+    RESERVED_BASEROW_FIELD_NAMES,
+)
+from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
+    InitialTableDataDuplicateNames,
 )
+from .models import Table
 from .signals import table_created, table_updated, table_deleted, tables_reordered
 
 
@@ -169,20 +173,13 @@ class TableHandler:
         field_name_set = {name.strip() for name in fields}
 
         if len(field_name_set) != len(fields):
-            raise InvalidInitialTableData("The imported field names must be unique")
+            raise InitialTableDataDuplicateNames()
 
         if len(field_name_set.intersection(RESERVED_BASEROW_FIELD_NAMES)) > 0:
-            raise InvalidInitialTableData(
-                f"The field names {','.join(RESERVED_BASEROW_FIELD_NAMES)} are "
-                f"reserved and cannot be used. Please rename your field names which "
-                f"match any of the reserved values before importing."
-            )
+            raise ReservedBaserowFieldNameException()
 
         if "" in field_name_set:
-            raise InvalidInitialTableData(
-                "A blank field name was provided which is not allowed, please "
-                "give all field names a non blank value."
-            )
+            raise InvalidBaserowFieldName()
 
         for row in data:
             for i in range(len(row), largest_column_count):

@@ -286,8 +286,7 @@ def test_create_table_with_data(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_INVALID_INITIAL_TABLE_DATA"
-    assert "reserved" in response_json["detail"]
+    assert response_json["error"] == "ERROR_RESERVED_BASEROW_FIELD_NAME"
 
     url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
     response = api_client.post(
@@ -307,7 +306,7 @@ def test_create_table_with_data(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_INVALID_INITIAL_TABLE_DATA"
+    assert response_json["error"] == "ERROR_INITIAL_TABLE_DATA_DUPLICATE_NAMES"
     assert "unique" in response_json["detail"]
 
     url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
@@ -327,7 +326,7 @@ def test_create_table_with_data(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_INVALID_INITIAL_TABLE_DATA"
+    assert response_json["error"] == "ERROR_INVALID_BASEROW_FIELD_NAME"
     assert "blank" in response_json["detail"]
 
     url = reverse("api:database:tables:list", kwargs={"database_id": database.id})

@@ -9,6 +9,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.tokens.handler import TokenHandler
@@ -1200,9 +1201,20 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         email="test@test.nl", password="password", first_name="Test1"
     )
     table = data_fixture.create_database_table(user=user)
+    table_to_link_with = data_fixture.create_database_table(
+        user=user, database=table.database
+    )
+    data_fixture.create_text_field(
+        primary=True,
+        name="Primary",
+        table=table_to_link_with,
+    )
     field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
     field_2 = data_fixture.create_number_field(name="Price,", table=table)
     field_3 = data_fixture.create_boolean_field(name='"Name, 2"', table=table)
+    link_field = FieldHandler().create_field(
+        user, table, "link_row", link_row_table=table_to_link_with, name="Link"
+    )
 
     model = table.get_model()
     row_1 = model.objects.create(
@@ -1227,6 +1239,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "Price,": "2",
             "id": 1,
             "order": "1.00000000000000000000",
+            "Link": [],
         }
     ]
 
@@ -1246,6 +1259,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         '"Name, 2"': False,
         "order": "1.00000000000000000000",
         "Price,": "2",
+        "Link": [],
     }
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
@@ -1273,7 +1287,13 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["results"] == [
-        {"Name": "name 1", "Price,": "2", "id": 1, "order": "1.00000000000000000000"}
+        {
+            "Name": "name 1",
+            "Price,": "2",
+            "id": 1,
+            "order": "1.00000000000000000000",
+            "Link": [],
+        }
     ]
 
     model.objects.create(
@@ -1282,6 +1302,20 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             f"field_{field_2.id}": 1,
             f"field_{field_3.id}": True,
         }
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f"{url}?user_field_names=true&order_by={link_field.name}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert (
+        response_json["detail"]
+        == "It is not possible to order by Link because the field type "
+        "link_row does not support filtering."
     )
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
@@ -1299,6 +1333,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "Price,": "2",
             "id": 1,
             "order": "1.00000000000000000000",
+            "Link": [],
         },
         {
             '"Name, 2"': True,
@@ -1306,6 +1341,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "Price,": "1",
             "id": 2,
             "order": "1.00000000000000000000",
+            "Link": [],
         },
     ]
 
@@ -1324,6 +1360,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "Price,": "1",
             "id": 2,
             "order": "1.00000000000000000000",
+            "Link": [],
         },
         {
             '"Name, 2"': False,
@@ -1331,5 +1368,6 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "Price,": "2",
             "id": 1,
             "order": "1.00000000000000000000",
+            "Link": [],
         },
     ]

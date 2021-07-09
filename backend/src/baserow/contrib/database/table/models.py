@@ -124,10 +124,12 @@ class TableModelQuerySet(models.QuerySet):
             field_object = field_object_dict[field_name_or_id]
             field_type = field_object["type"]
             field_name = field_object["name"]
+            user_field_name = field_object["field"].name
+            error_display_name = user_field_name if user_field_names else field_name
 
             if not field_object["type"].can_order_by:
                 raise OrderByFieldNotPossible(
-                    field_name,
+                    error_display_name,
                     field_type.type,
                     f"It is not possible to order by field type {field_type.type}.",
                 )

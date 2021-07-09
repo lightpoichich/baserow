@@ -64,7 +64,7 @@ def _validate_field_name(
     if name.strip() == "":
         raise InvalidBaserowFieldName()
 
-    if Field.objects_and_trash.filter(table=table, name=name).exists():
+    if Field.objects.filter(table=table, name=name).exists():
         raise FieldWithSameNameAlreadyExists(
             f"A field already exists for table '{table.name}' with the name '{name}'."
         )
@@ -463,7 +463,12 @@ class FieldHandler:
             SelectOption.objects.bulk_create(to_create)
 
     # noinspection PyMethodMayBeStatic
-    def find_next_unused_field_name(self, table, field_names_to_try: List[str]):
+    def find_next_unused_field_name(
+        self,
+        table,
+        field_names_to_try: List[str],
+        field_ids_to_ignore: Optional[List[int]] = None,
+    ):
         """
         Finds a unused field name in the provided table. If no names in the provided
         field_names_to_try list are available then the last field name in that list will
@@ -472,13 +477,19 @@ class FieldHandler:
         :param table: The table whose fields to search.
         :param field_names_to_try: The field_names to try in order before starting to
             append a number.
+        :param field_ids_to_ignore: A list of field id's to exclude from checking to see
+            if the field name clashes with.
         :return: An available field name
         """
+
+        if field_ids_to_ignore is None:
+            field_ids_to_ignore = []
 
         # Check if any of the names to try are available by finding any existing field
         # names with the same name.
         taken_field_names = set(
             Field.objects.filter(table=table, name__in=field_names_to_try)
+            .exclude(id__in=field_ids_to_ignore)
             .values("name")
             .distinct()
             .values_list("name", flat=True)
@@ -503,6 +514,7 @@ class FieldHandler:
             Field.objects.filter(
                 table=table, name__regex=fr"^{original_field_name} \d+$"
             )
+            .exclude(id__in=field_ids_to_ignore)
             .order_by("name")
             .distinct()
             .values_list("name", flat=True)

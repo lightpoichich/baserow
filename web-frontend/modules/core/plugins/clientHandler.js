@@ -73,12 +73,6 @@ class ErrorHandler {
         'You cannot restore this because as within something which is already' +
           ' trashed. Please restore the parent item first.'
       ),
-      ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS: new ResponseErrorMessage(
-        'Field with same name already exists.',
-        "A field with the same name already exists in the table or the table's " +
-          'trash. Please either permanently delete the duplicate field or restore' +
-          ' and rename it.'
-      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the

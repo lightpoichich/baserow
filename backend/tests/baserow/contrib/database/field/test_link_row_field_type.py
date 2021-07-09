@@ -194,8 +194,7 @@ def test_link_row_field_type(data_fixture):
     table_row.save()
     assert getattr(table_row, f"field_{link_field_2.id}") == "Text value"
 
-    # Delete the existing field. Alter that the related field should be deleted and
-    # no table named _relation_ should exist.
+    # Delete the existing field. Alter that the related field should be trashed.
     field_handler.delete_field(user, link_field_1)
 
     # Change a the text field back into a link row field.

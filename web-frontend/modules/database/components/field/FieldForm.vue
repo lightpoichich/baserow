@@ -11,14 +11,25 @@
           placeholder="Name"
           @blur="$v.values.name.$touch()"
         />
-        <div v-if="!$v.values.name.required" class="error">
+        <div
+          v-if="$v.values.name.$dirty && !$v.values.name.required"
+          class="error"
+        >
           This field is required.
         </div>
-        <div v-else-if="!$v.values.name.mustHaveUniqueFieldName" class="error">
+        <div
+          v-else-if="
+            $v.values.name.$dirty && !$v.values.name.mustHaveUniqueFieldName
+          "
+          class="error"
+        >
           A field with this name already exists.
         </div>
         <div
-          v-else-if="!$v.values.name.mustNotClashWithReservedName"
+          v-else-if="
+            $v.values.name.$dirty &&
+            !$v.values.name.mustNotClashWithReservedName
+          "
           class="error"
         >
           This field name is not allowed.

@@ -29,7 +29,8 @@ from ..table.models import Table
 
 logger = logging.getLogger(__name__)
 
-# Please keep in sync with web-frontend/modules/database/mixins/importer.js:51
+# Please keep in sync with the web-frontend version of this constant found in
+# web-frontend/modules/database/utils/constants.js
 RESERVED_BASEROW_FIELD_NAMES = {"id", "order"}
 
 

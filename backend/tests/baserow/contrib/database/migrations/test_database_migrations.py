@@ -4,8 +4,8 @@ import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
-migrate_from = [("database", "0031_fix_url_field_max_length")]
-migrate_to = [("database", "0032_unique_field_names")]
+migrate_from = [("database", "0032_trash")]
+migrate_to = [("database", "0033_unique_field_names")]
 
 
 # noinspection PyPep8Naming

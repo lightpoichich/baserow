@@ -1,4 +1,5 @@
 import logging
+import re
 from copy import deepcopy
 from typing import Dict, Any, Optional, List
 
@@ -488,8 +489,8 @@ class FieldHandler:
         # Check if any of the names to try are available by finding any existing field
         # names with the same name.
         taken_field_names = set(
-            Field.objects.filter(table=table, name__in=field_names_to_try)
-            .exclude(id__in=field_ids_to_ignore)
+            Field.objects.exclude(id__in=field_ids_to_ignore)
+            .filter(table=table, name__in=field_names_to_try)
             .values("name")
             .distinct()
             .values_list("name", flat=True)
@@ -511,10 +512,8 @@ class FieldHandler:
         # field name. This way we can skip these and ensure our new field has a
         # unique name.
         existing_field_name_collisions = set(
-            Field.objects.filter(
-                table=table, name__regex=fr"^{original_field_name} \d+$"
-            )
-            .exclude(id__in=field_ids_to_ignore)
+            Field.objects.exclude(id__in=field_ids_to_ignore)
+            .filter(table=table, name__regex=fr"^{re.escape(original_field_name)} \d+$")
             .order_by("name")
             .distinct()
             .values_list("name", flat=True)

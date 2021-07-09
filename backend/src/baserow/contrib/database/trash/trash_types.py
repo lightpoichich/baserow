@@ -91,6 +91,10 @@ class FieldTrashableItemType(TrashableItemType):
             [trashed_item.name, f"{trashed_item.name} (Restored)"],
             [trashed_item.id],  # Ignore the field itself from the check.
         )
+        # We need to set the specific field's name also so when the field_restored
+        # serializer switches to serializing the specific instance it picks up and uses
+        # the new name set here rather than the name currently in the DB.
+        trashed_item.specific.name = trashed_item.name
         trashed_item.save()
         field_restored.send(
             self,

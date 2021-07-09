@@ -165,11 +165,14 @@ class TrashHandler:
         """
 
         now = timezone.now()
-        cutoff = now - timezone.timedelta(
-            hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
-        )
-        TrashEntry.objects.filter(trashed_at__lte=cutoff).update(
+        hours = settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
+        cutoff = now - timezone.timedelta(hours=hours)
+        updated_count = TrashEntry.objects.filter(trashed_at__lte=cutoff).update(
             should_be_permanently_deleted=True
+        )
+        print(
+            f"Marked {updated_count} old trash items for deletion as they were "
+            f"older than {hours} hours."
         )
 
     @staticmethod
@@ -293,26 +296,6 @@ class TrashHandler:
                 # parent_id this method will not work and will need to be changed.
                 parent_id = None
                 trash_item_type = trash_item_type_registry.get_by_model(item)
-
-    @staticmethod
-    def item_is_marked_for_permanent_deletion(requesting_user, item, parent_id=None):
-        """
-        Given an instance of a model which is trashable (item) checks if it is marked
-        for permanent deletion.
-
-        :param requesting_user: The user requesting to check the item.
-        :param item: An instance of a trashable model to check.
-        :param parent_id: If the trashable type of the provided instance requires an
-            id to lookup it's parent it must be provided here.
-        :return: If the provided item is marked for permanent deletion or not.
-        """
-
-        trash_item_type = trash_item_type_registry.get_by_model(item)
-        _check_parent_id_valid(parent_id, trash_item_type)
-        entry = _get_trash_entry(
-            requesting_user, trash_item_type.type, parent_id, item.id
-        )
-        return entry.should_be_permanently_deleted
 
 
 def _get_group(group_id, user):

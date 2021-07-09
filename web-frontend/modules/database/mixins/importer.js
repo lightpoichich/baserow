@@ -43,24 +43,26 @@ export default {
 
       return { columns, head, rows, remaining }
     },
-    findNextFreeName(originalColumnName, setOfAllColumnNames, startingIndex) {
-      let i = startingIndex
+    findNextFreeName(originalColumnName, nextFreeIndexMap, startingIndex) {
+      let i = nextFreeIndexMap.get(originalColumnName) || startingIndex
       while (true) {
         const nextColumnNameToCheck = `${originalColumnName} ${i}`
-        if (!setOfAllColumnNames.includes(nextColumnNameToCheck)) {
+        if (!nextFreeIndexMap.has(nextColumnNameToCheck)) {
+          nextFreeIndexMap.set(originalColumnName, i + 1)
           return nextColumnNameToCheck
         }
         i++
       }
     },
-    makeColumnNameUniqueAndValidIfNotAlready(column, setOfAllColumnNames) {
+    makeColumnNameUniqueAndValidIfNotAlready(column, nextFreeIndexMap) {
       if (column === '') {
-        return this.findNextFreeName('Field', setOfAllColumnNames, 1)
+        return this.findNextFreeName('Field', nextFreeIndexMap, 1)
       } else if (RESERVED_BASEROW_FIELD_NAMES.includes(column)) {
-        return this.findNextFreeName(column, setOfAllColumnNames, 2)
-      } else if (setOfAllColumnNames.includes(column)) {
-        return this.findNextFreeName(column, setOfAllColumnNames, 2)
+        return this.findNextFreeName(column, nextFreeIndexMap, 2)
+      } else if (nextFreeIndexMap.get(column) > 0) {
+        return this.findNextFreeName(column, nextFreeIndexMap, 2)
       } else {
+        nextFreeIndexMap.set(column, 2)
         return column
       }
     },
@@ -71,18 +73,21 @@ export default {
      * @return A new array of field names which are guaranteed to be unique and valid.
      */
     makeHeaderUniqueAndValid(head) {
-      const headerWithUniqueNames = []
-      const setOfAllColumnNames = new Set()
-      for (const column of head) {
+      const nextFreeIndexMap = new Map()
+      for (let i = 0; i < head.length; i++) {
+        nextFreeIndexMap.set(head[i], 0)
+      }
+      const uniqueAndValidHeader = []
+      for (let i = 0; i < head.length; i++) {
+        const column = head[i]
         const trimmedColumn = column.trim()
         const uniqueValidName = this.makeColumnNameUniqueAndValidIfNotAlready(
           trimmedColumn,
-          setOfAllColumnNames
+          nextFreeIndexMap
         )
-        headerWithUniqueNames.push(uniqueValidName)
-        setOfAllColumnNames.add(uniqueValidName)
+        uniqueAndValidHeader.push(uniqueValidName)
       }
-      return headerWithUniqueNames
+      return uniqueAndValidHeader
     },
   },
 }

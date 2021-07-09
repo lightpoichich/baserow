@@ -5,8 +5,13 @@
 * Made it possible to list table field meta-data with a token.
 * The email field's validation is now consistent and much more permissive allowing most 
   values which look like email addresses.
+* Add trash where deleted apps, groups, tables, fields and rows can be restored 
+  deletion.
 * Fix the create group invite endpoint failing when no message provided.
 * Single select options can now be ordered by drag and drop. 
+* Added before and after date filters.
+* Support building Baserow out of the box on Ubuntu by lowering the required docker
+  version to build Baserow down to 19.03.
 
 ## Released (2021-06-02)
 

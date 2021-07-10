@@ -210,10 +210,10 @@ class ViewHandler:
         Updates the field options with the provided values if the field id exists in
         the table related to the view.
 
-        param user: The user on whose behalf the request is made.
+        :param user: The user on whose behalf the request is made.
         :type user: User
-        :param grid_view: The grid view for which the field options need to be updated.
-        :type grid_view: GridView
+        :param view: The grid view for which the field options need to be updated.
+        :type view: GridView
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
         :type field_options: dict
@@ -243,6 +243,11 @@ class ViewHandler:
                 "The model doesn't have a relationship with the View model or any "
                 "descendants."
             )
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        field_options = view_type.before_field_options_update(
+            view, field_options, fields
+        )
 
         allowed_field_ids = [field.id for field in fields]
         for field_id, options in field_options.items():

@@ -11,6 +11,7 @@ from baserow.core.registry import (
     APIUrlsRegistryMixin,
     APIUrlsInstanceMixin,
     ImportExportMixin,
+    MapAPIExceptionsInstanceMixin,
 )
 from .exceptions import (
     ViewTypeAlreadyRegistered,
@@ -21,6 +22,7 @@ from .exceptions import (
 
 
 class ViewType(
+    MapAPIExceptionsInstanceMixin,
     APIUrlsInstanceMixin,
     CustomFieldsInstanceMixin,
     ModelInstanceMixin,
@@ -246,6 +248,23 @@ class ViewType(
             (Serializer,),
             attrs,
         )
+
+    def before_field_options_update(self, view, field_options, fields):
+        """
+        Called before the field options are updated related to the provided view.
+
+        :param view: The grid view for which the field options need to be updated.
+        :type view: GridView
+        :param field_options: A dict with the field ids as the key and a dict
+            containing the values that need to be updated as value.
+        :type field_options: dict
+        :param fields: Optionally a list of fields can be provided so that they don't
+            have to be fetched again.
+        :return: The updated field options.
+        :rtype: dict
+        """
+
+        return field_options
 
 
 class ViewTypeRegistry(

@@ -39,12 +39,25 @@ export default {
         notifyIf(error, 'view')
       }
     },
-    async updateFieldOptionsOfAllFields(form, values) {
+    async updateFieldOptionsOfFields(
+      form,
+      fields,
+      values,
+      onlyCompatible = false
+    ) {
       const oldFieldOptions = clone(this.fieldOptions)
       const newFieldOptions = {}
-      Object.keys(this.fieldOptions).forEach((fieldId) => {
-        newFieldOptions[fieldId] = values
-      })
+      fields
+        .filter((field) => {
+          if (!onlyCompatible) {
+            return true
+          }
+          const fieldType = this.$registry.get('field', field.type)
+          return fieldType.getFormViewFieldComponent() !== null
+        })
+        .forEach((field) => {
+          newFieldOptions[field.id] = values
+        })
 
       try {
         await this.$store.dispatch(

@@ -3,6 +3,10 @@ from django.urls import path, include
 from rest_framework.serializers import CharField
 
 from baserow.api.user_files.serializers import UserFileField
+from baserow.contrib.database.api.views.form.errors import (
+    ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+)
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
@@ -13,6 +17,7 @@ from baserow.contrib.database.api.views.form.serializers import (
 from .handler import ViewHandler
 from .models import GridView, GridViewFieldOptions, FormView, FormViewFieldOptions
 from .registries import ViewType
+from .exceptions import FormViewFieldTypeIsNotSupported
 
 
 class GridViewType(ViewType):
@@ -131,6 +136,9 @@ class FormViewType(ViewType):
         "cover_image": UserFileField(required=False),
         "logo_image": UserFileField(required=False),
     }
+    api_exceptions_map = {
+        FormViewFieldTypeIsNotSupported: ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+    }
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.form import urls as api_urls
@@ -138,3 +146,19 @@ class FormViewType(ViewType):
         return [
             path("form/", include(api_urls, namespace=self.type)),
         ]
+
+    def before_field_options_update(self, view, field_options, fields):
+        """
+        Checks if a field type that is incompatible with the form view is being
+        enabled.
+        """
+
+        fields_dict = {field.id: field for field in fields}
+        for field_id, options in field_options.items():
+            field = fields_dict.get(int(field_id), None)
+            if options["enabled"] and field:
+                field_type = field_type_registry.get_by_model(field.specific_class)
+                if not field_type.can_be_in_form_view:
+                    raise FormViewFieldTypeIsNotSupported(field_type.type)
+
+        return field_options

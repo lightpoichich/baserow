@@ -1077,6 +1077,7 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
 class FileFieldType(FieldType):
     type = "file"
     model_class = FileField
+    can_be_in_form_view = False
 
     def prepare_value_for_db(self, instance, value):
         if value is None:

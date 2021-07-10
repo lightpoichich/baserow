@@ -657,3 +657,28 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == i2.id
     assert response_json["results"][0]["value"] == "Test 2"
+
+
+@pytest.mark.django_db
+def test_test_enable_form_view_file_field_options(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {"field_options": {file_field.id: {"enabled": True}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED"
+    assert (
+        response_json["detail"]
+        == "The file field type is not compatible with the form view."
+    )

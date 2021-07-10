@@ -1,5 +1,5 @@
-import ViewService from '@baserow/modules/database/services/view'
 import _ from 'lodash'
+import ViewService from '@baserow/modules/database/services/view'
 import { clone } from '@baserow/modules/core/utils/object'
 
 export const state = () => ({
@@ -119,7 +119,7 @@ export const actions = {
     { commit, getters },
     { form, field, values }
   ) {
-    const oldValues = getters.getAllFieldOptions[field.id]
+    const oldValues = clone(getters.getAllFieldOptions[field.id])
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,

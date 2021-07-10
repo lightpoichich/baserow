@@ -126,7 +126,8 @@ export class FieldType extends Registerable {
 
   /**
    * By default the row edit field component is used in the form. This can
-   * optionally be another component if needed.
+   * optionally be another component if needed. If null is returned, then the field
+   * is marked as not compatible with the form view.
    */
   getFormViewFieldComponent() {
     return this.getRowEditFieldComponent()
@@ -1109,6 +1110,10 @@ export class FileFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldFile
+  }
+
+  getFormViewFieldComponent() {
+    return null
   }
 
   toHumanReadableString(field, value) {

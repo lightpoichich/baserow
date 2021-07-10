@@ -223,8 +223,14 @@ class ViewsView(APIView):
     def post(self, request, data, table_id, filters, sortings):
         """Creates a new view for a user."""
 
+        type_name = data.pop("type")
+        field_type = view_type_registry.get(type_name)
         table = TableHandler().get_table(table_id)
-        view = ViewHandler().create_view(request.user, table, data.pop("type"), **data)
+
+        with field_type.map_api_exceptions():
+            view = ViewHandler().create_view(
+                request.user, table, type_name, **data
+            )
 
         serializer = view_type_registry.get_serializer(
             view, ViewSerializer, filters=filters, sortings=sortings
@@ -352,7 +358,8 @@ class ViewView(APIView):
             partial=True,
         )
 
-        view = ViewHandler().update_view(request.user, view, **data)
+        with view_type.map_api_exceptions():
+            view = ViewHandler().update_view(request.user, view, **data)
 
         serializer = view_type_registry.get_serializer(
             view, ViewSerializer, filters=filters, sortings=sortings
@@ -1023,9 +1030,10 @@ class ViewFieldOptionsView(APIView):
         view = handler.get_view(view_id).specific
         view_type = view_type_registry.get_by_model(view)
         serializer_class = view_type.get_field_options_serializer_class()
-
         data = validate_data(serializer_class, request.data)
-        handler.update_field_options(request.user, view, data["field_options"])
+
+        with view_type.map_api_exceptions():
+            handler.update_field_options(request.user, view, data["field_options"])
 
         serializer = serializer_class(view)
         return Response(serializer.data)

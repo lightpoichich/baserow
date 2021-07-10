@@ -5,11 +5,13 @@
     :class="{
       'form-view__file--dragging': dragging,
       'form-view__file--uploading': uploading,
+      'form-view__file--error': !isImage,
     }"
   >
     <slot></slot>
     <div class="form-view__file-dragging">Drop here</div>
     <div class="form-view__file-uploading">Uploading</div>
+    <div class="form-view__file-error">Not an image</div>
     <div
       v-if="uploading"
       class="form-view__file-progress"

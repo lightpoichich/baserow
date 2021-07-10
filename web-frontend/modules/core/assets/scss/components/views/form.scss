@@ -121,6 +121,10 @@
   }
 }
 
+.form-view__file-container {
+  position: relative;
+}
+
 .form-view__file {
   position: relative;
   display: inline-block;
@@ -148,6 +152,11 @@
     color: darken($color-neutral-100, 2%);
     background-color: darken($color-neutral-100, 2%);
   }
+
+  &.form-view__file--error {
+    color: darken($color-neutral-100, 2%);
+    border-color: $color-error-500;
+  }
 }
 
 .form-view__file-progress {
@@ -158,7 +167,8 @@
 }
 
 .form-view__file-dragging,
-.form-view__file-uploading {
+.form-view__file-uploading,
+.form-view__file-error {
   @include absolute(50%, auto, auto, 50%);
 
   display: none;
@@ -180,6 +190,14 @@
 
 .form-view__file-uploading {
   .form-view__file--uploading & {
+    display: block;
+  }
+}
+
+.form-view__file-error {
+  color: $color-error-500;
+
+  .form-view__file--error & {
     display: block;
   }
 }
@@ -206,6 +224,10 @@
   i {
     margin-right: 6px;
   }
+}
+
+.form-view__file-floating-error {
+  @include absolute(auto, auto, -40px, auto);
 }
 
 .form-view__edit {

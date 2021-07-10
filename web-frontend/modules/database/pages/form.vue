@@ -43,8 +43,19 @@
           </div>
         </div>
       </form>
-      <div v-else-if="submitAction === 'MESSAGE'" class="form-view__submitted">
-        <div class="form-view__submitted-message">
+      <div v-else-if="submitted" class="form-view__submitted">
+        <template v-if="isRedirect">
+          <div class="form-view__submitted-message">
+            Thanks for submitting the form!
+          </div>
+          <div class="form-view__redirecting-description">
+            You're being redirected to {{ submitActionRedirectURL }}.
+          </div>
+          <div class="form-view__redirecting-loading">
+            <div class="loading-absolute-center"></div>
+          </div>
+        </template>
+        <div v-else class="form-view__submitted-message">
           {{ submitActionMessage || 'Thanks for submitting the form!' }}
         </div>
         <FormViewPoweredBy></FormViewPoweredBy>
@@ -120,6 +131,7 @@ export default {
       submitted: false,
       submitAction: 'MESSAGE',
       submitActionMessage: '',
+      submitActionRedirectURL: '',
     }
   },
   head() {
@@ -129,6 +141,13 @@ export default {
         class: ['background-white'],
       },
     }
+  },
+  computed: {
+    isRedirect() {
+      return (
+        this.submitAction === 'REDIRECT' && this.submitActionRedirectURL !== ''
+      )
+    },
   },
   methods: {
     async submit() {
@@ -167,19 +186,18 @@ export default {
         const slug = this.$route.params.slug
         const { data } = await FormService(this.$client).submit(slug, values)
 
-        // If the submit action is a redirect, then we need to redirect safely to the
-        // provided URL.
-        if (
-          data.submit_action === 'REDIRECT' &&
-          data.submit_action_redirect_url !== ''
-        ) {
-          window.location.replace(data.submit_action_redirect_url)
-          return
-        }
-
         this.submitted = true
         this.submitAction = data.submit_action
         this.submitActionMessage = data.submit_action_message
+        this.submitActionRedirectURL = data.submit_action_redirect_url
+
+        // If the submit action is a redirect, then we need to redirect safely to the
+        // provided URL.
+        if (this.isRedirect) {
+          setTimeout(() => {
+            window.location.assign(data.submit_action_redirect_url)
+          }, 4000)
+        }
       } catch (error) {
         notifyIf(error, 'view')
       }

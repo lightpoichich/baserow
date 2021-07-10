@@ -31,7 +31,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
-    FormViewFieldTypeIsNotSupported
+    FormViewFieldTypeIsNotSupported,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -537,7 +537,7 @@ def test_update_field_options(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_enable_form_view_file_field( data_fixture):
+def test_enable_form_view_file_field(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     form_view = data_fixture.create_form_view(table=table)

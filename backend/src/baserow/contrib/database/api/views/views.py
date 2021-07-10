@@ -228,9 +228,7 @@ class ViewsView(APIView):
         table = TableHandler().get_table(table_id)
 
         with field_type.map_api_exceptions():
-            view = ViewHandler().create_view(
-                request.user, table, type_name, **data
-            )
+            view = ViewHandler().create_view(request.user, table, type_name, **data)
 
         serializer = view_type_registry.get_serializer(
             view, ViewSerializer, filters=filters, sortings=sortings

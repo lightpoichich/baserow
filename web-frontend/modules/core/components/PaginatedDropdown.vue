@@ -70,9 +70,15 @@ export default {
       required: false,
       default: 'value',
     },
+    fetchOnOpen: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
+      fetched: false,
       displayName: null,
       count: 0,
       page: 1,
@@ -84,7 +90,10 @@ export default {
    * When the component is first created, we immediately fetch the first page.
    */
   async created() {
-    this.results = await this.fetch(this.page, this.query)
+    if (!this.fetchOnOpen) {
+      this.fetched = true
+      this.results = await this.fetch(this.page, this.query)
+    }
   },
   methods: {
     /**
@@ -143,6 +152,13 @@ export default {
       ) {
         console.log('scroll')
         this.results.push(...(await this.fetch(this.page + 1, this.query)))
+      }
+    },
+    async show(...args) {
+      dropdown.methods.show.call(this, ...args)
+      if (!this.fetched) {
+        this.fetched = true
+        this.results = await this.fetch(this.page, this.query)
       }
     },
     /**

@@ -62,6 +62,7 @@
           :field="field"
           :value="value"
           :read-only="readOnly"
+          :lazy-load="true"
           @update="updateValue"
         />
         <div class="form-view__field-options">

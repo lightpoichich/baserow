@@ -27,9 +27,7 @@ RUN service supervisor stop && service nginx stop
 RUN rm -f /etc/nginx/sites-enabled/*
 
 RUN mkdir baserow
-COPY . /baserow/baserow
-RUN cd /baserow/baserow
-RUN ls
+COPY ./ /baserow/baserow
 #RUN git clone --branch 170-add-a-guide-to-deploy-on-heroku https://gitlab.com/bramw/baserow.git
 RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt

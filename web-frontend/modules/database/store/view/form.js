@@ -113,7 +113,7 @@ export const actions = {
     commit('DELETE_FIELD_OPTIONS', fieldId)
   },
   /**
-   * @TODO docs
+   * Updates the field options of a specific field.
    */
   async updateFieldOptionsOfField(
     { commit, getters },

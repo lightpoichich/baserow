@@ -26,7 +26,9 @@ WORKDIR /baserow
 RUN service supervisor stop && service nginx stop
 RUN rm -f /etc/nginx/sites-enabled/*
 
-RUN git clone --branch 170-add-a-guide-to-deploy-on-heroku https://gitlab.com/bramw/baserow.git
+RUN mkdir baserow
+COPY . /baserow/baserow
+#RUN git clone --branch 170-add-a-guide-to-deploy-on-heroku https://gitlab.com/bramw/baserow.git
 RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt
 RUN env/bin/pip install dj-database-url boto3==1.16.25 django-storages==1.10.1
@@ -41,8 +43,6 @@ ENV PYTHONPATH $PYTHONPATH:/baserow/baserow/backend/src:/baserow/heroku
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV TMPDIR=/run/temp
-
-USER root
 
 ADD supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 RUN ln -sf /dev/stdout /var/log/supervisor/supervisord.log

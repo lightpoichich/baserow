@@ -33,5 +33,6 @@ by pushing to the heroku remote repository.
 > pushing to Heroku.
 
 ```
+$ git remote add heroku https://git.heroku.com/baserow-test-app.git
 $ git push heroku YOUR_CURRENT_BRANCH:master
 ```

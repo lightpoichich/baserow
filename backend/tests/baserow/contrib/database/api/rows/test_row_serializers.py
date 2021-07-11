@@ -224,7 +224,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         "decimal_link_row": [
             {"id": 1, "value": "1.234"},
             {"id": 2, "value": "-123.456"},
-            {"id": 3, "value": ''},
+            {"id": 3, "value": ""},
         ],
         "email": "test@example.com",
         "file": [

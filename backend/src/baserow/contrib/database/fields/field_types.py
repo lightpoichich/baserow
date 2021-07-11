@@ -711,8 +711,7 @@ class LinkRowFieldType(FieldType):
         """
 
         return serializers.ListSerializer(
-            child=LinkRowValueSerializer(),
-            **{"required": False, **kwargs}
+            child=LinkRowValueSerializer(), **{"required": False, **kwargs}
         )
 
     def get_serializer_help_text(self, instance):

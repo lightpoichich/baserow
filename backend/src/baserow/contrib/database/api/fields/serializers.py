@@ -77,7 +77,7 @@ class LinkRowValueSerializer(serializers.Serializer):
             help_text="The primary field's value as a string of the row in the "
             "related table.",
             required=False,
-            source="*"
+            source="*",
         )
 
 

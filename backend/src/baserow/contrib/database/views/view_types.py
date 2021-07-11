@@ -165,7 +165,7 @@ class FormViewType(ViewType):
         fields_dict = {field.id: field for field in fields}
         for field_id, options in field_options.items():
             field = fields_dict.get(int(field_id), None)
-            if options["enabled"] and field:
+            if options.get("enabled") and field:
                 field_type = field_type_registry.get_by_model(field.specific_class)
                 if not field_type.can_be_in_form_view:
                     raise FormViewFieldTypeIsNotSupported(field_type.type)

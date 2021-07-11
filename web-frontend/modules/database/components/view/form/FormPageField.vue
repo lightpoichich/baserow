@@ -54,6 +54,9 @@ export default {
     focus() {
       this.$el.scrollIntoView({ behavior: 'smooth' })
     },
+    isValid() {
+      return this.$refs.field.isValid()
+    },
   },
 }
 </script>

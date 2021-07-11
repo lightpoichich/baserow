@@ -18,8 +18,10 @@
           <div v-if="logoImage !== null" class="form_view__logo">
             <img class="form_view__logo-img" :src="logoImage.url" width="200" />
           </div>
-          <h1 class="form-view__title">{{ title }}</h1>
-          <p class="form-view__description">{{ description }}</p>
+          <h1 v-if="title !== ''" class="form-view__title">{{ title }}</h1>
+          <p v-if="description !== ''" class="form-view__description">
+            {{ description }}
+          </p>
         </div>
         <FormPageField
           v-for="field in fields"
@@ -164,14 +166,18 @@ export default {
         const fieldType = this.$registry.get('field', field.field.type)
         const valueName = `field_${field.field.id}`
         const value = values[valueName]
+        const ref = this.$refs['field-' + field.field.id][0]
 
         // If the field required and empty or if the value has a validation error, then
         // we don't want to submit the form, focus on the field and top the loading.
         if (
           (field.required && fieldType.isEmpty(field.field, value)) ||
-          fieldType.getValidationError(field.field, value) !== null
+          fieldType.getValidationError(field.field, value) !== null ||
+          // It could be that the field component is in an invalid state and hasn't
+          // update the value yet. In that case, we also don't want to submit the form.
+          !ref.isValid()
         ) {
-          this.$refs['field-' + field.field.id][0].focus()
+          ref.focus()
           this.loading = false
           return
         }

@@ -188,53 +188,6 @@ def test_list_rows(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_list_rows_with_attribute_names(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
-    )
-    table = data_fixture.create_database_table(user=user)
-    text_field = data_fixture.create_text_field(
-        table=table, order=0, name="Color", text_default="white"
-    )
-    number_field = data_fixture.create_number_field(
-        table=table, order=1, name="Color 2"
-    )
-    boolean_field = data_fixture.create_boolean_field(
-        table=table, order=2, name="1 For sale"
-    )
-    grid = data_fixture.create_grid_view(table=table)
-
-    model = grid.table.get_model()
-    row_1 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "Green",
-            f"field_{number_field.id}": 10,
-            f"field_{boolean_field.id}": False,
-        }
-    )
-
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
-    response = api_client.get(
-        f"{url}?user_field_names=true", **{"HTTP_AUTHORIZATION": f"JWT {token}"}
-    )
-    response_json = response.json()
-    assert response_json == {
-        "count": 1,
-        "next": None,
-        "previous": None,
-        "results": [
-            {
-                "Color": "Green",
-                "Color 2": "10",
-                "1 For sale": False,
-                "id": row_1.id,
-                "order": "1.00000000000000000000",
-            }
-        ],
-    }
-
-
-@pytest.mark.django_db
 def test_list_rows_include_field_options(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -396,20 +349,6 @@ def test_list_filtered_rows(api_client, data_fixture):
     assert f"field_{text_field.id}" in response_json[0]
     assert f"field_{number_field.id}" in response_json[0]
     assert f"field_{boolean_field.id}" in response_json[0]
-
-    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
-    response = api_client.post(
-        f"{url}?user_field_names=true",
-        {"field_names": [number_field.name, boolean_field.name], "row_ids": [row_3.id]},
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_200_OK
-
-    assert len(response_json) == 1
-    assert response_json[0]["id"] == row_3.id
-    assert number_field.name in response_json[0]
-    assert boolean_field.name in response_json[0]
 
 
 @pytest.mark.django_db

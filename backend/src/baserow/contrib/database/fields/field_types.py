@@ -294,8 +294,7 @@ class NumberFieldType(FieldType):
 
         # DRF's Decimal Serializer knows how to quantize and format the decimal
         # correctly so lets use it instead of trying to do it ourselves.
-        value = self.get_serializer_field(instance).to_representation(value)
-        return value
+        return self.get_serializer_field(instance).to_representation(value)
 
     def get_model_field(self, instance, **kwargs):
         kwargs["decimal_places"] = (

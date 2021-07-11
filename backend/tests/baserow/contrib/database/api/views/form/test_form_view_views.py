@@ -25,7 +25,7 @@ def test_create_form_view(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert len(response_json["slug"]) == 36
+    assert len(response_json["slug"]) == 43
     assert response_json["type"] == "form"
     assert response_json["name"] == "Test Form"
     assert response_json["table_id"] == table.id
@@ -218,7 +218,7 @@ def test_rotate_slug(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["slug"] != old_slug
-    assert len(response_json["slug"]) == 36
+    assert len(response_json["slug"]) == 43
 
 
 @pytest.mark.django_db

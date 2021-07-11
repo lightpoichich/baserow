@@ -1,4 +1,4 @@
-import uuid
+import secrets
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -215,9 +215,9 @@ class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
 
 class FormView(View):
     field_options = models.ManyToManyField(Field, through="FormViewFieldOptions")
-    slug = models.UUIDField(
-        default=uuid.uuid4,
-        help_text="The unique slug that can be used to construct a public URL.",
+    slug = models.SlugField(
+        default=secrets.token_urlsafe,
+        help_text="The unique slug where the form can be accessed publicly on.",
         unique=True,
         db_index=True,
     )
@@ -270,7 +270,7 @@ class FormView(View):
     )
 
     def rotate_slug(self):
-        self.slug = uuid.uuid4()
+        self.slug = secrets.token_urlsafe()
 
     @property
     def active_field_options(self):

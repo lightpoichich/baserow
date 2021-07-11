@@ -41,6 +41,9 @@ def get_row_serializer_class(
         the serializer. By default all the fields of the model are going to be
         included. Note that the field id must exist in the model in order to work.
     :type field_ids: list or None
+    :param field_kwargs: A dict containing additional kwargs per field. The key must
+        be the field name and the value a dict containing the kwargs.
+    :type field_kwargs: dict
     :return: The generated serializer.
     :rtype: ModelSerializer
     """

@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import uuid
+import secrets
 
 
 class Migration(migrations.Migration):
@@ -29,12 +29,12 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "slug",
-                    models.UUIDField(
-                        db_index=True,
-                        default=uuid.uuid4,
-                        help_text="The unique slug that can be used to construct a "
-                        "public URL.",
+                    models.SlugField(
+                        default=secrets.token_urlsafe,
+                        help_text="The unique slug where the form can be accessed "
+                        "publicly on.",
                         unique=True,
+                        db_index=True,
                     ),
                 ),
                 (

@@ -127,9 +127,9 @@
 .form-view__page {
   min-height: 100%;
   background-color: $white;
-  overflow: hidden;
 
   &.form-view__page--rounded {
+    overflow: hidden;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
   }

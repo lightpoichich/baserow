@@ -239,7 +239,6 @@ class FormViewLinkRowFieldLookupView(APIView):
         page = paginator.paginate_queryset(queryset, request, self)
         serializer = LinkRowValueSerializer(
             page,
-            value_field_name=model._field_objects[primary_field.id]["name"],
             many=True,
         )
         return paginator.get_paginated_response(serializer.data)

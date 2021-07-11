@@ -617,7 +617,7 @@ class LinkRowFieldType(FieldType):
                 inner_value, inner_field_object
             )
 
-        return ",".join(
+        return ", ".join(
             self._get_and_map_pk_values(
                 field_object, value, map_to_human_readable_value
             )
@@ -706,22 +706,8 @@ class LinkRowFieldType(FieldType):
         be used to include the primary field's value in the response as a string.
         """
 
-        primary_field_name = None
-
-        if hasattr(instance, "_related_model"):
-            related_model = instance._related_model
-            primary_field = next(
-                object
-                for object in related_model._field_objects.values()
-                if object["field"].primary
-            )
-            if primary_field:
-                primary_field_name = primary_field["name"]
-
         return serializers.ListSerializer(
-            child=LinkRowValueSerializer(
-                **{"value_field_name": primary_field_name, "required": False, **kwargs}
-            )
+            child=LinkRowValueSerializer(**{"required": False, **kwargs})
         )
 
     def get_serializer_help_text(self, instance):
@@ -1169,7 +1155,7 @@ class FileFieldType(FieldType):
                 file["visible_name"],
             )
 
-        return ",".join(file_names)
+        return ", ".join(file_names)
 
     def get_serializer_help_text(self, instance):
         return (

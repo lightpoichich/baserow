@@ -67,20 +67,17 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
 
 class LinkRowValueSerializer(serializers.Serializer):
     id = serializers.IntegerField(
-        help_text="The unique identifier of the row in the " "related table."
+        read_only=True,
+        help_text="The unique identifier of the row in the related table.",
     )
 
     def __init__(self, *args, **kwargs):
-        value_field_name = kwargs.pop("value_field_name", "value")
         super().__init__(*args, **kwargs)
-        kwargs = {}
-        if value_field_name != "value":
-            kwargs["source"] = value_field_name
         self.fields["value"] = serializers.CharField(
             help_text="The primary field's value as a string of the row in the "
             "related table.",
             required=False,
-            **kwargs
+            source="*"
         )
 
 

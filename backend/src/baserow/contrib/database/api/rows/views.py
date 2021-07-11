@@ -353,9 +353,8 @@ class RowsView(APIView):
 
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "create", table, False)
-        model = table.get_model()
-
         user_field_names = "user_field_names" in request.GET
+        model = table.get_model()
 
         validation_serializer = get_row_serializer_class(
             model, user_field_names=user_field_names
@@ -459,7 +458,6 @@ class RowView(APIView):
 
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "read", table, False)
-
         user_field_names = "user_field_names" in request.GET
         model = table.get_model()
         row = RowHandler().get_row(request.user, table, row_id, model)
@@ -543,7 +541,6 @@ class RowView(APIView):
 
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "update", table, False)
-
         user_field_names = "user_field_names" in request.GET
 
         field_names = None

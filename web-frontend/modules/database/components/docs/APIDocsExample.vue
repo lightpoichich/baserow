@@ -48,7 +48,7 @@
       </a>
       <div class="api-docs__example-type">
         <Dropdown
-          :class="'dropdown--floating'"
+          class="dropdown--floating"
           :value="value.type"
           @input="
             $emit('input', {

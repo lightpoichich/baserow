@@ -341,13 +341,14 @@ class RowHandler:
         Takes the field objects for a model and a dictionary keyed by user specified
         field names for that model. Then will convert the keys from the user names to
         the internal Baserow field names which look like field_1, field_2 and
-        corrospond to the actual database column names.
+        correspond to the actual database column names.
 
         :param field_objects: The field objects for a model.
         :param values: A dictionary keyed by user field names to values.
         :return: A dictionary with the same values but the keys converted to the
             corresponding internal baserow field name (field_1,field_2 etc)
         """
+
         to_internal_name = {}
         for field_object in field_objects.values():
             to_internal_name[field_object["field"].name] = field_object["name"]

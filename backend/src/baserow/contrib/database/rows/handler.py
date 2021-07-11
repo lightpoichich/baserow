@@ -245,7 +245,7 @@ class RowHandler:
         group = table.database.group
         group.has_user(user, raise_error=True)
 
-        instance = self._create_row(table, values, model, before)
+        instance = self.force_create_row(table, values, model, before)
 
         row_created.send(
             self, row=instance, before=before, user=user, table=table, model=model
@@ -253,7 +253,7 @@ class RowHandler:
 
         return instance
 
-    def _create_row(self, table, values=None, model=None, before=None):
+    def force_create_row(self, table, values=None, model=None, before=None):
         """
         Creates a new row for a given table with the provided values.
 

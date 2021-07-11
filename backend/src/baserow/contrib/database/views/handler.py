@@ -864,7 +864,7 @@ class ViewHandler:
             raise ValidationError(field_errors)
 
         allowed_values = extract_allowed(values, allowed_field_names)
-        instance = RowHandler()._create_row(table, allowed_values, model)
+        instance = RowHandler().force_create_row(table, allowed_values, model)
 
         row_created.send(
             self, row=instance, before=None, user=None, table=table, model=model

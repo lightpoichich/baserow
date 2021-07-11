@@ -46,7 +46,7 @@ class GridViewView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Returns only rows that belong to the related view's "
-                            "table.",
+                "table.",
             ),
             OpenApiParameter(
                 name="count",
@@ -76,29 +76,29 @@ class GridViewView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
                 description="Can only be used in combination with the `limit` "
-                            "parameter and defines from which offset the rows should "
-                            "be returned.",
+                "parameter and defines from which offset the rows should "
+                "be returned.",
             ),
             OpenApiParameter(
                 name="page",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
                 description="Defines which page of rows should be returned. Either "
-                            "the `page` or `limit` can be provided, not both.",
+                "the `page` or `limit` can be provided, not both.",
             ),
             OpenApiParameter(
                 name="size",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
                 description="Can only be used in combination with the `page` parameter "
-                            "and defines how many rows should be returned.",
+                "and defines how many rows should be returned.",
             ),
             OpenApiParameter(
                 name="search",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description="If provided only rows with data that matches the search "
-                            "query are going to be returned.",
+                "query are going to be returned.",
             ),
         ],
         tags=["Database table grid view"],
@@ -194,7 +194,7 @@ class GridViewView(APIView):
                 type=OpenApiTypes.INT,
                 required=False,
                 description="Returns only rows that belong to the related view's "
-                            "table.",
+                "table.",
             )
         ],
         tags=["Database table grid view"],

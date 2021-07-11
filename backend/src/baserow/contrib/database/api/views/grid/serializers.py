@@ -16,7 +16,7 @@ class GridViewFilterSerializer(serializers.Serializer):
         default=None,
         child=serializers.IntegerField(),
         help_text="Only the fields related to the provided ids are added to the "
-                  "response. If None are provided all fields will be returned.",
+        "response. If None are provided all fields will be returned.",
     )
     row_ids = serializers.ListField(
         allow_empty=False,

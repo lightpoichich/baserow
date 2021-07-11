@@ -13,7 +13,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 
 class FieldSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField(
-        help_text="The type value related to the field type."
+        help_text="The type of the related field."
     )
 
     class Meta:

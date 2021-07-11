@@ -108,6 +108,9 @@ export default {
     }
   },
   watch: {
+    'view.submit_action_message'(value) {
+      this.submit_action_message = value
+    },
     'view.submit_action_redirect_url'(value) {
       this.submit_action_redirect_url = value
     },

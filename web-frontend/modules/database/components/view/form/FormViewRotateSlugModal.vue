@@ -5,9 +5,9 @@
     <div>
       <p>
         Are you sure that you want to refresh the URL of {{ view.name }}? After
-        refreshing, a new URL will be generated and the it will not be possible
-        to access the form view via the old URL. Everyone that you have shared
-        the URL with, won't be able to access the form.
+        refreshing, a new URL will be generated and it will not be possible to
+        access the form via the old URL. Everyone that you have shared the URL
+        with, won't be able to access the form.
       </p>
       <div class="actions">
         <div class="align-right">

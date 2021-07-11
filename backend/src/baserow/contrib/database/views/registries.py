@@ -253,8 +253,8 @@ class ViewType(
         """
         Called before the field options are updated related to the provided view.
 
-        :param view: The grid view for which the field options need to be updated.
-        :type view: GridView
+        :param view: The view for which the field options need to be updated.
+        :type view: View
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
         :type field_options: dict

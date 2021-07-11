@@ -78,8 +78,8 @@ class UserFileField(serializers.Field):
     """
     This field can be used for validating user provided user files, which means a
     user has provided a dict containing the user file name. It will check if that
-    user file exists and returns that instance. Vice versa, a user info instance will
-    be serialized when serialized via this field.
+    user file exists and returns that instance. Vice versa, a user file instance will
+    be serialized when converted to data by the serializer.
 
     Example:
     Serializer(data={

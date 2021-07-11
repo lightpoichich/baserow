@@ -212,8 +212,8 @@ class ViewHandler:
 
         :param user: The user on whose behalf the request is made.
         :type user: User
-        :param view: The grid view for which the field options need to be updated.
-        :type view: GridView
+        :param view: The view for which the field options need to be updated.
+        :type view: View
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
         :type field_options: dict
@@ -796,8 +796,8 @@ class ViewHandler:
 
     def get_public_form_view_by_slug(self, user, slug):
         """
-        Returns the form view related to the provided slug, if the provided slug is
-        public or if the user has access to the group.
+        Returns the form view related to the provided slug if the form related to the
+        slug is public or if the user has access to the related group.
 
         :param user: The user on whose behalf the form is requested.
         :type user: User

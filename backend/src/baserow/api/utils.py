@@ -206,7 +206,8 @@ def get_serializer_class(
     :type field_overrides: dict
     :param base_class: The class that must be extended.
     :type base_class: ModelSerializer
-    :param meta_ref_name: @TODO
+    :param meta_ref_name: Optionally a custom ref name can be set. If not provided,
+        then the class name of the model and base class are used.
     :type meta_ref_name: str
     :return: The generated model serializer containing the provided fields.
     :rtype: ModelSerializer

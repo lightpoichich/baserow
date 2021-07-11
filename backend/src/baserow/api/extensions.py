@@ -12,7 +12,7 @@ class MappingSerializerExtension(OpenApiSerializerExtension):
     Example:
         @auto_schema(
             responses={
-                200: DiscriminatorMappingSerializer(
+                200: MappingSerializer(
                     "Applications",
                     {
                         'car': CarSerializer,

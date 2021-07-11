@@ -132,9 +132,18 @@ class FormViewType(ViewType):
         "submit_action_redirect_url",
     ]
     serializer_field_overrides = {
-        "slug": CharField(read_only=True),
-        "cover_image": UserFileField(required=False),
-        "logo_image": UserFileField(required=False),
+        "slug": CharField(
+            read_only=True,
+            help_text="The unique slug that can be used to construct a public URL.",
+        ),
+        "cover_image": UserFileField(
+            required=False,
+            help_text="The cover image that must be displayed at the top of the form.",
+        ),
+        "logo_image": UserFileField(
+            required=False,
+            help_text="The logo image that must be displayed at the top of the form.",
+        ),
     }
     api_exceptions_map = {
         FormViewFieldTypeIsNotSupported: ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,

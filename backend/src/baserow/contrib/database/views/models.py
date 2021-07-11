@@ -217,7 +217,7 @@ class FormView(View):
     field_options = models.ManyToManyField(Field, through="FormViewFieldOptions")
     slug = models.UUIDField(
         default=uuid.uuid4,
-        help_text="The unique slug where the form can be accessed publicly on.",
+        help_text="The unique slug that can be used to construct a public URL.",
         unique=True,
         db_index=True,
     )

@@ -56,6 +56,7 @@ class RotateFormViewSlugView(APIView):
             "value. This would mean that the publicly shared URL of the form will "
             "change. Everyone that knew the URL won't have access to the form anymore."
         ),
+        request=None,
         responses={
             200: form_view_serializer_class(many=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -189,9 +190,9 @@ class FormViewLinkRowFieldLookupView(APIView):
         tags=["Database table form view"],
         operation_id="database_table_form_view_link_row_field_lookup",
         description=(
-            "If the form is publicly shared or if the authenticated has access to the "
-            "related group, then this endpoint can be used to do a value lookup of the "
-            "link row fields that are included in the form. Normally it is not "
+            "If the form is publicly shared or if an authenticated user has access to "
+            "the related group, then this endpoint can be used to do a value lookup of "
+            "the link row fields that are included in the form. Normally it is not "
             "possible for a not authenticated visitor to fetch the rows of a table. "
             "This endpoint makes it possible to fetch the id and primary field value "
             "of the related table of a link row included in the form view."

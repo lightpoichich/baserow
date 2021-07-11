@@ -32,8 +32,8 @@ class Migration(migrations.Migration):
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
-                        help_text="The unique slug where the form can be accessed "
-                        "publicly on.",
+                        help_text="The unique slug that can be used to construct a "
+                        "public URL.",
                         unique=True,
                     ),
                 ),

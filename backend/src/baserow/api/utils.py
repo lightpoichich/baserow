@@ -191,7 +191,9 @@ def type_from_data_or_registry(
         return registry.get_by_model(model_instance.specific_class).type
 
 
-def get_serializer_class(model, field_names, field_overrides=None, base_class=None):
+def get_serializer_class(
+    model, field_names, field_overrides=None, base_class=None, meta_ref_name=None
+):
     """
     Generates a model serializer based on the provided field names and field overrides.
 
@@ -204,18 +206,22 @@ def get_serializer_class(model, field_names, field_overrides=None, base_class=No
     :type field_overrides: dict
     :param base_class: The class that must be extended.
     :type base_class: ModelSerializer
+    :param meta_ref_name: @TODO
+    :type meta_ref_name: str
     :return: The generated model serializer containing the provided fields.
     :rtype: ModelSerializer
     """
 
     model_ = model
-    meta_ref_name = model_.__name__
 
     if not field_overrides:
         field_overrides = {}
 
-    if base_class:
-        meta_ref_name += base_class.__name__
+    if not meta_ref_name:
+        meta_ref_name = model_.__name__
+
+        if base_class:
+            meta_ref_name += base_class.__name__
 
     if not base_class:
         base_class = ModelSerializer
@@ -252,9 +258,22 @@ class MappingSerializer:
         self.many = many
 
 
-class PolymorphicCustomFieldRegistrySerializer:
+class CustomFieldRegistryMappingSerializer:
     """
-    A placeholder class for the `PolymorphicCustomFieldRegistrySerializerExtension`
+    A placeholder class for the `CustomFieldRegistryMappingSerializerExtension`
+    extension class.
+    """
+
+    def __init__(self, registry, base_class, many=False):
+        self.read_only = False
+        self.registry = registry
+        self.base_class = base_class
+        self.many = many
+
+
+class DiscriminatorCustomFieldsMappingSerializer:
+    """
+    A placeholder class for the `DiscriminatorCustomFieldsMappingSerializerExtension`
     extension class.
     """
 
@@ -266,9 +285,10 @@ class PolymorphicCustomFieldRegistrySerializer:
         self.many = many
 
 
-class PolymorphicMappingSerializer:
+class DiscriminatorMappingSerializer:
     """
-    A placeholder class for the `PolymorphicMappingSerializerExtension` extension class.
+    A placeholder class for the `DiscriminatorMappingSerializerExtension` extension
+    class.
     """
 
     def __init__(self, component_name, mapping, type_field_name="type", many=False):

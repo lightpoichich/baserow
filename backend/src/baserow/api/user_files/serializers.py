@@ -73,7 +73,7 @@ class UserFileSerializer(
         return instance.name
 
 
-# @TODO show correct API docs.
+@extend_schema_field(UserFileSerializer)
 class UserFileField(serializers.Field):
     """
     This field can be used for validating user provided user files, which means a

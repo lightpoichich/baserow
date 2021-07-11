@@ -7,8 +7,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 
-from django.utils.functional import lazy
-
 from baserow.api.decorators import (
     validate_body,
     validate_body_custom_fields,
@@ -21,7 +19,10 @@ from baserow.api.utils import (
     MappingSerializer,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.utils import PolymorphicCustomFieldRegistrySerializer
+from baserow.api.utils import (
+    DiscriminatorCustomFieldsMappingSerializer,
+    CustomFieldRegistryMappingSerializer,
+)
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
@@ -76,7 +77,7 @@ from .errors import (
 
 view_field_options_mapping_serializer = MappingSerializer(
     "ViewFieldOptions",
-    lazy(view_type_registry.get_field_options_serializer_map, dict)(),
+    view_type_registry.get_field_options_serializer_map(),
     "view_type",
 )
 
@@ -125,7 +126,7 @@ class ViewsView(APIView):
             "are going to be added. Each type can have different properties."
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer, many=True
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -196,11 +197,11 @@ class ViewsView(APIView):
             "group. Depending on the type, different properties can optionally be "
             "set."
         ),
-        request=PolymorphicCustomFieldRegistrySerializer(
+        request=DiscriminatorCustomFieldsMappingSerializer(
             view_type_registry, CreateViewSerializer
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(
@@ -269,7 +270,7 @@ class ViewView(APIView):
             "could be returned."
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -322,11 +323,11 @@ class ViewView(APIView):
             "related database's group. The type cannot be changed. It depends on the "
             "existing type which properties can be changed."
         ),
-        request=PolymorphicCustomFieldRegistrySerializer(
+        request=CustomFieldRegistryMappingSerializer(
             view_type_registry, UpdateViewSerializer
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(

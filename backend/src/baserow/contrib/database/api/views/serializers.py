@@ -198,7 +198,9 @@ class ViewSerializer(serializers.ModelSerializer):
 
 
 class CreateViewSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(choices=lazy(view_type_registry.get_types, list)())
+    type = serializers.ChoiceField(
+        choices=lazy(view_type_registry.get_types, list)(), required=True
+    )
 
     class Meta:
         model = View
@@ -207,6 +209,7 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
 class UpdateViewSerializer(serializers.ModelSerializer):
     class Meta:
+        ref_name = "view update"
         model = View
         fields = ("name", "filter_type", "filters_disabled")
         extra_kwargs = {

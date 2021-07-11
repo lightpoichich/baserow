@@ -98,13 +98,18 @@ class CharFieldMatchingRegexFieldType(FieldType, ABC):
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        validators = kwargs.pop("validators", None) or []
+        validators.append(self.validator)
         return serializers.CharField(
-            required=False,
-            allow_null=True,
-            allow_blank=True,
-            validators=[self.validator],
-            max_length=self.max_length,
-            **kwargs,
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                "validators": validators,
+                "max_length": self.max_length,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -142,12 +147,15 @@ class TextFieldType(FieldType):
     serializer_field_names = ["text_default"]
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.CharField(
-            required=False,
-            allow_null=True,
-            allow_blank=True,
-            default=instance.text_default or None,
-            **kwargs,
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                "default": instance.text_default or None,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -167,8 +175,14 @@ class LongTextFieldType(FieldType):
     model_class = LongTextField
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.CharField(
-            required=False, allow_null=True, allow_blank=True, **kwargs
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -194,8 +208,14 @@ class URLFieldType(FieldType):
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.URLField(
-            required=False, allow_null=True, allow_blank=True, **kwargs
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -236,11 +256,13 @@ class NumberFieldType(FieldType):
 
         if value is not None and not instance.number_negative and value < 0:
             raise ValidationError(
-                f"The value for field {instance.id} cannot be " f"negative."
+                f"The value for field {instance.id} cannot be negative."
             )
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+
         kwargs["decimal_places"] = (
             0
             if instance.number_type == NUMBER_TYPE_INTEGER
@@ -251,13 +273,18 @@ class NumberFieldType(FieldType):
             kwargs["min_value"] = 0
 
         return serializers.DecimalField(
-            max_digits=self.MAX_DIGITS + kwargs["decimal_places"],
-            required=False,
-            allow_null=True,
-            **kwargs,
+            **{
+                "max_digits": self.MAX_DIGITS + kwargs["decimal_places"],
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
         )
 
     def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+
         # If the number is an integer we want it to be a literal json number and so
         # don't convert it to a string. However if a decimal to preserve any precision
         # we keep it as a string.
@@ -267,7 +294,8 @@ class NumberFieldType(FieldType):
 
         # DRF's Decimal Serializer knows how to quantize and format the decimal
         # correctly so lets use it instead of trying to do it ourselves.
-        return self.get_serializer_field(instance).to_representation(value)
+        value = self.get_serializer_field(instance).to_representation(value)
+        return value
 
     def get_model_field(self, instance, **kwargs):
         kwargs["decimal_places"] = (
@@ -330,7 +358,9 @@ class BooleanFieldType(FieldType):
     model_class = BooleanField
 
     def get_serializer_field(self, instance, **kwargs):
-        return serializers.BooleanField(required=False, default=False, **kwargs)
+        return serializers.BooleanField(
+            **{"required": False, "default": False, **kwargs}
+        )
 
     def get_model_field(self, instance, **kwargs):
         return models.BooleanField(default=False, **kwargs)
@@ -403,12 +433,16 @@ class DateFieldType(FieldType):
         return value.strftime(python_format)
 
     def get_serializer_field(self, instance, **kwargs):
-        kwargs["required"] = False
-        kwargs["allow_null"] = True
+        required = kwargs.get("required", False)
+
         if instance.date_include_time:
-            return serializers.DateTimeField(**kwargs)
+            return serializers.DateTimeField(
+                **{"required": required, "allow_null": not required, **kwargs}
+            )
         else:
-            return serializers.DateField(**kwargs)
+            return serializers.DateField(
+                **{"required": required, "allow_null": not required, **kwargs}
+            )
 
     def get_model_field(self, instance, **kwargs):
         kwargs["null"] = True
@@ -587,7 +621,7 @@ class LinkRowFieldType(FieldType):
                 inner_value, inner_field_object
             )
 
-        return ",".join(
+        return ", ".join(
             self._get_and_map_pk_values(
                 field_object, value, map_to_human_readable_value
             )
@@ -661,7 +695,11 @@ class LinkRowFieldType(FieldType):
         """
 
         return serializers.ListField(
-            child=serializers.IntegerField(min_value=0), required=False, **kwargs
+            **{
+                "child": serializers.IntegerField(min_value=0),
+                "required": False,
+                **kwargs,
+            }
         )
 
     def get_response_serializer_field(self, instance, **kwargs):
@@ -672,24 +710,9 @@ class LinkRowFieldType(FieldType):
         be used to include the primary field's value in the response as a string.
         """
 
-        primary_field_name = None
-
-        if hasattr(instance, "_related_model"):
-            related_model = instance._related_model
-            primary_field = next(
-                object
-                for object in related_model._field_objects.values()
-                if object["field"].primary
-            )
-            if primary_field:
-                primary_field_name = primary_field["name"]
-
         return serializers.ListSerializer(
-            child=LinkRowValueSerializer(
-                value_field_name=primary_field_name,
-                required=False,
-            ),
-            **kwargs,
+            child=LinkRowValueSerializer(),
+            **{"required": False, **kwargs}
         )
 
     def get_serializer_help_text(self, instance):
@@ -1045,6 +1068,7 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
 class FileFieldType(FieldType):
     type = "file"
     model_class = FileField
+    can_be_in_form_view = False
 
     def prepare_value_for_db(self, instance, value):
         if value is None:
@@ -1097,11 +1121,19 @@ class FileFieldType(FieldType):
         return user_files
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.ListSerializer(
-            child=FileFieldRequestSerializer(),
-            required=False,
-            allow_null=True,
-            **kwargs,
+            **{
+                "child": FileFieldRequestSerializer(),
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
+        )
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        return FileFieldResponseSerializer(
+            **{"many": True, "required": False, **kwargs}
         )
 
     def get_export_value(self, value, field_object):
@@ -1128,10 +1160,7 @@ class FileFieldType(FieldType):
                 file["visible_name"],
             )
 
-        return ",".join(file_names)
-
-    def get_response_serializer_field(self, instance, **kwargs):
-        return FileFieldResponseSerializer(many=True, required=False, **kwargs)
+        return ", ".join(file_names)
 
     def get_serializer_help_text(self, instance):
         return (
@@ -1258,15 +1287,21 @@ class SingleSelectFieldType(FieldType):
         raise ValidationError(f"The provided value is not a valid option.")
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.PrimaryKeyRelatedField(
-            queryset=SelectOption.objects.filter(field=instance),
-            required=False,
-            allow_null=True,
-            **kwargs,
+            **{
+                "queryset": SelectOption.objects.filter(field=instance),
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
         )
 
     def get_response_serializer_field(self, instance, **kwargs):
-        return SelectOptionSerializer(required=False, allow_null=True, **kwargs)
+        required = kwargs.get("required", False)
+        return SelectOptionSerializer(
+            **{"required": required, "allow_null": not required, **kwargs}
+        )
 
     def get_serializer_help_text(self, instance):
         return (

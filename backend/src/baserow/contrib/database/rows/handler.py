@@ -249,7 +249,8 @@ class RowHandler:
         self, user, table, values=None, model=None, before=None, user_field_names=False
     ):
         """
-        Creates a new row for a given table with the provided values.
+        Creates a new row for a given table with the provided values if the user
+        belongs to the related group. It also calls the row_created signal.
 
         :param user: The user of whose behalf the row is created.
         :type user: User
@@ -271,11 +272,46 @@ class RowHandler:
         :rtype: Model
         """
 
-        if not values:
-            values = {}
+        if not model:
+            model = table.get_model()
 
         group = table.database.group
         group.has_user(user, raise_error=True)
+
+        instance = self.force_create_row(table, values, model, before, user_field_names)
+
+        row_created.send(
+            self, row=instance, before=before, user=user, table=table, model=model
+        )
+
+        return instance
+
+    def force_create_row(
+        self, table, values=None, model=None, before=None, user_field_names=False
+    ):
+        """
+        Creates a new row for a given table with the provided values.
+
+        :param table: The table for which to create a row for.
+        :type table: Table
+        :param values: The values that must be set upon creating the row. The keys must
+            be the field ids.
+        :type values: dict
+        :param model: If a model is already generated it can be provided here to avoid
+            having to generate the model again.
+        :type model: Model
+        :param before: If provided the new row will be placed right before that row
+            instance.
+        :type before: Table
+        :param user_field_names: Whether or not the values are keyed by the internal
+            Baserow field name (field_1,field_2 etc) or by the user field names.
+        :type user_field_names: True
+        :return: The created row instance.
+        :rtype: Model
+        """
+
+        if not values:
+            values = {}
 
         if not model:
             model = table.get_model()
@@ -292,10 +328,6 @@ class RowHandler:
 
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)
-
-        row_created.send(
-            self, row=instance, before=before, user=user, table=table, model=model
-        )
 
         return instance
 

@@ -26,6 +26,7 @@ def get_row_serializer_class(
     field_ids=None,
     field_names_to_include=None,
     user_field_names=False,
+    field_kwargs=None,
 ):
     """
     Generates a Django rest framework model serializer based on the available fields
@@ -52,14 +53,20 @@ def get_row_serializer_class(
         to be included. Note that the field name must exist in the model in
         order to work.
     :type field_names_to_include: list or None
+    :param field_kwargs: A dict containing additional kwargs per field. The key must
+        be the field name and the value a dict containing the kwargs.
+    :type field_kwargs: dict
     :return: The generated serializer.
     :rtype: ModelSerializer
     """
 
-    field_objects = model._field_objects
+    if not field_kwargs:
+        field_kwargs = {}
 
+    field_objects = model._field_objects
     field_names = []
     field_overrides = {}
+
     for field in field_objects.values():
         field_id_matches = field_ids is None or (field["field"].id in field_ids)
         field_name_matches = field_names_to_include is None or (
@@ -68,7 +75,7 @@ def get_row_serializer_class(
 
         if field_id_matches and field_name_matches:
             name = field["field"].name if user_field_names else field["name"]
-            extra_kwargs = {}
+            extra_kwargs = field_kwargs.get(field["name"], {})
 
             if field["name"] != name:
                 # If we are building a serializer with names which do not match the
@@ -165,9 +172,4 @@ def get_example_row_serializer_class(add_id=False):
 
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
     get_example_row_serializer_class(True)
-)
-example_pagination_row_serializer_class_with_field_options = (
-    get_example_pagination_serializer_class(
-        get_example_row_serializer_class(True), add_field_options=True
-    )
 )

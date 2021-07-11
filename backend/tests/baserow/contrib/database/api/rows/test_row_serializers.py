@@ -224,7 +224,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         "decimal_link_row": [
             {"id": 1, "value": "1.234"},
             {"id": 2, "value": "-123.456"},
-            {"id": 3, "value": None},
+            {"id": 3, "value": ''},
         ],
         "email": "test@example.com",
         "file": [
@@ -254,21 +254,14 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
             },
         ],
         "file_link_row": [
-            {
-                "id": 1,
-                "value": "[{'name': 'test_hash.txt', 'size': 100, "
-                "'is_image': False, 'mime_type': 'text/plain', "
-                "'image_width': None, 'uploaded_at': "
-                "'2020-01-01T12:00:00+00:00', 'image_height': "
-                "None, 'visible_name': 'name.txt'}]",
-            },
-            {"id": 2, "value": "[]"},
+            {"id": 1, "value": "name.txt"},
+            {"id": 2, "value": ""},
         ],
         "id": 2,
         "link_row": [
             {"id": 1, "value": "linked_row_1"},
             {"id": 2, "value": "linked_row_2"},
-            {"id": 3, "value": None},
+            {"id": 3, "value": ""},
         ],
         "long_text": "long_text",
         "negative_decimal": "-1.2",

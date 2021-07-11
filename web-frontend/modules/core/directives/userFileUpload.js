@@ -108,6 +108,7 @@ export default {
       leave() {},
       progress() {},
       done() {},
+      error() {},
     }
     el.userFileUploadValue = Object.assign(defaults, binding.value)
   },
@@ -128,11 +129,15 @@ export default {
       return
     }
 
-    const { data } = await UserFileService(client).uploadFile(
-      files[0],
-      el.userFileUploadValue.progress
-    )
+    try {
+      const { data } = await UserFileService(client).uploadFile(
+        files[0],
+        el.userFileUploadValue.progress
+      )
 
-    el.userFileUploadValue.done(data)
+      el.userFileUploadValue.done(data)
+    } catch (e) {
+      el.userFileUploadValue.error(e)
+    }
   },
 }

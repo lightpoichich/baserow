@@ -150,7 +150,6 @@ export default {
         this.results.length < this.count &&
         items.scrollTop > max - 30
       ) {
-        console.log('scroll')
         this.results.push(...(await this.fetch(this.page + 1, this.query)))
       }
     },

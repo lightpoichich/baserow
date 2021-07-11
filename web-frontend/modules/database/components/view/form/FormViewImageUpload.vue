@@ -21,6 +21,8 @@
 </template>
 
 <script>
+import { notifyIf } from '@baserow/modules/core/utils/error'
+
 export default {
   name: 'FormViewImageUpload',
   data() {
@@ -57,6 +59,12 @@ export default {
           this.uploading = false
           this.percentage = 0
           this.$emit('uploaded', file)
+        },
+        error: (error) => {
+          this.dragging = false
+          this.uploading = false
+          this.percentage = 0
+          notifyIf(error)
         },
       }
     },

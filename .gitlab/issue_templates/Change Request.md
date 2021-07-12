@@ -5,10 +5,10 @@
 <!-- This might only be one part, but may involve multiple sections !-->
 
 ## How does this currently work?
-<!-- the current process, and any associated business rules !-->
+<!-- The current feature and any associated information !-->
 
 ## What is the desired way of working?
-<!-- after the change, what should the process be, and what should the business rules be !-->
+<!-- After the change, how should the feature work? !-->
 
 ## UI/UX Design Required
 <!-- Delete as appropriate. Please estimate how much UI and UX design work is required. !-->

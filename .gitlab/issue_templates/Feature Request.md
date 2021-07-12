@@ -8,8 +8,8 @@
 <!-- 
     What benefits does this bring?
         - enables useful new workflows and use cases for baserow
+        - improved performance, usability etc
         - reduced support issues
-        - automate labour intensive tasks
         
     What risks might this introduce?
         - potential security or data privacy issues 

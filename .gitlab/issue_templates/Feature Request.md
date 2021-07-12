@@ -13,7 +13,7 @@
         
     What risks might this introduce?
         - potential security or data privacy issues 
-        - complexity for user or technically
+        - increased user or technical complexity
         - performance implications 
 !-->
 

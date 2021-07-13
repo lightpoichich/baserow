@@ -14,84 +14,22 @@
     </div>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">
-        <label class="control__label">Old password</label>
-        <div class="control__elements">
-          <input
-            v-model="account.oldPassword"
-            :class="{ 'input--error': $v.account.oldPassword.$error }"
-            type="password"
-            class="input input--large"
-            @blur="$v.account.oldPassword.$touch()"
-          />
-          <div
-            v-if="
-              $v.account.oldPassword.$error && !$v.account.oldPassword.required
-            "
-            class="error"
-          >
-            An old password is required.
-          </div>
-          <div
-            v-if="
-              $v.account.oldPassword.$error && !$v.account.oldPassword.maxLength
-            "
-            class="error"
-          >
-            A maximum of
-            {{ $v.account.oldPassword.$params.maxLength.max }} characters is
-            allowed here.
-          </div>
-          <div
-            v-if="
-              $v.account.oldPassword.$error && !$v.account.oldPassword.minLength
-            "
-            class="error"
-          >
-            A minimum of
-            {{ $v.account.oldPassword.$params.minLength.min }} characters is
-            required here.
-          </div>
-        </div>
+        <PasswordInput
+          ref="oldPassword"
+          label="Old Password"
+          name="oldPassword"
+          :password-value="account.oldPassword"
+          @inputChange="handleChange"
+        />
       </div>
       <div class="control">
-        <label class="control__label">New password</label>
-        <div class="control__elements">
-          <input
-            v-model="account.newPassword"
-            :class="{ 'input--error': $v.account.newPassword.$error }"
-            type="password"
-            class="input input--large"
-            @blur="$v.account.newPassword.$touch()"
-          />
-          <div
-            v-if="
-              $v.account.newPassword.$error && !$v.account.newPassword.required
-            "
-            class="error"
-          >
-            A new password is required.
-          </div>
-          <div
-            v-if="
-              $v.account.newPassword.$error && !$v.account.newPassword.maxLength
-            "
-            class="error"
-          >
-            A maximum of
-            {{ $v.account.newPassword.$params.maxLength.max }} characters is
-            allowed here.
-          </div>
-          <div
-            v-if="
-              $v.account.newPassword.$error && !$v.account.newPassword.minLength
-            "
-            class="error"
-          >
-            A minimum of
-            {{ $v.account.newPassword.$params.minLength.min }} characters is
-            required here.
-          </div>
-        </div>
+        <PasswordInput
+          ref="newPassword"
+          label="New Password"
+          name="newPassword"
+          :password-value="account.newPassword"
+          @inputChange="handleChange"
+        />
       </div>
       <div class="control">
         <label class="control__label">Repeat new password</label>
@@ -123,18 +61,15 @@
 </template>
 
 <script>
-import {
-  maxLength,
-  minLength,
-  required,
-  sameAs,
-} from 'vuelidate/lib/validators'
+import { sameAs } from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
+import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
 
 export default {
+  components: { PasswordInput },
   mixins: [error],
   layout: 'login',
   data() {
@@ -149,13 +84,23 @@ export default {
     }
   },
   methods: {
+    handleChange(event) {
+      const { value, name } = event.target
+      this.account[name] = value
+    },
     async changePassword() {
       this.$v.$touch()
-      if (this.$v.$invalid) {
+      this.$refs.newPassword.$v.$touch()
+      this.$refs.oldPassword.$v.$touch()
+      if (
+        this.$v.$invalid ||
+        this.$refs.newPassword.$v.$invalid ||
+        this.$refs.oldPassword.$v.$invalid
+      ) {
         return
       }
 
-      this.loading = true
+      // this.loading = true
       this.hideError()
 
       try {
@@ -178,16 +123,6 @@ export default {
   },
   validations: {
     account: {
-      oldPassword: {
-        required,
-        maxLength: maxLength(256),
-        minLength: minLength(8),
-      },
-      newPassword: {
-        required,
-        maxLength: maxLength(256),
-        minLength: minLength(8),
-      },
       passwordConfirm: {
         sameAsPassword: sameAs('newPassword'),
       },

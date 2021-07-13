@@ -5,19 +5,13 @@
       <Error :error="error"></Error>
       <form @submit.prevent="resetPassword">
         <div class="control">
-          <label class="control__label">New password</label>
-          <div class="control__elements">
-            <input
-              v-model="account.password"
-              :class="{ 'input--error': $v.account.password.$error }"
-              type="password"
-              class="input input--large"
-              @blur="$v.account.password.$touch()"
-            />
-            <div v-if="$v.account.password.$error" class="error">
-              A new password is required.
-            </div>
-          </div>
+          <PasswordInput
+            ref="password"
+            label="New Password"
+            name="password"
+            :password-value="account.password"
+            @inputChange="handleChange"
+          />
         </div>
         <div class="control">
           <label class="control__label">Repeat new password</label>
@@ -68,13 +62,15 @@
 </template>
 
 <script>
-import { required, sameAs } from 'vuelidate/lib/validators'
+import { sameAs } from 'vuelidate/lib/validators'
 
+import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
+  components: { PasswordInput },
   mixins: [error],
   layout: 'login',
   data() {
@@ -93,9 +89,14 @@ export default {
     }
   },
   methods: {
+    handleChange(event) {
+      const { value, name } = event.target
+      this.account[name] = value
+    },
     async resetPassword() {
       this.$v.$touch()
-      if (this.$v.$invalid) {
+      this.$refs.password.$v.$touch()
+      if (this.$v.$invalid || this.$refs.password.$v.$invalid) {
         return
       }
 
@@ -127,7 +128,6 @@ export default {
   },
   validations: {
     account: {
-      password: { required },
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },

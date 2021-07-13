@@ -82,6 +82,7 @@ export default {
   },
   methods: {
     isFormValid() {
+      this.$v.passwordValue.$touch()
       return !this.$v.$invalid
     },
   },

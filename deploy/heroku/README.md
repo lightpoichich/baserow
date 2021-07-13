@@ -28,10 +28,6 @@ $ heroku config:set -a baserow-test-app BASEROW_AMOUNT_OF_WORKERS=1
 Now that we have replicated the setup of the app.json, we can deploy the application
 by pushing to the heroku remote repository.
 
-> Make sure that you have committed all your changes and temporarily replaced the
-> `master` branch with your own branch in the deploy/heroku/Dockerfile before
-> pushing to Heroku.
-
 ```
 $ git remote add heroku https://git.heroku.com/baserow-test-app.git
 $ git push heroku YOUR_CURRENT_BRANCH:master

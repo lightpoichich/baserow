@@ -26,7 +26,7 @@ WORKDIR /baserow
 RUN service supervisor stop && service nginx stop
 RUN rm -f /etc/nginx/sites-enabled/*
 
-RUN git clone --branch 170-add-a-guide-to-deploy-on-heroku https://gitlab.com/bramw/baserow.git
+ADD . /baserow/baserow
 RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt
 RUN env/bin/pip install dj-database-url boto3==1.16.25 django-storages==1.10.1
@@ -35,19 +35,19 @@ RUN (cd baserow/web-frontend && yarn install && yarn build)
 RUN (mkdir -p /baserow/heroku/heroku && \
      mkdir /baserow/media && \
     touch /baserow/heroku/heroku/__init__.py)
-ADD settings.py /baserow/heroku/heroku
+ADD deploy/heroku/settings.py /baserow/heroku/heroku
 
 ENV PYTHONPATH $PYTHONPATH:/baserow/baserow/backend/src:/baserow/heroku
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV TMPDIR=/run/temp
 
-ADD supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+ADD deploy/heroku/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 RUN ln -sf /dev/stdout /var/log/supervisor/supervisord.log
 
-ADD nginx.conf /baserow/nginx.conf
+ADD deploy/heroku/nginx.conf /baserow/nginx.conf
 RUN ln -sf /dev/stdout /var/log/nginx/access.log
 RUN ln -sf /dev/stderr /var/log/nginx/error.log
 
-ADD entry.sh /baserow/entry.sh
+ADD deploy/heroku/entry.sh /baserow/entry.sh
 RUN ["chmod", "+x", "/baserow/entry.sh"]

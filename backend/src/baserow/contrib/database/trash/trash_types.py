@@ -33,7 +33,9 @@ class TableTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, trashed_item: Table):
+    def permanently_delete_item(
+        self, trashed_item: Table, trash_item_lookup_cache=None
+    ):
         """Deletes the table schema and instance."""
 
         connection = connections[settings.USER_TABLE_DATABASE]
@@ -79,19 +81,6 @@ class FieldTrashableItemType(TrashableItemType):
     type = "field"
     model_class = Field
 
-    def lookup_trashed_item(
-        self, trashed_entry: TrashEntry, trash_item_lookup_cache=None
-    ):
-        field = super().lookup_trashed_item(trashed_entry, trash_item_lookup_cache)
-        # Invalidate the cached model for this field's table as we might be about to
-        # delete this field.
-        if (
-            trash_item_lookup_cache is not None
-            and "row_table_model_cache" in trash_item_lookup_cache
-        ):
-            del trash_item_lookup_cache["row_table_model_cache"][field.table.id]
-        return field
-
     def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
         return trashed_item.table
 
@@ -115,8 +104,16 @@ class FieldTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, field: Application):
+    def permanently_delete_item(self, field: Application, trash_item_lookup_cache=None):
         """Deletes the table schema and instance."""
+
+        # Invalidate the cached model for this field's table as we might be about to
+        # delete this field.
+        if (
+            trash_item_lookup_cache is not None
+            and "row_table_model_cache" in trash_item_lookup_cache
+        ):
+            trash_item_lookup_cache["row_table_model_cache"].pop(field.table.id, None)
 
         field = field.specific
         field_type = field_type_registry.get_by_model(field)
@@ -186,7 +183,7 @@ class RowTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, row):
+    def permanently_delete_item(self, row, trash_item_lookup_cache=None):
         row.delete()
 
     def lookup_trashed_item(

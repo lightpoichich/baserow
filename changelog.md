@@ -3,6 +3,12 @@
 ## Unreleased
 
 * Added a Heroku template and one click deploy button.
+* Fixed bug preventing the deletion of rows with a blank single select primary field
+* Fixed error in trash cleanup job when deleting multiple rows and a field from the same
+  table at once.
+
+## Released (2021-07-12)
+
 * Made it possible to list table field meta-data with a token.
 * Added form view.
 * The API endpoint to update the grid view field options has been moved to
@@ -20,6 +26,10 @@
   called 'order' and 'id'. Existing invalid field names will be fixed automatically. 
 * Add user_field_names GET flag to various endpoints which switches the API to work
   using actual field names and not the internal field_1,field_2 etc identifiers.
+* Added templates:
+  * Commercial Property Management
+  * Company Asset Tracker
+  * Student Planner
 
 ## Released (2021-06-02)
 

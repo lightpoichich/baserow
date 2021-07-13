@@ -100,7 +100,7 @@ export default {
         return
       }
 
-      // this.loading = true
+      this.loading = true
       this.hideError()
 
       try {

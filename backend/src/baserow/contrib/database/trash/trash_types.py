@@ -79,6 +79,19 @@ class FieldTrashableItemType(TrashableItemType):
     type = "field"
     model_class = Field
 
+    def lookup_trashed_item(
+        self, trashed_entry: TrashEntry, trash_item_lookup_cache=None
+    ):
+        field = super().lookup_trashed_item(trashed_entry, trash_item_lookup_cache)
+        # Invalidate the cached model for this field's table as we might be able to
+        # delete this field.
+        if (
+            trash_item_lookup_cache is not None
+            and "row_table_model_cache" in trash_item_lookup_cache
+        ):
+            del trash_item_lookup_cache["row_table_model_cache"][field.table.id]
+        return field
+
     def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
         return trashed_item.table
 

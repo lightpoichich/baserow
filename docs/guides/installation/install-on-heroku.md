@@ -1,6 +1,6 @@
 # Installation on Heroku
 
-> The Heroku template and one click 
+> The Heroku template and one click to deploy button are currently in beta.
 
 Heroku is a platform as a service that enables developer to build, run and operate
 applications entirely in the cloud. We have created a template that allows you to

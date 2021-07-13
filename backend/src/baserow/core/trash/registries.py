@@ -43,7 +43,7 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         database and do any other required clean-up.
 
         :param trashed_item: The item to delete permanently.
-        :param trash_item_lookup_cache: If a cache is being used to speed-up trash
+        :param trash_item_lookup_cache: If a cache is being used to speed up trash
             item lookups it should be provided here so trash items can invalidate the
             cache if when they are deleted a potentially cache item becomes invalid.
         """

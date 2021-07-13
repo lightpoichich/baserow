@@ -107,12 +107,13 @@ class FieldTrashableItemType(TrashableItemType):
     def permanently_delete_item(self, field: Application, trash_item_lookup_cache=None):
         """Deletes the table schema and instance."""
 
-        # Invalidate the cached model for this field's table as we might be about to
-        # delete this field.
         if (
             trash_item_lookup_cache is not None
             and "row_table_model_cache" in trash_item_lookup_cache
         ):
+            # Invalidate the cached model for this field's table as after this field is
+            # deleted usage of the old model will cause ProgrammingError's as the column
+            # for this field no longer exists.
             trash_item_lookup_cache["row_table_model_cache"].pop(field.table.id, None)
 
         field = field.specific

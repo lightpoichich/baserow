@@ -83,7 +83,7 @@ class FieldTrashableItemType(TrashableItemType):
         self, trashed_entry: TrashEntry, trash_item_lookup_cache=None
     ):
         field = super().lookup_trashed_item(trashed_entry, trash_item_lookup_cache)
-        # Invalidate the cached model for this field's table as we might be able to
+        # Invalidate the cached model for this field's table as we might be about to
         # delete this field.
         if (
             trash_item_lookup_cache is not None

@@ -58,14 +58,12 @@ Baserow on your network.
 
 1. `HOST_PUBLISH_IP=0.0.0.0` - This will configure `docker-compose.yml` to expose
    Baserow's containers on all IP addresses on the host machine, instead of just
-   localhost. Warning: this will bypass any ufw rules if you have not configured
-   explicitly, please see [this page](https://github.com/chaifeng/ufw-docker) for more
-   details.
+   localhost. Warning: if you are using UFW please see the warning above.
 2. `PUBLIC_BACKEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:8000` - This will
    ensure that Baserow clients will be able to successfully connect to the backend,
-   if you can visit Baserow at port :3000 but you are getting API errors please ensure
+   if you can visit Baserow at port `3000` but you are getting API errors please ensure
    this variable is set correctly.
-3. `PUBLIC_WEB_FRONTEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:8000` - The same
+3. `PUBLIC_WEB_FRONTEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:3000` - The same
    variable as above but the URL for the web-frontend container instead.
    
 For example you could run the command below after replacing `REPLACE_ME` with the

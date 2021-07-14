@@ -88,7 +88,7 @@ you should be redirected to the login screen. From here you can create a new acc
 start using the software.
 
 > Baserow will not be accessible by default from machines other than the one it is
-> running on. Please see [How to make Baserow publically accessible](baserow-docker-how-to.md#Make Baserow publicly accessible)
+> running on. Please see the [docker how to](baserow-docker-how-to.md)
 > on how to configure Baserow so you can access it over a network or the internet.
 
 ## Further Reading

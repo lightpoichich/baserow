@@ -107,7 +107,7 @@ Port configuration (these only work when used with the docker-compose files):
 - `HOST_PUBLISH_IP` (default `127.0.0.1`) : The IP address on the docker host Baserow's
   containers will bind exposed ports to. By default Baserow only exposes it's containers
   ports on localhost, please see
-  the [Baserow Docker How To](../guides/baserow-docker-how-to.md#Make Baserow publicly accessible)
+  the [Baserow Docker How To](../guides/baserow-docker-how-to.md)
   on how to expose Baserow over a network or the internet.
 - `BACKEND_PORT` (default `8000`) : The port the `backend` container will bind to on
   your local network.

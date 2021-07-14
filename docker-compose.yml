@@ -51,7 +51,7 @@ services:
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
     ports:
-      - "${HOST_PUBLISH_IP:-127.0.0.1}:${BACKEND_PORT:-:8000}:8000"
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
     depends_on:
       - db
       - redis

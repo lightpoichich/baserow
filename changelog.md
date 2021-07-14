@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+* Baserow's docker-compose.yml files no longer expose internal container services and
+  will by default only make Baserow accessible on localhost. 
 
 ## Released (2021-07-13)
 

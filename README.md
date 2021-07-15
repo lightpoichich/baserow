@@ -11,7 +11,7 @@ Gitter https://gitter.im/bramw-baserow/community.
 > internet depending on your operating system, networking setup and firewall settings.
 > Please update to the latest version of Baserow, 1.4.2 which no longer exposes the 
 > redis, db and mjml containers. Additionally, 1.4.2 only exposes the backend, 
-> web-frontend and media containers now localhost and not on 0.0.0.0. If you were 
+> web-frontend and media containers on localhost and not on 0.0.0.0. If you were 
 > previously relying on `docker-compose.yml` publicly exposing Baserow then please 
 > follow the [Make Baserow publicly accessible](./docs/guides/running-baserow-locally.md)
 > guide.

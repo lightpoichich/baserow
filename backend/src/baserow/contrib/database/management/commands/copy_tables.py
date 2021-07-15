@@ -37,14 +37,23 @@ class Command(BaseCommand):
             type=str,
             help="The database connection name to copy tables to the public schema.",
         )
+        parser.add_argument(
+            "--actually-run",
+            action="store_true",
+            help="Provide this flag if you want to actually do the copy. Without this "
+            "flag the command will run in a dry run mode and not make any changes.",
+        )
 
     def handle(self, *args, **options):
+        actually_run = "actually_run" in options and options["actually_run"]
+
         source = options["source_database"]
         source_connection = connections[source]
         source_tables = source_connection.introspection.table_names()
         source_connection_params = connection_string_from_django_connection(
             source_connection
         )
+        source_db_name = source_connection.settings_dict["NAME"]
 
         target = options["target_database"]
         target_connection = connections[target]
@@ -52,15 +61,33 @@ class Command(BaseCommand):
             target_connection
         )
         target_tables = set(target_connection.introspection.table_names())
+        target_db_name = target_connection.settings_dict["NAME"]
+
+        if actually_run:
+            print(
+                f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
+                f"{target_db_name}"
+            )
+        else:
+            print(
+                "Dry run... If --actually-run was provided then would"
+                f" copy {source_db_name} to {target_db_name}"
+            )
 
         for table in source_tables:
             if table not in target_tables:
                 print(f"Importing {table}")
-                run(
+                command = (
                     f"pg_dump {source_connection_params} -t public.{table} | "
-                    f"psql {target_connection_params}",
-                    source_connection.settings_dict["PASSWORD"],
+                    f"psql {target_connection_params}"
                 )
+                if actually_run:
+                    run(
+                        command,
+                        source_connection.settings_dict["PASSWORD"],
+                    )
+                else:
+                    print(f"Would have run {command}.")
             else:
                 print(
                     f"Skipping import of {table} as it is already in the target "

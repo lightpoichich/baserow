@@ -5,7 +5,7 @@ If you just want to try out Baserow on your local computer, it is best to use
 Baserow only accessible on the machine it is running on.
 
 Please note, the Docker images and compose files provided by Baserow are currently only
-intended for use without modification for local only testing. Exposing these containers
+intended for use without modification locally. Exposing these containers
 publicly on the internet is not currently supported and is done at your own risk.
 
 ### Quickstart

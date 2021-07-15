@@ -10,8 +10,11 @@ Gitter https://gitter.im/bramw-baserow/community.
 > `docker-compose.yml` then it is possible this redis server has been exposed to the 
 > internet depending on your operating system, networking setup and firewall settings.
 > Please update to the latest version of Baserow, 1.4.2 which no longer exposes the 
-> redis, db and mjml containers, and also only exposes the backend, web-frontend and 
-> media containers on localhost and not on 0.0.0.0. 
+> redis, db and mjml containers. Additionally, 1.4.2 only exposes the backend, 
+> web-frontend and media containers now localhost and not on 0.0.0.0. If you were 
+> previously relying on `docker-compose.yml` publicly exposing Baserow then please 
+> follow the [Make Baserow publicly accessible](./docs/guides/running-baserow-locally.md)
+> guide.
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 *Beta*

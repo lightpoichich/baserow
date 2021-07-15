@@ -42,9 +42,9 @@ $ BACKEND_PORT=8001 ./dev.sh
 
 ### Make Baserow publicly accessible
 
-Please note, the Docker images and compose files provided by Baserow are currently only
-intended for use without modification for local only testing. Exposing these containers
-publicly on the internet is not currently supported and is done at your own risk. 
+Please note, the Docker and compose files provided by Baserow are currently only
+intended for local use. Exposing these containers publicly on the internet is not 
+currently supported and is done at your own risk.
 
 By default when you run `docker-compose up` you can only access Baserow from the same
 machine by visiting `localhost:3000` or `127.0.0.1:3000`. If you are running the Baserow

@@ -24,7 +24,7 @@ def connection_string_from_django_connection(django_connection):
 
 
 class Command(BaseCommand):
-    help = "Fills a table with random data."
+    help = "Copies all the tables from one django database connection to another."
 
     def add_arguments(self, parser):
         parser.add_argument(

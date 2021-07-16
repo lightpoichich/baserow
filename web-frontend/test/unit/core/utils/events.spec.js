@@ -1,7 +1,8 @@
 import {
-  isAlphabeticCharacter,
-  isNumberCharacter,
-  isSpecialCharacter,
+  isUnicodeLetterCharacter,
+  isUnicodeNumberCharacter,
+  isUnicodePunctuationCharacter,
+  isUnicodeSymbolCharacter,
 } from '@baserow/modules/core/utils/events'
 
 describe('test key press event helpers', () => {
@@ -32,6 +33,7 @@ describe('test key press event helpers', () => {
     'x',
     'y',
     'z',
+    'µ',
   ]
 
   const aToZUpper = [
@@ -109,44 +111,44 @@ describe('test key press event helpers', () => {
   // Tests for isAlphabeticCharacter function
 
   test.each(aToZLower)(
-    'test alphabetic character lower should be true',
+    'test letter character lower should be true',
     (value) => {
-      expect(isAlphabeticCharacter(value)).toBeTruthy()
+      expect(isUnicodeLetterCharacter(value)).toBeTruthy()
     }
   )
 
   test.each(aToZUpper)(
-    'test alphabetic character upper should be true',
+    'test letter character upper should be true',
     (value) => {
-      expect(isAlphabeticCharacter(value)).toBeTruthy()
+      expect(isUnicodeLetterCharacter(value)).toBeTruthy()
     }
   )
 
   test.each(notString)(
-    'test alphabetic character wrong type should be false',
+    'test letter character wrong type should be false',
     (value) => {
-      expect(isAlphabeticCharacter(value)).toBeFalsy()
+      expect(isUnicodeLetterCharacter(value)).toBeFalsy()
     }
   )
 
   test.each(testNumberCases)(
-    'test alphabetic character numbers should be false',
+    'test letter character numbers should be false',
     (value) => {
-      expect(isAlphabeticCharacter(value)).toBeFalsy()
+      expect(isUnicodeLetterCharacter(value)).toBeFalsy()
     }
   )
 
   test.each(specialCharacterCases)(
-    'test alphabetic character special characters should be false',
+    'test letter character special characters should be false',
     (value) => {
-      expect(isAlphabeticCharacter(value)).toBeFalsy()
+      expect(isUnicodeLetterCharacter(value)).toBeFalsy()
     }
   )
 
   test.each(aToZMoreThanOneChar)(
-    'test alphabetic character with more than one characters should be false',
+    'test letter character with more than one characters should be false',
     (value) => {
-      expect(isAlphabeticCharacter(value)).toBeFalsy()
+      expect(isUnicodeLetterCharacter(value)).toBeFalsy()
     }
   )
 
@@ -155,28 +157,28 @@ describe('test key press event helpers', () => {
   test.each(testNumberCases)(
     'test number character should be true',
     (value) => {
-      expect(isNumberCharacter(value)).toBeTruthy()
+      expect(isUnicodeNumberCharacter(value)).toBeTruthy()
     }
   )
 
   test.each(testNumberCasesNumber)(
     'test number character with number type should be true',
     (value) => {
-      expect(isNumberCharacter(value)).toBeTruthy()
+      expect(isUnicodeNumberCharacter(value)).toBeTruthy()
     }
   )
 
   test.each(aToZLower)(
     'test number character with alphabetic lower character strings should be false',
     (value) => {
-      expect(isNumberCharacter(value)).toBeFalsy()
+      expect(isUnicodeNumberCharacter(value)).toBeFalsy()
     }
   )
 
   test.each(aToZUpper)(
     'test number character with alphabetic upper character strings should be false',
     (value) => {
-      expect(isNumberCharacter(value)).toBeFalsy()
+      expect(isUnicodeNumberCharacter(value)).toBeFalsy()
     }
   )
 
@@ -185,42 +187,54 @@ describe('test key press event helpers', () => {
   test.each(specialCharacterCases)(
     'test special characters should be true',
     (value) => {
-      expect(isSpecialCharacter(value)).toBeTruthy()
+      const result =
+        isUnicodeSymbolCharacter(value) || isUnicodePunctuationCharacter(value)
+      expect(result).toBeTruthy()
     }
   )
 
   test.each(aToZLower)(
     'test special characters with alphabetic lower characters should be false',
     (value) => {
-      expect(isSpecialCharacter(value)).toBeFalsy()
+      const result =
+        isUnicodeSymbolCharacter(value) || isUnicodePunctuationCharacter(value)
+      expect(result).toBeFalsy()
     }
   )
 
   test.each(aToZUpper)(
     'test special characters with alphabetic upper characters should be false',
     (value) => {
-      expect(isSpecialCharacter(value)).toBeFalsy()
+      const result =
+        isUnicodeSymbolCharacter(value) || isUnicodePunctuationCharacter(value)
+      expect(result).toBeFalsy()
     }
   )
 
   test.each(testNumberCases)(
     'test special characters with number characters should be false',
     (value) => {
-      expect(isSpecialCharacter(value)).toBeFalsy()
+      const result =
+        isUnicodeSymbolCharacter(value) || isUnicodePunctuationCharacter(value)
+      expect(result).toBeFalsy()
     }
   )
 
   test.each(testNumberCasesNumber)(
     'test special characters with numbers should be false',
     (value) => {
-      expect(isSpecialCharacter(value)).toBeFalsy()
+      const result =
+        isUnicodeSymbolCharacter(value) || isUnicodePunctuationCharacter(value)
+      expect(result).toBeFalsy()
     }
   )
 
   test.each(notString)(
     'test special characters with different objects should be false',
     (value) => {
-      expect(isSpecialCharacter(value)).toBeFalsy()
+      const result =
+        isUnicodeSymbolCharacter(value) || isUnicodePunctuationCharacter(value)
+      expect(result).toBeFalsy()
     }
   )
 })

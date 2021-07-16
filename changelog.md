@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+* Fixed bug where the currently selected dropdown item is out of view from the dropdown
+  window when scrolling with the arrow keys.
 
 ## Released (2021-07-15)
 

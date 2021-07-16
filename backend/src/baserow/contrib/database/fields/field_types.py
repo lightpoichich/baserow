@@ -916,12 +916,17 @@ class LinkRowFieldType(FieldType):
         if not isinstance(from_field, self.model_class) and isinstance(
             to_field, self.model_class
         ):
+            handler = FieldHandler()
+            related_field_name = handler.find_next_unused_field_name(
+                to_field.link_row_table,
+                [f"{to_field.table.name}", f"{to_field.table.name} - {to_field.name}"],
+            )
             to_field.link_row_related_field = FieldHandler().create_field(
                 user=user,
                 table=to_field.link_row_table,
                 type_name=self.type,
                 do_schema_change=False,
-                name=to_field.table.name,
+                name=related_field_name,
                 link_row_table=to_field.table,
                 link_row_related_field=to_field,
                 link_row_relation_id=to_field.link_row_relation_id,

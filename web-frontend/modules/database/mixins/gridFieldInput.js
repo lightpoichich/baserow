@@ -1,4 +1,4 @@
-import { isPrintableCharacterKeyPress } from '@baserow/modules/core/utils/events'
+import { isPrintableUnicodeCharacterKeyPress } from '@baserow/modules/core/utils/events'
 
 /**
  * This mixin can be used with a grid view field if the field only needs an input. For
@@ -70,7 +70,7 @@ export default {
 
         // If a printable key was pressed while not editing we want to replace the
         // exiting value with something new.
-        if (!this.editing && isPrintableCharacterKeyPress(event)) {
+        if (!this.editing && isPrintableUnicodeCharacterKeyPress(event)) {
           this.edit('', event)
         }
       }

@@ -253,7 +253,7 @@ export default {
      * window in which to scroll
      * If the element to scroll to is below the current dropdown's
      * bottom scroll position, then scroll so that the item to scroll to
-     * is the last viewable item in the dropdown window. Reversely if the element to
+     * is the last viewable item in the dropdown window. Conversely if the element to
      * scroll to is above the current dropdown's top scroll position then scroll so
      * that the item to scroll to is the first viewable item in the dropdown window
      */
@@ -277,23 +277,25 @@ export default {
       const movingDownwards = !isArrowUp
       const movingUpwards = isArrowUp
 
-      // Calculates whether the next item on the bottom of the dropdown is out of view
-      // which happens when the difference between the element to scroll to's
+      // nextItemOutOfView can be used if one wants to check if the item to scroll
+      // to is out of view of the current dropdowns bottom scroll position.
+      // This happens when the difference between the element to scroll to's
       // offsetTop and the current scrollTop of the dropdown is smaller than height
       // of the dropdown minus the height of the element
       const nextItemOutOfView =
         itemToScrollTo.$el.offsetTop - this.$refs.items.scrollTop >
         this.$refs.items.clientHeight - itemToScrollTo.$el.clientHeight
 
-      // Calculates whether the previous item on top of the dropdown is out of view
-      // which happens when the element to scroll to's offsetTop is smaller than the
+      // prevItemOutOfView can be used if one wants to check if the item to scroll
+      // to is out of view of the current dropdowns top scroll position.
+      // This happens when the element to scroll to's offsetTop is smaller than the
       // current scrollTop of the dropdown
       const prevItemOutOfView =
         itemToScrollTo.$el.offsetTop < this.$refs.items.scrollTop
 
       // When the user is scrolling downwards (i.e. pressing key down)
       // and the itemToScrollTo is out of view we want to add the height of the
-      // element plus its bottom margin so that is perfectly aligned
+      // element plus its bottom margin so that is perfectly aligned at the bottom
       if (nextItemOutOfView && movingDownwards) {
         return (
           this.$refs.items.scrollTop +

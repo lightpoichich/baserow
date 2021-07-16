@@ -962,9 +962,7 @@ def test_change_link_row_related_table_when_field_with_related_name_exists(
         database=table.database, user=user, name="SecondRelatedTable"
     )
     # Make a field which will clash with the newly updated/created link row field later
-    clashing_field_name = data_fixture.create_text_field(
-        table=second_related_table, order=1, name="Table"
-    )
+    data_fixture.create_text_field(table=second_related_table, order=1, name="Table")
 
     handler = FieldHandler()
     link_row = handler.create_field(

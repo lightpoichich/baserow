@@ -36,7 +36,7 @@
 
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
-import { isPrintableCharacterKeyPress } from '@baserow/modules/core/utils/events'
+import { isPrintableUnicodeCharacterKeyPress } from '@baserow/modules/core/utils/events'
 import singleSelectField from '@baserow/modules/database/mixins/singleSelectField'
 
 export default {
@@ -78,7 +78,7 @@ export default {
         if (
           !this.editing &&
           (event.keyCode === 13 ||
-            isPrintableCharacterKeyPress(event) ||
+            isPrintableUnicodeCharacterKeyPress(event) ||
             event.key === 'F2')
         ) {
           this.toggleDropdown()

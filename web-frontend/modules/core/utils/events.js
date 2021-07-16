@@ -1,37 +1,49 @@
-export function isAlphabeticCharacter(str) {
+export function isUnicodeLetterCharacter(str) {
   /*
   This function determines whether the pressed key is a alphabetic character
-   */
-  const charRegex = /^[A-Za-z]$/
   if (charRegex.test(str)) {
     return true
   }
   return false
+   */
+  const charRegex = /^\p{L}\p{M}*$/iu
+  return charRegex.test(str)
 }
 
-export function isNumberCharacter(str) {
+export function isUnicodeNumberCharacter(str) {
   /*
   This function determines whether the pressed key is a number
    */
-  const numberRegex = /^\d$/
+  const numberRegex = /^\p{N}$/iu
   if (numberRegex.test(str)) {
     return true
   }
   return false
 }
 
-export function isSpecialCharacter(str) {
+export function isUnicodeSymbolCharacter(str) {
   /*
-  This function determines whether the pressed key is a special character
+  This function determines whether the pressed key is a math symbol, currency sign, etc.
    */
-  const specialCharRegex = /^[<>{}"/|;:.,~!?@#$%=&*§[\]\\´`+'\-_€^]$/
-  if (specialCharRegex.test(str)) {
+  const symbolRegex = /^\p{S}$/iu
+  if (symbolRegex.test(str)) {
     return true
   }
   return false
 }
 
-export function isPrintableCharacterKeyPress(event) {
+export function isUnicodePunctuationCharacter(str) {
+  /*
+  This function determines whether the pressed key is a punctuation character
+   */
+  const punctuationRegex = /^\p{P}$/iu
+  if (punctuationRegex.test(str)) {
+    return true
+  }
+  return false
+}
+
+export function isPrintableUnicodeCharacterKeyPress(event) {
   /*
   This function is a helper which determines whether the pressed key
   is either a
@@ -42,9 +54,10 @@ export function isPrintableCharacterKeyPress(event) {
    */
   const { key } = event
   const isPrintableCharacter =
-    isAlphabeticCharacter(key) ||
-    isNumberCharacter(key) ||
-    isSpecialCharacter(key)
+    isUnicodeLetterCharacter(key) ||
+    isUnicodeNumberCharacter(key) ||
+    isUnicodeSymbolCharacter(key) ||
+    isUnicodePunctuationCharacter(key)
 
   return isPrintableCharacter
 }

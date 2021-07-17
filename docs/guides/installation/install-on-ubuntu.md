@@ -92,18 +92,18 @@ it for when you need it later.
 
 In order to use the Baserow application, we will need to create a media directory for
 the uploaded user files, a virtual environment and install some more dependencies
-like: NodeJS, Yarn, Python 3.
+like: NodeJS, Yarn, Python 3.7.
 
 ```bash
 # Create uploaded user files and media directory
 $ mkdir media
 $ chmod 0755 media
 
-# Install python3, pip & virtualenv
-$ apt install python3 python3-pip virtualenv libpq-dev libmysqlclient-dev -y
+# Install python3.7, pip & virtualenv
+$ apt install python3.7 python3.7-dev python3-pip virtualenv libpq-dev libmysqlclient-dev -y
 
 # Create virtual environment
-$ virtualenv -p python3 env
+$ virtualenv -p python3.7 env
 
 # Activate the virtual environment
 $ source env/bin/activate

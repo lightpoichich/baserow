@@ -10,11 +10,11 @@ def run(command, password):
     proc.wait()
 
 
-def connection_string_from_django_connection(django_connection):
+def connection_string_from_django_connection(django_connection, host_name, port):
     settings_dict = django_connection.settings_dict
     params = [
-        "-h " + settings_dict["HOST"],
-        "-p " + settings_dict["PORT"],
+        "-h " + settings_dict["HOST"] if host_name == "django" else host_name,
+        "-p " + settings_dict["PORT"] if port == "django" else port,
         "-U " + settings_dict["USER"],
         "-w",  # Specify the password is not to be provided interactively as we are
         # setting the PGPASSWORD env variable instead.
@@ -37,6 +37,18 @@ class Command(BaseCommand):
             help="The name of the folder to store the backup in.",
         )
         parser.add_argument(
+            "host_name",
+            type=str,
+            help="To use the django connection setting enter django, otherwise the "
+            "host name you want to use.",
+        )
+        parser.add_argument(
+            "port",
+            type=str,
+            help="To use the django connection setting enter django, otherwise the "
+            "port you want to use.",
+        )
+        parser.add_argument(
             "--actually-run",
             action="store_true",
             help="Provide this flag if you want to actually do the copy. Without this "
@@ -54,8 +66,12 @@ class Command(BaseCommand):
 
         source = options["database"]
         backup_name = options["backup_name"]
+        host_name = options["backup_name"]
+        port = options["port"]
         db_connection = connections[source]
-        db_connection_string = connection_string_from_django_connection(db_connection)
+        db_connection_string = connection_string_from_django_connection(
+            db_connection, host_name, port
+        )
         if actually_run:
             print(f"REAL RUN, ABOUT TO BACKUP DATABASE {source} ")
         else:

@@ -42,9 +42,15 @@ class Command(BaseCommand):
             help="Provide this flag if you want to actually do the copy. Without this "
             "flag the command will run in a dry run mode and not make any changes.",
         )
+        parser.add_argument(
+            "--ssl",
+            action="store_true",
+            help="Provide this flag if psql should be run with sslmode=require",
+        )
 
     def handle(self, *args, **options):
         actually_run = "actually_run" in options and options["actually_run"]
+        ssl = "ssl" in options and options["ssl"]
 
         source = options["database"]
         backup_name = options["backup_name"]
@@ -59,10 +65,11 @@ class Command(BaseCommand):
             f"pg_basebackup {db_connection_string} -D {backup_name} -F t -z -l "
             f'"baserow backup run at `date`" -X stream -R -P'
         )
+
         if actually_run:
-            run(
-                command,
-                db_connection.settings_dict["PASSWORD"],
-            )
+            env_variables = {"PGPASSWORD": db_connection.settings_dict["PASSWORD"]}
+            if ssl:
+                env_variables["PGSSLMODE"] = "require"
+            run(command, env_variables)
         else:
             print(f"Would have run {command}.")

@@ -4,9 +4,9 @@ from django.core.management.base import BaseCommand
 from django.db import connections
 
 
-def run(command, password):
+def run(command, env):
     print(f"Running {command}")
-    proc = Popen(command, shell=True, env={"PGPASSWORD": password})
+    proc = Popen(command, shell=True, env=env)
     proc.wait()
 
 
@@ -66,7 +66,7 @@ class Command(BaseCommand):
 
         source = options["database"]
         backup_name = options["backup_name"]
-        host_name = options["backup_name"]
+        host_name = options["host_name"]
         port = options["port"]
         db_connection = connections[source]
         db_connection_string = connection_string_from_django_connection(

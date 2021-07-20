@@ -30,20 +30,24 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "source_database",
+            "--source_connection",
             type=str,
-            help="The database connection name to copy tables from the public schema.",
+            required=True,
+            help="The django database connection name to copy tables from the public "
+                 "schema.",
         )
         parser.add_argument(
-            "target_database",
+            "--target_connection",
             type=str,
-            help="The database connection name to copy tables to the public schema.",
+            required=True,
+            help="The django database connection name to copy tables to the public "
+                 "schema.",
         )
         parser.add_argument(
-            "--actually-run",
+            "--dry-run",
             action="store_true",
-            help="Provide this flag if you want to actually do the copy. Without this "
-            "flag the command will run in a dry run mode and not make any changes.",
+            help="Provide this flag to show a dry run report of the tables that would "
+                 "be copied without this flag."
         )
         parser.add_argument(
             "--ssl",
@@ -52,10 +56,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        actually_run = "actually_run" in options and options["actually_run"]
+        dry_run = "dry_run" in options and options["dry_run"]
         ssl = "ssl" in options and options["ssl"]
 
-        source = options["source_database"]
+        source = options["source_connection"]
         source_connection = connections[source]
         source_tables = source_connection.introspection.table_names()
         source_connection_params = connection_string_from_django_connection(
@@ -63,7 +67,7 @@ class Command(BaseCommand):
         )
         source_db_name = source_connection.settings_dict["NAME"]
 
-        target = options["target_database"]
+        target = options["target_connection"]
         target_connection = connections[target]
         target_connection_params = connection_string_from_django_connection(
             target_connection
@@ -71,18 +75,18 @@ class Command(BaseCommand):
         target_tables = set(target_connection.introspection.table_names())
         target_db_name = target_connection.settings_dict["NAME"]
 
-        if actually_run:
-            self.stdout.write(
-                self.style.NOTICE(
-                    f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
-                    f"{target_db_name}"
-                )
-            )
-        else:
+        if dry_run:
             self.stdout.write(
                 self.style.WARNING(
                     "Dry run... If --actually-run was provided then would"
                     f" copy {source_db_name} to {target_db_name}"
+                )
+            )
+        else:
+            self.stdout.write(
+                self.style.NOTICE(
+                    f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
+                    f"{target_db_name}"
                 )
             )
 
@@ -98,15 +102,15 @@ class Command(BaseCommand):
                     f"pg_dump {source_connection_params} -t public.{table} | "
                     f"psql {target_connection_params}"
                 )
-                if actually_run:
+                if dry_run:
+                    self.stdout.write(f"Would have run {command}")
+                else:
                     self.stdout.write(f"Running command: {command}")
                     run(
                         command,
                         source_connection.settings_dict["PASSWORD"],
                         ssl_mode=ssl,
                     )
-                else:
-                    self.stdout.write(f"Would have run {command}")
             else:
                 self.stdout.write(
                     self.style.WARNING(

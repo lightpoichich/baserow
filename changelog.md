@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-* The ability to run Baserow with the user tables in a separate database has been 
-  removed entirely to prevent data integrity issues.
+* The internal setting allowing Baserow to run with the user tables in a separate 
+  database has been removed entirely to prevent data integrity issues.
   
 ## Released (2021-07-16)
 

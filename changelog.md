@@ -1,14 +1,51 @@
 # Changelog
 
 ## Unreleased
+* Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
+
+## Released (2021-07-16)
+
+* Fix bug preventing fields not being able to be converted to link row fields in some
+  situations.
+
+## Released (2021-07-15)
+
+* **Breaking Change**: Baserow's `docker-compose.yml` no longer exposes ports for 
+  the `db`, `mjml` and `redis` containers for security reasons. 
+* **Breaking Change**: `docker-compose.yml` will by default only expose Baserow on 
+  `localhost` and not `0.0.0.0`, meaning it will not be accessible remotely unless 
+  manually configured.
+
+## Released (2021-07-13)
+
+* Added a Heroku template and one click deploy button.
+* Fixed bug preventing the deletion of rows with a blank single select primary field.
+* Fixed error in trash cleanup job when deleting multiple rows and a field from the
+  same table at once.
+
+## Released (2021-07-12)
 
 * Made it possible to list table field meta-data with a token.
+* Added form view.
+* The API endpoint to update the grid view field options has been moved to
+  `/api/database/views/{view_id}/field-options/`.
+* The email field's validation is now consistent and much more permissive allowing most 
+  values which look like email addresses.
+* Add trash where deleted apps, groups, tables, fields and rows can be restored 
+  deletion.
 * Fix the create group invite endpoint failing when no message provided.
 * Single select options can now be ordered by drag and drop. 
 * Added before and after date filters.
 * Support building Baserow out of the box on Ubuntu by lowering the required docker
   version to build Baserow down to 19.03.
-* Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
+* Disallow duplicate field names in the same table, blank field names or field names
+  called 'order' and 'id'. Existing invalid field names will be fixed automatically. 
+* Add user_field_names GET flag to various endpoints which switches the API to work
+  using actual field names and not the internal field_1,field_2 etc identifiers.
+* Added templates:
+  * Commercial Property Management
+  * Company Asset Tracker
+  * Student Planner
 
 ## Released (2021-06-02)
 

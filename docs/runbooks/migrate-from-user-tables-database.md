@@ -43,8 +43,8 @@ versa.
 1. Ensure you have the command line utilities `pg_dump` and `psql` available, these can
    be installed in ubuntu by running `sudo apt install postgresql-client`
 1. Run a dry run copy by
-   executing: `./baserow copy_tables DJANGO_CONNECTION_NAME_TO_USER_TABLES_DB default`
-1. Confirm the dry run looks correct and append `--actually-run` to the above command to
+   executing: `./baserow copy_tables --source_connection=DJANGO_CONNECTION_NAME_TO_USER_TABLES_DB --target_connection=default --dry-run`
+1. Confirm the dry run looks correct and remove `--dry-run` to the above command to
    perform the real copy.
 1. Start-up your Baserow server.
 1. Confirm you can see your previous databases, tables and can create new ones.
@@ -56,7 +56,7 @@ versa.
 ## Steps to Rollback
 
 1. Simply down-grade your version of Baserow to the previous version.
-1. If you successfully ran the `copy_tables --actually-run` command above your default
+1. If you successfully ran the `copy_tables` command above your default
    Baserow database will now have a copy of all the user tables. Before attempting to
    migrate again you need to delete these copied tables otherwise when you come to
    repeat the command it will not overwrite the copies with potential new user table

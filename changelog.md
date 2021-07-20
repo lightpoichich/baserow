@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Added password validation to password reset page.
+
 ## Released (2021-07-16)
 
 * Fix bug preventing fields not being able to be converted to link row fields in some

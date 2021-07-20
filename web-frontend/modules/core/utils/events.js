@@ -47,9 +47,10 @@ export function isPrintableUnicodeCharacterKeyPress(event) {
   /*
   This function is a helper which determines whether the pressed key
   is either a
-    CharacterKey or
-    NumberKey or
-    SpecialCharacter
+    UnicodeLetterCharacter or
+    UnicodeNumberCharacter or
+    UnicodeSymbolCharacter or
+    UnicodePunctuationCharacter
   hereby defined as a 'printable character'
    */
   const { key } = event

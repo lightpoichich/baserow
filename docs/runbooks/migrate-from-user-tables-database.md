@@ -36,25 +36,29 @@ versa.
    `default` (and not overridden by other config files you might be using) then you do
    not need to follow this guide and can stop here.
 1. Ensure you have taken a recoverable backup of your Baserow database.
-1. Shut-down your Baserow server to ensure no further changes can be made to the 
-   database during the migration period. 
-1. Upgrade your version of Baserow, however leave the django connection pointed to
-   by your `USER_TABLES_DATABASE` setting.
-1. Run a dry run copy by executing: `./baserow copy_tables DJANGO_CONNECTION_NAME_TO_USER_TABLES_DB default`
+1. Shut-down your Baserow server to ensure no further changes can be made to the
+   database during the migration period.
+1. Upgrade your version of Baserow, however leave the django connection pointed to by
+   your `USER_TABLES_DATABASE` setting.
+1. Ensure you have the command line utilities `pg_dump` and `psql` available, these can
+   be installed in ubuntu by running `sudo apt install postgresql-client`
+1. Run a dry run copy by
+   executing: `./baserow copy_tables DJANGO_CONNECTION_NAME_TO_USER_TABLES_DB default`
 1. Confirm the dry run looks correct and append `--actually-run` to the above command to
    perform the real copy.
 1. Start-up your Baserow server.
 1. Confirm you can see your previous databases, tables and can create new ones.
-1. When confident everything is working as expected, all data has been copied and you 
+1. When confident everything is working as expected, all data has been copied and you
    have sufficient back-ups you can delete the old `USER_TABLES_DATABASE` entirely.
-1. Delete the Django connection config pointed to by your old 
-   `USER_TABLES_DATABASE` setting.
+1. Delete the Django connection config pointed to by your old
+   `USER_TABLES_DATABASE` setting and the setting itself.
 
 ## Steps to Rollback
+
 1. Simply down-grade your version of Baserow to the previous version.
 1. If you successfully ran the `copy_tables --actually-run` command above your default
    Baserow database will now have a copy of all the user tables. Before attempting to
-   migrate again you need to delete these copied tables otherwise when you come to 
+   migrate again you need to delete these copied tables otherwise when you come to
    repeat the command it will not overwrite the copies with potential new user table
    data. If you know the user tables have not been modified then this is not an issue.
 

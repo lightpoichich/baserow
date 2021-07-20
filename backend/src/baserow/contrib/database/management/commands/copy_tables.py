@@ -64,19 +64,25 @@ class Command(BaseCommand):
         target_db_name = target_connection.settings_dict["NAME"]
 
         if actually_run:
-            print(
-                f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
-                f"{target_db_name}"
+            self.stdout.write(
+                self.style.NOTICE(
+                    f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
+                    f"{target_db_name}"
+                )
             )
         else:
-            print(
-                "Dry run... If --actually-run was provided then would"
-                f" copy {source_db_name} to {target_db_name}"
+            self.stdout.write(
+                self.style.WARNING(
+                    "Dry run... If --actually-run was provided then would"
+                    f" copy {source_db_name} to {target_db_name}"
+                )
             )
 
+        count = 0
         for table in source_tables:
             if table not in target_tables:
-                print(f"Importing {table}")
+                count += 1
+                self.stdout.write(self.style.SUCCESS(f"Importing {table}"))
                 command = (
                     f"pg_dump {source_connection_params} -t public.{table} | "
                     f"psql {target_connection_params}"
@@ -87,9 +93,12 @@ class Command(BaseCommand):
                         source_connection.settings_dict["PASSWORD"],
                     )
                 else:
-                    print(f"Would have run {command}.")
+                    self.stdout.write(f"Would have run {command}")
             else:
-                print(
-                    f"Skipping import of {table} as it is already in the target "
-                    "database."
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Skipping import of {table} as it is already in the target "
+                        "database."
+                    )
                 )
+        self.stdout.write(self.style.SUCCESS(f"Successfully copied {count} tables."))

@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## Released (2021-07-16)
+
+* Fix bug preventing fields not being able to be converted to link row fields in some
+  situations.
+
+## Released (2021-07-15)
+
+* **Breaking Change**: Baserow's `docker-compose.yml` no longer exposes ports for 
+  the `db`, `mjml` and `redis` containers for security reasons. 
+* **Breaking Change**: `docker-compose.yml` will by default only expose Baserow on 
+  `localhost` and not `0.0.0.0`, meaning it will not be accessible remotely unless 
+  manually configured.
+
+## Released (2021-07-13)
+
+* Added a Heroku template and one click deploy button.
+* Fixed bug preventing the deletion of rows with a blank single select primary field.
+* Fixed error in trash cleanup job when deleting multiple rows and a field from the
+  same table at once.
+
 ## Released (2021-07-12)
 
 * Made it possible to list table field meta-data with a token.

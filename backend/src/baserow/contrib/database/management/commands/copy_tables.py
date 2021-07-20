@@ -4,9 +4,11 @@ from django.core.management.base import BaseCommand
 from django.db import connections
 
 
-def run(command, password):
-    print(f"Running {command}")
-    proc = Popen(command, shell=True, env={"PGPASSWORD": password})
+def run(command, password, ssl_mode=False):
+    env = {"PGPASSWORD": password}
+    if ssl_mode:
+        env["PGSSLMODE"] = "require"
+    proc = Popen(command, shell=True, env=env)
     proc.wait()
 
 
@@ -43,9 +45,15 @@ class Command(BaseCommand):
             help="Provide this flag if you want to actually do the copy. Without this "
             "flag the command will run in a dry run mode and not make any changes.",
         )
+        parser.add_argument(
+            "--ssl",
+            action="store_true",
+            help="Provide this flag if ssl should be enabled via sslmode=require",
+        )
 
     def handle(self, *args, **options):
         actually_run = "actually_run" in options and options["actually_run"]
+        ssl = "ssl" in options and options["ssl"]
 
         source = options["source_database"]
         source_connection = connections[source]
@@ -64,32 +72,46 @@ class Command(BaseCommand):
         target_db_name = target_connection.settings_dict["NAME"]
 
         if actually_run:
-            print(
-                f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
-                f"{target_db_name}"
+            self.stdout.write(
+                self.style.NOTICE(
+                    f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
+                    f"{target_db_name}"
+                )
             )
         else:
-            print(
-                "Dry run... If --actually-run was provided then would"
-                f" copy {source_db_name} to {target_db_name}"
+            self.stdout.write(
+                self.style.WARNING(
+                    "Dry run... If --actually-run was provided then would"
+                    f" copy {source_db_name} to {target_db_name}"
+                )
             )
 
+        if ssl:
+            self.stdout.write(self.style.SUCCESS("Running with sslmode=require"))
+
+        count = 0
         for table in source_tables:
             if table not in target_tables:
-                print(f"Importing {table}")
+                count += 1
+                self.stdout.write(self.style.SUCCESS(f"Importing {table}"))
                 command = (
                     f"pg_dump {source_connection_params} -t public.{table} | "
                     f"psql {target_connection_params}"
                 )
                 if actually_run:
+                    self.stdout.write(f"Running command: {command}")
                     run(
                         command,
                         source_connection.settings_dict["PASSWORD"],
+                        ssl_mode=ssl,
                     )
                 else:
-                    print(f"Would have run {command}.")
+                    self.stdout.write(f"Would have run {command}")
             else:
-                print(
-                    f"Skipping import of {table} as it is already in the target "
-                    "database."
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Skipping import of {table} as it is already in the target "
+                        "database."
+                    )
                 )
+        self.stdout.write(self.style.SUCCESS(f"Successfully copied {count} tables."))

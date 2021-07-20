@@ -4,9 +4,11 @@ from django.core.management.base import BaseCommand
 from django.db import connections
 
 
-def run(command, password):
-    print(f"Running {command}")
-    proc = Popen(command, shell=True, env={"PGPASSWORD": password})
+def run(command, password, ssl_mode=False):
+    env = {"PGPASSWORD": password}
+    if ssl_mode:
+        env["PGSSLMODE"] = "require"
+    proc = Popen(command, shell=True, env=env)
     proc.wait()
 
 
@@ -43,9 +45,15 @@ class Command(BaseCommand):
             help="Provide this flag if you want to actually do the copy. Without this "
             "flag the command will run in a dry run mode and not make any changes.",
         )
+        parser.add_argument(
+            "--ssl",
+            action="store_true",
+            help="Provide this flag if ssl should be enabled via sslmode=require",
+        )
 
     def handle(self, *args, **options):
         actually_run = "actually_run" in options and options["actually_run"]
+        ssl = "ssl" in options and options["ssl"]
 
         source = options["source_database"]
         source_connection = connections[source]
@@ -78,6 +86,9 @@ class Command(BaseCommand):
                 )
             )
 
+        if ssl:
+            self.stdout.write(self.style.SUCCESS("Running with sslmode=require"))
+
         count = 0
         for table in source_tables:
             if table not in target_tables:
@@ -88,9 +99,11 @@ class Command(BaseCommand):
                     f"psql {target_connection_params}"
                 )
                 if actually_run:
+                    self.stdout.write(f"Running command: {command}")
                     run(
                         command,
                         source_connection.settings_dict["PASSWORD"],
+                        ssl_mode=ssl,
                     )
                 else:
                     self.stdout.write(f"Would have run {command}")

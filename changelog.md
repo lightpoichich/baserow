@@ -4,6 +4,11 @@
 
 * The ability to run Baserow with the user tables in a separate database has been 
   removed entirely to prevent data integrity issues.
+  
+## Released (2021-07-16)
+
+* Fix bug preventing fields not being able to be converted to link row fields in some
+  situations.
 
 ## Released (2021-07-15)
 

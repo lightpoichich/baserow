@@ -56,12 +56,22 @@ install Redis with the following commands.
 $ sudo add-apt-repository ppa:chris-lea/redis-server
 $ sudo apt update
 $ sudo apt install redis-server -y
-$ sed -i 's/supervised no/supervised systemd/g' /etc/redis/redis.conf
+$ sudo sed -i 's/supervised no/supervised systemd/g' /etc/redis/redis.conf
 $ sudo systemctl enable --now redis-server
 $ sudo systemctl restart redis.service
 ```
 
 Redis is not publicly accessible by default, so there is no need to setup a password.
+
+## Install other utils 
+
+Git is required to download the source code of Baserow so you can install it in the 
+following section. Curl will be required later in the guide to install nodejs. 
+Install them both using the following command:
+
+```
+$ sudo apt install git curl -y 
+```
 
 ## Install Baserow
 

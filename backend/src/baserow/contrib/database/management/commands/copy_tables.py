@@ -34,20 +34,20 @@ class Command(BaseCommand):
             type=str,
             required=True,
             help="The django database connection name to copy tables from the public "
-                 "schema.",
+            "schema.",
         )
         parser.add_argument(
             "--target_connection",
             type=str,
             required=True,
             help="The django database connection name to copy tables to the public "
-                 "schema.",
+            "schema.",
         )
         parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Provide this flag to show a dry run report of the tables that would "
-                 "be copied without this flag."
+            "be copied without this flag.",
         )
         parser.add_argument(
             "--ssl",

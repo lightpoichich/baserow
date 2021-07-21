@@ -1,3 +1,4 @@
+import math
 from subprocess import Popen
 
 from django.core.management.base import BaseCommand
@@ -44,6 +45,12 @@ class Command(BaseCommand):
             "schema.",
         )
         parser.add_argument(
+            "--batch_size",
+            type=int,
+            required=True,
+            help="The number of tables to transfer at once in each pg_dump batch.",
+        )
+        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Provide this flag to show a dry run report of the tables that would "
@@ -58,6 +65,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = "dry_run" in options and options["dry_run"]
         ssl = "ssl" in options and options["ssl"]
+        batch_size = options["batch_size"]
 
         source = options["source_connection"]
         source_connection = connections[source]
@@ -94,12 +102,24 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Running with sslmode=require"))
 
         count = 0
-        for table in source_tables:
-            if table not in target_tables:
-                count += 1
-                self.stdout.write(self.style.SUCCESS(f"Importing {table}"))
+        num_batches = math.ceil(len(source_tables) / batch_size)
+        for batch_num in range(num_batches):
+            batch = set(
+                source_tables[batch_num * batch_size : (batch_num + 1) * batch_size]
+            )
+            tables_not_in_target_db = batch.difference(target_tables)
+            num_to_copy = len(tables_not_in_target_db)
+            count += num_to_copy
+            self.stdout.write(
+                self.style.SUCCESS(f"Importing {num_to_copy} tables in " f"one go")
+            )
+            if num_to_copy > 0:
+                table_str = ""
+                for table in tables_not_in_target_db:
+                    table_str += f" -t public.{table}"
+
                 command = (
-                    f"pg_dump {source_connection_params} -t public.{table} | "
+                    f"pg_dump {source_connection_params} {table_str} | "
                     f"psql {target_connection_params}"
                 )
                 if dry_run:
@@ -114,8 +134,8 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(
                     self.style.WARNING(
-                        f"Skipping import of {table} as it is already in the target "
-                        "database."
+                        f"Skipping import of batch {batch_num} as all tables were "
+                        "already in the target database."
                     )
                 )
         self.stdout.write(self.style.SUCCESS(f"Successfully copied {count} tables."))

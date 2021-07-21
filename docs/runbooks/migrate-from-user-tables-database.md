@@ -42,8 +42,23 @@ versa.
    your `USER_TABLES_DATABASE` setting.
 1. Ensure you have the command line utilities `pg_dump` and `psql` available, these can
    be installed in ubuntu by running `sudo apt install postgresql-client`
+1. If you are connecting to a connection pool service like pgbouncer with your instance
+   of Baserow, you need to ensure `copy_tables` will not run using a pooled connection.
+    1. This is because `copy_tables` uses both `pg_dump` and `psql` which when combined
+       will change the search_path of the current connection. If this happens to a
+       shared pooled connection then future clients of the connection will encounter
+       errors as if the Baserow tables don't exist. You must set the `DATABASE_HOST`
+       , `DATABASE_PORT` and `DATABASE_NAME` environment variables before running the
+       `copy_tables` command to ensure you connect directly to the database instead of
+       via pg_bouncer. If you accidentally run `copy_tables` via a pooled connection you
+       will need to either manually run `RESET search_path;` on that connection or reset
+       that shared connection some other way.
 1. Run a dry run copy by
-   executing: `./baserow copy_tables --source_connection=DJANGO_CONNECTION_NAME_TO_USER_TABLES_DB --target_connection=default --dry-run`
+   executing: `./baserow copy_tables --batch_size=10 --source_connection=DJANGO_CONNECTION_NAME_TO_USER_TABLES_DB --target_connection=default --dry-run`
+    1. The `batch_size` parameter controls how many tables will be copied on each
+       individual run of `pg_dump` and import of those tables executed by `copy_tables`.
+       You can raise this value to increase the speed of the command or lower it if you
+       encounter out of shared memory errors.
 1. Confirm the dry run looks correct and remove `--dry-run` to the above command to
    perform the real copy.
 1. Start-up your Baserow server.
@@ -56,9 +71,9 @@ versa.
 ## Steps to Rollback
 
 1. Simply down-grade your version of Baserow to the previous version.
-1. If you successfully ran the `copy_tables` command above your default
-   Baserow database will now have a copy of all the user tables. Before attempting to
-   migrate again you need to delete these copied tables otherwise when you come to
-   repeat the command it will not overwrite the copies with potential new user table
-   data. If you know the user tables have not been modified then this is not an issue.
+1. If you successfully ran the `copy_tables` command above your default Baserow database
+   will now have a copy of all the user tables. Before attempting to migrate again you
+   need to delete these copied tables otherwise when you come to repeat the command it
+   will not overwrite the copies with potential new user table data. If you know the
+   user tables have not been modified then this is not an issue.
 

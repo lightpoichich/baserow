@@ -3,7 +3,7 @@
 > Users who have not manually changed their default Baserow backend Django configuration
 > to enable a separate `USER_TABLES_DATABASE` do not need to follow this runbook, will
 > not been affected by the database inconstancy issues described below and finally do
-> not need to perform any special upgrade steps for version 1.4.4 or later. As this
+> not need to perform any special upgrade steps for version 1.5 or later. As this
 > setting is an internal undocumented Baserow setting, we believe/hope no users have
 > been using this setting and this guide is primarily for internal Baserow dev
 > reference.
@@ -11,11 +11,11 @@
 This runbook describes how to migrate away from storing user tables in a separate user
 tables database back to storing them in the same database as the rest of Baserow's
 tables. If you have set the internal Baserow config parameter `USER_TABLES_DATABASE`
-present in versions prior to 1.4.3 to connection for another database, then you are
+present in versions prior to 1.5 to connection for another database, then you are
 storing the user tables in another database and must follow this migration to upgrade to
-1.4.4 or later.
+1.5 or later.
 
-`USER_TABLES_DATABASE` was deleted as an option entirely in version 1.4.4 as it was
+`USER_TABLES_DATABASE` was deleted as an option entirely in version 1.5 as it was
 incredibly dangerous to enable. This is because any crash that happened in a transaction
 after a change had been made to the `USER_TABLES_DATABASE`
 would not roll back the changes in the `USER_TABLES_DATABASE`, but it would rollback

@@ -1,14 +1,12 @@
 import math
 from subprocess import Popen
+from typing import Callable, Dict, Any
 
 from django.core.management.base import BaseCommand
 from django.db import connections
 
 
-def run(command, password, ssl_mode=False):
-    env = {"PGPASSWORD": password}
-    if ssl_mode:
-        env["PGSSLMODE"] = "require"
+def run(command, env):
     proc = Popen(command, shell=True, env=env)
     proc.wait()
 
@@ -24,6 +22,100 @@ def connection_string_from_django_connection(django_connection):
         # setting the PGPASSWORD env variable instead.
     ]
     return " ".join(params)
+
+
+def copy_tables(
+    batch_size: int,
+    dry_run: bool,
+    ssl: bool,
+    source_connection,
+    target_connection,
+    logger: Callable[[str], None],
+    command_runner: Callable[[str, Dict[str, Any]], None],
+):
+    """
+    Copies all tables from the database pointed at by `source_connection` to the
+    database pointed at by `target_connection`. Does so in batches of `batch_size`
+    tables to avoid shared memory errors due to not being able to lock all the tables at
+    once in big databases.
+
+    :param batch_size: How many tables to copy in each batch
+    :param dry_run: When true only prints the commands it will run and won't actually
+        run execute anything.
+    :param ssl: When true configures psql/pg_dump to connect with sslmode=require .
+    :param source_connection: A django connection wrapper pointing at the database you
+        wish to copy all tables from.
+    :param target_connection: A django connection wrapper pointing at the database you
+        want to copy tables to.
+    :type logger: A function which will be used to log info.
+    :type command_runner: A function which executes a single bash command with the
+        provided env dict.
+    """
+
+    source_connection_params = connection_string_from_django_connection(
+        source_connection
+    )
+    target_connection_params = connection_string_from_django_connection(
+        target_connection
+    )
+
+    target_tables_set = set(target_connection.introspection.table_names())
+    target_db_name = target_connection.settings_dict["NAME"]
+
+    source_tables = source_connection.introspection.table_names()
+    source_db_name = source_connection.settings_dict["NAME"]
+
+    if dry_run:
+        logger(
+            "Dry run... If --actually-run was provided then would"
+            f" copy {source_db_name} to {target_db_name}"
+        )
+    else:
+        logger(
+            f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
+            f"{target_db_name}"
+        )
+    if ssl:
+        logger("Running with sslmode=require")
+    count = 0
+    num_batches = math.ceil(len(source_tables) / batch_size)
+    logger(f"Importing {num_batches} batches of tables separately.")
+    for batch_num in range(num_batches):
+        batch = source_tables[batch_num * batch_size : (batch_num + 1) * batch_size]
+        num_to_copy = 0
+        table_str = ""
+        for table in batch:
+            if table not in target_tables_set:
+                table_str += f" -t public.{table}"
+                num_to_copy += 1
+            else:
+                logger(f"Skipping {table} as it is already in the target db")
+
+        if num_to_copy > 0:
+            count += num_to_copy
+            logger(f"Importing {num_to_copy} tables in " f"one go")
+            command = (
+                f"pg_dump {source_connection_params}{table_str} | "
+                f"psql {target_connection_params}"
+            )
+            if dry_run:
+                logger(f"Would have run {command}")
+            else:
+                password = source_connection.settings_dict["PASSWORD"]
+                env = {"PGPASSWORD": password}
+                if ssl:
+                    env["PGSSLMODE"] = "require"
+                logger(f"Running command: {command}")
+                command_runner(
+                    command,
+                    env,
+                )
+        else:
+            logger(
+                f"Skipping import of batch {batch_num} as all tables were "
+                "already in the target database."
+            )
+    logger(f"Successfully copied {count} tables.")
 
 
 class Command(BaseCommand):
@@ -69,73 +161,16 @@ class Command(BaseCommand):
 
         source = options["source_connection"]
         source_connection = connections[source]
-        source_tables = source_connection.introspection.table_names()
-        source_connection_params = connection_string_from_django_connection(
-            source_connection
-        )
-        source_db_name = source_connection.settings_dict["NAME"]
 
         target = options["target_connection"]
         target_connection = connections[target]
-        target_connection_params = connection_string_from_django_connection(
-            target_connection
+
+        copy_tables(
+            batch_size,
+            dry_run,
+            ssl,
+            source_connection,
+            target_connection,
+            self.stdout.write,
+            run,
         )
-        target_tables = set(target_connection.introspection.table_names())
-        target_db_name = target_connection.settings_dict["NAME"]
-
-        if dry_run:
-            self.stdout.write(
-                self.style.WARNING(
-                    "Dry run... If --actually-run was provided then would"
-                    f" copy {source_db_name} to {target_db_name}"
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.NOTICE(
-                    f"REAL RUN, ABOUT TO COPY TABLES FROM {source_db_name} to "
-                    f"{target_db_name}"
-                )
-            )
-
-        if ssl:
-            self.stdout.write(self.style.SUCCESS("Running with sslmode=require"))
-
-        count = 0
-        num_batches = math.ceil(len(source_tables) / batch_size)
-        for batch_num in range(num_batches):
-            batch = set(
-                source_tables[batch_num * batch_size : (batch_num + 1) * batch_size]
-            )
-            tables_not_in_target_db = batch.difference(target_tables)
-            num_to_copy = len(tables_not_in_target_db)
-            count += num_to_copy
-            self.stdout.write(
-                self.style.SUCCESS(f"Importing {num_to_copy} tables in " f"one go")
-            )
-            if num_to_copy > 0:
-                table_str = ""
-                for table in tables_not_in_target_db:
-                    table_str += f" -t public.{table}"
-
-                command = (
-                    f"pg_dump {source_connection_params} {table_str} | "
-                    f"psql {target_connection_params}"
-                )
-                if dry_run:
-                    self.stdout.write(f"Would have run {command}")
-                else:
-                    self.stdout.write(f"Running command: {command}")
-                    run(
-                        command,
-                        source_connection.settings_dict["PASSWORD"],
-                        ssl_mode=ssl,
-                    )
-            else:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"Skipping import of batch {batch_num} as all tables were "
-                        "already in the target database."
-                    )
-                )
-        self.stdout.write(self.style.SUCCESS(f"Successfully copied {count} tables."))

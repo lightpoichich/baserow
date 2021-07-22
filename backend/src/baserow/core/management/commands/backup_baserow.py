@@ -1,16 +1,19 @@
 from django.core.management.base import BaseCommand
 
-from baserow.core.management.backup.backup import do_backup, BackupPostgresCommand
+from baserow.core.management.backup.backup_runner import (
+    BaserowBackupRunner,
+    add_shared_postgres_command_args,
+)
 
 
 class Command(BaseCommand):
     help = """
         Backs up a Baserow database into a single compressed archive which can be
-        restored using the restore_db Baserow management command. To provide the
-        database password you must either have a valid .pgpass file containing the
-        password for the requested connection in the expected postgres location (see
-        https://www.postgresql.org/docs/current/libpq-pgpass.html) or set the
-        PGPASSFILE environment variable.
+        restored using the restore_baserow Baserow management command.
+        To provide the database password you should either have a valid .pgpass file
+        containing the password for the requested connection in the expected postgres
+        location (seehttps://www.postgresql.org/docs/current/libpq-pgpass.html) or set
+        the PGPASSFILE environment variable.
 
         WARNING: This command is only safe to run on a database which is not actively
         being updated and not connected to a running version of Baserow for the
@@ -20,7 +23,10 @@ class Command(BaseCommand):
         databases tables in batches and so might generate an inconsistent back-up if
         database changes occur partway through the run. Additionally when tables are
         being backed up this command will hold an ACCESS SHARE lock over them, meaning
-        users will see errors if they attempt to delete tables or edit fields.
+        users will see errors if they attempt to delete tables or edit fields. So to be
+        safe you should only perform back-up's when your Baserow server is shut down
+        or you have first copied the database to a new cluster which is not in active
+        use.
 
         The back-up is split into batches as often Baserow database's can end up with
         large numbers of tables and a single run of `pg_dump` over the entire database
@@ -39,8 +45,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--batch-size",
             type=int,
-            default=False,
             dest="batch-size",
+            default=60,
             help="The number of tables to back_up per each `pg_dump` command. If you "
             "are encountering out of shared memory errors then you can either "
             "lower this value or increase your databases "
@@ -65,54 +71,22 @@ class Command(BaseCommand):
             "-f",
             "--file",
             type=str,
-            default=False,
             dest="file",
             help="Send the backup to the specified file. If not given then "
             "backups will be saved to the working directory with a file name of "
-            "`baserow_backup_{database}_{time}.tar.gz`",
+            "`baserow_backup_{database}_{datetime}.tar.gz`",
         )
-        parser.add_argument(
-            "-h",
-            "--host",
-            type=str,
-            required=True,
-            dest="host",
-            help="The host name of the machine on which the database is running.",
-        )
-        parser.add_argument(
-            "-d",
-            "--database",
-            required=True,
-            type=str,
-            dest="database",
-            help="Specifies the name of the database to connect to.",
-        )
-        parser.add_argument(
-            "-U",
-            "--username",
-            required=True,
-            type=str,
-            dest="username",
-            help="The username to connect to the database as.",
-        )
-        parser.add_argument(
-            "-p",
-            "--port",
-            type=str,
-            default="5432",
-            dest="port",
-            help="Specifies the TCP port or local Unix domain socket file on which "
-            "the server is listening for connections.",
-        )
+        add_shared_postgres_command_args(parser)
         parser.add_argument(
             "additional_pg_dump_args",
             nargs="*",
-            help="Any further args specified here will be directly "
+            help="Any further args specified after a -- will be directly "
             "passed to each call of `pg_dump` which this back_up tool "
             "runs, please see https://www.postgresql.org/docs/11/app-pgdump.html for "
             "all the available options. Please be careful as arguments provided "
             "here will override arguments passed to `pg_dump` internally by "
-            "this tool such as -w, -T and -t causing errors and undefined behavior.",
+            "this tool such as -w, -T, -Fd and -t causing errors and undefined "
+            "behavior.",
         )
 
     def handle(self, *args, **options):
@@ -125,7 +99,7 @@ class Command(BaseCommand):
         jobs = options["jobs"]
         additional_args = options["additional_pg_dump_args"]
 
-        dump_args = BackupPostgresCommand(
+        runner = BaserowBackupRunner(
             host,
             database,
             username,
@@ -133,4 +107,4 @@ class Command(BaseCommand):
             jobs,
             additional_args,
         )
-        do_backup(dump_args, file, batch_size)
+        runner.backup_baserow(file, batch_size)

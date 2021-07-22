@@ -2,9 +2,6 @@
 
 ## Unreleased
 
-* Fixed bug where the currently selected dropdown item is out of view from the dropdown
-  window when scrolling with the arrow keys.
-
 ## Released (2021-07-15)
 
 * **Breaking Change**: Baserow's `docker-compose.yml` no longer exposes ports for 

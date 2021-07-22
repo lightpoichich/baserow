@@ -217,7 +217,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.4.2",
+    "VERSION": "1.4.3",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -241,8 +241,6 @@ SPECTACULAR_SETTINGS = {
         {"name": "Admin"},
     ],
 }
-
-DATABASE_ROUTERS = ("baserow.contrib.database.database_routers.TablesDatabaseRouter",)
 
 # The storage must always overwrite existing files.
 DEFAULT_FILE_STORAGE = "baserow.core.storage.OverwriteFileSystemStorage"

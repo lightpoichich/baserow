@@ -32,7 +32,7 @@ class Command(BaseCommand):
             help="The database connection name to use to connect to the db.",
         )
         parser.add_argument(
-            "backup_name",
+            "backup_file_name",
             type=str,
             help="The name of the folder to store the backup in.",
         )
@@ -65,7 +65,7 @@ class Command(BaseCommand):
         ssl = "ssl" in options and options["ssl"]
 
         source = options["database"]
-        backup_name = options["backup_name"]
+        backup_name = options["backup_file_name"]
         host_name = options["host_name"]
         port = options["port"]
         db_connection = connections[source]

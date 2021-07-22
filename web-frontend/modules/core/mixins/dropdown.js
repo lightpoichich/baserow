@@ -247,15 +247,13 @@ export default {
       )
     },
     /**
-     * When scrolling up and down between options with the keyboard, this
-     * method calculates the expected behavior to the user considering
-     * disabled items that need to be skipped and a limited dropdown
-     * window in which to scroll
-     * If the element to scroll to is below the current dropdown's
-     * bottom scroll position, then scroll so that the item to scroll to
-     * is the last viewable item in the dropdown window. Conversely if the element to
-     * scroll to is above the current dropdown's top scroll position then scroll so
-     * that the item to scroll to is the first viewable item in the dropdown window.
+     * This method calculates the expected container scroll top offset if the next
+     * child is selected. This is for example used when navigating with the arrow keys.
+     * If the element to scroll to is below the current dropdown's bottom scroll
+     * position, then scroll so that the item to scroll to is the last visible item
+     * in the dropdown window. Conversely if the element to scroll to is above the
+     * current dropdown's top scroll position then scroll so that the item to scroll
+     * to is the first viewable item in the dropdown window.
      *
      * !It is assumed that all the elements in the dropdown are of equal height!
      */

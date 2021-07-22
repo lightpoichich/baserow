@@ -71,6 +71,10 @@
   border-radius: 3px;
   user-select: none;
 
+  &:last-child {
+    margin-bottom: 0;
+  }
+
   &:hover {
     background-color: $color-neutral-100;
   }

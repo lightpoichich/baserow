@@ -254,8 +254,6 @@ export default {
      * in the dropdown window. Conversely if the element to scroll to is above the
      * current dropdown's top scroll position then scroll so that the item to scroll
      * to is the first viewable item in the dropdown window.
-     *
-     * !It is assumed that all the elements in the dropdown are of equal height!
      */
     getScrollTopAmountForNextChild(itemToScrollTo, isArrowUp) {
       // Styles of the itemToScroll to. Needed in order to get margins and height
@@ -275,17 +273,17 @@ export default {
 
       const dropdownWindowBeforeHeight = parseInt(
         dropdownWindowBeforeStyles.height
-      ) // 10 px
+      )
       const dropdownWindowAfterHeight = parseInt(
         dropdownWindowAfterStyles.height
-      ) // 10px
-      const dropdownWindowHeight = this.$refs.items.clientHeight // 164px
+      )
+      const dropdownWindowHeight = this.$refs.items.clientHeight
 
-      const itemHeight = parseInt(itemToScrollToStyles.height) // 32px
-      const itemMarginTop = parseInt(itemToScrollToStyles.marginTop) // 0px
-      const itemMarginBottom = parseInt(itemToScrollToStyles.marginBottom) // 4px
+      const itemHeight = parseInt(itemToScrollToStyles.height)
+      const itemMarginTop = parseInt(itemToScrollToStyles.marginTop)
+      const itemMarginBottom = parseInt(itemToScrollToStyles.marginBottom)
       const itemHeightWithMargins =
-        itemHeight + itemMarginTop + itemMarginBottom // 36px
+        itemHeight + itemMarginTop + itemMarginBottom
 
       // Based on the values set in the SCSS files. The height of a dropdowns select
       // item is set to 32px and the height of the select_items window is set to 4 *

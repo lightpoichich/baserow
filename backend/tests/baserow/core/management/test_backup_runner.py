@@ -79,10 +79,12 @@ def test_backup_baserow(
 
     fs.create_dir("/fake_tmp_dir")
     mock_tempfile.return_value.__enter__.return_value = "/fake_tmp_dir"
+
     dbname = connection.settings_dict["NAME"]
     host = connection.settings_dict["HOST"]
     user = connection.settings_dict["USER"]
     port = connection.settings_dict["PORT"]
+
     runner = BaserowBackupRunner(
         host=host,
         database=dbname,

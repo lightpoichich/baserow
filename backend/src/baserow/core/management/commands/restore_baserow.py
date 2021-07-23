@@ -1,9 +1,12 @@
-from django.core.management.base import BaseCommand
+from subprocess import CalledProcessError
+
+from django.core.management.base import BaseCommand, CommandError
 
 from baserow.core.management.backup.backup_runner import (
     BaserowBackupRunner,
     add_shared_postgres_command_args,
 )
+from baserow.core.management.backup.exceptions import InvalidBaserowBackupArchive
 
 
 class Command(BaseCommand):
@@ -87,4 +90,20 @@ class Command(BaseCommand):
             port,
             jobs,
         )
-        runner.restore_baserow(file, additional_args)
+        try:
+            runner.restore_baserow(file, additional_args)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Successfully restored Baserow to the database called: {database} "
+                )
+            )
+
+        except CalledProcessError as e:
+            raise CommandError(
+                "The back-up failed because of the failure of the following "
+                "sub-command, please read the output of the failed command above to "
+                "see what went wrong. \n"
+                "The sub-command which failed was:\n"
+                + " ".join(e.cmd)
+                + f"\nIt failed with a return code of: {e.returncode}"
+            )

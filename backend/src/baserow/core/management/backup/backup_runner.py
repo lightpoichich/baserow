@@ -51,7 +51,7 @@ class BaserowBackupRunner:
         backup_file_name: Optional[str] = None,
         batch_size: Optional[int] = 60,
         additional_pg_dump_args: Optional[List[str]] = None,
-    ):
+    ) -> str:
         """
         Backs up an entire Database containing an installation of Baserow.
 
@@ -61,6 +61,10 @@ class BaserowBackupRunner:
         :param batch_size: How many tables to dump in each sub dump run by this command.
         :param additional_pg_dump_args: Additional command line arguments passed to
         each run of pg_dump.
+        :return: Returns the file path/name of the created back-up file.
+        :raises InvalidBaserowBackupArchive: When the provided backup archive does not
+            meet the expected baserow backup format.
+        :raises CalledProcessError: When one of the sub commands fails.
         """
 
         backup_file_name = backup_file_name or _default_backup_location(self.database)
@@ -71,7 +75,7 @@ class BaserowBackupRunner:
             self._open_files_and_run_backup(
                 backup_file_name, batch_size, additional_pg_dump_args
             )
-            print(f"Successfully backed up Baserow to {backup_file_name}")
+            return backup_file_name
         except Exception as e:
             # An empty tar file will still be created if an exception occurs,
             # clean it up so the user isn't confused by invalid back-up files being
@@ -94,6 +98,7 @@ class BaserowBackupRunner:
             backup file to restore from.
         :param additional_pg_restore_args: Additional command line arguments passed to
             every run of pg_restore.
+        :raises CalledProcessError: When one of the sub commands fails.
         """
 
         if additional_pg_restore_args is None:
@@ -121,7 +126,6 @@ class BaserowBackupRunner:
             self._restore_user_tables_from_batch_back_ups(
                 backup_sub_folder, additional_pg_restore_args
             )
-            print(f"Successfully restored up Baserow to database: {self.database}")
 
     def _build_pg_dump_command(self, extra_command: List[str]) -> List[str]:
         return ["pg_dump"] + self._get_postgres_tool_args() + extra_command

@@ -9,6 +9,9 @@ from freezegun import freeze_time
 
 from baserow.contrib.database.table.models import Table
 from baserow.core.management.backup.backup_runner import BaserowBackupRunner
+from baserow.core.management.backup.exceptions import (
+    InvalidBaserowBackupArchive,
+)
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -539,6 +542,35 @@ def test_restore_baserow_only_does_first_restore_if_no_user_tables(
             ),
         ]
     )
+
+
+@patch("tempfile.TemporaryDirectory")
+@patch("subprocess.check_output")
+@patch("tarfile.open")
+def test_restore_baserow_raises_exception_if_sub_folder_not_found_after_extract(
+    mock_tarfile_open, mock_check_output, mock_tempfile, fs, data_fixture, environ
+):
+
+    mock_tempdir_to_be(fs, mock_tempfile, "/fake_tmp_dir/")
+    fs.create_dir("/fake_tmp_dir/some_other_bad_folder/")
+
+    dbname = connection.settings_dict["NAME"]
+    host = connection.settings_dict["HOST"]
+    user = connection.settings_dict["USER"]
+    port = connection.settings_dict["PORT"]
+
+    runner = BaserowBackupRunner(
+        host=host,
+        database=dbname,
+        username=user,
+        port=port,
+        jobs=1,
+    )
+
+    with pytest.raises(InvalidBaserowBackupArchive):
+        runner.restore_baserow("backup.tar.gz")
+
+    mock_check_output.assert_not_called()
 
 
 def a_pg_dump_for_everything_else():

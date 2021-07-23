@@ -18,7 +18,6 @@ module.exports = {
     'prettier',
   ],
   plugins: ['prettier'],
-  // add your custom rules here
   rules: {
     'no-console': 0,
     'vue/no-mutating-props': 0,

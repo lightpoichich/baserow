@@ -113,11 +113,11 @@ def test_import_export_form_view(data_fixture, tmpdir):
     assert serialized["title"] == form_view.title
     assert serialized["cover_image"] == {
         "name": form_view.cover_image.name,
-        "original_name": form_view.cover_image.original_name
+        "original_name": form_view.cover_image.original_name,
     }
     assert serialized["logo_image"] == {
         "name": form_view.logo_image.name,
-        "original_name": form_view.logo_image.original_name
+        "original_name": form_view.logo_image.original_name,
     }
     assert serialized["submit_action"] == form_view.submit_action
     assert serialized["submit_action_message"] == form_view.submit_action_message

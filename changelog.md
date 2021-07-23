@@ -6,6 +6,7 @@
   database has been removed entirely to prevent data integrity issues.
 * Fixed bug where the currently selected dropdown item is out of view from the dropdown
   window when scrolling with the arrow keys.
+* Made the form view compatible with importing and exporting.
   
 ## Released (2021-07-16)
 

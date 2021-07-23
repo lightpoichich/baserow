@@ -105,6 +105,5 @@ class Command(BaseCommand):
             username,
             port,
             jobs,
-            additional_args,
         )
-        runner.backup_baserow(file, batch_size)
+        runner.backup_baserow(file, batch_size, additional_args)

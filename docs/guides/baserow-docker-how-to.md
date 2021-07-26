@@ -171,7 +171,7 @@ the runbook found here [runbooks/back-up-and-restore-baserow.md](https://gitlab.
 before restoring a Baserow database.
 
 ```bash
-$ docker-compose run -e PGPASSWORD=baserow -v $(pwd)/backups/:/baserow/backend/backups/ backend manage restore_baserow -h db -d baserow -U baserow -f backups/baserow_backup.tar.gz
+$ docker-compose run -e PGPASSWORD=baserow -v $(pwd)/backups/:/baserow/backups/ backend manage restore_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz
 ```
 
 ## Common Problems

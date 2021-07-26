@@ -90,10 +90,6 @@ export default {
     }
   },
   methods: {
-    handleChange(event) {
-      const { value, name } = event.target
-      this.account[name] = value
-    },
     async resetPassword() {
       this.$v.$touch()
       if (this.$v.$invalid) {

@@ -416,6 +416,40 @@ class BooleanViewFilterType(ViewFilterType):
         return Q()
 
 
+class LinkRowHasViewFilterType(ViewFilterType):
+    """
+    The link row has filter accepts the row ID of the related table as value. It
+    filters the queryset so that only rows that have a relationship with the provided
+    row ID will remain. So if for example '10' is provided, then only rows where the
+    link row field has a relationship with the row '10' persists.
+    """
+
+    type = "link_row_has"
+    compatible_field_types = [LinkRowFieldType.type]
+
+    def get_filter(self, field_name, value, model_field, field):
+        value = value.strip()
+
+        if value == "":
+            return Q()
+
+        try:
+            return Q(**{f"{field_name}__in": [int(value)]})
+        except Exception:
+            return Q()
+
+
+class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterType):
+    """
+    The link row has filter accepts the row ID of the related table as value. It
+    filters the queryset so that only rows that don't have a relationship with the
+    provided row ID will remain. So if for example '10' is provided, then only rows
+    where the link row field does not have a relationship with the row '10' persists.
+    """
+
+    type = "link_row_has_not"
+
+
 class EmptyViewFilterType(ViewFilterType):
     """
     The empty filter checks if the field value is empty, this can be '', null,

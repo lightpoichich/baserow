@@ -6,6 +6,7 @@
   database has been removed entirely to prevent data integrity issues.
 * Fixed bug where the currently selected dropdown item is out of view from the dropdown
   window when scrolling with the arrow keys.
+* Introduced link row field has row filter.
   
 ## Released (2021-07-16)
 

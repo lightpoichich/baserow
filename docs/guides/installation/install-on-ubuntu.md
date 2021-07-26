@@ -104,6 +104,16 @@ In order to use the Baserow application, we will need to create a media director
 the uploaded user files, a virtual environment and install some more dependencies
 like: NodeJS, Yarn, Python 3.7.
 
+First, if you are on Ubuntu version 20.04 or later you will need add the following 
+repository to then be able to install Python 3.7:
+
+```bash
+add-apt-repository ppa:deadsnakes/ppa
+apt-get update
+```
+
+Next follow these steps:
+
 ```bash
 # Create uploaded user files and media directory
 $ mkdir media

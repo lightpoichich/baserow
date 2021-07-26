@@ -5,13 +5,13 @@
       <Error :error="error"></Error>
       <form @submit.prevent="resetPassword">
         <div class="control">
-          <PasswordInput
-            ref="password"
-            label="New Password"
-            name="password"
-            :password-value="account.password"
-            @inputChange="handleChange"
-          />
+          <label class="control__label">New password</label>
+          <div class="control__elements">
+            <PasswordInput
+              v-model="account.password"
+              :validation-state="$v.account.password"
+            />
+          </div>
         </div>
         <div class="control">
           <label class="control__label">Repeat new password</label>
@@ -65,6 +65,7 @@
 import { sameAs } from 'vuelidate/lib/validators'
 
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
@@ -95,8 +96,7 @@ export default {
     },
     async resetPassword() {
       this.$v.$touch()
-      this.$refs.password.$v.$touch()
-      if (this.$v.$invalid || this.$refs.password.$v.$invalid) {
+      if (this.$v.$invalid) {
         return
       }
 
@@ -128,6 +128,7 @@ export default {
   },
   validations: {
     account: {
+      password: passwordValidation,
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },

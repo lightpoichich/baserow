@@ -14,22 +14,22 @@
     </div>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">
-        <PasswordInput
-          ref="oldPassword"
-          label="Old Password"
-          name="oldPassword"
-          :password-value="account.oldPassword"
-          @inputChange="handleChange"
-        />
+        <label class="control__label">Old Password</label>
+        <div class="control__elements">
+          <PasswordInput
+            v-model="account.oldPassword"
+            :validation-state="$v.account.oldPassword"
+          />
+        </div>
       </div>
       <div class="control">
-        <PasswordInput
-          ref="newPassword"
-          label="New Password"
-          name="newPassword"
-          :password-value="account.newPassword"
-          @inputChange="handleChange"
-        />
+        <label class="control__label">New Password</label>
+        <div class="control__elements">
+          <PasswordInput
+            v-model="account.newPassword"
+            :validation-state="$v.account.newPassword"
+          />
+        </div>
       </div>
       <div class="control">
         <label class="control__label">Repeat new password</label>
@@ -61,12 +61,13 @@
 </template>
 
 <script>
-import { sameAs } from 'vuelidate/lib/validators'
+import { sameAs, required } from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 
 export default {
   components: { PasswordInput },
@@ -84,19 +85,10 @@ export default {
     }
   },
   methods: {
-    handleChange(event) {
-      const { value, name } = event.target
-      this.account[name] = value
-    },
     async changePassword() {
       this.$v.$touch()
-      this.$refs.newPassword.$v.$touch()
-      this.$refs.oldPassword.$v.$touch()
-      if (
-        this.$v.$invalid ||
-        this.$refs.newPassword.$v.$invalid ||
-        this.$refs.oldPassword.$v.$invalid
-      ) {
+
+      if (this.$v.$invalid) {
         return
       }
 
@@ -125,6 +117,10 @@ export default {
     account: {
       passwordConfirm: {
         sameAsPassword: sameAs('newPassword'),
+      },
+      newPassword: passwordValidation,
+      oldPassword: {
+        required,
       },
     },
   },

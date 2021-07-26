@@ -1,13 +1,13 @@
 <template>
   <form @submit.prevent="submit">
     <div class="control">
-      <PasswordInput
-        ref="password"
-        label="New Password"
-        name="password"
-        :password-value="values.password"
-        @inputChange="handleChange"
-      />
+      <label class="control__label">New password</label>
+      <div class="control__elements">
+        <PasswordInput
+          v-model="values.password"
+          :validation-state="$v.values.password"
+        />
+      </div>
     </div>
     <div class="control">
       <label class="control__label">Repeat password</label>
@@ -41,6 +41,7 @@
 <script>
 import { sameAs } from 'vuelidate/lib/validators'
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 
@@ -63,17 +64,12 @@ export default {
       },
     }
   },
-  methods: {
-    handleChange(event) {
-      const { value, name } = event.target
-      this.values[name] = value
-    },
-  },
   validations: {
     values: {
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },
+      password: passwordValidation,
     },
   },
 }

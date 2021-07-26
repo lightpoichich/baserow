@@ -57,13 +57,13 @@
         </div>
       </div>
       <div class="control">
-        <PasswordInput
-          ref="password"
-          label="Password"
-          name="password"
-          :password-value="account.password"
-          @inputChange="handleChange"
-        />
+        <label class="control__label">Password</label>
+        <div class="control__elements">
+          <PasswordInput
+            v-model="account.password"
+            :validation-state="$v.account.password"
+          />
+        </div>
       </div>
       <div class="control">
         <label class="control__label">Repeat password</label>
@@ -100,6 +100,7 @@ import { email, minLength, required, sameAs } from 'vuelidate/lib/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 
 export default {
   name: 'AuthRegister',
@@ -134,14 +135,9 @@ export default {
     }
   },
   methods: {
-    handleChange(event) {
-      const { value, name } = event.target
-      this.account[name] = value
-    },
     async register() {
       this.$v.$touch()
-      this.$refs.password.$v.$touch()
-      if (this.$v.$invalid || this.$refs.password.$v.$invalid) {
+      if (this.$v.$invalid) {
         return
       }
 
@@ -194,6 +190,7 @@ export default {
         required,
         minLength: minLength(2),
       },
+      password: passwordValidation,
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },

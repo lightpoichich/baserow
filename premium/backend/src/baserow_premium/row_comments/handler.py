@@ -30,7 +30,9 @@ class RowCommentHandler:
         return RowComment.objects.filter(table_id=table_id, row_id=row.id).all()
 
     @staticmethod
-    def create_comment(requesting_user: User, table_id: int, row_id: int, comment: str):
+    def create_comment(
+        requesting_user: User, table_id: int, row_id: int, comment: str
+    ) -> RowComment:
         """
         Creates a new row comment on the specified row.
 

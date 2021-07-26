@@ -8,6 +8,10 @@ User = get_user_model()
 
 
 class RowComment(CreatedAndUpdatedOnMixin, models.Model):
+    """
+    A user made comment on a specific row in a user table in Baserow.
+    """
+
     table = models.ForeignKey(
         Table,
         on_delete=models.CASCADE,

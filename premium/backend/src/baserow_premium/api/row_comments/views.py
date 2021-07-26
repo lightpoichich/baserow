@@ -12,7 +12,7 @@ from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.core.exceptions import UserNotInGroup
 from .serializers import RowCommentSerializer, RowCommentCreateSerializer
-from ...row_comments.hander import RowCommentHandler
+from baserow_premium.row_comments.handler import RowCommentHandler
 
 
 class RowCommentView(APIView):

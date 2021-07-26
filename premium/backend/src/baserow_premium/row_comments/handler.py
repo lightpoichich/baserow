@@ -3,6 +3,7 @@ from django.db.models import QuerySet
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
+from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.models import RowComment
 
 User = get_user_model()
@@ -42,7 +43,11 @@ class RowCommentHandler:
         :raises RowDoesNotExist: If the row does not exist.
         :raises UserNotInGroup: If the user is not a member of the group that the
             table is in.
+        :raises InvalidRowCommentException: If the comment is blank or None.
         """
+
+        if comment is None or comment == "":
+            raise InvalidRowCommentException()
 
         table = TableHandler().get_table(table_id)
         row = RowHandler().get_row(requesting_user, table, row_id)

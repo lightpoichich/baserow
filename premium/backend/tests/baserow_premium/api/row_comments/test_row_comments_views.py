@@ -260,3 +260,26 @@ def test_cant_make_a_row_comment_greater_than_max_settings(data_fixture, api_cli
             }
         ]
     }
+
+
+@pytest.mark.django_db
+def test_cant_make_a_null_row_comment(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token(first_name="Test User")
+    table, fields, rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "comment": [{"code": "required", "error": "This field is required."}]
+    }

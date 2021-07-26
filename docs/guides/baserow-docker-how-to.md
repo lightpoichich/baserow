@@ -159,7 +159,7 @@ $ mkdir backups
 # The folder must be the same UID:GID as the user running inside the container, which
 # for the local env is 9999:9999, for the dev env it is 1000:1000 or your own UID:GID
 # when using ./dev.sh
-$ chown 9999:9999 backups/ 
+$ sudo chown 9999:9999 backups/ 
 $ docker-compose run -e PGPASSWORD=baserow -v $(pwd)/backups:/baserow/backups backend manage backup_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz 
 # backups/ now contains your Baserow backup.
 ```

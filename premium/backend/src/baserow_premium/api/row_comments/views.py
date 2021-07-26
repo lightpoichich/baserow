@@ -13,8 +13,8 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInGroup
+from baserow_premium.row_comments.models import RowComment
 from .serializers import RowCommentSerializer, RowCommentCreateSerializer
-from ...row_comments.models import RowComment
 
 
 class RowCommentView(APIView):
@@ -77,7 +77,7 @@ class RowCommentView(APIView):
         ],
         tags=["Rows"],
         operation_id="create_row_comment",
-        description="Creates a comment on the specified row..",
+        description="Creates a comment on the specified row.",
         request=RowCommentCreateSerializer,
         responses={
             200: RowCommentSerializer,

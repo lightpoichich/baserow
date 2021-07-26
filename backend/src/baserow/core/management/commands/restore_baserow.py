@@ -6,7 +6,6 @@ from baserow.core.management.backup.backup_runner import (
     BaserowBackupRunner,
     add_shared_postgres_command_args,
 )
-from baserow.core.management.backup.exceptions import InvalidBaserowBackupArchive
 
 
 class Command(BaseCommand):

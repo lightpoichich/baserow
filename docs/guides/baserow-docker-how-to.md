@@ -148,6 +148,32 @@ $ # Or instead using ./dev.sh
 $ ./dev.sh run backend manage sync_templates 
 ```
 
+### Back-up your Baserow DB
+
+Please read the output of `docker-compose run backend manage backup_baserow --help` and
+the runbook found here [runbooks/back-up-and-restore-baserow.md](https://gitlab.com/bramw/baserow/-/blob/develop/docs/runbooks/back-up-and-restore-baserow.md.md)
+before backing up your Baserow database. 
+
+```bash
+$ mkdir backups
+# The folder must be the same UID:GID as the user running inside the container, which
+# for the local env is 9999:9999, for the dev env it is 1000:1000 or your own UID:GID
+# when using ./dev.sh
+$ chown 9999:9999 backups/ 
+$ docker-compose run -e PGPASSWORD=baserow -v $(pwd)/backups:/baserow/backups backend manage backup_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz 
+# backups/ now contains your Baserow backup.
+```
+
+### Restore your Baserow DB from a back-up
+
+Please read the output of `docker-compose run backend manage restore_baserow --help` and
+the runbook found here [runbooks/back-up-and-restore-baserow.md](https://gitlab.com/bramw/baserow/-/blob/develop/docs/runbooks/back-up-and-restore-baserow.md.md)
+before restoring a Baserow database.
+
+```bash
+$ docker-compose run -e PGPASSWORD=baserow -v $(pwd)/backups/:/baserow/backend/backups/ backend manage restore_baserow -h db -d baserow -U baserow -f backups/baserow_backup.tar.gz
+```
+
 ## Common Problems
 
 ### Build Error - Service 'backend' failed to build: unable to convert uid/gid chown

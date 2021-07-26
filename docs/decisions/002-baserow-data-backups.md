@@ -94,12 +94,15 @@ database objects from our custom back-up logic.
 1. Higher chance of bugs in back-up due to having to do custom logic
 1. Long running back-ups will not include any changes made during the back-up period
 
-## Option 3: fork the database and then run pg_dump
+## Option 3: fork the database and then run pg_dump (Chosen solution)
 
 We could fork the database in digital ocean, hopefully then we could do Option 1 if we
 then manually raised `max_locks_per_transaction` for the fork (assuming this scales to
 hundreds of thousands of tables!), or instead do Option 2 as because it is a non-live
-fork and no longer be updated the back-up we generate will be consistent.
+fork and no longer be updated the back-up we generate will be consistent. In reality
+we cannot raise `max_locks_per_transaction` without making support ticket on a managed
+Digital Ocean postgres cluster so instead we had to go with this Option combined with
+Option 2.
 
 ### Advantages
 1. If digital ocean's forking works well they are doing the hard part for us
@@ -115,7 +118,15 @@ fork and no longer be updated the back-up we generate will be consistent.
 1. Every single backup will take time to fork + time to pg_dump to do, which might be 
    ages
 
-## Option 4: pg_basebackup (Proposed solution)
+## Option 4: pg_basebackup (Potential Future solution)
+
+>
+> We were not able to use this option as it is not possible to open a replication
+> connection to a managed Digital Ocean postgres cluster, which is required to run
+> pg_basebackup. In the future if Baserow switches to a different provider where this
+> is possible and we want to start doing live back-ups directly on the production
+> database then we should re-visit this option.
+> 
 
 [pg_basebackup](https://www.postgresql.org/docs/11/app-pgbasebackup.html) is another
 built-in Postgres back-up tool which works at the file-system level and not logically
@@ -174,6 +185,17 @@ See https://www.cybertec-postgresql.com/en/pg_basebackup-creating-self-sufficien
 for more details. As long as we properly understand what pg_basebackup is doing, test
 the resulting command line script works and test it can be used to recover Baserow, we
 are fine.
+
+# Chosen Solution
+
+In the end due to limitations with the Digital Ocean managed cluster we went with
+Option 2 combined with Option 3. Two new scripts `backup_baserow` and `restore_baserow`
+were made which split the database into chunks to `pg_dump` separately and store in a 
+tar. This is literally the only way we could back-up the DO cluster without making
+support tickets for them to manually change the config. Additionally, we need this 
+script even if we went with Option 4 as once the basedump has been made we still need
+to turn it into something that can be pg_restored, and being able to do that without
+having to modify `max_locks_per_transaction` is a useful ability.
 
 
 

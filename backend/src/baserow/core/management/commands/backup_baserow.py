@@ -113,8 +113,8 @@ class Command(BaseCommand):
             backup_file_name = runner.backup_baserow(file, batch_size, additional_args)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Successfully back-up Baserow to {backup_file_name} which can be "
-                    f"restored using the ./baserow restore_baserow command. "
+                    f"Successfully backed up Baserow to {backup_file_name} which can "
+                    f"be restored using the ./baserow restore_baserow command. "
                 )
             )
 

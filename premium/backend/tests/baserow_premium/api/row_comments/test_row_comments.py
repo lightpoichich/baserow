@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from freezegun import freeze_time
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
@@ -219,4 +220,43 @@ def test_cant_make_a_blank_row_comment(data_fixture, api_client):
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response.json()["detail"] == {
         "comment": [{"code": "blank", "error": "This field may not be blank."}]
+    }
+
+
+@pytest.mark.django_db
+def test_cant_make_a_row_comment_greater_than_max_settings(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token(first_name="Test User")
+    table, fields, rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+    response = api_client.post(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        {"comment": "1" * settings.MAX_ROW_COMMENT_LENGTH},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        {"comment": "1" * (settings.MAX_ROW_COMMENT_LENGTH + 1)},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "comment": [
+            {
+                "code": "max_length",
+                "error": f"Ensure this field has no more than "
+                f"{settings.MAX_ROW_COMMENT_LENGTH} characters.",
+            }
+        ]
     }

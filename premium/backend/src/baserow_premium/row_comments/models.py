@@ -8,12 +8,18 @@ User = get_user_model()
 
 
 class RowComment(CreatedAndUpdatedOnMixin, models.Model):
-    table = models.ForeignKey(Table, on_delete=models.CASCADE)
-    row_id = models.PositiveIntegerField()
-    # TODO: Should we instead SET_NULL or just cache the Username here? What do we
-    #  want to do when a user is deleted?
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    comment = models.TextField()
+    table = models.ForeignKey(
+        Table,
+        on_delete=models.CASCADE,
+        help_text="The table the row this comment is for is found in. ",
+    )
+    row_id = models.PositiveIntegerField(
+        help_text="The id of the row the comment is for."
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, help_text="The user who made the comment."
+    )
+    comment = models.TextField(help_text="The users comment.")
 
     class Meta:
         ordering = ("created_on",)

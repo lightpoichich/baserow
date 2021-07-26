@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
@@ -32,6 +33,8 @@ class RowCommentSerializer(ModelSerializer):
 
 
 class RowCommentCreateSerializer(ModelSerializer):
+    comment = CharField(max_length=settings.MAX_ROW_COMMENT_LENGTH)
+
     class Meta:
         model = RowComment
         fields = ("comment",)

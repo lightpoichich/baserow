@@ -9,12 +9,10 @@ from baserow.api.schemas import get_error_schema
 from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
-from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInGroup
-from baserow_premium.row_comments.models import RowComment
 from .serializers import RowCommentSerializer, RowCommentCreateSerializer
+from ...row_comments.hander import RowCommentHandler
 
 
 class RowCommentView(APIView):
@@ -24,7 +22,7 @@ class RowCommentView(APIView):
                 name="table_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The table to look for row comments in.",
+                description="The table the row is in.",
             ),
             OpenApiParameter(
                 name="row_id",
@@ -33,7 +31,7 @@ class RowCommentView(APIView):
                 description="The row to get row comments for.",
             ),
         ],
-        tags=["Rows"],
+        tags=["Database table rows"],
         operation_id="get_row_comments",
         description="Returns all row comments for the specified table and row.",
         responses={
@@ -55,10 +53,13 @@ class RowCommentView(APIView):
         }
     )
     def get(self, request, table_id, row_id):
-        table = TableHandler().get_table(table_id)
-        row = RowHandler().get_row(request.user, table, row_id)
-        rows = RowComment.objects.filter(table_id=table_id, row_id=row.id).all()
-        return Response(RowCommentSerializer(rows, many=True).data)
+        comments = RowCommentHandler.get_comments(request.user, table_id, row_id)
+        return Response(
+            RowCommentSerializer(
+                comments,
+                many=True,
+            ).data
+        )
 
     @extend_schema(
         parameters=[
@@ -75,7 +76,7 @@ class RowCommentView(APIView):
                 description="The row to create a comment for.",
             ),
         ],
-        tags=["Rows"],
+        tags=["Database table rows"],
         operation_id="create_row_comment",
         description="Creates a comment on the specified row.",
         request=RowCommentCreateSerializer,
@@ -99,12 +100,7 @@ class RowCommentView(APIView):
     )
     @validate_body(RowCommentCreateSerializer)
     def post(self, request, table_id, row_id, data):
-        table = TableHandler().get_table(table_id)
-        row = RowHandler().get_row(request.user, table, row_id)
-        rows = RowComment.objects.create(
-            user=request.user,
-            table=table,
-            row_id=row.id,
-            comment=data["comment"],
+        new_row_comment = RowCommentHandler.create_comment(
+            request.user, table_id, row_id, data["comment"]
         )
-        return Response(RowCommentSerializer(rows).data)
+        return Response(RowCommentSerializer(new_row_comment).data)

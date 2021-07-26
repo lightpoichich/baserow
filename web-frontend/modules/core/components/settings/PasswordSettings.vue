@@ -14,7 +14,7 @@
     </div>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">
-        <label class="control__label">Old Password</label>
+        <label class="control__label">Old password</label>
         <div class="control__elements">
           <PasswordInput
             v-model="account.oldPassword"
@@ -23,7 +23,7 @@
         </div>
       </div>
       <div class="control">
-        <label class="control__label">New Password</label>
+        <label class="control__label">New password</label>
         <div class="control__elements">
           <PasswordInput
             v-model="account.newPassword"

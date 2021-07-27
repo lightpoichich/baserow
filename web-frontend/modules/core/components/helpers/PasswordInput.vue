@@ -14,6 +14,11 @@ Example Usage:
    :validation-state="the vuelidate validation instance of the given password value"
 />
 
+In case the password validation rules change, the passwordValidation object in the
+validators file needs to be updated, as well as this component.
+
+modules/core/validators.js
+
 -->
 <template>
   <div>

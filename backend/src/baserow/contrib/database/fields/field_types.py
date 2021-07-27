@@ -51,6 +51,7 @@ from .models import (
     NumberField,
     BooleanField,
     DateField,
+    LastModifiedField,
     LinkRowField,
     EmailField,
     FileField,
@@ -547,6 +548,30 @@ class DateFieldType(FieldType):
             return value
 
         setattr(row, field_name, datetime.fromisoformat(value))
+
+
+class LastModifiedFieldType(FieldType):
+    type = "last_modified"
+    model_class = LastModifiedField
+    allowed_fields = ["date_format", "date_include_time", "date_time_format"]
+    serializer_field_names = ["date_format", "date_include_time", "date_time_format"]
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+
+        if instance.date_include_time:
+            return serializers.DateTimeField(
+                **{"required": required, "allow_null": not required, **kwargs}
+            )
+        else:
+            return serializers.DateField(
+                **{"required": required, "allow_null": not required, **kwargs}
+            )
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        return models.DateTimeField(**kwargs)
 
 
 class LinkRowFieldType(FieldType):

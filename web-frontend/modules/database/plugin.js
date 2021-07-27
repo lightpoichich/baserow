@@ -9,6 +9,7 @@ import {
   NumberFieldType,
   BooleanFieldType,
   DateFieldType,
+  LastModifiedFieldType,
   FileFieldType,
   SingleSelectFieldType,
   PhoneNumberFieldType,
@@ -94,6 +95,7 @@ export default ({ store, app }) => {
   app.$registry.register('field', new NumberFieldType())
   app.$registry.register('field', new BooleanFieldType())
   app.$registry.register('field', new DateFieldType())
+  app.$registry.register('field', new LastModifiedFieldType())
   app.$registry.register('field', new URLFieldType())
   app.$registry.register('field', new EmailFieldType())
   app.$registry.register('field', new FileFieldType())

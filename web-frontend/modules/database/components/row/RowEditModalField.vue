@@ -62,6 +62,7 @@ export default {
       return this.$registry.get('field', type).getRowEditFieldComponent()
     },
     update(value, oldValue) {
+      console.log('HIER?')
       this.$emit('update', {
         row: this.row,
         field: this.field,

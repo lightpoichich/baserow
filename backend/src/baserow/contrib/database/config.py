@@ -63,6 +63,7 @@ class DatabaseConfig(AppConfig):
             NumberFieldType,
             BooleanFieldType,
             DateFieldType,
+            LastModifiedFieldType,
             LinkRowFieldType,
             EmailFieldType,
             FileFieldType,
@@ -77,6 +78,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(NumberFieldType())
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())
+        field_type_registry.register(LastModifiedFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
         field_type_registry.register(SingleSelectFieldType())

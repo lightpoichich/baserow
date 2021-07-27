@@ -1,3 +1,4 @@
+from django.db.models import F
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.pagination import LimitOffsetPagination
@@ -165,6 +166,9 @@ class GridViewView(APIView):
 
         if "count" in request.GET:
             return Response({"count": queryset.count()})
+
+        for item in queryset:
+            print("HELLO ITEM: ", item)
 
         if LimitOffsetPagination.limit_query_param in request.GET:
             paginator = LimitOffsetPagination()

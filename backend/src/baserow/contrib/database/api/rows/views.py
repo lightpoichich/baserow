@@ -550,13 +550,16 @@ class RowView(APIView):
         else:
             field_ids = RowHandler().extract_field_ids_from_dict(request.data)
         model = table.get_model()
+        print("HIER")
         validation_serializer = get_row_serializer_class(
             model,
             field_ids=field_ids,
             field_names_to_include=field_names,
             user_field_names=user_field_names,
         )
+        print("NOCH HIER")
         data = validate_data(validation_serializer, request.data)
+        print("ODER HIER?")
 
         try:
             row = RowHandler().update_row(
@@ -569,6 +572,8 @@ class RowView(APIView):
             )
         except ValidationError as e:
             raise RequestBodyValidationException(detail=e.message)
+
+        row.field_251 = row.updated_on
 
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names

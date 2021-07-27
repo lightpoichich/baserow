@@ -940,6 +940,24 @@ export class DateFieldType extends FieldType {
   }
 }
 
+export class LastModifiedFieldType extends DateFieldType {
+  static getType() {
+    return 'last_modified'
+  }
+
+  getName() {
+    return 'Last Modified'
+  }
+
+  getGridViewFieldComponent() {
+    return null
+  }
+
+  getRowEditFieldComponent() {
+    return null
+  }
+}
+
 export class URLFieldType extends FieldType {
   static getType() {
     return 'url'

@@ -34,7 +34,7 @@ export const actions = {
         tableId,
         rowId
       )
-      commit('REPLACE_ALL_ROW_COMMENTS', data)
+      commit('REPLACE_ALL_ROW_COMMENTS', data.results)
       commit('SET_LOADED', true)
     } finally {
       commit('SET_LOADING', false)

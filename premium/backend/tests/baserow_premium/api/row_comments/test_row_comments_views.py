@@ -25,7 +25,12 @@ def test_row_comments_api_view(data_fixture, api_client):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
-    assert response.json() == []
+    assert response.json() == {
+        "count": 0,
+        "next": None,
+        "previous": None,
+        "results": [],
+    }
 
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
@@ -59,7 +64,12 @@ def test_row_comments_api_view(data_fixture, api_client):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
-    assert response.json() == [expected_comment_json]
+    assert response.json() == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [expected_comment_json],
+    }
 
 
 @pytest.mark.django_db
@@ -317,7 +327,7 @@ def test_trashing_the_row_returns_404_for_comments(data_fixture, api_client):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
-    assert response.json()[0]["row_id"] == rows[0].id
+    assert response.json()["results"][0]["row_id"] == rows[0].id
 
     TrashHandler.trash(user, table.database.group, table.database, rows[0], table.id)
 
@@ -353,7 +363,7 @@ def test_trashing_the_row_returns_404_for_comments(data_fixture, api_client):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
-    assert response.json()[0]["row_id"] == rows[0].id
+    assert response.json()["results"][0]["row_id"] == rows[0].id
 
 
 @pytest.mark.django_db
@@ -397,7 +407,7 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
-    assert response.json()[0]["row_id"] == rows[0].id
+    assert response.json()["results"][0]["row_id"] == rows[0].id
 
     assert RowComment.objects.count() == 2
     model = table.get_model()
@@ -457,7 +467,7 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
-    assert response.json()[0]["row_id"] == rows[0].id
+    assert response.json()["results"][0]["row_id"] == rows[0].id
 
     assert RowComment.objects.count() == 2
     model = table.get_model()
@@ -496,7 +506,8 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
     )
     assert response.status_code == HTTP_200_OK
 
-    with django_assert_num_queries(8):
+    expected_num_of_fixed_queries = 9
+    with django_assert_num_queries(expected_num_of_fixed_queries):
         response = api_client.get(
             reverse(
                 "api:premium:row_comments:item",
@@ -506,7 +517,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
         assert response.status_code == HTTP_200_OK
-        assert response.json()[0]["row_id"] == rows[0].id
+        assert response.json()["results"][0]["row_id"] == rows[0].id
 
     response = api_client.post(
         reverse(
@@ -519,7 +530,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
     )
     assert response.status_code == HTTP_200_OK
 
-    with django_assert_num_queries(8):
+    with django_assert_num_queries(expected_num_of_fixed_queries):
         response = api_client.get(
             reverse(
                 "api:premium:row_comments:item",

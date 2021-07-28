@@ -1,6 +1,4 @@
 import pytest
-from django.db import connection
-from django.test.utils import CaptureQueriesContext
 from django.conf import settings
 from freezegun import freeze_time
 from rest_framework.reverse import reverse

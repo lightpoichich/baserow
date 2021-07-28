@@ -1,6 +1,4 @@
 import pytest
-from django.db import connection
-from django.test.utils import CaptureQueriesContext
 
 from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.handler import RowCommentHandler

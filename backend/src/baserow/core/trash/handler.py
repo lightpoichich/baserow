@@ -212,7 +212,9 @@ class TrashHandler:
                         trash_entry, trash_item_lookup_cache
                     )
                     trash_item_type.permanently_delete_item(
-                        to_delete, trash_item_lookup_cache
+                        to_delete,
+                        trash_entry.parent_trash_item_id,
+                        trash_item_lookup_cache,
                     )
                 except TrashItemDoesNotExist:
                     # When a parent item is deleted it should also delete all of it's
@@ -228,14 +230,17 @@ class TrashHandler:
         )
 
     @staticmethod
-    def permanently_delete(trashable_item):
+    def permanently_delete(trashable_item, parent_id=None):
         """
         Actually removes the provided trashable item from the database irreversibly.
         :param trashable_item: An instance of a TrashableItemType model_class to delete.
+        :param parent_id: If required to look-up the item to delete or related items
+            this should be set to the parent id of the item to delete.
         """
 
         trash_item_type = trash_item_type_registry.get_by_model(trashable_item)
-        trash_item_type.permanently_delete_item(trashable_item)
+        _check_parent_id_valid(parent_id, trash_item_type)
+        trash_item_type.permanently_delete_item(trashable_item, parent_id)
 
     @staticmethod
     def get_trash_contents(

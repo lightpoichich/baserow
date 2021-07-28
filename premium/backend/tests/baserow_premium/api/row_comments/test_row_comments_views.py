@@ -4,6 +4,10 @@ from freezegun import freeze_time
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from baserow.core.models import TrashEntry
+from baserow.core.trash.handler import TrashHandler
+from baserow_premium.row_comments.models import RowComment
+
 
 @pytest.mark.django_db
 def test_row_comments_api_view(data_fixture, api_client):
@@ -283,3 +287,186 @@ def test_cant_make_a_null_row_comment(data_fixture, api_client):
     assert response.json()["detail"] == {
         "comment": [{"code": "required", "error": "This field is required."}]
     }
+
+
+@pytest.mark.django_db
+def test_trashing_the_row_returns_404_for_comments(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token(first_name="Test User")
+    table, fields, rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.post(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[0].id},
+            ),
+            {"comment": "My test comment"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()[0]["row_id"] == rows[0].id
+
+    TrashHandler.trash(user, table.database.group, table.database, rows[0], table.id)
+
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+    response = api_client.post(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        {"comment": "My test comment"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+    TrashHandler.restore_item(user, "row", rows[0].id, table.id)
+
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()[0]["row_id"] == rows[0].id
+
+
+@pytest.mark.django_db
+def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token(first_name="Test User")
+    table, fields, rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.post(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[0].id},
+            ),
+            {"comment": "My test comment"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.post(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[1].id},
+            ),
+            {"comment": "My test comment on other row which should not be deleted"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()[0]["row_id"] == rows[0].id
+
+    assert RowComment.objects.count() == 2
+    model = table.get_model()
+    assert model.objects.count() == 2
+
+    TrashHandler.trash(user, table.database.group, table.database, rows[0], table.id)
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert RowComment.objects.count() == 1
+    assert model.objects.count() == 1
+    assert RowComment.objects.first().row_id == rows[1].id
+
+
+@pytest.mark.django_db
+def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token(first_name="Test User")
+    table, fields, rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+    other_table, other_fields, other_rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.post(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[0].id},
+            ),
+            {"comment": "My test comment"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.post(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": other_table.id, "row_id": rows[0].id},
+            ),
+            {"comment": "My test comment on other table which should not be deleted"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()[0]["row_id"] == rows[0].id
+
+    assert RowComment.objects.count() == 2
+    model = table.get_model()
+    assert model.objects.count() == 2
+
+    TrashHandler.trash(user, table.database.group, table.database, table)
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert RowComment.objects.count() == 1
+    assert RowComment.objects.first().row_id == other_rows[0].id

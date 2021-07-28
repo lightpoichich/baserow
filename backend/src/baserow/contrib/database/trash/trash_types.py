@@ -11,7 +11,11 @@ from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
+from baserow.core.trash.exceptions import (
+    ParentIdMustBeProvidedException,
+)
 from baserow.core.trash.registries import TrashableItemType
+from baserow_premium.row_comments.models import RowComment
 
 
 class TableTrashableItemType(TrashableItemType):
@@ -33,7 +37,10 @@ class TableTrashableItemType(TrashableItemType):
         )
 
     def permanently_delete_item(
-        self, trashed_item: Table, trash_item_lookup_cache=None
+        self,
+        trashed_item: Table,
+        parent_id=None,
+        trash_item_lookup_cache=None,
     ):
         """Deletes the table schema and instance."""
 
@@ -84,7 +91,12 @@ class FieldTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, field: Field, trash_item_lookup_cache=None):
+    def permanently_delete_item(
+        self,
+        field: Field,
+        parent_id=None,
+        trash_item_lookup_cache=None,
+    ):
         """Deletes the table schema and instance."""
 
         if (
@@ -163,7 +175,12 @@ class RowTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, row, trash_item_lookup_cache=None):
+    def permanently_delete_item(
+        self, row, parent_id=None, trash_item_lookup_cache=None
+    ):
+        if parent_id is None:
+            raise ParentIdMustBeProvidedException()
+        RowComment.objects.filter(table_id=parent_id, row_id=row.id).delete()
         row.delete()
 
     def lookup_trashed_item(

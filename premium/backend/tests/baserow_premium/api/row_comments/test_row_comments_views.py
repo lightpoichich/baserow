@@ -1,4 +1,6 @@
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.conf import settings
 from freezegun import freeze_time
 from rest_framework.reverse import reverse
@@ -470,3 +472,62 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
 
     assert RowComment.objects.count() == 1
     assert RowComment.objects.first().row_id == other_rows[0].id
+
+
+@pytest.mark.django_db
+def test_getting_row_comments_executes_fixed_number_of_queries(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token(first_name="Test User")
+    other_user, other_token = data_fixture.create_user_and_token(first_name="Test User")
+
+    table, fields, rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    data_fixture.create_user_group(user=other_user, group=table.database.group)
+
+    response = api_client.post(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        {"comment": "My test comment"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    with django_assert_num_queries(8):
+        response = api_client.get(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[0].id},
+            ),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
+        assert response.json()[0]["row_id"] == rows[0].id
+
+    response = api_client.post(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        {"comment": "My test comment from another user"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    with django_assert_num_queries(8):
+        response = api_client.get(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[0].id},
+            ),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_200_OK

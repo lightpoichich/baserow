@@ -27,7 +27,11 @@ class RowCommentHandler:
 
         table = TableHandler().get_table(table_id)
         row = RowHandler().get_row(requesting_user, table, row_id)
-        return RowComment.objects.filter(table_id=table_id, row_id=row.id).all()
+        return (
+            RowComment.objects.prefetch_related("user")
+            .filter(table_id=table_id, row_id=row.id)
+            .all()
+        )
 
     @staticmethod
     def create_comment(

@@ -92,7 +92,10 @@ class FieldOptionsField(serializers.Field):
 
 class ViewFilterSerializer(serializers.ModelSerializer):
     preload_values = serializers.DictField(
-        help_text="Can contain unique preloaded values per filter.", read_only=True
+        help_text="Can contain unique preloaded values per filter. This is for "
+        "example used by the `link_row_has` filter to communicate the display name if "
+        "a value is provided.",
+        read_only=True,
     )
 
     class Meta:

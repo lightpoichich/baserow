@@ -1,8 +1,10 @@
 <template>
   <Modal
     ref="modal"
-    :full-height="true"
+    :full-height="!!pluginComponent"
     :right-sidebar="!!pluginComponent"
+    :content-scrollable="!!pluginComponent"
+    :right-sidebar-scrollable="false"
     @hidden="$emit('hidden', { row })"
   >
     <template #content>
@@ -36,8 +38,7 @@
       </div>
     </template>
     <template v-if="!!pluginComponent" #sidebar>
-      <component :is="pluginComponent" :row-id="rowId" :table-id="table.id">
-      </component>
+      <component :is="pluginComponent" :row="row" :table="table"></component>
     </template>
   </Modal>
 </template>

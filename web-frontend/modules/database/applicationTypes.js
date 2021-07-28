@@ -16,6 +16,10 @@ export class DatabaseApplicationType extends ApplicationType {
     return 'database'
   }
 
+  getRowEditModalRightSidebarComponent() {
+    return null
+  }
+
   getIconClass() {
     return 'database'
   }

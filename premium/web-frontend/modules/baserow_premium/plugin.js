@@ -9,7 +9,7 @@ import {
   UsersAdminType,
 } from '@baserow_premium/adminTypes'
 import rowCommentsStore from '@baserow_premium/store/row_comments'
-import RowCommentSideBar from '@baserow_premium/components/row_comments/RowCommentSideBar'
+import RowCommentsSidebar from '@baserow_premium/components/row_comments/RowCommentsSidebar'
 
 export default ({ store, app }) => {
   store.registerModule('row_comments', rowCommentsStore)
@@ -22,5 +22,5 @@ export default ({ store, app }) => {
   app.$registry.register('exporter', new XMLTableExporter())
 
   const databaseApplication = app.$registry.get('application', 'database')
-  databaseApplication.componentPlugins.RowEditModal = RowCommentSideBar
+  databaseApplication.componentPlugins.RowEditModal = RowCommentsSidebar
 }

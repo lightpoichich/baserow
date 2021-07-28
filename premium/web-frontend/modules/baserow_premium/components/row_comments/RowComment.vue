@@ -31,7 +31,7 @@
 import moment from 'moment'
 
 export default {
-  name: 'Comment',
+  name: 'RowComment',
   props: {
     comment: {
       type: Object,

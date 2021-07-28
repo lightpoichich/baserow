@@ -13,21 +13,30 @@
         'modal__box--full-screen': fullScreen,
         'modal__box--small': small,
         'modal__box--tiny': tiny,
-        'modal__box--right-sidebar': rightSidebar,
-        'modal__box--left-sidebar': leftSidebar,
       }"
     >
       <template v-if="sidebar">
-        <div v-if="leftSidebar" class="modal__box-sidebar">
+        <div
+          v-if="leftSidebar"
+          class="modal__box-sidebar modal__box-sidebar--left"
+          :class="{ 'modal__box-sidebar--scrollable': leftSidebarScrollable }"
+        >
           <slot name="sidebar"></slot>
         </div>
-        <div class="modal__box-content">
+        <div
+          class="modal__box-content"
+          :class="{ 'modal__box-content--scrollable': contentScrollable }"
+        >
           <slot name="content"></slot>
           <a v-if="closeButton" class="modal__close" @click="hide()">
             <i class="fas fa-times"></i>
           </a>
         </div>
-        <div v-if="rightSidebar" class="modal__box-sidebar">
+        <div
+          v-if="rightSidebar"
+          class="modal__box-sidebar modal__box-sidebar--right"
+          :class="{ 'modal__box-sidebar--scrollable': rightSidebarScrollable }"
+        >
           <slot name="sidebar"></slot>
         </div>
       </template>
@@ -80,6 +89,21 @@ export default {
       required: false,
     },
     fullHeight: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    leftSidebarScrollable: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    contentScrollable: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    rightSidebarScrollable: {
       type: Boolean,
       default: false,
       required: false,

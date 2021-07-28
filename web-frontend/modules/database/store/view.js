@@ -446,6 +446,9 @@ export const actions = {
         newValues[name] = values[name]
       }
     })
+
+    // When updating a filter, the preload values must be cleared because they
+    // might not match the filter anymore.
     newValues.preload_values = {}
 
     dispatch('forceUpdateFilter', { filter, values: newValues })

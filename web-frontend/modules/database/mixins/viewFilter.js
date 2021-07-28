@@ -1,3 +1,8 @@
+/**
+ * A mixin that can be used in combination with the view filter input components. If
+ * contains the expected props and it has a computed property that finds the field
+ * object related to filter field id.
+ */
 export default {
   props: {
     filter: {

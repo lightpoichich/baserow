@@ -7,6 +7,7 @@ import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/vi
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
+import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import { trueString } from '@baserow/modules/database/utils/constants'
 
 export class ViewFilterType extends Registerable {
@@ -611,6 +612,58 @@ export class BooleanViewFilterType extends ViewFilterType {
     )
     rowValue = trueString.includes(rowValue.toString().toLowerCase().trim())
     return filterValue ? rowValue : !rowValue
+  }
+}
+
+export class LinkRowHasFilterType extends ViewFilterType {
+  static getType() {
+    return 'link_row_has'
+  }
+
+  getName() {
+    return 'has'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeLinkRow
+  }
+
+  getCompatibleFieldTypes() {
+    return ['link_row']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return true
+  }
+}
+
+export class LinkRowHasNotFilterType extends ViewFilterType {
+  static getType() {
+    return 'link_row_has_not'
+  }
+
+  getName() {
+    return 'has not'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeLinkRow
+  }
+
+  getCompatibleFieldTypes() {
+    return ['link_row']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return true
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="filters__value-date">
+  <div>
     <input
       ref="date"
       v-model="dateString"

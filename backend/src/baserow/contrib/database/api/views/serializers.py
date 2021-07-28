@@ -91,9 +91,13 @@ class FieldOptionsField(serializers.Field):
 
 
 class ViewFilterSerializer(serializers.ModelSerializer):
+    preload_values = serializers.DictField(
+        help_text="Can contain unique preloaded values per filter.", read_only=True
+    )
+
     class Meta:
         model = ViewFilter
-        fields = ("id", "view", "field", "type", "value")
+        fields = ("id", "view", "field", "type", "value", "preload_values")
         extra_kwargs = {"id": {"read_only": True}}
 
 

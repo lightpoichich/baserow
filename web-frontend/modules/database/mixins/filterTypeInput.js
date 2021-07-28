@@ -12,6 +12,18 @@ export default {
       type: String,
       required: true,
     },
+    fieldId: {
+      type: Number,
+      required: true,
+    },
+    primary: {
+      type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
+      required: true,
+    },
     readOnly: {
       type: Boolean,
       required: true,

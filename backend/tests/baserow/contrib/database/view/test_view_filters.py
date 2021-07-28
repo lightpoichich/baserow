@@ -1895,6 +1895,70 @@ def test_filename_contains_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_link_row_preload_values(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    related_table = data_fixture.create_database_table(database=database)
+    primary_field = data_fixture.create_text_field(table=table, primary=True)
+    related_primary_field = data_fixture.create_text_field(
+        table=related_table, primary=True
+    )
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    link_row_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Test",
+        link_row_table=related_table,
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+    related_model = related_table.get_model()
+
+    related_row_1 = row_handler.create_row(
+        user=user,
+        table=related_table,
+        model=related_model,
+        values={
+            f"field_{related_primary_field.id}": "Related row 1",
+        },
+    )
+    row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 1",
+            f"field_{link_row_field.id}": [related_row_1.id],
+        },
+    )
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=link_row_field,
+        type="link_row_has",
+        value=f"",
+    )
+    assert filter.preload_values["display_name"] is None
+
+    filter.value = "test"
+    filter.save()
+    assert filter.preload_values["display_name"] is None
+
+    filter.value = "-1"
+    filter.save()
+    assert filter.preload_values["display_name"] is None
+
+    with django_assert_num_queries(4):
+        filter.value = f"{related_row_1.id}"
+        filter.save()
+        assert filter.preload_values["display_name"] == "Related row 1"
+
+
+@pytest.mark.django_db
 def test_link_row_has_filter_type(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)

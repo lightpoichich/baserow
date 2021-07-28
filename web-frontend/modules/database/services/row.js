@@ -14,6 +14,9 @@ export default (client) => {
 
       return client.get(`/database/rows/table/${tableId}/`, config)
     },
+    get(tableId, rowId) {
+      return client.get(`/database/rows/table/${tableId}/${rowId}/`)
+    },
     create(tableId, values, beforeId = null) {
       const config = { params: {} }
 

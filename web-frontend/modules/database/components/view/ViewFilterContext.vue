@@ -100,6 +100,7 @@
           :ref="'filter-' + filter.id + '-value'"
           :value="filter.value"
           :field-id="filter.field"
+          :preload-values="filter.preload_values"
           :fields="fields"
           :primary="primary"
           :read-only="readOnly"

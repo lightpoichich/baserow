@@ -18,6 +18,8 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
 )
 from baserow.contrib.database.views.view_types import GridViewType
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db
@@ -383,6 +385,7 @@ def test_list_view_filters(api_client, data_fixture):
     assert response_json[0]["field"] == field_1.id
     assert response_json[0]["type"] == filter_1.type
     assert response_json[0]["value"] == filter_1.value
+    assert response_json[0]["preload_values"] == {}
     assert response_json[1]["id"] == filter_2.id
 
     response = api_client.delete(
@@ -567,6 +570,51 @@ def test_get_view_filter(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_VIEW_FILTER_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_get_link_row_filter_type_preload_values(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    related_table = data_fixture.create_database_table(database=database)
+    related_primary_field = data_fixture.create_text_field(
+        table=related_table, primary=True
+    )
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    link_row_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Test",
+        link_row_table=related_table,
+    )
+    row_handler = RowHandler()
+    related_model = related_table.get_model()
+
+    related_row_1 = row_handler.create_row(
+        user=user,
+        table=related_table,
+        model=related_model,
+        values={
+            f"field_{related_primary_field.id}": "Related row 1",
+        },
+    )
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=link_row_field,
+        type="link_row_has",
+        value=f"{related_row_1.id}",
+    )
+    response = api_client.get(
+        reverse("api:database:views:filter_item", kwargs={"view_filter_id": filter.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["preload_values"] == {"display_name": "Related row 1"}
 
 
 @pytest.mark.django_db

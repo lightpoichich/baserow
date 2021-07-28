@@ -438,6 +438,34 @@ class LinkRowHasViewFilterType(ViewFilterType):
         except Exception:
             return Q()
 
+    def get_preload_values(self, view_filter):
+        """
+        This method preloads the display name of the related value. This prevents a
+        lot of API requests if the view has a lot of `link_row_has` filters. It will
+        also make sure that the display name is visible for read only previews.
+        """
+
+        name = None
+        id = None
+
+        try:
+            id = int(view_filter.value)
+        except Exception:
+            pass
+
+        if id:
+            field = view_filter.field.specific
+            table = field.link_row_table
+            primary_field = table.field_set.get(primary=True)
+            model = table.get_model(field_ids=[], fields=[primary_field])
+
+            try:
+                name = str(model.objects.get(pk=id))
+            except model.DoesNotExist:
+                pass
+
+        return {"display_name": name}
+
 
 class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterType):
     """

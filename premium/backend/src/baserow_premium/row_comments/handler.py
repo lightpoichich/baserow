@@ -26,8 +26,12 @@ class RowCommentHandler:
         """
 
         table = TableHandler().get_table(table_id)
-        row = RowHandler().get_row(requesting_user, table, row_id)
-        return RowComment.objects.filter(table_id=table_id, row_id=row.id).all()
+        RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
+        return (
+            RowComment.objects.prefetch_related("user")
+            .filter(table_id=table_id, row_id=row_id)
+            .all()
+        )
 
     @staticmethod
     def create_comment(
@@ -52,7 +56,7 @@ class RowCommentHandler:
             raise InvalidRowCommentException()
 
         table = TableHandler().get_table(table_id)
-        row = RowHandler().get_row(requesting_user, table, row_id)
+        RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
         return RowComment.objects.create(
-            user=requesting_user, table=table, row_id=row.id, comment=comment
+            user=requesting_user, table=table, row_id=row_id, comment=comment
         )

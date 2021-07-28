@@ -33,7 +33,10 @@ class TableTrashableItemType(TrashableItemType):
         )
 
     def permanently_delete_item(
-        self, trashed_item: Table, trash_item_lookup_cache=None
+        self,
+        trashed_item: Table,
+        parent_id=None,
+        trash_item_lookup_cache=None,
     ):
         """Deletes the table schema and instance."""
 
@@ -84,7 +87,12 @@ class FieldTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, field: Field, trash_item_lookup_cache=None):
+    def permanently_delete_item(
+        self,
+        field: Field,
+        parent_id=None,
+        trash_item_lookup_cache=None,
+    ):
         """Deletes the table schema and instance."""
 
         if (
@@ -163,7 +171,9 @@ class RowTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, row, trash_item_lookup_cache=None):
+    def permanently_delete_item(
+        self, row, parent_id=None, trash_item_lookup_cache=None
+    ):
         row.delete()
 
     def lookup_trashed_item(

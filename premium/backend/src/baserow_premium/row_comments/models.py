@@ -26,5 +26,6 @@ class RowComment(CreatedAndUpdatedOnMixin, models.Model):
     comment = models.TextField(help_text="The users comment.")
 
     class Meta:
+        db_table = "database_rowcomment"
         ordering = ("created_on",)
         indexes = [models.Index(fields=["table", "row_id", "created_on"])]

@@ -25,7 +25,7 @@ class ApplicationTrashableItemType(TrashableItemType):
         )
 
     def permanently_delete_item(
-        self, trashed_item: Application, trash_item_lookup_cache=None
+        self, trashed_item: Application, parent_id=None, trash_item_lookup_cache=None
     ):
         """
         Deletes an application and the related relations in the correct way.
@@ -58,7 +58,7 @@ class GroupTrashableItemType(TrashableItemType):
             group_restored.send(self, group_user=group_user, user=None)
 
     def permanently_delete_item(
-        self, trashed_group: Group, trash_item_lookup_cache=None
+        self, trashed_group: Group, parent_id=None, trash_item_lookup_cache=None
     ):
         """
         Deletes the provided group and all of its applications permanently.

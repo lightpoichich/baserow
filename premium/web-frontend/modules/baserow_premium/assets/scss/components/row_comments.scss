@@ -16,6 +16,10 @@
 .comment__top {
   display: flex;
   align-items: flex-start;
+
+  &.comment--right {
+    align-items: flex-end;
+  }
 }
 
 .comment__body {
@@ -51,6 +55,10 @@
   flex-direction: column;
   align-items: flex-start;
   line-height: normal;
+
+  &.comment--right {
+    align-items: flex-end;
+  }
 }
 
 .comment__name {
@@ -66,7 +74,7 @@
   text-align: right;
 }
 
-.comment__deleted-at-display {
+.comment__commented-at-display {
   @extend %ellipsis;
 
   font-size: 12px;

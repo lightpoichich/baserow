@@ -7,7 +7,7 @@
         v-for="c in comments"
         :key="c.id"
         :comment="c"
-        :left="c.user === userId"
+        :own-comment="c.user === userId"
       ></Comment>
       <input v-model="comment" type="text" />
       <a href="#" @click.prevent="postComment">Add comment</a>

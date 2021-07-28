@@ -1,36 +1,26 @@
 <template>
   <div>
-    <div v-if="left" class="comment">
-      <div class="comment__top">
-        <div class="comment__initials">
+    <div :class="{ 'comment--right': ownComment }" class="comment">
+      <div :class="{ 'comment--right': ownComment }" class="comment__top">
+        <div
+          v-if="!ownComment"
+          :class="{ 'comment--right': ownComment }"
+          class="comment__initials"
+        >
           {{ comment.first_name | nameAbbreviation }}
         </div>
-        <div class="comment__content">
-          <div class="comment__name">
+        <div :class="{ 'comment--right': ownComment }" class="comment__content">
+          <strong v-if="!ownComment" class="comment__name">
             {{ comment.first_name }}
-          </div>
+          </strong>
+          <strong v-else class="comment__name">You</strong>
           <div class="comment__commented-at-display">{{ timeAgo }}</div>
         </div>
-      </div>
-      <div class="comment__body">
-        {{ comment.comment }}
-      </div>
-    </div>
-    <div v-else class="comment">
-      <div class="comment__top">
-        <div class="comment__content">
-          <div class="comment__name comment--right">
-            {{ comment.first_name }}
-          </div>
-          <div class="comment__commented-at-display comment--right">
-            {{ timeAgo }}
-          </div>
-        </div>
-        <div class="comment__initials">
+        <div v-if="ownComment" class="comment__initials">
           {{ comment.first_name | nameAbbreviation }}
         </div>
       </div>
-      <div class="comment__body comment--right">
+      <div :class="{ 'comment--right': ownComment }" class="comment__body">
         {{ comment.comment }}
       </div>
     </div>
@@ -47,7 +37,7 @@ export default {
       type: Object,
       required: true,
     },
-    left: {
+    ownComment: {
       type: Boolean,
       required: true,
     },

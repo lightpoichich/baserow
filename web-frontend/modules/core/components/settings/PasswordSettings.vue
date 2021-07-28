@@ -23,12 +23,7 @@
             class="input input--large"
             @blur="$v.account.oldPassword.$touch()"
           />
-          <div
-            v-if="
-              $v.account.oldPassword.$error && !$v.account.oldPassword.maxLength
-            "
-            class="error"
-          >
+          <div v-if="$v.account.oldPassword.$error" class="error">
             Old password is required.
           </div>
         </div>
@@ -130,9 +125,7 @@ export default {
         sameAsPassword: sameAs('newPassword'),
       },
       newPassword: passwordValidation,
-      oldPassword: {
-        required,
-      },
+      oldPassword: { required },
     },
   },
 }

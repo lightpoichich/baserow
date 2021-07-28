@@ -637,7 +637,13 @@ export class LinkRowHasFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    return true
+    const filterValueId = parseInt(filterValue)
+
+    if (isNaN(filterValueId)) {
+      return true
+    }
+
+    return rowValue.some((relation) => relation.id === filterValueId)
   }
 }
 
@@ -663,7 +669,13 @@ export class LinkRowHasNotFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    return true
+    const filterValueId = parseInt(filterValue)
+
+    if (isNaN(filterValueId)) {
+      return true
+    }
+
+    return !rowValue.some((relation) => relation.id === filterValueId)
   }
 }
 

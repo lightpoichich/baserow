@@ -87,10 +87,6 @@ export default {
       this.name = displayName || ''
     },
     isValidValue() {
-      if (this.value === '') {
-        return false
-      }
-
       if (isNaN(parseInt(this.value))) {
         return false
       }

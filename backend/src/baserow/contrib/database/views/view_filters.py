@@ -430,9 +430,6 @@ class LinkRowHasViewFilterType(ViewFilterType):
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
-        if value == "":
-            return Q()
-
         try:
             return Q(**{f"{field_name}__in": [int(value)]})
         except Exception:

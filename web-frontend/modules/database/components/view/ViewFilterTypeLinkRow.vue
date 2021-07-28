@@ -4,13 +4,10 @@
     :class="{ 'filters__value-link-row--disabled': readOnly }"
     @click.prevent="!readOnly && $refs.selectModal.show()"
   >
-    <div v-if="loading" class="loading-absolute-center"></div>
-    <div v-else-if="!valid" class="filters__value-link-row-choose">
-      Choose row
-    </div>
-    <template v-else>
-      {{ name || `unnamed row ${value}` }}
+    <template v-if="valid">
+      {{ name || `unnamed row ${filter.value}` }}
     </template>
+    <div v-else class="filters__value-link-row-choose">Choose row</div>
     <SelectRowModal
       v-if="!readOnly"
       ref="selectModal"
@@ -22,59 +19,29 @@
 
 <script>
 import SelectRowModal from '@baserow/modules/database/components/row/SelectRowModal'
+import viewFilter from '@baserow/modules/database/mixins/viewFilter'
 
 export default {
   name: 'ViewFilterTypeLinkRow',
   components: { SelectRowModal },
-  props: {
-    value: {
-      type: String,
-      required: true,
-    },
-    fieldId: {
-      type: Number,
-      required: true,
-    },
-    primary: {
-      type: Object,
-      required: true,
-    },
-    fields: {
-      type: Array,
-      required: true,
-    },
-    preloadValues: {
-      type: Object,
-      required: true,
-    },
-    readOnly: {
-      type: Boolean,
-      required: true,
-    },
-  },
+  mixins: [viewFilter],
   data() {
     return {
       name: '',
-      loading: false,
     }
   },
   computed: {
-    field() {
-      return this.primary.id === this.fieldId
-        ? this.primary
-        : this.fields.find((f) => f.id === this.fieldId)
-    },
     valid() {
-      return this.isValidValue(this.value)
+      return this.isValidValue(this.filter.value)
     },
   },
   watch: {
-    preloadValues(value) {
+    'filter.preload_values'(value) {
       this.setNameFromPreloadValues(value)
     },
   },
   mounted() {
-    this.setNameFromPreloadValues(this.preloadValues)
+    this.setNameFromPreloadValues(this.filter.preload_values)
   },
   methods: {
     setNameFromRow(row, primary) {
@@ -84,10 +51,12 @@ export default {
     },
     setNameFromPreloadValues(values) {
       const displayName = values.display_name
-      this.name = displayName || ''
+      if (displayName) {
+        this.name = displayName
+      }
     },
     isValidValue() {
-      if (isNaN(parseInt(this.value))) {
+      if (isNaN(parseInt(this.filter.value))) {
         return false
       }
 

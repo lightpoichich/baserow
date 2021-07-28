@@ -446,6 +446,7 @@ export const actions = {
         newValues[name] = values[name]
       }
     })
+    newValues.preload_values = {}
 
     dispatch('forceUpdateFilter', { filter, values: newValues })
 

@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import {mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 import error from '@baserow/modules/core/mixins/error'
 import Comment from '@baserow_premium/components/row_comments/Comment'
 

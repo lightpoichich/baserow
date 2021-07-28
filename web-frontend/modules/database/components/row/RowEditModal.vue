@@ -44,10 +44,8 @@
 
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
-import RowEditModalField
-  from '@baserow/modules/database/components/row/RowEditModalField'
-import CreateFieldContext
-  from '@baserow/modules/database/components/field/CreateFieldContext'
+import RowEditModalField from '@baserow/modules/database/components/row/RowEditModalField'
+import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 
 export default {
   name: 'RowEditModal',

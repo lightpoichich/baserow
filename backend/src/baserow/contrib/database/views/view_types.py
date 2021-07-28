@@ -216,6 +216,7 @@ class FormViewType(ViewType):
                     "description": field_option.description,
                     "enabled": field_option.enabled,
                     "required": field_option.required,
+                    "order": field_option.order,
                 }
             )
 

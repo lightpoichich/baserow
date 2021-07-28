@@ -169,3 +169,4 @@ def test_import_export_form_view(data_fixture, tmpdir):
     assert field_option.description == imported_field_option.description
     assert field_option.enabled == imported_field_option.enabled
     assert field_option.required == imported_field_option.required
+    assert field_option.order == imported_field_option.order

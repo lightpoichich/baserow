@@ -13,22 +13,31 @@
         'modal__box--full-screen': fullScreen,
         'modal__box--small': small,
         'modal__box--tiny': tiny,
+        'modal__box--right-sidebar': rightSidebar,
+        'modal__box--left-sidebar': leftSidebar,
       }"
     >
       <template v-if="sidebar">
-        <div class="modal__box-sidebar">
+        <div v-if="leftSidebar" class="modal__box-sidebar">
           <slot name="sidebar"></slot>
         </div>
         <div class="modal__box-content">
           <slot name="content"></slot>
+          <a v-if="closeButton" class="modal__close" @click="hide()">
+            <i class="fas fa-times"></i>
+          </a>
+        </div>
+        <div v-if="rightSidebar" class="modal__box-sidebar">
+          <slot name="sidebar"></slot>
         </div>
       </template>
       <template v-if="!sidebar">
         <slot></slot>
+        <slot name="content"></slot>
+        <a v-if="closeButton" class="modal__close" @click="hide()">
+          <i class="fas fa-times"></i>
+        </a>
       </template>
-      <a v-if="closeButton" class="modal__close" @click="hide()">
-        <i class="fas fa-times"></i>
-      </a>
     </div>
   </div>
 </template>
@@ -40,7 +49,12 @@ export default {
   name: 'Modal',
   mixins: [baseModal],
   props: {
-    sidebar: {
+    leftSidebar: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    rightSidebar: {
       type: Boolean,
       default: false,
       required: false,
@@ -69,6 +83,11 @@ export default {
       type: Boolean,
       default: false,
       required: false,
+    },
+  },
+  computed: {
+    sidebar() {
+      return this.leftSidebar || this.rightSidebar
     },
   },
 }

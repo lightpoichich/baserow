@@ -52,11 +52,21 @@
 
 .modal__box-sidebar {
   position: relative;
-  flex: 0 0 200px;
   background-color: $color-neutral-50;
-  border-right: 1px solid $color-neutral-200;
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
+
+  .modal__box--left-sidebar & {
+    flex: 0 0 200px;
+    border-right: 1px solid $color-neutral-200;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+  }
+
+  .modal__box--right-sidebar & {
+    flex: 0 0 300px;
+    border-left: 1px solid $color-neutral-200;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
 
   .modal__box--full-height & {
     overflow-y: auto;

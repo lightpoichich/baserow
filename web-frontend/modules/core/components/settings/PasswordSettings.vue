@@ -16,10 +16,21 @@
       <div class="control">
         <label class="control__label">Old password</label>
         <div class="control__elements">
-          <PasswordInput
+          <input
             v-model="account.oldPassword"
-            :validation-state="$v.account.oldPassword"
+            :class="{ 'input--error': $v.account.oldPassword.$error }"
+            type="password"
+            class="input input--large"
+            @blur="$v.account.oldPassword.$touch()"
           />
+          <div
+            v-if="
+              $v.account.oldPassword.$error && !$v.account.oldPassword.maxLength
+            "
+            class="error"
+          >
+            Old password is required.
+          </div>
         </div>
       </div>
       <div class="control">

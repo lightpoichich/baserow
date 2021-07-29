@@ -1027,6 +1027,20 @@ export const actions = {
     commit('UPDATE_ROW_FIELD_VALUE', { row, field, value })
     dispatch('onRowChange', { view, row, fields, primary })
 
+    fields.map((field) => {
+      const fieldType = this.$registry.get('field', field._.type.type)
+      const fieldID = `field_${field.id}`
+      const currentFieldValue = row[fieldID]
+      const updateValue = fieldType.onRowChange(
+        row,
+        value,
+        oldValue,
+        currentFieldValue
+      )
+      commit('UPDATE_ROW_FIELD_VALUE', { row, field, value: updateValue })
+      return null
+    })
+
     const fieldType = this.$registry.get('field', field._.type.type)
     const newValue = fieldType.prepareValueForUpdate(field, value)
     const values = {}

@@ -285,7 +285,6 @@ export const mutations = {
     }
   },
   UPDATE_ROW_IN_BUFFER(state, { row, values }) {
-    console.log('I WAS ACTUALLY CALLED', values)
     const index = state.rows.findIndex((item) => item.id === row.id)
     if (index !== -1) {
       Object.assign(state.rows[index], values)
@@ -1047,16 +1046,12 @@ export const actions = {
     values[`field_${field.id}`] = newValue
 
     try {
-      const ret = await RowService(this.$client).update(
+      const updatedRow = await RowService(this.$client).update(
         table.id,
         row.id,
         values
       )
-      console.log('RET: ', ret)
-      const data = ret.data
-      console.log('Registry: ', this.$registry)
-      console.log('Available Data: ', data)
-      commit('UPDATE_ROW_IN_BUFFER', { row, values: data })
+      commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
     } catch (error) {
       commit('UPDATE_ROW_FIELD_VALUE', { row, field, value: oldValue })
       dispatch('onRowChange', { view, row, fields, primary })

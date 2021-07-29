@@ -155,12 +155,13 @@ the runbook found here [runbooks/back-up-and-restore-baserow.md](https://gitlab.
 before backing up your Baserow database. 
 
 ```bash
-$ mkdir backups
+$ docker-compose build # Make sure you have built the latest images first
+$ mkdir ~/baserow_backups
 # The folder must be the same UID:GID as the user running inside the container, which
 # for the local env is 9999:9999, for the dev env it is 1000:1000 or your own UID:GID
 # when using ./dev.sh
-$ sudo chown 9999:9999 backups/ 
-$ docker-compose run -e PGPASSWORD=baserow -v $(pwd)/backups:/baserow/backups backend manage backup_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz 
+$ sudo chown 9999:9999 ~/baserow_backups/ 
+$ docker-compose run -e PGPASSWORD=baserow -v ~/baserow_backups:/baserow/backups backend manage backup_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz 
 # backups/ now contains your Baserow backup.
 ```
 
@@ -171,7 +172,8 @@ the runbook found here [runbooks/back-up-and-restore-baserow.md](https://gitlab.
 before restoring a Baserow database.
 
 ```bash
-$ docker-compose run -e PGPASSWORD=baserow -v $(pwd)/backups/:/baserow/backups/ backend manage restore_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz
+$ docker-compose build # Make sure you have built the latest images first
+$ docker-compose run -e PGPASSWORD=baserow -v ~/baserow_backups/:/baserow/backups/ backend manage restore_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz
 ```
 
 ## Common Problems

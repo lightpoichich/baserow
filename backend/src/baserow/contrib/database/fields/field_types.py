@@ -552,6 +552,7 @@ class DateFieldType(FieldType):
 
 class LastModifiedFieldType(FieldType):
     type = "last_modified"
+    should_do_schema_change = False
     model_class = LastModifiedField
     allowed_fields = ["date_format", "date_include_time", "date_time_format"]
     serializer_field_names = ["date_format", "date_include_time", "date_time_format"]
@@ -559,18 +560,18 @@ class LastModifiedFieldType(FieldType):
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
 
-        if instance.date_include_time:
-            return serializers.DateTimeField(
-                **{"required": required, "allow_null": not required, **kwargs}
-            )
-        else:
-            return serializers.DateField(
-                **{"required": required, "allow_null": not required, **kwargs}
-            )
+        if not instance.date_include_time:
+            kwargs["format"] = "%Y-%m-%d"
+
+        return serializers.DateTimeField(
+            **{"required": required, "allow_null": not required, **kwargs}
+        )
 
     def get_model_field(self, instance, **kwargs):
         kwargs["null"] = True
         kwargs["blank"] = True
+        kwargs["db_column"] = "updated_on"
+
         return models.DateTimeField(**kwargs)
 
 

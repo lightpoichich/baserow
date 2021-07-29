@@ -254,6 +254,7 @@ class Table(
         field_names=None,
         attribute_names=False,
         manytomany_models=None,
+        exclude_virtual_fields=False,
     ):
         """
         Generates a temporary Django model based on available fields that belong to
@@ -381,6 +382,9 @@ class Table(
             field = field.specific
             field_type = field_type_registry.get_by_model(field)
             field_name = field.db_column
+
+            if exclude_virtual_fields and not field_type.should_do_schema_change:
+                continue
 
             # If attribute_names is True we will not use 'field_{id}' as attribute name,
             # but we will rather use a name the user provided.

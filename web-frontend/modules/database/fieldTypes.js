@@ -32,6 +32,7 @@ import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
 import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean'
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
+import FunctionalGridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDateReadOnly'
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
@@ -44,6 +45,7 @@ import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEdi
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
+import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
@@ -374,6 +376,19 @@ export class FieldType extends Registerable {
         filterValue
       )
     )
+  }
+
+  /**
+   * Runs every time any field changes in a given row. For every field.
+   * The return value will be used to immediately update the frontend (i.e. the vuex store).
+   *
+   */
+  onRowChange(row, updatedFieldValue, updatedFieldOldValue, currentFieldValue) {
+    return currentFieldValue
+  }
+
+  shouldRefreshWhenAdded() {
+    return false
   }
 }
 
@@ -828,37 +843,17 @@ export class BooleanFieldType extends FieldType {
   }
 }
 
-export class DateFieldType extends FieldType {
-  static getType() {
-    return 'date'
-  }
-
+class BaseDateFieldType extends FieldType {
   getIconClass() {
     return 'calendar-alt'
   }
 
-  getName() {
-    return 'Date'
+  getSortIndicator() {
+    return ['text', '1', '9']
   }
 
   getFormComponent() {
     return FieldDateSubForm
-  }
-
-  getGridViewFieldComponent() {
-    return GridViewFieldDate
-  }
-
-  getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldDate
-  }
-
-  getRowEditFieldComponent() {
-    return RowEditFieldDate
-  }
-
-  getSortIndicator() {
-    return ['text', '1', '9']
   }
 
   getSort(name, order) {
@@ -940,7 +935,29 @@ export class DateFieldType extends FieldType {
   }
 }
 
-export class LastModifiedFieldType extends DateFieldType {
+export class DateFieldType extends BaseDateFieldType {
+  static getType() {
+    return 'date'
+  }
+
+  getName() {
+    return 'Date'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDate
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDate
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldDate
+  }
+}
+
+export class LastModifiedFieldType extends BaseDateFieldType {
   static getType() {
     return 'last_modified'
   }
@@ -949,12 +966,25 @@ export class LastModifiedFieldType extends DateFieldType {
     return 'Last Modified'
   }
 
-  getGridViewFieldComponent() {
-    return null
+  getRowEditFieldComponent() {
+    return RowEditFieldDateReadOnly
   }
 
-  getRowEditFieldComponent() {
-    return null
+  getGridViewFieldComponent() {
+    return FunctionalGridViewFieldDateReadOnly
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDateReadOnly
+  }
+
+  onRowChange(row, updatedFieldValue, updatedFieldOldValue, currentFieldValue) {
+    const currentDate = moment()
+    return currentDate
+  }
+
+  shouldRefreshWhenAdded() {
+    return true
   }
 }
 

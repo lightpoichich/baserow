@@ -759,31 +759,7 @@ class ViewHandler:
         if model is None:
             model = view.table.get_model()
 
-        value_names = ["id", "order"]
-        updated_names = []
-        for k, v in model._field_objects.items():
-            if v["type"].type == "last_modified":
-                updated_names.append(v["name"])
-            else:
-                value_names.append(v["name"])
-
-        def get_annotation(key):
-            return {
-                key: F("updated_on"),
-            }
-
-        if len(updated_names) > 0:
-            queryset = model.objects.values(*value_names)
-            for name in updated_names:
-                print("QUERYSET IST WAS FÜR EIN TYP?: ", type(queryset))
-                queryset = queryset.annotate(**get_annotation(name))
-        else:
-            queryset = model.objects.all()
-
-        queryset.enhance_by_fields()
-
-        for item in queryset:
-            print("ITEM TYPE: ", type(item))
+        queryset = model.objects.all().enhance_by_fields()
 
         view_type = view_type_registry.get_by_model(view.specific_class)
         if view_type.can_filter:

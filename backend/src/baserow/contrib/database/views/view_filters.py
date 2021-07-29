@@ -19,6 +19,7 @@ from baserow.contrib.database.fields.field_types import (
     URLFieldType,
     NumberFieldType,
     DateFieldType,
+    LastModifiedFieldType,
     LinkRowFieldType,
     BooleanFieldType,
     EmailFieldType,
@@ -104,6 +105,7 @@ class ContainsViewFilterType(ViewFilterType):
         EmailFieldType.type,
         PhoneNumberFieldType.type,
         DateFieldType.type,
+        LastModifiedFieldType.type,
         SingleSelectFieldType.type,
         NumberFieldType.type,
     ]
@@ -187,7 +189,7 @@ class DateEqualViewFilterType(ViewFilterType):
     """
 
     type = "date_equal"
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
 
     def get_filter(self, field_name, value, model_field, field):
         """
@@ -241,7 +243,7 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
 
     type = "base_date_field_lookup_type"
     query_field_lookup = ""
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
 
     @staticmethod
     def parse_date(value: str) -> datetime.date:
@@ -286,7 +288,7 @@ class DateBeforeViewFilterType(BaseDateFieldLookupFilterType):
 
     type = "date_before"
     query_field_lookup = "__lt"
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
 
 
 class DateAfterViewFilterType(BaseDateFieldLookupFilterType):
@@ -306,7 +308,7 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
     """
 
     type = "date_equals_today"
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
     query_for = ["year", "month", "day"]
 
     def get_filter(self, field_name, value, model_field, field):
@@ -430,6 +432,7 @@ class EmptyViewFilterType(ViewFilterType):
         NumberFieldType.type,
         BooleanFieldType.type,
         DateFieldType.type,
+        LastModifiedFieldType.type,
         LinkRowFieldType.type,
         EmailFieldType.type,
         FileFieldType.type,

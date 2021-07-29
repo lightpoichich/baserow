@@ -44,7 +44,9 @@ class RowCommentView(APIView):
         operation_id="get_row_comments",
         description="Returns all row comments for the specified table and row.",
         responses={
-            200: get_example_pagination_serializer_class(RowCommentSerializer),
+            200: get_example_pagination_serializer_class(
+                RowCommentSerializer, serializer_args=[None]
+            ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(
                 [
@@ -69,7 +71,8 @@ class RowCommentView(APIView):
         )
 
         page = paginator.paginate_queryset(comments, request, self)
-        serializer = RowCommentSerializer(page, many=True)
+        context = {"user": request.user}
+        serializer = RowCommentSerializer(page, many=True, context=context)
 
         return paginator.get_paginated_response(serializer.data)
 
@@ -115,4 +118,5 @@ class RowCommentView(APIView):
         new_row_comment = RowCommentHandler.create_comment(
             request.user, table_id, row_id, data["comment"]
         )
-        return Response(RowCommentSerializer(new_row_comment).data)
+        context = {"user": request.user}
+        return Response(RowCommentSerializer(new_row_comment, context=context).data)

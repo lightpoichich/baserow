@@ -146,9 +146,6 @@ export const getters = {
   getUsername(state) {
     return state.user ? state.user.username : ''
   },
-  getUserId(state) {
-    return state.user ? state.user.id : ''
-  },
   isStaff(state) {
     return state.user ? state.user.is_staff : false
   },

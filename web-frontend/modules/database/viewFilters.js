@@ -195,6 +195,7 @@ export class ContainsViewFilterType extends ViewFilterType {
       'email',
       'phone_number',
       'date',
+      'last_modified',
       'single_select',
       'number',
     ]
@@ -226,6 +227,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'email',
       'phone_number',
       'date',
+      'last_modified',
       'single_select',
       'number',
     ]
@@ -254,7 +256,7 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -287,7 +289,7 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -330,7 +332,7 @@ export class DateAfterViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -373,7 +375,7 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -402,7 +404,7 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified']
   }
 
   getDefaultValue() {
@@ -639,6 +641,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'email',
       'number',
       'date',
+      'last_modified',
       'boolean',
       'link_row',
       'file',
@@ -682,6 +685,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'email',
       'number',
       'date',
+      'last_modified',
       'boolean',
       'link_row',
       'file',

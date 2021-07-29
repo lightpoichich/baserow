@@ -167,9 +167,6 @@ class GridViewView(APIView):
         if "count" in request.GET:
             return Response({"count": queryset.count()})
 
-        for item in queryset:
-            print("HELLO ITEM: ", item)
-
         if LimitOffsetPagination.limit_query_param in request.GET:
             paginator = LimitOffsetPagination()
         else:

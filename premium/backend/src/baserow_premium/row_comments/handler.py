@@ -28,7 +28,7 @@ class RowCommentHandler:
         table = TableHandler().get_table(table_id)
         RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
         return (
-            RowComment.objects.prefetch_related("user")
+            RowComment.objects.select_related("user")
             .filter(table_id=table_id, row_id=row_id)
             .all()
         )

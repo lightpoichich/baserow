@@ -60,8 +60,8 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="rowcomment",
             index=models.Index(
-                fields=["table", "row_id", "created_on"],
-                name="database_ro_table_i_1dd337_idx",
+                fields=["table", "row_id", "-created_on"],
+                name="database_ro_table_i_e8263d_idx",
             ),
         ),
     ]

@@ -254,7 +254,6 @@ class TrashHandler:
         trash_item_id = to_delete.id
         trash_item_type.permanently_delete_item(
             to_delete,
-            parent_id,
             trash_item_lookup_cache,
         )
         permanently_deleted.send(

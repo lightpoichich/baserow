@@ -6,6 +6,7 @@
 }
 
 .row-comments__body {
+  position: relative;
   height: 100%;
   overflow-y: auto;
   border-top-left-radius: 6px;
@@ -83,6 +84,7 @@
   margin-right: 20px;
   border-radius: 6px;
   border-top-left-radius: 0;
+  white-space: pre-line;
 
   .row-comments__comment--right & {
     text-align: right;

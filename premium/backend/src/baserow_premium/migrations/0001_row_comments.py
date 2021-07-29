@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 "db_table": "database_rowcomment",
-                "ordering": ("created_on",),
+                "ordering": ("-created_on",),
             },
         ),
         migrations.AddIndex(

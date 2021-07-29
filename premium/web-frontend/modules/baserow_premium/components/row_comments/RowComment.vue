@@ -14,9 +14,7 @@
         <div class="row-comments__comment-head-time">{{ timeAgo }}</div>
       </div>
     </div>
-    <div class="row-comments__comment-text">
-      {{ comment.comment }}
-    </div>
+    <div class="row-comments__comment-text">{{ comment.comment }}</div>
   </div>
 </template>
 

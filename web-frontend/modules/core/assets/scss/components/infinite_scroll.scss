@@ -2,4 +2,9 @@
   @include absolute(0, 0, 0, 0);
 
   overflow-y: auto;
+
+  &--reversed {
+    display: flex;
+    flex-direction: column-reverse;
+  }
 }

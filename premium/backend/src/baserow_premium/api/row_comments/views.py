@@ -69,6 +69,7 @@ class RowCommentView(APIView):
         paginator = PageNumberPagination(
             limit_page_size=settings.ROW_COMMENT_PAGE_SIZE_LIMIT
         )
+        paginator.page_size = settings.ROW_COMMENT_PAGE_SIZE_LIMIT
 
         page = paginator.paginate_queryset(comments, request, self)
         context = {"user": request.user}

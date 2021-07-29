@@ -39,6 +39,7 @@ export default {
       this.loading = true
 
       const type = values.type
+      const fieldType = this.$registry.get('field', type)
       delete values.type
 
       try {
@@ -47,6 +48,9 @@ export default {
           values,
           table: this.table,
         })
+        if (fieldType.shouldRefreshWhenAdded()) {
+          this.$emit('refresh')
+        }
         this.loading = false
         this.$refs.form.reset()
         this.hide()

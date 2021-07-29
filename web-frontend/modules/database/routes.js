@@ -19,9 +19,20 @@ export const routes = [
       return p
     },
   },
+  // These redirect exist because the original api docs path was `/api/docs`, but
+  // they have been renamed.
+  {
+    path: '/api/docs',
+    redirect: '/api-docs',
+  },
+  {
+    path: '/api/docs/database/:databaseId',
+    redirect: '/api-docs/database/:databaseId',
+  },
   {
     name: 'database-api-docs',
     path: '/api-docs',
+    alias: '/api/docs',
     component: path.resolve(__dirname, 'pages/APIDocs.vue'),
   },
   {

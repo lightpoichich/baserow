@@ -38,7 +38,6 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
     def permanently_delete_item(
         self,
         trashed_item: Any,
-        parent_id: Optional[int] = None,
         trash_item_lookup_cache: Dict[str, Any] = None,
     ):
         """
@@ -46,8 +45,6 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         database and do any other required clean-up.
 
         :param trashed_item: The item to delete permanently.
-        :param parent_id: If required to look-up the item to delete or related items
-            this should be set to the parent id of the item to delete.
         :param trash_item_lookup_cache: If a cache is being used to speed up trash
             item lookups it should be provided here so trash items can invalidate the
             cache if when they are deleted a potentially cache item becomes invalid.

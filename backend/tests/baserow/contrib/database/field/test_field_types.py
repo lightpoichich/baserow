@@ -74,6 +74,7 @@ def test_valid_url(data_fixture):
     row_handler = RowHandler()
 
     field_handler.create_field(user=user, table=table, type_name="url", name="URL")
+    assert len(URLField.objects.all()) == 1
 
     model = table.get_model(attribute_names=True)
 

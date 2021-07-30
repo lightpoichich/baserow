@@ -193,6 +193,85 @@ def test_url_field_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_valid_url(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_database_table(user=user, database=table.database)
+    field = data_fixture.create_text_field(table=table, order=1, name="name")
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    field_handler.create_field(user=user, table=table, type_name="url", name="URL")
+
+    model = table.get_model(attribute_names=True)
+
+    valid_urls = [
+        "baserow.io",
+        "ftp://baserow.io",
+        "git://example.com/",
+        "ws://baserow.io",
+        "http://baserow.io",
+        "https://baserow.io",
+        "HTTP://BASEROW.IO",
+        "https://test.nl/test",
+        "https://test.nl/test",
+        "https://test.nl/test?with=a-query&that=has-more",
+        "https://test.nl/test",
+        "http://-.~_!$&'()*+,;=%40:80%2f@example.com",
+        "http://उदाहरण.परीक्षा",
+        "http://foo.com/(something)?after=parens",
+        "http://142.42.1.1/",
+        "http://userid:password@example.com:65535/",
+        "http://su--b.valid-----hyphens.com/",
+        "//baserow.io/test",
+        "127.0.0.1",
+        "https://test.nl#test",
+        "http://baserow.io/hrscywv4p/image/upload/c_fill,g_faces:center,"
+        "h_128,w_128/yflwk7vffgwyyenftkr7.png",
+        "https://gitlab.com/bramw/baserow/-/issues?row=nice/route",
+        "https://web.archive.org/web/20210313191012/https://baserow.io/",
+        "mailto:bram@baserow.io?test=test",
+    ]
+    invalid_urls = ["test", "test."]
+
+    for invalid_url in invalid_urls:
+        with pytest.raises(ValidationError):
+            row_handler.create_row(
+                user=user, table=table, values={"url": invalid_url}, model=model
+            )
+
+    for url in valid_urls:
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={"url": url, "name": url},
+            model=model,
+        )
+    for bad_url in invalid_urls:
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={"url": "", "name": bad_url},
+            model=model,
+        )
+
+    # Convert the text field to a url field so we can check how the conversion of
+    # values went.
+    field_handler.update_field(user=user, field=field, new_type_name="url")
+    rows = model.objects.all()
+    i = 0
+    for url in valid_urls:
+        assert rows[i].url == url
+        assert rows[i].name == url
+        i += 1
+
+    for _ in invalid_urls:
+        assert rows[i].url == ""
+        assert rows[i].name == ""
+        i += 1
+
+
+@pytest.mark.django_db
 def test_valid_email(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

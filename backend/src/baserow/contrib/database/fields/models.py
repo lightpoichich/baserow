@@ -168,6 +168,7 @@ class LastModifiedField(Field, BaseDateMixin):
 
 
 class LinkRowField(Field):
+    THROUGH_DATABASE_TABLE_PREFIX = "database_relation_"
     link_row_table = models.ForeignKey(
         "database.Table",
         on_delete=models.CASCADE,
@@ -206,7 +207,7 @@ class LinkRowField(Field):
         if not self.link_row_relation_id:
             raise ValueError("The link row field does not yet have a relation id.")
 
-        return f"database_relation_{self.link_row_relation_id}"
+        return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.link_row_relation_id}"
 
     @staticmethod
     def get_new_relation_id():

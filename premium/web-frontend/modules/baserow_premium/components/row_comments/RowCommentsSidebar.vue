@@ -87,7 +87,6 @@ export default {
   },
   methods: {
     async postComment() {
-      console.log(this.comment)
       if (!this.comment.trim() || this.postingComment) {
         return
       }

@@ -40,9 +40,12 @@ describe('test string utils', () => {
       'ws://baserow.io',
       'http://baserow.io',
       'https://baserow.io',
+      'https://www.baserow.io',
       'HTTP://BASEROW.IO',
       'https://test.nl/test',
       'https://test.nl/test',
+      'http://localhost',
+      '//localhost',
       'https://test.nl/test?with=a-query&that=has-more',
       'https://test.nl/test',
       "http://-.~_!$&'()*+,;=%40:80%2f@example.com",
@@ -60,7 +63,7 @@ describe('test string utils', () => {
       'mailto:bram@baserow.io?test=test',
     ]
 
-    const invalidURLs = ['test', 'test.']
+    const invalidURLs = ['test', 'test.', 'localhost']
 
     for (const invalidUrl of invalidURLs) {
       expect(isValidURL(invalidUrl)).toBe(false)

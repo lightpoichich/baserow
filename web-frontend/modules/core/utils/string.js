@@ -41,7 +41,7 @@ export const slugify = (string) => {
  * after the dot.
  */
 export const isValidURL = (str) => {
-  const pattern = /.{1,255}\..{1,6}(.*)/gi
+  const pattern = /.{1,255}[.|//].{1,}/gi
   return !!pattern.test(str)
 }
 

@@ -228,10 +228,10 @@ class URLFieldType(TextFieldMatchingRegexFieldType):
 
     @property
     def regex(self):
-        # A very lenient URL validator that allows all types of URL as long as it
+        # A very lenient URL validator that allows all types of URLs as long as it
         # respects the maximal amount of characters before the dot at at least have
         # one character after the dot.
-        return r".{1,255}\..{1,}"
+        return r".{1,255}[.|//].{1,}"
 
     def random_value(self, instance, fake, cache):
         return fake.url()

@@ -5,8 +5,19 @@ import TableTemplate from '@baserow/modules/database/components/table/TableTempl
 import { populateTable } from '@baserow/modules/database/store/table'
 
 export class DatabaseApplicationType extends ApplicationType {
+  constructor() {
+    super()
+    this.componentPlugins = {
+      RowEditModal: false,
+    }
+  }
+
   static getType() {
     return 'database'
+  }
+
+  getRowEditModalRightSidebarComponent() {
+    return null
   }
 
   getIconClass() {

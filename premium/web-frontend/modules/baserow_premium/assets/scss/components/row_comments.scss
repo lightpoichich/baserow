@@ -85,6 +85,7 @@
   border-radius: 6px;
   border-top-left-radius: 0;
   white-space: pre-line;
+  word-wrap: break-word;
 
   .row-comments__comment--right & {
     text-align: right;
@@ -96,14 +97,38 @@
 }
 
 .row-comments__foot {
+  position: relative;
   flex-shrink: 0;
   padding: 20px;
   border-top: solid 1px $color-neutral-200;
 }
 
+.row-comments__foot-fake-textarea {
+  appearance: none;
+  display: block;
+  width: 100%;
+  border: 1px solid #9fa4ab;
+  border-radius: 3px;
+  padding: 8px 12px 8px 12px;
+  outline: none;
+  background-color: white;
+}
+
 .row-comments__foot-input {
   font-size: 14px;
   line-height: 22px;
-  height: (22px * 1) + (10px * 2);
   resize: none;
+  padding: 0 0;
+  border: 0;
+  width: 100%;
+
+  &--loading {
+    &::after {
+      content: " ";
+      margin: -7px auto auto auto;
+
+      @include loading(14px);
+      @include absolute(50%, auto, auto, 35px);
+    }
+  }
 }

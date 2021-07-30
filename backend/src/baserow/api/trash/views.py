@@ -149,6 +149,7 @@ class TrashContentsView(APIView):
             request.user, group_id, application_id
         )
         paginator = PageNumberPagination(limit_page_size=settings.TRASH_PAGE_SIZE_LIMIT)
+        paginator.page_size = 8
         page = paginator.paginate_queryset(trash_contents, request, self)
         serializer = TrashContentsSerializer(page, many=True)
 

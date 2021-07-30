@@ -31,6 +31,7 @@
       <InfiniteScroll
         :max-count="totalServerSideTrashContentsCount"
         :current-count="trashContents.length"
+        :loading="loadingNextPage"
         @load-next-page="$emit('load-next-page', $event)"
       >
         <TrashEntry
@@ -40,9 +41,6 @@
           :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
           @restore="$emit('restore', $event)"
         ></TrashEntry>
-        <div v-if="loadingNextPage" class="trash__entries-loading-wrapper">
-          <div class="loading"></div>
-        </div>
       </InfiniteScroll>
     </div>
     <TrashEmptyModal

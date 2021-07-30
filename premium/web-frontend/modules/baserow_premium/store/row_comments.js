@@ -1,29 +1,52 @@
 import RowCommentService from '@baserow_premium/services/row_comments/row_comments'
+import _ from 'lodash'
+import Vue from 'vue'
 
 export const state = () => ({
   comments: [],
+  seenComments: {},
+  postingComment: false,
   loading: false,
   loaded: false,
   currentCount: 0,
   totalCount: 0,
-  currentPage: 1,
   loadedRowId: false,
   loadedTableId: false,
 })
 
 export const mutations = {
-  ADD_ROW_COMMENT(state, comment) {
-    state.comments.unshift(comment)
+  ADD_ROW_COMMENTS(state, comments) {
+    comments.forEach((comment) => {
+      const existingCommentLocation = state.seenComments[comment.id]
+      const insertLocation = _.sortedIndexBy(
+        state.comments,
+        comment,
+        (c) => -c.id
+      )
+      state.comments.splice(insertLocation, 0, comment)
+      if (existingCommentLocation) {
+        // We received an updated comment and inserted the new version above, now we
+        // need to find the old version and delete it. It must be somewhere after the
+        // new insert location as sortedIndexBy returns the lowest index which
+        // preserves the sort order.
+        const possibleDuplicateComment = state.comments[insertLocation + 1]
+        if (possibleDuplicateComment.id === comment.id) {
+          state.comments.splice(insertLocation, 1)
+        }
+      } else {
+        Vue.set(state.seenComments, comment.id, true)
+      }
+    })
+    state.currentCount = state.comments.length
   },
   REMOVE_ROW_COMMENT(state, comment) {
     const index = state.comments.findIndex((c) => c.id === comment)
     state.comments.splice(index, 1)
+    Vue.unset(state.seenComments, comment.id)
   },
-  REPLACE_ALL_ROW_COMMENTS(state, comments) {
-    state.comments = comments
-  },
-  APPEND_ROW_COMMENTS(state, comments) {
-    state.comments = state.comments.concat(comments)
+  RESET_ROW_COMMENTS(state) {
+    state.comments = []
+    state.seenComments = {}
   },
   SET_LOADING(state, loading) {
     state.loading = loading
@@ -31,11 +54,12 @@ export const mutations = {
   SET_LOADED(state, loaded) {
     state.loaded = loaded
   },
-  SET_CURRENT_COUNT(state, currentCount) {
-    state.currentCount = currentCount
+  SET_LOADED_TABLE_AND_ROW(state, { tableId, rowId }) {
+    state.loadedRowId = rowId
+    state.loadedTableId = tableId
   },
-  SET_CURRENT_PAGE(state, currentPage) {
-    state.currentPage = currentPage
+  SET_POSTING_COMMENT(state, postingComment) {
+    state.postingComment = postingComment
   },
   SET_TOTAL_COUNT(state, totalCount) {
     state.totalCount = totalCount
@@ -54,47 +78,48 @@ export const actions = {
         tableId,
         rowId
       )
-      commit('REPLACE_ALL_ROW_COMMENTS', data.results)
+      commit('RESET_ROW_COMMENTS')
+      commit('ADD_ROW_COMMENTS', data.results)
       commit('SET_TOTAL_COUNT', data.count)
-      commit('SET_CURRENT_COUNT', state.comments.length)
       commit('SET_LOADED', true)
-      commit('SET_CURRENT_PAGE', 1)
     } finally {
       commit('SET_LOADING', false)
     }
   },
-  async fetchPage({ dispatch, commit, getters, state }, { tableId, rowId }) {
+  async fetchPage(
+    { dispatch, commit, getters, state },
+    { tableId, rowId, page }
+  ) {
     commit('SET_LOADING', true)
     try {
-      const nextPage = state.page + 1
       const { data } = await RowCommentService(this.$client).fetchAll(
         tableId,
         rowId,
-        nextPage
+        state.currentCount
       )
-      commit('APPEND_ROW_COMMENTS', data.results)
+      commit('ADD_ROW_COMMENTS', data.results)
       commit('SET_TOTAL_COUNT', data.count)
-      commit('SET_CURRENT_COUNT', state.comments.length)
-      commit('SET_CURRENT_PAGE', nextPage)
     } finally {
       commit('SET_LOADING', false)
     }
   },
   async postComment({ commit, state }, { tableId, rowId, comment }) {
-    const { data } = await RowCommentService(this.$client).create(
-      tableId,
-      rowId,
-      comment
-    )
-    commit('ADD_ROW_COMMENT', data)
-    commit('SET_TOTAL_COUNT', state.totalCount + 1)
-    commit('SET_CURRENT_COUNT', state.currentCount + 1)
-    commit('SET_CURRENT_PAGE', Math.floor(state.currentCount / 100) + 1)
+    try {
+      commit('SET_POSTING_COMMENT', true)
+      const { data } = await RowCommentService(this.$client).create(
+        tableId,
+        rowId,
+        comment
+      )
+      console.log('Adding ', data)
+      commit('ADD_ROW_COMMENTS', [data])
+      commit('SET_TOTAL_COUNT', state.totalCount + 1)
+    } finally {
+      commit('SET_POSTING_COMMENT', false)
+    }
   },
   forceAddRowComment({ commit }, { comment }) {
-    commit('ADD_ROW_COMMENT', {
-      comment,
-    })
+    commit('ADD_ROW_COMMENTS', [comment])
   },
 }
 
@@ -110,6 +135,9 @@ export const getters = {
   },
   getLoading(state) {
     return state.loading
+  },
+  getPostingComment(state) {
+    return state.postingComment
   },
   getLoaded(state) {
     return state.loaded

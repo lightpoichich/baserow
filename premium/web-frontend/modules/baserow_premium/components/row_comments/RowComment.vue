@@ -11,7 +11,9 @@
         <div class="row-comments__comment-head-name">
           {{ comment.own_comment ? 'You' : comment.first_name }}
         </div>
-        <div class="row-comments__comment-head-time">{{ timeAgo }}</div>
+        <div :title="localTimestamp" class="row-comments__comment-head-time">
+          {{ timeAgo }}
+        </div>
       </div>
     </div>
     <div class="row-comments__comment-text">{{ comment.comment }}</div>
@@ -31,7 +33,10 @@ export default {
   },
   computed: {
     timeAgo() {
-      return moment.utc(this.comment.created_at).fromNow()
+      return moment.utc(this.comment.created_on).fromNow()
+    },
+    localTimestamp() {
+      return moment.utc(this.comment.created_on).format('L LT')
     },
   },
 }

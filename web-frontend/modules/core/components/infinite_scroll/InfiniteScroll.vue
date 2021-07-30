@@ -6,6 +6,17 @@
     @scroll="handleScroll"
   >
     <slot />
+    <div
+      v-show="currentCount < maxCount"
+      ref="loadingWrapper"
+      class="infinite-scroll__loading-wrapper"
+    >
+      <div v-if="loading" class="loading"></div>
+    </div>
+    <div
+      v-show="currentCount >= maxCount"
+      class="infinite-scroll__end-line"
+    ></div>
   </section>
 </template>
 
@@ -30,29 +41,60 @@ export default {
       default: false,
     },
   },
+  data() {
+    return {
+      oldScrollTop: false,
+    }
+  },
+  watch: {
+    loading(newLoading) {
+      if (!newLoading && this.oldScrollTop) {
+        this.$refs.infiniteScroll.scrollTop = this.oldScrollTop
+        this.oldScrollTop = false
+      }
+    },
+  },
   created() {
     if (this.reverse) {
       this.$nextTick(() => {
-        this.scrollToBottom()
+        this.scrollToStart()
       })
     }
   },
   methods: {
     handleScroll({ target: { scrollTop, clientHeight, scrollHeight } }) {
+      console.log(
+        `Scroll sT:${scrollTop}, cH:${clientHeight}, sH:${scrollHeight}`
+      )
+      const height = clientHeight + this.$refs.loadingWrapper.clientHeight
       if (this.reverse) {
-        if (-scrollTop + clientHeight >= scrollHeight) {
+        if (-scrollTop + height >= scrollHeight) {
           this.loadNextPage()
         }
-      } else if (scrollTop + clientHeight >= scrollHeight) this.loadNextPage()
+      } else if (scrollTop + height >= scrollHeight) this.loadNextPage()
     },
     loadNextPage() {
       if (this.currentCount < this.maxCount && !this.loading) {
-        this.$emit('load-next-page')
+        const nextPage = Math.ceil(this.currentCount / 10)
+        // Need to switch to limit offset.....
+        this.oldScrollTop = this.$refs.infiniteScroll.scrollTop
+        console.log('Loading ', nextPage, this.currentCount)
+        this.$emit('load-next-page', nextPage)
+        // this.$nextTick(this.scrollToEnd)
       }
     },
-    scrollToBottom() {
+    scrollToStart() {
       const infiniteScroll = this.$refs.infiniteScroll
-      infiniteScroll.scrollTop = infiniteScroll.scrollHeight
+      console.log('Scrolling to start')
+      infiniteScroll.scrollTop = this.reverse ? 0 : infiniteScroll.scrollHeight
+    },
+    scrollToEnd() {
+      console.log('Scrolling to end')
+      const infiniteScroll = this.$refs.infiniteScroll
+      this.oldScrollTop = infiniteScroll.scrollTop
+      infiniteScroll.scrollTop = this.reverse
+        ? -infiniteScroll.scrollHeight + 10
+        : infiniteScroll.scrollHeight - 10
     },
   },
 }

@@ -39,7 +39,7 @@ from .exceptions import (
     IncompatiblePrimaryFieldTypeError,
 )
 from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
-from .fields import SingleSelectForeignKey, URLTextField
+from .fields import SingleSelectForeignKey
 from .handler import FieldHandler
 from .models import (
     NUMBER_TYPE_INTEGER,

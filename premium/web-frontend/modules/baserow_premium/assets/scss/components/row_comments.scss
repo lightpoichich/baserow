@@ -75,6 +75,9 @@
 
   font-size: 10px;
   color: $color-neutral-400;
+  // Prevent long characters like 'g' in the time display being cut off
+  // partway down.
+  height: 14px;
 
   .row-comments__comment--right & {
     text-align: right;

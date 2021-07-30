@@ -1026,18 +1026,34 @@ export const actions = {
     commit('UPDATE_ROW_FIELD_VALUE', { row, field, value })
     dispatch('onRowChange', { view, row, fields, primary })
 
-    fields.map((field) => {
+    let fieldsToCallOnRowChange = [...fields, primary]
+    fieldsToCallOnRowChange = fieldsToCallOnRowChange.filter((el) => {
+      return el.id !== field.id
+    })
+
+    const updatedFieldValues = []
+
+    fieldsToCallOnRowChange.forEach((field) => {
       const fieldType = this.$registry.get('field', field._.type.type)
       const fieldID = `field_${field.id}`
       const currentFieldValue = row[fieldID]
-      const updateValue = fieldType.onRowChange(
+      // Add field object to "onRowChange"
+      const updatedFieldValue = fieldType.onRowChange(
         row,
+        field,
         value,
         oldValue,
         currentFieldValue
       )
-      commit('UPDATE_ROW_FIELD_VALUE', { row, field, value: updateValue })
-      return null
+
+      if (currentFieldValue !== updatedFieldValue) {
+        updatedFieldValues.push({ field, oldValue: currentFieldValue })
+        commit('UPDATE_ROW_FIELD_VALUE', {
+          row,
+          field,
+          value: updatedFieldValue,
+        })
+      }
     })
 
     const fieldType = this.$registry.get('field', field._.type.type)
@@ -1054,6 +1070,14 @@ export const actions = {
       commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
     } catch (error) {
       commit('UPDATE_ROW_FIELD_VALUE', { row, field, value: oldValue })
+
+      updatedFieldValues.forEach((item) => {
+        commit('UPDATE_ROW_FIELD_VALUE', {
+          row,
+          field: item.field,
+          value: item.oldValue,
+        })
+      })
       dispatch('onRowChange', { view, row, fields, primary })
       throw error
     }

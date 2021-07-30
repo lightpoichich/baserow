@@ -383,7 +383,13 @@ export class FieldType extends Registerable {
    * The return value will be used to immediately update the frontend (i.e. the vuex store).
    *
    */
-  onRowChange(row, updatedFieldValue, updatedFieldOldValue, currentFieldValue) {
+  onRowChange(
+    row,
+    updatedField,
+    updatedFieldValue,
+    updatedFieldOldValue,
+    currentFieldValue
+  ) {
     return currentFieldValue
   }
 
@@ -395,6 +401,16 @@ export class FieldType extends Registerable {
 export class TextFieldType extends FieldType {
   static getType() {
     return 'text'
+  }
+
+  onRowChange(
+    row,
+    updatedField,
+    updatedFieldValue,
+    updatedFieldOldValue,
+    currentFieldValue
+  ) {
+    return `${currentFieldValue} - Update haha`
   }
 
   getIconClass() {
@@ -978,8 +994,14 @@ export class LastModifiedFieldType extends BaseDateFieldType {
     return FunctionalGridViewFieldDateReadOnly
   }
 
-  onRowChange(row, updatedFieldValue, updatedFieldOldValue, currentFieldValue) {
-    const currentDate = moment()
+  onRowChange(
+    row,
+    updatedField,
+    updatedFieldValue,
+    updatedFieldOldValue,
+    currentFieldValue
+  ) {
+    const currentDate = moment().utc().format()
     return currentDate
   }
 

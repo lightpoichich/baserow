@@ -706,19 +706,19 @@ class RowMoveView(APIView):
 
         user_field_names = "user_field_names" in request.GET
 
-        model = table.get_model()
+        model = table.get_model(exclude_virtual_fields=True)
         before_id = request.GET.get("before_id")
         before = (
             RowHandler().get_row(request.user, table, before_id, model)
             if before_id
             else None
         )
-        row = RowHandler().move_row(
-            request.user, table, row_id, before=before, model=model
-        )
+        RowHandler().move_row(request.user, table, row_id, before=before, model=model)
+        model = table.get_model()
+        moved_row = RowHandler().get_row(request.user, table, row_id, model=model)
 
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
-        serializer = serializer_class(row)
+        serializer = serializer_class(moved_row)
         return Response(serializer.data)

@@ -16,7 +16,7 @@ class RowCommentSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_own_comment(self, object):
-        return object.user == self.context["user"]
+        return "user" in self.context and object.user == self.context["user"]
 
     class Meta:
         model = RowComment

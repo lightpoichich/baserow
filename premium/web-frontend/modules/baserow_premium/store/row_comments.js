@@ -93,6 +93,7 @@ export const actions = {
       commit('RESET_ROW_COMMENTS')
       commit('ADD_ROW_COMMENTS', data.results)
       commit('SET_TOTAL_COUNT', data.count)
+      commit('SET_LOADED_TABLE_AND_ROW', { tableId, rowId })
       commit('SET_LOADED', true)
     } finally {
       commit('SET_LOADING', false)
@@ -138,8 +139,13 @@ export const actions = {
       commit('SET_POSTING_COMMENT', false)
     }
   },
-  forceAddRowComment({ commit }, { comment }) {
-    commit('ADD_ROW_COMMENTS', [comment])
+  forceCreate({ commit, state }, comment) {
+    if (
+      state.loadedTableId === comment.table &&
+      state.loadedRowId === comment.row_id
+    ) {
+      commit('ADD_ROW_COMMENTS', [comment])
+    }
   },
 }
 

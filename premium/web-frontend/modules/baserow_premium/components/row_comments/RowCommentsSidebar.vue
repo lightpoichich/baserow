@@ -27,8 +27,8 @@
         <div class="row-comments__foot">
           <ExpandableTextarea
             ref="expandableTextarea"
-            :loading="postingComment"
             v-model="comment"
+            :loading="postingComment"
             @entered="postComment"
           >
           </ExpandableTextarea>

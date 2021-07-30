@@ -111,7 +111,6 @@ export default {
         const comment = this.comment.trim()
         this.comment = ''
         this.numTextAreaLines = 1
-        console.log('Posting', comment)
         await this.$store.dispatch('row_comments/postComment', {
           tableId,
           rowId,
@@ -136,18 +135,14 @@ export default {
       }
     },
     resizeTextArea(event) {
-      console.log(event)
       setTimeout(() => {
         const inputTextArea = this.$refs.inputTextArea
         this.numTextAreaLines = this.calculateHeight(inputTextArea)
-        console.log(
-          this.numTextAreaLines,
-          inputTextArea.scrollHeight,
-          inputTextArea.offsetHeight,
-          (inputTextArea.scrollHeight - 20) / 22
-        )
       })
     },
+    /**
+     * Taken from https://stackoverflow.com/questions/1760629/how-to-get-number-of-rows-in-textarea-using-javascript/1761203#1761203
+     */
     calculateContentHeight(ta, scanAmount) {
       const origHeight = ta.style.height
       let height = ta.offsetHeight
@@ -155,7 +150,6 @@ export default {
       const overflow = ta.style.overflow
       /// only bother if the ta is bigger than content
       if (height >= scrollHeight) {
-        // console.log(`${height} >= ${scrollHeight}`)
         /// check that our browser supports changing dimension
         /// calculations mid-way through a function call...
         ta.style.height = height + scanAmount + 'px'
@@ -163,18 +157,13 @@ export default {
         ta.style.overflow = 'hidden'
         /// by checking that scrollHeight has updated
         if (scrollHeight < ta.scrollHeight) {
-          // console.log(`${scrollHeight} < ${ta.scrollHeight}`)
           /// now try and scan the ta's height downwards
           /// until scrollHeight becomes larger than height
           while (ta.offsetHeight >= ta.scrollHeight) {
-            // console.log(`${ta.offsetHeight} >= ${ta.scrollHeight}`)
-            // console.log(`${height}-=${scanAmount}`)
             ta.style.height = (height -= scanAmount) + 'px'
           }
           /// be more specific to get the exact height
           while (ta.offsetHeight < ta.scrollHeight) {
-            // console.log(`${ta.offsetHeight} < ${ta.scrollHeight}`)
-            // console.log(`${height}++`)
             ta.style.height = height++ + 'px'
           }
           height--
@@ -196,13 +185,9 @@ export default {
       // This will get the line-height only if it is set in the css,
       // otherwise it's "normal"
       const taLineHeight = parseInt(style.lineHeight, 10)
-      console.log(taLineHeight)
       // Get the scroll height of the textarea
       const taHeight = this.calculateContentHeight(ta, taLineHeight)
       // calculate the number of lines
-      console.log(
-        `CALC HEIGHT OF ${taHeight} and rows of ${taLineHeight / taLineHeight}`
-      )
       return Math.ceil(taHeight / taLineHeight)
     },
   },

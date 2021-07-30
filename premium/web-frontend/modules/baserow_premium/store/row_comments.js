@@ -76,7 +76,8 @@ export const actions = {
     try {
       const { data } = await RowCommentService(this.$client).fetchAll(
         tableId,
-        rowId
+        rowId,
+        {}
       )
       commit('RESET_ROW_COMMENTS')
       commit('ADD_ROW_COMMENTS', data.results)
@@ -86,16 +87,18 @@ export const actions = {
       commit('SET_LOADING', false)
     }
   },
-  async fetchPage(
+  async fetchNextSetOfComments(
     { dispatch, commit, getters, state },
-    { tableId, rowId, page }
+    { tableId, rowId }
   ) {
     commit('SET_LOADING', true)
     try {
+      // We have to use offset based paging here as new comments can be added by the
+      // user or come in via realtime events.
       const { data } = await RowCommentService(this.$client).fetchAll(
         tableId,
         rowId,
-        state.currentCount
+        { offset: state.currentCount }
       )
       commit('ADD_ROW_COMMENTS', data.results)
       commit('SET_TOTAL_COUNT', data.count)
@@ -111,7 +114,6 @@ export const actions = {
         rowId,
         comment
       )
-      console.log('Adding ', data)
       commit('ADD_ROW_COMMENTS', [data])
       commit('SET_TOTAL_COUNT', state.totalCount + 1)
     } finally {

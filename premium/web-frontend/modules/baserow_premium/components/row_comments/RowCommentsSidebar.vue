@@ -19,11 +19,17 @@
             />
           </InfiniteScroll>
         </div>
-        <div
-          class="row-comments__foot"
-          :class="{ 'row-comments__foot-input--loading': postingComment }"
-        >
-          <div class="row-comments__foot-fake-textarea">
+        <div class="row-comments__foot">
+          <div
+            class="row-comments__foot-fake-textarea"
+            :class="{
+              'row-comments__foot-input--loading-overlay': postingComment,
+            }"
+          >
+            <div
+              v-if="postingComment"
+              class="row-comments__foot-input--loading"
+            ></div>
             <textarea
               ref="inputTextArea"
               v-model="comment"
@@ -32,7 +38,6 @@
                 height: textBoxSize + 'px',
                 overflow: textBoxOverflow,
               }"
-              :disabled="postingComment"
               rows="1"
               @keydown.enter.exact.prevent="postComment"
               @change="resizeTextArea"
@@ -102,46 +107,50 @@ export default {
   },
   methods: {
     async postComment() {
-      if (!this.comment.trim()) {
+      if (!this.comment.trim() || this.postingComment) {
         return
       }
       try {
         const tableId = this.table.id
         const rowId = this.row.id
         const comment = this.comment.trim()
-        this.comment = ''
-        this.numTextAreaLines = 1
         await this.$store.dispatch('row_comments/postComment', {
           tableId,
           rowId,
           comment,
         })
+        this.comment = ''
+        this.resizeTextArea()
         this.$refs.infiniteScroll.scrollToStart()
       } catch (e) {
         notifyIf(e, 'application')
       }
     },
-    async nextPage(page) {
+    async nextPage() {
       try {
         const tableId = this.table.id
         const rowId = this.row.id
-        await this.$store.dispatch('row_comments/fetchPage', {
+        await this.$store.dispatch('row_comments/fetchNextSetOfComments', {
           tableId,
           rowId,
-          page,
         })
       } catch (e) {
         notifyIf(e, 'application')
       }
     },
-    resizeTextArea(event) {
-      setTimeout(() => {
+    resizeTextArea() {
+      this.$nextTick(() => {
         const inputTextArea = this.$refs.inputTextArea
         this.numTextAreaLines = this.calculateHeight(inputTextArea)
       })
     },
     /**
      * Taken from https://stackoverflow.com/questions/1760629/how-to-get-number-of-rows-in-textarea-using-javascript/1761203#1761203
+     *
+     * The key reason we need this is to resize a fully expanded textarea to something
+     * smaller as a user deletes newlines or text. Hence we need to actually manipulate
+     * the dom and lower the height of the textarea until we find overflow is occurring
+     * again to re-find the correct min height.
      */
     calculateContentHeight(ta, scanAmount) {
       const origHeight = ta.style.height

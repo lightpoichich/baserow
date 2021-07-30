@@ -104,8 +104,10 @@
 }
 
 .row-comments__foot-fake-textarea {
+  position: relative;
   appearance: none;
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
   border: 1px solid #9fa4ab;
   border-radius: 3px;
@@ -123,12 +125,19 @@
   width: 100%;
 
   &--loading {
-    &::after {
-      content: " ";
-      margin: -7px auto auto auto;
+    margin-right: 7px;
 
-      @include loading(14px);
-      @include absolute(50%, auto, auto, 35px);
+    @include loading(14px);
+  }
+
+  &--loading-overlay {
+    &::before {
+      content: '';
+      border-radius: 2px;
+      background-color: rgba(0, 0, 0, 0.16);
+      z-index: 2;
+
+      @include absolute(0, 0, 0, 0);
     }
   }
 }

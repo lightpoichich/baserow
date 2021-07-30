@@ -34,13 +34,16 @@
         :loading="loadingNextPage"
         @load-next-page="$emit('load-next-page', $event)"
       >
-        <TrashEntry
-          v-for="item in trashContents"
-          :key="'trash-item-' + item.id"
-          :trash-entry="item"
-          :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
-          @restore="$emit('restore', $event)"
-        ></TrashEntry>
+        <template #default>
+          <TrashEntry
+            v-for="item in trashContents"
+            :key="'trash-item-' + item.id"
+            :trash-entry="item"
+            :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
+            @restore="$emit('restore', $event)"
+          ></TrashEntry>
+        </template>
+        <template #end> <div class="trash__end-line"></div> </template>
       </InfiniteScroll>
     </div>
     <TrashEmptyModal

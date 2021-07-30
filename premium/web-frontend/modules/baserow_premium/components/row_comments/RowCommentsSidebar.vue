@@ -12,11 +12,16 @@
             :reverse="true"
             @load-next-page="nextPage"
           >
-            <RowComment
-              v-for="c in comments"
-              :key="'row-comment-' + c.id"
-              :comment="c"
-            />
+            <template #default>
+              <RowComment
+                v-for="c in comments"
+                :key="'row-comment-' + c.id"
+                :comment="c"
+              />
+            </template>
+            <template #end>
+              <div class="row-comments__end-line"></div>
+            </template>
           </InfiniteScroll>
         </div>
         <div class="row-comments__foot">

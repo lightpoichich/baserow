@@ -13,10 +13,9 @@
     >
       <div v-if="loading" class="loading"></div>
     </div>
-    <div
-      v-show="currentCount >= maxCount"
-      class="infinite-scroll__end-line"
-    ></div>
+    <slot v-if="currentCount >= maxCount && isScrolling" name="end">
+      <div class="infinite-scroll__end-line"></div>
+    </slot>
   </section>
 </template>
 
@@ -41,14 +40,33 @@ export default {
       default: false,
     },
   },
+  data() {
+    return {
+      isScrolling: false,
+    }
+  },
+  watch: {
+    currentCount() {
+      this.calculateIsScrolling()
+    },
+  },
   created() {
     if (this.reverse) {
       this.$nextTick(() => {
         this.scrollToStart()
       })
     }
+    this.calculateIsScrolling()
   },
   methods: {
+    calculateIsScrolling() {
+      this.$nextTick(() => {
+        const infiniteScroll = this.$refs.infiniteScroll
+        this.isScrolling =
+          infiniteScroll &&
+          infiniteScroll.scrollHeight > infiniteScroll.clientHeight
+      })
+    },
     handleScroll({ target: { scrollTop, clientHeight, scrollHeight } }) {
       const height = clientHeight + this.$refs.loadingWrapper.clientHeight
       if (this.reverse) {

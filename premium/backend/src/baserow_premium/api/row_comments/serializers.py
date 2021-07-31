@@ -25,7 +25,6 @@ class RowCommentSerializer(serializers.ModelSerializer):
             "table",
             "row_id",
             "comment",
-            "user",
             "first_name",
             "created_on",
             "updated_on",

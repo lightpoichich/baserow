@@ -91,6 +91,10 @@ def setup_interesting_test_table(data_fixture):
         "date_us": date,
         "datetime_eu": datetime,
         "date_eu": date,
+        "last_modified_datetime_us": None,
+        "last_modified_date_us": None,
+        "last_modified_datetime_eu": None,
+        "last_modified_date_eu": None,
         # We will setup link rows manually later
         "link_row": None,
         "decimal_link_row": None,
@@ -131,8 +135,9 @@ def setup_interesting_test_table(data_fixture):
         if val is not None:
             row_values[f"field_{name_to_field_id[field_type]}"] = val
     # Make a blank row to test empty field conversion also.
-    blank_row = model.objects.create(**{})
-    row = model.objects.create(**row_values)
+    with freeze_time("2021-01-02 12:00"):
+        blank_row = model.objects.create(**{})
+        row = model.objects.create(**row_values)
 
     # Setup the link rows
     linked_row_1 = row_handler.create_row(

@@ -9,6 +9,7 @@ from pytz import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.models import (
+    LastModifiedField,
     LongTextField,
     URLField,
     DateField,
@@ -886,3 +887,60 @@ def test_phone_number_field_type(api_client, data_fixture):
     response = api_client.delete(email, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
     assert PhoneNumberField.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_last_modified_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+
+    # first add text field so that there is already a row with an
+    # updated_on value
+    text_field = data_fixture.create_text_field(user=user, table=table)
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{text_field.id}": "Test Text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    # now add a last_modified field with datetime
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Last", "type": "last_modified", "date_include_time": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == "last_modified"
+    assert LastModifiedField.objects.all().count() == 1
+    last_modified_field_id = response_json["id"]
+    assert last_modified_field_id
+
+    # verify that the timestamp is the same as the updated_on column
+    model = table.get_model(attribute_names=True)
+    row = model.objects.all().last()
+    assert row.last == row.updated_on
+
+    # change the text_field value so that we can verify that the
+    # last_modified column gets updated as well
+    response = api_client.patch(
+        reverse(
+            "api:database:rows:item",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        {f"field_{text_field.id}": "test_second"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    last_datetime = row.last.replace(microsecond=0)
+    updated_on_datetime = row.updated_on.replace(microsecond=0)
+
+    assert last_datetime == updated_on_datetime

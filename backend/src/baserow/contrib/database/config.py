@@ -84,10 +84,15 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(SingleSelectFieldType())
         field_type_registry.register(PhoneNumberFieldType())
 
-        from .fields.field_converters import LinkRowFieldConverter, FileFieldConverter
+        from .fields.field_converters import (
+            LinkRowFieldConverter,
+            FileFieldConverter,
+            LastModifiedFieldConverter,
+        )
 
         field_converter_registry.register(LinkRowFieldConverter())
         field_converter_registry.register(FileFieldConverter())
+        field_converter_registry.register(LastModifiedFieldConverter())
 
         from .views.view_types import GridViewType, FormViewType
 

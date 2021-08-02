@@ -15,6 +15,7 @@ from baserow.core.exceptions import (
     ApplicationNotInGroup,
     GroupDoesNotExist,
     GroupUserDoesNotExist,
+    GroupUserIsLastAdmin,
     ApplicationDoesNotExist,
     UserInvalidGroupPermissionsError,
     BaseURLHostnameNotAllowed,
@@ -251,6 +252,39 @@ def test_update_group(send_mock, data_fixture):
 
     with pytest.raises(ValueError):
         handler.update_group(user=user_2, group=object(), name="New name")
+
+
+@pytest.mark.django_db
+def test_leave_group(data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    user_4 = data_fixture.create_user()
+    group_1 = data_fixture.create_group()
+    group_2 = data_fixture.create_group()
+    data_fixture.create_user_group(user=user_1, group=group_1, permissions="ADMIN")
+    data_fixture.create_user_group(user=user_2, group=group_1, permissions="ADMIN")
+    data_fixture.create_user_group(user=user_3, group=group_1, permissions="USER")
+    data_fixture.create_user_group(user=user_3, group=group_2, permissions="USER")
+    data_fixture.create_user_group(user=user_4, group=group_2, permissions="USER")
+
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.leave_group(user=user_4, group=group_1)
+
+    handler.leave_group(user=user_2, group=group_1)
+
+    with pytest.raises(GroupUserIsLastAdmin):
+        handler.leave_group(user=user_1, group=group_1)
+
+    handler.leave_group(user=user_3, group=group_1)
+
+    assert GroupUser.objects.filter(user=user_1, group=group_1).exists() is True
+    assert GroupUser.objects.filter(user=user_2, group=group_1).exists() is False
+    assert GroupUser.objects.filter(user=user_3, group=group_1).exists() is False
+    assert GroupUser.objects.filter(user=user_3, group=group_2).exists() is True
+    assert GroupUser.objects.filter(user=user_4, group=group_2).exists() is True
 
 
 @pytest.mark.django_db

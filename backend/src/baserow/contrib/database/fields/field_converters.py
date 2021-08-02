@@ -75,7 +75,7 @@ class LastModifiedFieldConverter(RecreateFieldConverter):
         """
         In case there is a conversion for the LastModifiedField from
         'without timestamp' to 'with timestamp' we need to make sure
-        that the field gets the timestamp or date from the 'updated_on'
+        that the field gets the timestamp from the 'updated_on'
         column.
         """
 
@@ -94,11 +94,9 @@ class LastModifiedFieldConverter(RecreateFieldConverter):
         with timestamp.
         """
 
-        from_date_to_timestamp = (
-            not from_field.date_include_time and to_field.date_include_time
-        )
-        return (
-            isinstance(from_field, LastModifiedField)
-            and isinstance(to_field, LastModifiedField)
-            and from_date_to_timestamp
-        )
+        if not isinstance(from_field, LastModifiedField) or not isinstance(
+            to_field, LastModifiedField
+        ):
+            return False
+
+        return not from_field.date_include_time and to_field.date_include_time

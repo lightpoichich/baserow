@@ -354,7 +354,7 @@ class RowsView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "create", table, False)
         user_field_names = "user_field_names" in request.GET
-        model = table.get_model(exclude_virtual_fields=True)
+        model = table.get_model()
 
         validation_serializer = get_row_serializer_class(
             model, user_field_names=user_field_names
@@ -380,15 +380,10 @@ class RowsView(APIView):
         except ValidationError as e:
             raise RequestBodyValidationException(detail=e.message)
 
-        model = table.get_model()
-        created_row_id = row.id
-        created_row = RowHandler().get_row(
-            request.user, table, created_row_id, model=model
-        )
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
-        serializer = serializer_class(created_row)
+        serializer = serializer_class(row)
 
         return Response(serializer.data)
 
@@ -554,7 +549,7 @@ class RowView(APIView):
             field_names = request.data.keys()
         else:
             field_ids = RowHandler().extract_field_ids_from_dict(request.data)
-        model = table.get_model(exclude_virtual_fields=True)
+        model = table.get_model()
         validation_serializer = get_row_serializer_class(
             model,
             field_ids=field_ids,
@@ -575,8 +570,6 @@ class RowView(APIView):
         except ValidationError as e:
             raise RequestBodyValidationException(detail=e.message)
 
-        model = table.get_model()
-        row = RowHandler().get_row(request.user, table, row_id, model=model)
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names
         )

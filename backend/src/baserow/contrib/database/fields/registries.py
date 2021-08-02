@@ -65,9 +65,6 @@ class FieldType(
     can_be_in_form_view = True
     """Indicates whether the field is compatible with the form view."""
 
-    should_do_schema_change = True
-    """Indicates whether a schema update should be performed."""
-
     def prepare_value_for_db(self, instance, value):
         """
         When a row is created or updated all the values are going to be prepared for the

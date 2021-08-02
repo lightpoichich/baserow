@@ -106,11 +106,10 @@ class FieldTrashableItemType(TrashableItemType):
         field_type = field_type_registry.get_by_model(field)
 
         # Remove the field from the table schema.
-        from_model = field.table.get_model(field_ids=[], fields=[field])
-        if field_type.should_do_schema_change:
-            with connection.schema_editor() as schema_editor:
-                model_field = from_model._meta.get_field(field.db_column)
-                schema_editor.remove_field(from_model, model_field)
+        with connection.schema_editor() as schema_editor:
+            from_model = field.table.get_model(field_ids=[], fields=[field])
+            model_field = from_model._meta.get_field(field.db_column)
+            schema_editor.remove_field(from_model, model_field)
 
         field.delete()
 

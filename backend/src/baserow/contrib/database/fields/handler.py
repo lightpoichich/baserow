@@ -162,7 +162,6 @@ class FieldHandler:
         allowed_fields = ["name"] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
-        should_do_schema_change = field_type.should_do_schema_change
 
         num_fields = table.field_set.count()
         if (num_fields + 1) > settings.MAX_FIELD_LIMIT:
@@ -181,11 +180,12 @@ class FieldHandler:
             table=table, order=last_order, primary=primary, **field_values
         )
 
-        # Add the field to the table schema, if field should be added.
-        to_model = table.get_model(field_ids=[], fields=[instance])
-        if do_schema_change and should_do_schema_change:
-            with connection.schema_editor() as schema_editor:
-                model_field = to_model._meta.get_field(instance.db_column)
+        # Add the field to the table schema.
+        with connection.schema_editor() as schema_editor:
+            to_model = table.get_model(field_ids=[], fields=[instance])
+            model_field = to_model._meta.get_field(instance.db_column)
+
+            if do_schema_change:
                 schema_editor.add_field(to_model, model_field)
 
         field_type.after_create(instance, to_model, user, connection, before)

@@ -699,7 +699,7 @@ class RowMoveView(APIView):
 
         user_field_names = "user_field_names" in request.GET
 
-        model = table.get_model(exclude_virtual_fields=True)
+        model = table.get_model()
         before_id = request.GET.get("before_id")
         before = (
             RowHandler().get_row(request.user, table, before_id, model)

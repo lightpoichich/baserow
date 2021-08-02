@@ -11,6 +11,7 @@
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 * Added password validation to password reset page.
 * Add backup and restore database management commands.
+* Hide view types that can't be exported in the export modal.
 
 ## Released (2021-07-16)
 

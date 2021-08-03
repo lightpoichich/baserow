@@ -95,6 +95,10 @@ def setup_interesting_test_table(data_fixture):
         "last_modified_date_us": None,
         "last_modified_datetime_eu": None,
         "last_modified_date_eu": None,
+        "created_on_datetime_us": None,
+        "created_on_date_us": None,
+        "created_on_datetime_eu": None,
+        "created_on_date_eu": None,
         # We will setup link rows manually later
         "link_row": None,
         "decimal_link_row": None,

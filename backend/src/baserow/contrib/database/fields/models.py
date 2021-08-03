@@ -1,3 +1,4 @@
+import pytz
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
@@ -164,7 +165,37 @@ class DateField(Field, BaseDateMixin):
 
 
 class LastModifiedField(Field, BaseDateMixin):
-    pass
+    TIMEZONE_CHOICES = list(zip(pytz.all_timezones, pytz.all_timezones))
+    timezone = models.CharField(
+        max_length=255,
+        blank=False,
+        help_text="Timezone of User during field creation.",
+        choices=TIMEZONE_CHOICES,
+    )
+
+    def save(self, *args, **kwargs):
+        """Check if the timezone is a valid choice."""
+
+        if not any(self.timezone in _tuple for _tuple in self.TIMEZONE_CHOICES):
+            raise ValueError(f"{self.timezone} is not a valid choice.")
+        super(LastModifiedField, self).save(*args, **kwargs)
+
+
+class CreatedOnField(Field, BaseDateMixin):
+    TIMEZONE_CHOICES = list(zip(pytz.all_timezones, pytz.all_timezones))
+    timezone = models.CharField(
+        max_length=255,
+        blank=False,
+        help_text="Timezone of User during field creation.",
+        choices=TIMEZONE_CHOICES,
+    )
+
+    def save(self, *args, **kwargs):
+        """Check if the timezone is a valid choice."""
+
+        if not any(self.timezone in _tuple for _tuple in self.TIMEZONE_CHOICES):
+            raise ValueError(f"{self.timezone} is not a valid choice.")
+        super(CreatedOnField, self).save(*args, **kwargs)
 
 
 class LinkRowField(Field):

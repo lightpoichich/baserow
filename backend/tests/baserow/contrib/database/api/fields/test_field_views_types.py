@@ -910,7 +910,12 @@ def test_last_modified_field_type(api_client, data_fixture):
     # now add a last_modified field with datetime
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "Last", "type": "last_modified", "date_include_time": True},
+        {
+            "name": "Last",
+            "type": "last_modified",
+            "date_include_time": True,
+            "timezone": "Europe/Berlin",
+        },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

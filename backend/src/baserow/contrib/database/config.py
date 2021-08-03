@@ -64,6 +64,7 @@ class DatabaseConfig(AppConfig):
             BooleanFieldType,
             DateFieldType,
             LastModifiedFieldType,
+            CreatedOnFieldType,
             LinkRowFieldType,
             EmailFieldType,
             FileFieldType,
@@ -79,6 +80,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())
         field_type_registry.register(LastModifiedFieldType())
+        field_type_registry.register(CreatedOnFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
         field_type_registry.register(SingleSelectFieldType())
@@ -88,11 +90,13 @@ class DatabaseConfig(AppConfig):
             LinkRowFieldConverter,
             FileFieldConverter,
             LastModifiedFieldConverter,
+            CreatedOnFieldConverter,
         )
 
         field_converter_registry.register(LinkRowFieldConverter())
         field_converter_registry.register(FileFieldConverter())
         field_converter_registry.register(LastModifiedFieldConverter())
+        field_converter_registry.register(CreatedOnFieldConverter())
 
         from .views.view_types import GridViewType, FormViewType
 

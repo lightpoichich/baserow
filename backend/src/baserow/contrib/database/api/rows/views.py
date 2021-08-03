@@ -706,12 +706,12 @@ class RowMoveView(APIView):
             if before_id
             else None
         )
-        RowHandler().move_row(request.user, table, row_id, before=before, model=model)
-        model = table.get_model()
-        moved_row = RowHandler().get_row(request.user, table, row_id, model=model)
+        row = RowHandler().move_row(
+            request.user, table, row_id, before=before, model=model
+        )
 
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
-        serializer = serializer_class(moved_row)
+        serializer = serializer_class(row)
         return Response(serializer.data)

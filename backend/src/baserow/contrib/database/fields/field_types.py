@@ -52,6 +52,7 @@ from .models import (
     BooleanField,
     DateField,
     LastModifiedField,
+    CreatedOnField,
     LinkRowField,
     EmailField,
     FileField,
@@ -556,10 +557,43 @@ class DateFieldType(BaseDateFieldType):
 class LastModifiedFieldType(BaseDateFieldType):
     type = "last_modified"
     model_class = LastModifiedField
+    allowed_fields = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "timezone",
+    ]
+    serializer_field_names = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "timezone",
+    ]
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+
+        if instance.date_include_time:
+            return serializers.DateTimeField(
+                **{
+                    "required": required,
+                    "allow_null": not required,
+                    **kwargs,
+                }
+            )
+        else:
+            return serializers.DateField(
+                **{
+                    "required": required,
+                    "allow_null": not required,
+                    **kwargs,
+                }
+            )
 
     def get_model_field(self, instance, **kwargs):
         kwargs["null"] = True
         kwargs["blank"] = True
+
         if instance.date_include_time:
             return models.DateTimeField(auto_now=True, **kwargs)
         else:
@@ -582,6 +616,71 @@ class LastModifiedFieldType(BaseDateFieldType):
         if not isinstance(from_field, self.model_class):
             to_model.objects.all().update(
                 **{f"{to_field.db_column}": models.F("updated_on")}
+            )
+
+
+class CreatedOnFieldType(BaseDateFieldType):
+    type = "created_on"
+    model_class = CreatedOnField
+    allowed_fields = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "timezone",
+    ]
+    serializer_field_names = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "timezone",
+    ]
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+
+        if instance.date_include_time:
+            return serializers.DateTimeField(
+                **{
+                    "required": required,
+                    "allow_null": not required,
+                    **kwargs,
+                }
+            )
+        else:
+            return serializers.DateField(
+                **{
+                    "required": required,
+                    "allow_null": not required,
+                    **kwargs,
+                }
+            )
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+
+        if instance.date_include_time:
+            return models.DateTimeField(auto_now_add=True, **kwargs)
+        else:
+            return models.DateField(auto_now_add=True, **kwargs)
+
+    def after_create(self, field, model, user, connection, before):
+        model.objects.all().update(**{f"{field.db_column}": models.F("created_on")})
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+    ):
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(
+                **{f"{to_field.db_column}": models.F("created_on")}
             )
 
 

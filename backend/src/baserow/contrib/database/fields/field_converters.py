@@ -1,5 +1,5 @@
 from .registries import FieldConverter
-from .models import LastModifiedField, LinkRowField, FileField
+from .models import CreatedOnField, LastModifiedField, LinkRowField, FileField
 from django.db import models
 
 
@@ -96,6 +96,50 @@ class LastModifiedFieldConverter(RecreateFieldConverter):
 
         if not isinstance(from_field, LastModifiedField) or not isinstance(
             to_field, LastModifiedField
+        ):
+            return False
+
+        return not from_field.date_include_time and to_field.date_include_time
+
+
+class CreatedOnFieldConverter(RecreateFieldConverter):
+    type = "created_on"
+
+    def alter_field(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        from_model_field,
+        to_model_field,
+        user,
+        connection,
+    ):
+        """
+        In case there is a conversion for the CreatedOnField from
+        'without timestamp' to 'with timestamp' we need to make sure
+        that the field gets the timestamp from the 'created_on'
+        column.
+        """
+
+        with connection.schema_editor() as schema_editor:
+            schema_editor.remove_field(from_model, from_model_field)
+            schema_editor.add_field(to_model, to_model_field)
+
+        to_model.objects.all().update(
+            **{f"{to_field.db_column}": models.F("created_on")}
+        )
+
+    def is_applicable(self, from_model, from_field, to_field):
+        """
+        The Field Converter for the CreatedOnField should only run if there is a
+        conversion from CreatedOnField without timestamp to CreatedOnField
+        with timestamp.
+        """
+
+        if not isinstance(from_field, CreatedOnField) or not isinstance(
+            to_field, CreatedOnField
         ):
             return False
 

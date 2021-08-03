@@ -1,5 +1,4 @@
 import pytest
-from datetime import datetime
 from rest_framework import serializers
 
 from baserow.contrib.database.api.rows.serializers import (
@@ -226,6 +225,10 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         "last_modified_date_us": "2021-01-02",
         "last_modified_datetime_eu": "2021-01-02T12:00:00Z",
         "last_modified_datetime_us": "2021-01-02T12:00:00Z",
+        "created_on_date_eu": "2021-01-02",
+        "created_on_date_us": "2021-01-02",
+        "created_on_datetime_eu": "2021-01-02T12:00:00Z",
+        "created_on_datetime_us": "2021-01-02T12:00:00Z",
         "decimal_link_row": [
             {"id": 1, "value": "1.234"},
             {"id": 2, "value": "-123.456"},

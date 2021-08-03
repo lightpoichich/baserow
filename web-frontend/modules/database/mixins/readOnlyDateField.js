@@ -1,0 +1,36 @@
+import moment from 'moment'
+import {
+  getDateMomentFormat,
+  getTimeMomentFormat,
+} from '@baserow/modules/database/utils/date'
+
+export default {
+  methods: {
+    getTimezone(field) {
+      let timezone = 'UTC'
+
+      if (field.timezone) {
+        timezone = field.timezone
+      }
+      return timezone
+    },
+    getDate(field, value) {
+      if (value === null) {
+        return ''
+      }
+
+      const existing = moment.tz(value || undefined, this.getTimezone(field))
+      const dateFormat = getDateMomentFormat(field.date_format)
+      return existing.format(dateFormat)
+    },
+    getTime(field, value) {
+      if (value === null) {
+        return ''
+      }
+
+      const existing = moment.tz(value || undefined, this.getTimezone(field))
+      const timeFormat = getTimeMomentFormat(field.date_time_format)
+      return existing.format(timeFormat)
+    },
+  },
+}

@@ -4,13 +4,18 @@
       class="grid-field-date"
       :class="{ 'grid-field-date--has-time': props.field.date_include_time }"
     >
-      <div ref="dateDisplay" class="grid-field-date__date">
+      <div
+        ref="dateDisplay"
+        class="grid-field-date__date"
+        :class="{ 'grid-field-date-read-only__date': props.isReadOnly }"
+      >
         {{ $options.methods.getDate(props.field, props.value) }}
       </div>
       <div
         v-if="props.field.date_include_time"
         ref="timeDisplay"
         class="grid-field-date__time"
+        :class="{ 'grid-field-date-read-only__time': props.isReadOnly }"
       >
         {{ $options.methods.getTime(props.field, props.value) }}
       </div>
@@ -19,33 +24,29 @@
 </template>
 
 <script>
-import moment from 'moment'
-import {
-  getDateMomentFormat,
-  getTimeMomentFormat,
-} from '@baserow/modules/database/utils/date'
+import readOnlyDateField from '@baserow/modules/database/mixins/readOnlyDateField'
 
 export default {
   name: 'FunctionalGridViewFieldDate',
-  methods: {
-    getDate(field, value) {
-      if (value === null) {
-        return ''
-      }
-
-      const existing = moment.utc(value || undefined)
-      const dateFormat = getDateMomentFormat(field.date_format)
-      return existing.format(dateFormat)
+  mixins: [readOnlyDateField],
+  props: {
+    isReadOnly: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
-    getTime(field, value) {
-      if (value === null) {
-        return ''
-      }
-
-      const existing = moment.utc(value || undefined)
-      const timeFormat = getTimeMomentFormat(field.date_time_format)
-      return existing.format(timeFormat)
+    field: {
+      type: Object,
+      required: true,
     },
+    value: {
+      type: String,
+      required: false,
+      default: '',
+    },
+  },
+  mounted() {
+    console.log('HELLO WHATUP')
   },
 }
 </script>

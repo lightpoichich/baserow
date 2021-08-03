@@ -1,10 +1,9 @@
 import RowCommentService from '@baserow_premium/services/row_comments/row_comments'
 import _ from 'lodash'
-import Vue from 'vue'
+import moment from 'moment'
 
 export const state = () => ({
   comments: [],
-  seenComments: {},
   postingComment: false,
   loading: false,
   loaded: false,
@@ -20,40 +19,26 @@ export const mutations = {
    * comments is an ordered list of comments descending by ID with no duplicate
    * comments. If a comment with the same id as an existing comment is provided in the
    * list the existing comment will be replaced by the new one.
+   *
+   * We want to handle duplicates here as comments received as realtime events could
+   * potentially be also loaded in via a normal backend api fetch call.
    */
   ADD_ROW_COMMENTS(state, comments) {
-    comments.forEach((comment) => {
-      const existingCommentLocation = state.seenComments[comment.id]
-      // Binary search to find the descending id location in the comments list.
-      const insertLocation = _.sortedIndexBy(
-        state.comments,
-        comment,
-        (c) => -c.id
+    comments.forEach((newComment) => {
+      const existingIndex = state.comments.findIndex(
+        (c) => c.id === newComment.id
       )
-      state.comments.splice(insertLocation, 0, comment)
-      if (existingCommentLocation) {
-        // We received an updated comment and inserted the new version above, now we
-        // need to find the old version and delete it. It must be immediately after the
-        // new insert location as sortedIndexBy returns the lowest index which
-        // preserves the sort order.
-        const possibleDuplicateComment = state.comments[insertLocation + 1]
-        if (possibleDuplicateComment.id === comment.id) {
-          state.comments.splice(insertLocation, 1)
-        }
+      if (existingIndex >= 0) {
+        // Prevent duplicates by just replacing them inline
+        state.comments.splice(existingIndex, 0, newComment)
       } else {
-        Vue.set(state.seenComments, comment.id, true)
+        state.comments.push(newComment)
       }
     })
     state.currentCount = state.comments.length
   },
-  REMOVE_ROW_COMMENT(state, comment) {
-    const index = state.comments.findIndex((c) => c.id === comment)
-    state.comments.splice(index, 1)
-    Vue.unset(state.seenComments, comment.id)
-  },
   RESET_ROW_COMMENTS(state) {
     state.comments = []
-    state.seenComments = {}
   },
   SET_LOADING(state, loading) {
     state.loading = loading
@@ -144,8 +129,8 @@ export const actions = {
 }
 
 export const getters = {
-  getRowComments(state) {
-    return state.comments
+  getSortedRowComments(state) {
+    return _.sortBy(state.comments, (c) => -moment.utc(c.created_on))
   },
   getCurrentCount(state) {
     return state.currentCount

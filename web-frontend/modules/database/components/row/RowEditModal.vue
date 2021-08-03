@@ -1,9 +1,9 @@
 <template>
   <Modal
     ref="modal"
-    :full-height="!!pluginComponent"
-    :right-sidebar="!!pluginComponent"
-    :content-scrollable="!!pluginComponent"
+    :full-height="!!optionalRightSideBar"
+    :right-sidebar="!!optionalRightSideBar"
+    :content-scrollable="!!optionalRightSideBar"
     :right-sidebar-scrollable="false"
     @hidden="$emit('hidden', { row })"
   >
@@ -37,8 +37,12 @@
         ></CreateFieldContext>
       </div>
     </template>
-    <template v-if="!!pluginComponent" #sidebar>
-      <component :is="pluginComponent" :row="row" :table="table"></component>
+    <template v-if="!!optionalRightSideBar" #sidebar>
+      <component
+        :is="optionalRightSideBar"
+        :row="row"
+        :table="table"
+      ></component>
     </template>
   </Modal>
 </template>
@@ -81,8 +85,9 @@ export default {
   data() {
     return {
       rowId: -1,
-      pluginComponent: this.$registry.get('application', 'database')
-        .componentPlugins.RowEditModal,
+      optionalRightSideBar: this.$registry
+        .get('application', 'database')
+        .getRowEditModalRightSidebarComponent(),
     }
   },
   computed: {

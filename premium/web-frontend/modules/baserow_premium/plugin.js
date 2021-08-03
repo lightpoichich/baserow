@@ -9,7 +9,7 @@ import {
   UsersAdminType,
 } from '@baserow_premium/adminTypes'
 import rowCommentsStore from '@baserow_premium/store/row_comments'
-import RowCommentsSidebar from '@baserow_premium/components/row_comments/RowCommentsSidebar'
+import { PremiumDatabaseApplicationType } from '@baserow_premium/applicationTypes'
 
 export default ({ store, app }) => {
   store.registerModule('row_comments', rowCommentsStore)
@@ -21,6 +21,7 @@ export default ({ store, app }) => {
   app.$registry.register('exporter', new JSONTableExporter())
   app.$registry.register('exporter', new XMLTableExporter())
 
-  const databaseApplication = app.$registry.get('application', 'database')
-  databaseApplication.componentPlugins.RowEditModal = RowCommentsSidebar
+  // Overwrite the existing database application type with the one customized for
+  // premium use.
+  app.$registry.register('application', new PremiumDatabaseApplicationType())
 }

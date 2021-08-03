@@ -1,4 +1,4 @@
-.expandable-textarea__wrapper {
+.auto-expandable-textarea__container {
   position: relative;
   appearance: none;
   display: flex;
@@ -11,7 +11,7 @@
   background-color: white;
 }
 
-.expandable-textarea__textarea {
+.auto-expandable-textarea {
   font-size: 14px;
   line-height: 22px;
   resize: none;

@@ -1,15 +1,16 @@
 <template>
   <div
-    class="expandable-textarea__wrapper"
+    class="auto-expandable-textarea__container"
     :class="{
-      'expandable-textarea--loading': loading,
+      'auto-expandable-textarea--loading-overlay': loading,
     }"
   >
-    <div v-if="loading" class="expandable-textarea__textarea--loading"></div>
+    <div v-if="loading" class="auto-expandable-textarea--loading"></div>
     <textarea
       ref="inputTextArea"
       v-model="innerValue"
-      class="input expandable-textarea__textarea"
+      :placeholder="placeholder"
+      class="input auto-expandable-textarea"
       :style="{
         height: textBoxSize + 'px',
         overflow: textBoxOverflow,
@@ -21,7 +22,7 @@
 </template>
 <script>
 export default {
-  name: 'ExpandableTextarea',
+  name: 'AutoExpandableTextarea',
   props: {
     value: {
       required: true,
@@ -30,6 +31,11 @@ export default {
     loading: {
       required: true,
       type: Boolean,
+    },
+    placeholder: {
+      required: false,
+      type: String,
+      default: '',
     },
     maxRows: {
       required: false,

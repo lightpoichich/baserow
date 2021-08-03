@@ -9,6 +9,7 @@ import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFi
 import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import { trueString } from '@baserow/modules/database/utils/constants'
+import { isNumeric } from '@baserow/modules/core/utils/string'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -637,12 +638,11 @@ export class LinkRowHasFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    const filterValueId = parseInt(filterValue)
-
-    if (isNaN(filterValueId)) {
+    if (!isNumeric(filterValue)) {
       return true
     }
 
+    const filterValueId = parseInt(filterValue)
     return rowValue.some((relation) => relation.id === filterValueId)
   }
 }
@@ -669,12 +669,11 @@ export class LinkRowHasNotFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    const filterValueId = parseInt(filterValue)
-
-    if (isNaN(filterValueId)) {
+    if (!isNumeric(filterValue)) {
       return true
     }
 
+    const filterValueId = parseInt(filterValue)
     return !rowValue.some((relation) => relation.id === filterValueId)
   }
 }

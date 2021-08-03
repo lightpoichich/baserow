@@ -22,6 +22,7 @@ import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/GridViewFieldBoolean'
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDate'
+import GridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDateReadOnly'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
@@ -32,7 +33,6 @@ import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
 import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean'
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
-import FunctionalGridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDateReadOnly'
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
@@ -380,37 +380,53 @@ export class FieldType extends Registerable {
 
   /**
    * Runs every time any field changes in a given row. For every field.
-   * The return value will be used to immediately update the frontend (i.e. the vuex store).
-   *
+   * The return value can be used to immediately update the frontend (i.e. the vuex store).
    */
   onRowChange(
     row,
     updatedField,
     updatedFieldValue,
     updatedFieldOldValue,
+    currentField,
     currentFieldValue
   ) {
     return currentFieldValue
   }
 
+  /**
+   * Runs every time a new row gets created.
+   */
+  onRowAdd() {
+    return null
+  }
+
+  /**
+   * Runs every time a row gets moved.
+   */
+  onRowMove(row) {
+    return null
+  }
+
+  /**
+   * Determines whether a grid refresh should be executed after the specific field
+   * has been added to a table.
+   */
   shouldRefreshWhenAdded() {
     return false
+  }
+
+  /**
+   * Function which gets called in GridViewCells in order to
+   * pass additional FieldType specific props to the component.
+   */
+  getAdditionalProps() {
+    return {}
   }
 }
 
 export class TextFieldType extends FieldType {
   static getType() {
     return 'text'
-  }
-
-  onRowChange(
-    row,
-    updatedField,
-    updatedFieldValue,
-    updatedFieldOldValue,
-    currentFieldValue
-  ) {
-    return `${currentFieldValue} - Update haha`
   }
 
   getIconClass() {
@@ -978,6 +994,10 @@ export class LastModifiedFieldType extends BaseDateFieldType {
     return 'last_modified'
   }
 
+  getIconClass() {
+    return 'edit'
+  }
+
   getName() {
     return 'Last Modified'
   }
@@ -987,11 +1007,11 @@ export class LastModifiedFieldType extends BaseDateFieldType {
   }
 
   getGridViewFieldComponent() {
-    return FunctionalGridViewFieldDateReadOnly
+    return GridViewFieldDateReadOnly
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldDateReadOnly
+    return FunctionalGridViewFieldDate
   }
 
   onRowChange(
@@ -999,14 +1019,72 @@ export class LastModifiedFieldType extends BaseDateFieldType {
     updatedField,
     updatedFieldValue,
     updatedFieldOldValue,
+    currentField,
     currentFieldValue
   ) {
     const currentDate = moment().utc().format()
     return currentDate
   }
 
+  onRowAdd() {
+    const currentDate = moment().utc().format()
+    return currentDate
+  }
+
+  onRowMove(row) {
+    const currentDate = moment().utc().format()
+    return currentDate
+  }
+
   shouldRefreshWhenAdded() {
     return true
+  }
+
+  getAdditionalProps() {
+    return {
+      isReadOnly: true,
+    }
+  }
+}
+
+export class CreatedOnFieldType extends BaseDateFieldType {
+  static getType() {
+    return 'created_on'
+  }
+
+  getIconClass() {
+    return 'plus'
+  }
+
+  getName() {
+    return 'Created On'
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldDateReadOnly
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDateReadOnly
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDate
+  }
+
+  shouldRefreshWhenAdded() {
+    return true
+  }
+
+  onRowAdd() {
+    const currentDate = moment().utc().format()
+    return currentDate
+  }
+
+  getAdditionalProps() {
+    return {
+      isReadOnly: true,
+    }
   }
 }
 

@@ -13,6 +13,7 @@ import {
   FileFieldType,
   SingleSelectFieldType,
   PhoneNumberFieldType,
+  CreatedOnFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -96,6 +97,7 @@ export default ({ store, app }) => {
   app.$registry.register('field', new BooleanFieldType())
   app.$registry.register('field', new DateFieldType())
   app.$registry.register('field', new LastModifiedFieldType())
+  app.$registry.register('field', new CreatedOnFieldType())
   app.$registry.register('field', new URLFieldType())
   app.$registry.register('field', new EmailFieldType())
   app.$registry.register('field', new FileFieldType())

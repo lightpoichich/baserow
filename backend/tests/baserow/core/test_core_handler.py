@@ -255,7 +255,8 @@ def test_update_group(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_leave_group(data_fixture):
+@patch("baserow.core.signals.group_user_deleted.send")
+def test_leave_group(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
@@ -263,7 +264,9 @@ def test_leave_group(data_fixture):
     group_1 = data_fixture.create_group()
     group_2 = data_fixture.create_group()
     data_fixture.create_user_group(user=user_1, group=group_1, permissions="ADMIN")
-    data_fixture.create_user_group(user=user_2, group=group_1, permissions="ADMIN")
+    group_user_2 = data_fixture.create_user_group(
+        user=user_2, group=group_1, permissions="ADMIN"
+    )
     data_fixture.create_user_group(user=user_3, group=group_1, permissions="USER")
     data_fixture.create_user_group(user=user_3, group=group_2, permissions="USER")
     data_fixture.create_user_group(user=user_4, group=group_2, permissions="USER")
@@ -274,6 +277,10 @@ def test_leave_group(data_fixture):
         handler.leave_group(user=user_4, group=group_1)
 
     handler.leave_group(user=user_2, group=group_1)
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["group_user_id"] == group_user_2.id
+    assert send_mock.call_args[1]["group_user"].group_id == group_user_2.group_id
+    assert send_mock.call_args[1]["user"].id == user_2.id
 
     with pytest.raises(GroupUserIsLastAdmin):
         handler.leave_group(user=user_1, group=group_1)

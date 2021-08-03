@@ -209,7 +209,11 @@ class CoreHandler:
 
         # If the user is not the last admin, we can safely delete the user from the
         # group.
+        group_user_id = group_user.id
         group_user.delete()
+        group_user_deleted.send(
+            self, group_user_id=group_user_id, group_user=group_user, user=user
+        )
 
     def delete_group(self, user, group):
         """

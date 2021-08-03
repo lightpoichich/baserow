@@ -18,6 +18,7 @@
 </template>
 
 <script>
+import { isNumeric } from '@baserow/modules/core/utils/string'
 import SelectRowModal from '@baserow/modules/database/components/row/SelectRowModal'
 import viewFilter from '@baserow/modules/database/mixins/viewFilter'
 
@@ -56,7 +57,7 @@ export default {
       }
     },
     isValidValue() {
-      if (isNaN(parseInt(this.filter.value))) {
+      if (!isNumeric(this.filter.value)) {
         return false
       }
 

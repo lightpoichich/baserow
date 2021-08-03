@@ -432,7 +432,7 @@ class LinkRowHasViewFilterType(ViewFilterType):
 
         try:
             return Q(**{f"{field_name}__in": [int(value)]})
-        except Exception:
+        except ValueError:
             return Q()
 
     def get_preload_values(self, view_filter):
@@ -443,21 +443,21 @@ class LinkRowHasViewFilterType(ViewFilterType):
         """
 
         name = None
-        id = None
+        related_row_id = None
 
         try:
-            id = int(view_filter.value)
-        except Exception:
+            related_row_id = int(view_filter.value)
+        except ValueError:
             pass
 
-        if id:
+        if related_row_id:
             field = view_filter.field.specific
             table = field.link_row_table
             primary_field = table.field_set.get(primary=True)
             model = table.get_model(field_ids=[], fields=[primary_field])
 
             try:
-                name = str(model.objects.get(pk=id))
+                name = str(model.objects.get(pk=related_row_id))
             except model.DoesNotExist:
                 pass
 

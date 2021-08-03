@@ -57,79 +57,79 @@ def test_equal_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="equal", value="Test"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = long_text_field
-    filter.value = "Long"
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.value = "Long"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = integer_field
-    filter.value = "10"
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.value = "10"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
     # Because the value 'test' cannot be accepted the filter is not applied so it will
     # return all rows.
-    filter.field = integer_field
-    filter.value = "test"
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.value = "test"
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = decimal_field
-    filter.value = "20.20"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "20.20"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = boolean_field
-    filter.value = "1"
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.value = "1"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = boolean_field
-    filter.value = "0"
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.value = "0"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.field = text_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = text_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = long_text_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = integer_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = decimal_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = boolean_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
 
@@ -177,7 +177,7 @@ def test_not_equal_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="not_equal", value="Test"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
@@ -185,17 +185,17 @@ def test_not_equal_filter_type(data_fixture):
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.field = long_text_field
-    filter.value = "Long"
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.value = "Long"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.field = integer_field
-    filter.value = "10"
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.value = "10"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
@@ -203,57 +203,57 @@ def test_not_equal_filter_type(data_fixture):
 
     # Because the value 'test' cannot be accepted the filter is not applied so it will
     # return all rows.
-    filter.field = integer_field
-    filter.value = "test"
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.value = "test"
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = decimal_field
-    filter.value = "20.20"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "20.20"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.field = boolean_field
-    filter.value = "1"
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.value = "1"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.field = boolean_field
-    filter.value = "0"
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.value = "0"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = text_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = text_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = long_text_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = integer_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = decimal_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
-    filter.field = boolean_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.value = ""
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
 
@@ -313,110 +313,110 @@ def test_contains_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains", value="john"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = "DOE"
-    filter.save()
+    view_filter.value = "DOE"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = "test"
-    filter.save()
+    view_filter.value = "test"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_3.id in ids
 
-    filter.value = " is "
-    filter.save()
+    view_filter.value = " is "
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.value = ""
-    filter.save()
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.value = "random"
-    filter.save()
+    view_filter.value = "random"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.field = long_text_field
-    filter.value = "multiLINE"
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.value = "multiLINE"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_3.id in ids
 
-    filter.field = date_field
-    filter.value = "2020-02-01"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2020-02-01"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = date_field
-    filter.value = "01/02/2020"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "01/02/2020"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.field = date_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = number_field
-    filter.value = "98"
-    filter.save()
+    view_filter.field = number_field
+    view_filter.value = "98"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = number_field
-    filter.value = "0" + str(row.id)
-    filter.save()
+    view_filter.field = number_field
+    view_filter.value = "0" + str(row.id)
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.field = number_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = number_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = date_field
-    filter.value = "00:12"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "00:12"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_3.id in ids
 
-    filter.field = single_select_field
-    filter.value = "A"
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.value = "A"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = single_select_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = single_select_field
-    filter.value = "C"
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.value = "C"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
@@ -479,7 +479,7 @@ def test_contains_not_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains_not", value="john"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
@@ -487,99 +487,99 @@ def test_contains_not_filter_type(data_fixture):
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.value = "DOE"
-    filter.save()
+    view_filter.value = "DOE"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.value = "test"
-    filter.save()
+    view_filter.value = "test"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_2.id in ids
 
-    filter.value = " is "
-    filter.save()
+    view_filter.value = " is "
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
-    filter.value = ""
-    filter.save()
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.value = "random"
-    filter.save()
+    view_filter.value = "random"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = long_text_field
-    filter.value = "multiLINE"
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.value = "multiLINE"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_2.id in ids
 
-    filter.field = date_field
-    filter.value = "2020-02-01"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2020-02-01"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id not in ids
 
-    filter.field = date_field
-    filter.value = "01/02/2020"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "01/02/2020"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = date_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = number_field
-    filter.value = "98"
-    filter.save()
+    view_filter.field = number_field
+    view_filter.value = "98"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id not in ids
 
-    filter.field = number_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = number_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = date_field
-    filter.value = "00:12"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "00:12"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_3.id not in ids
 
-    filter.field = single_select_field
-    filter.value = "A"
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.value = "A"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id not in ids
 
-    filter.field = single_select_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.field = single_select_field
-    filter.value = "C"
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.value = "C"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
@@ -613,31 +613,31 @@ def test_single_select_equal_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=field, type="single_select_equal", value=""
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.value = str(option_a.id)
-    filter.save()
+    view_filter.value = str(option_a.id)
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_1.id in ids
 
-    filter.value = str(option_b.id)
-    filter.save()
+    view_filter.value = str(option_b.id)
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
-    filter.value = "-1"
-    filter.save()
+    view_filter.value = "-1"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.value = "Test"
-    filter.save()
+    view_filter.value = "Test"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
@@ -680,33 +680,33 @@ def test_single_select_not_equal_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=field, type="single_select_not_equal", value=""
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.value = str(option_a.id)
-    filter.save()
+    view_filter.value = str(option_a.id)
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_3.id in ids
 
-    filter.value = str(option_b.id)
-    filter.save()
+    view_filter.value = str(option_b.id)
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_1.id in ids
     assert row_3.id in ids
 
-    filter.value = "-1"
-    filter.save()
+    view_filter.value = "-1"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    filter.value = "Test"
-    filter.save()
+    view_filter.value = "Test"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
@@ -732,51 +732,51 @@ def test_boolean_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=boolean_field, type="boolean", value="TRUE"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = "Y"
-    filter.save()
+    view_filter.value = "Y"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = "1"
-    filter.save()
+    view_filter.value = "1"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = "on"
-    filter.save()
+    view_filter.value = "on"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = "false"
-    filter.save()
+    view_filter.value = "false"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
-    filter.value = "no"
-    filter.save()
+    view_filter.value = "no"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
-    filter.value = "off"
-    filter.save()
+    view_filter.value = "off"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
-    filter.value = ""
-    filter.save()
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
@@ -823,7 +823,7 @@ def test_higher_than_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=integer_field, type="higher_than", value="1"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
@@ -831,104 +831,104 @@ def test_higher_than_filter_type(data_fixture):
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.value = "9.4444"
-    filter.save()
+    view_filter.value = "9.4444"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.value = "9.8"
-    filter.save()
+    view_filter.value = "9.8"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.value = "100"
-    filter.save()
+    view_filter.value = "100"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.value = "not_number"
-    filter.save()
+    view_filter.value = "not_number"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
-    filter.value = "-5"
-    filter.save()
+    view_filter.value = "-5"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.value = "-11"
-    filter.save()
+    view_filter.value = "-11"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row.id in ids
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.value = "-10"
-    filter.save()
+    view_filter.value = "-10"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.value = "-9.99999"
-    filter.save()
+    view_filter.value = "-9.99999"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.field = decimal_field
-    filter.value = "9.9999"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "9.9999"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.field = decimal_field
-    filter.value = "20.19999"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "20.19999"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_3.id in ids
 
-    filter.field = decimal_field
-    filter.value = "20.20001"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "20.20001"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_3.id in ids
 
-    filter.field = decimal_field
-    filter.value = "100"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "100"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.field = decimal_field
-    filter.value = "99.98"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "99.98"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_3.id in ids
 
-    filter.field = decimal_field
-    filter.value = "1000"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "1000"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.field = decimal_field
-    filter.value = "not_number"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "not_number"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
@@ -974,112 +974,112 @@ def test_lower_than_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=integer_field, type="lower_than", value="1"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.value = "9.4444"
-    filter.save()
+    view_filter.value = "9.4444"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.value = "9.8"
-    filter.save()
+    view_filter.value = "9.8"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.value = "100"
-    filter.save()
+    view_filter.value = "100"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row.id in ids
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.value = "not_number"
-    filter.save()
+    view_filter.value = "not_number"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
-    filter.value = "-5"
-    filter.save()
+    view_filter.value = "-5"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.value = "-9"
-    filter.save()
+    view_filter.value = "-9"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.value = "-10"
-    filter.save()
+    view_filter.value = "-10"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.value = "-9.99999"
-    filter.save()
+    view_filter.value = "-9.99999"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.field = decimal_field
-    filter.value = "9.9999"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "9.9999"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.field = decimal_field
-    filter.value = "20.199999"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "20.199999"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.field = decimal_field
-    filter.value = "20.20001"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "20.20001"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_4.id in ids
 
-    filter.field = decimal_field
-    filter.value = "100"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "100"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row.id in ids
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.field = decimal_field
-    filter.value = "99.98"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "99.98"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_4.id in ids
 
-    filter.field = decimal_field
-    filter.value = "1000"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "1000"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row.id in ids
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.field = decimal_field
-    filter.value = "not_number"
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.value = "not_number"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
@@ -1126,72 +1126,72 @@ def test_date_equal_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=date_field, type="date_equal", value="2020-06-17"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = date_field
-    filter.value = "2019-01-01"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2019-01-01"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
-    filter.field = date_field
-    filter.value = "2018-01-01"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2018-01-01"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.field = date_field
-    filter.value = "2019-01-01 12:00:00"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2019-01-01 12:00:00"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
     # If an empty value is provided then the filter will not be applied, so we expect
     # all the rows.
-    filter.field = date_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
-    filter.field = date_time_field
-    filter.value = " 2020-06-17 01:30:00 "
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = " 2020-06-17 01:30:00 "
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = date_time_field
-    filter.value = "2020-06-17 01:30:05"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2020-06-17 01:30:05"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
 
-    filter.field = date_time_field
-    filter.value = "2020-06-17 01:30:10"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2020-06-17 01:30:10"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.field = date_time_field
-    filter.value = "2020-06-17"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2020-06-17"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
     assert row_2.id in ids
 
-    filter.field = date_time_field
-    filter.value = "  2020-06-17  "
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "  2020-06-17  "
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
@@ -1199,9 +1199,9 @@ def test_date_equal_filter_type(data_fixture):
 
     # If an empty value is provided then the filter will not be applied, so we expect
     # all the rows.
-    filter.field = date_time_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
@@ -1242,7 +1242,7 @@ def test_date_day_month_year_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=date_field, type="date_equals_today", value="UTC"
     )
 
@@ -1253,8 +1253,8 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert len(ids) == 1
         assert row.id not in ids
 
-        filter.type = "date_equals_month"
-        filter.save()
+        view_filter.type = "date_equals_month"
+        view_filter.save()
 
         ids = [
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
@@ -1263,8 +1263,8 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert row_2.id in ids
         assert row_3.id in ids
 
-        filter.type = "date_equals_year"
-        filter.save()
+        view_filter.type = "date_equals_year"
+        view_filter.save()
 
         ids = [
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
@@ -1274,8 +1274,8 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert row_2.id in ids
         assert row_3.id in ids
 
-    filter.type = "date_equals_today"
-    filter.save()
+    view_filter.type = "date_equals_today"
+    view_filter.save()
 
     with freeze_time("2021-01-02 01:01"):
         ids = [
@@ -1284,8 +1284,8 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert len(ids) == 1
         assert row_3.id in ids
 
-        filter.value = "Etc/GMT+2"
-        filter.save()
+        view_filter.value = "Etc/GMT+2"
+        view_filter.save()
 
         ids = [
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
@@ -1293,8 +1293,8 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert len(ids) == 1
         assert row.id not in ids
 
-        filter.value = "NOT_EXISTING_SO_WILL_BE_UTC"
-        filter.save()
+        view_filter.value = "NOT_EXISTING_SO_WILL_BE_UTC"
+        view_filter.save()
 
         ids = [
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
@@ -1345,7 +1345,7 @@ def test_date_not_equal_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=date_field, type="date_not_equal", value="2020-06-17"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
@@ -1354,24 +1354,24 @@ def test_date_not_equal_filter_type(data_fixture):
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.field = date_field
-    filter.value = "2019-01-01"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2019-01-01"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row.id in ids
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.field = date_field
-    filter.value = "2018-01-01"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2018-01-01"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
-    filter.field = date_field
-    filter.value = "2019-01-01 12:00:00"
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = "2019-01-01 12:00:00"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row.id in ids
@@ -1380,45 +1380,45 @@ def test_date_not_equal_filter_type(data_fixture):
 
     # If an empty value is provided then the filter will not be applied, so we expect
     # all the rows.
-    filter.field = date_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = date_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
-    filter.field = date_time_field
-    filter.value = " 2020-06-17 01:30:00 "
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = " 2020-06-17 01:30:00 "
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row_2.id in ids
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.field = date_time_field
-    filter.value = "2020-06-17 01:30:05"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2020-06-17 01:30:05"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row_2.id not in ids
 
-    filter.field = date_time_field
-    filter.value = "2020-06-17 01:30:10"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2020-06-17 01:30:10"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
-    filter.field = date_time_field
-    filter.value = "2020-06-17"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2020-06-17"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_3.id in ids
     assert row_4.id in ids
 
-    filter.field = date_time_field
-    filter.value = "  2020-06-17  "
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "  2020-06-17  "
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_3.id in ids
@@ -1426,9 +1426,9 @@ def test_date_not_equal_filter_type(data_fixture):
 
     # If an empty value is provided then the filter will not be applied, so we expect
     # all the rows.
-    filter.field = date_time_field
-    filter.value = ""
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
 
@@ -1498,22 +1498,22 @@ def test_date_before_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=date_field, type="date_before", value="2021-07-06"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.field = date_time_field
-    filter.value = "2021-07-06"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2021-07-06"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = ""
-    filter.save()
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
     assert row.id in ids
@@ -1564,22 +1564,22 @@ def test_date_after_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=date_field, type="date_after", value="2021-07-06"
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.field = date_time_field
-    filter.value = "2021-07-06"
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.value = "2021-07-06"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_4.id in ids
 
-    filter.value = ""
-    filter.save()
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
     assert row.id in ids
@@ -1672,45 +1672,45 @@ def test_empty_filter_type(data_fixture):
     )
     getattr(row_3, f"field_{link_row_field.id}").add(tmp_row.id)
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="empty", value=""
     )
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = long_text_field
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = integer_field
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = decimal_field
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = date_field
-    filter.save()
+    view_filter.field = date_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = date_time_field
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = link_row_field
-    filter.save()
+    view_filter.field = link_row_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = boolean_field
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = file_field
-    filter.save()
+    view_filter.field = file_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
-    filter.field = single_select_field
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
 
@@ -1779,45 +1779,45 @@ def test_not_empty_filter_type(data_fixture):
     )
     getattr(row_2, f"field_{link_row_field.id}").add(tmp_row.id)
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="not_empty", value=""
     )
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = long_text_field
-    filter.save()
+    view_filter.field = long_text_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = integer_field
-    filter.save()
+    view_filter.field = integer_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = decimal_field
-    filter.save()
+    view_filter.field = decimal_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = date_field
-    filter.save()
+    view_filter.field = date_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = date_time_field
-    filter.save()
+    view_filter.field = date_time_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = link_row_field
-    filter.save()
+    view_filter.field = link_row_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = boolean_field
-    filter.save()
+    view_filter.field = boolean_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = file_field
-    filter.save()
+    view_filter.field = file_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
-    filter.field = single_select_field
-    filter.save()
+    view_filter.field = single_select_field
+    view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
 
@@ -1850,7 +1850,7 @@ def test_filename_contains_filter_type(data_fixture):
         }
     )
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=file_field,
         type="filename_contains",
@@ -1860,25 +1860,25 @@ def test_filename_contains_filter_type(data_fixture):
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = ".jpg"
-    filter.save()
+    view_filter.value = ".jpg"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.value = ".png"
-    filter.save()
+    view_filter.value = ".png"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row.id in ids
 
-    filter.value = "test."
-    filter.save()
+    view_filter.value = "test."
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_with_multiple_files.id in ids
 
-    filter.value = ""
-    filter.save()
+    view_filter.value = ""
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row.id in ids
@@ -1936,26 +1936,26 @@ def test_link_row_preload_values(data_fixture, django_assert_num_queries):
             f"field_{link_row_field.id}": [related_row_1.id],
         },
     )
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=link_row_field,
         type="link_row_has",
         value=f"",
     )
-    assert filter.preload_values["display_name"] is None
+    assert view_filter.preload_values["display_name"] is None
 
-    filter.value = "test"
-    filter.save()
-    assert filter.preload_values["display_name"] is None
+    view_filter.value = "test"
+    view_filter.save()
+    assert view_filter.preload_values["display_name"] is None
 
-    filter.value = "-1"
-    filter.save()
-    assert filter.preload_values["display_name"] is None
+    view_filter.value = "-1"
+    view_filter.save()
+    assert view_filter.preload_values["display_name"] is None
 
     with django_assert_num_queries(4):
-        filter.value = f"{related_row_1.id}"
-        filter.save()
-        assert filter.preload_values["display_name"] == "Related row 1"
+        view_filter.value = f"{related_row_1.id}"
+        view_filter.save()
+        assert view_filter.preload_values["display_name"] == "Related row 1"
 
 
 @pytest.mark.django_db
@@ -2056,7 +2056,7 @@ def test_link_row_has_filter_type(data_fixture):
     )
 
     handler = ViewHandler()
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=link_row_field,
         type="link_row_has",
@@ -2065,32 +2065,32 @@ def test_link_row_has_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 5
 
-    filter.value = "not_number"
-    filter.save()
+    view_filter.value = "not_number"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 5
 
-    filter.value = "-1"
-    filter.save()
+    view_filter.value = "-1"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    filter.value = f"{related_row_1.id}"
-    filter.save()
+    view_filter.value = f"{related_row_1.id}"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_1.id in ids
     assert row_with_all_relations.id in ids
 
-    filter.value = f"{related_row_2.id}"
-    filter.save()
+    view_filter.value = f"{related_row_2.id}"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_with_all_relations.id in ids
 
-    filter.value = f"{related_row_3.id}"
-    filter.save()
+    view_filter.value = f"{related_row_3.id}"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row_3.id in ids
@@ -2195,7 +2195,7 @@ def test_link_row_has_not_filter_type(data_fixture):
     )
 
     handler = ViewHandler()
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=link_row_field,
         type="link_row_has_not",
@@ -2204,32 +2204,32 @@ def test_link_row_has_not_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 5
 
-    filter.value = "not_number"
-    filter.save()
+    view_filter.value = "not_number"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 5
 
-    filter.value = "-1"
-    filter.save()
+    view_filter.value = "-1"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 5
 
-    filter.value = f"{related_row_1.id}"
-    filter.save()
+    view_filter.value = f"{related_row_1.id}"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row_1.id not in ids
     assert row_with_all_relations.id not in ids
 
-    filter.value = f"{related_row_2.id}"
-    filter.save()
+    view_filter.value = f"{related_row_2.id}"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row_2.id not in ids
     assert row_with_all_relations.id not in ids
 
-    filter.value = f"{related_row_3.id}"
-    filter.save()
+    view_filter.value = f"{related_row_3.id}"
+    view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
     assert row_3.id not in ids

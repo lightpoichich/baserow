@@ -198,7 +198,7 @@ def test_get_view(api_client, data_fixture):
     table_2 = data_fixture.create_database_table(user=user_2)
     view = data_fixture.create_grid_view(table=table)
     view_2 = data_fixture.create_grid_view(table=table_2)
-    filter = data_fixture.create_view_filter(view=view)
+    view_filter = data_fixture.create_view_filter(view=view)
 
     url = reverse("api:database:views:item", kwargs={"view_id": view_2.id})
     response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
@@ -232,11 +232,11 @@ def test_get_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["id"] == view.id
     assert len(response_json["filters"]) == 1
-    assert response_json["filters"][0]["id"] == filter.id
-    assert response_json["filters"][0]["view"] == filter.view_id
-    assert response_json["filters"][0]["field"] == filter.field_id
-    assert response_json["filters"][0]["type"] == filter.type
-    assert response_json["filters"][0]["value"] == filter.value
+    assert response_json["filters"][0]["id"] == view_filter.id
+    assert response_json["filters"][0]["view"] == view_filter.view_id
+    assert response_json["filters"][0]["field"] == view_filter.field_id
+    assert response_json["filters"][0]["type"] == view_filter.type
+    assert response_json["filters"][0]["value"] == view_filter.value
     assert response_json["sortings"] == []
 
     response = api_client.delete(
@@ -602,14 +602,16 @@ def test_get_link_row_filter_type_preload_values(data_fixture, api_client):
             f"field_{related_primary_field.id}": "Related row 1",
         },
     )
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=link_row_field,
         type="link_row_has",
         value=f"{related_row_1.id}",
     )
     response = api_client.get(
-        reverse("api:database:views:filter_item", kwargs={"view_filter_id": filter.id}),
+        reverse(
+            "api:database:views:filter_item", kwargs={"view_filter_id": view_filter.id}
+        ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()

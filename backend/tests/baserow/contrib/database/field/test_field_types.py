@@ -108,7 +108,15 @@ def test_valid_url(data_fixture):
         "https://web.archive.org/web/20210313191012/https://baserow.io/",
         "mailto:bram@baserow.io?test=test",
     ]
-    invalid_urls = ["test", "test.", "localhost"]
+    invalid_urls = [
+        "test",
+        "test.",
+        "localhost",
+        "\nwww.test.nl",
+        "www\n.test.nl",
+        "www .test.nl",
+        " www.test.nl",
+    ]
 
     for invalid_url in invalid_urls:
         with pytest.raises(ValidationError):

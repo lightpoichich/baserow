@@ -63,7 +63,15 @@ describe('test string utils', () => {
       'mailto:bram@baserow.io?test=test',
     ]
 
-    const invalidURLs = ['test', 'test.', 'localhost']
+    const invalidURLs = [
+      'test',
+      'test.',
+      'localhost',
+      '\nwww.test.nl',
+      'www\n.test.nl',
+      'www .test.nl',
+      ' www.test.nl',
+    ]
 
     for (const invalidUrl of invalidURLs) {
       expect(isValidURL(invalidUrl)).toBe(false)

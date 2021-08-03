@@ -978,12 +978,29 @@ export const actions = {
       order = new BigNumber(before.order).minus(change).toString()
     }
 
+    // In order to make changes feel really fast, we optimistically
+    // updated all the field values that provide a onRowMove function
+    const fieldsToCallOnRowMove = [...fields, primary]
+    const optimisticFieldValues = {}
+    const valuesBeforeOptimisticUpdate = {}
+
+    fieldsToCallOnRowMove.forEach((field) => {
+      const fieldType = this.$registry.get('field', field._.type.type)
+      const fieldID = `field_${field.id}`
+      const currentFieldValue = row[fieldID]
+      const fieldValue = fieldType.onRowMove(row)
+      if (fieldValue) {
+        optimisticFieldValues[fieldID] = fieldValue
+        valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
+      }
+    })
+
     dispatch('updatedExistingRow', {
       view: grid,
       fields,
       primary,
       row,
-      values: { order },
+      values: { order, ...optimisticFieldValues },
     })
 
     try {
@@ -992,6 +1009,9 @@ export const actions = {
         row.id,
         before !== null ? before.id : null
       )
+      // Use the return value to update the moved row with values from
+      // the backend
+      commit('UPDATE_ROW_IN_BUFFER', { row, values: data })
       if (before === null) {
         // Not having a before means that the row was moved to the end and because
         // that order was just an estimation, we want to update it with the real
@@ -1009,7 +1029,7 @@ export const actions = {
         fields,
         primary,
         row,
-        values: { order: oldOrder },
+        values: { order: oldOrder, ...valuesBeforeOptimisticUpdate },
       })
       throw error
     }
@@ -1023,38 +1043,48 @@ export const actions = {
     { commit, dispatch },
     { table, view, row, field, fields, primary, value, oldValue }
   ) {
-    commit('UPDATE_ROW_FIELD_VALUE', { row, field, value })
-    dispatch('onRowChange', { view, row, fields, primary })
+    const optimisticFieldValues = {}
+
+    // Add the new value for the field that gets updated to our
+    // optimistic field updates object
+    optimisticFieldValues[field.id] = value
+    const valuesBeforeOptimisticUpdate = {}
+
+    // Store the before value of the field that gets updated
+    // in case we need to rollback changes
+    valuesBeforeOptimisticUpdate[field.id] = oldValue
 
     let fieldsToCallOnRowChange = [...fields, primary]
+
+    // We already added the updated field values to our updated objects
+    // so we can remove the field from our fieldsToCallOnRowChange
     fieldsToCallOnRowChange = fieldsToCallOnRowChange.filter((el) => {
       return el.id !== field.id
     })
 
-    const updatedFieldValues = []
-
-    fieldsToCallOnRowChange.forEach((field) => {
-      const fieldType = this.$registry.get('field', field._.type.type)
-      const fieldID = `field_${field.id}`
+    fieldsToCallOnRowChange.forEach((fieldToCall) => {
+      const fieldType = this.$registry.get('field', fieldToCall._.type.type)
+      const fieldID = `field_${fieldToCall.id}`
       const currentFieldValue = row[fieldID]
-      // Add field object to "onRowChange"
-      const updatedFieldValue = fieldType.onRowChange(
+      const optimisticFieldValue = fieldType.onRowChange(
         row,
         field,
         value,
         oldValue,
+        fieldToCall,
         currentFieldValue
       )
 
-      if (currentFieldValue !== updatedFieldValue) {
-        updatedFieldValues.push({ field, oldValue: currentFieldValue })
-        commit('UPDATE_ROW_FIELD_VALUE', {
-          row,
-          field,
-          value: updatedFieldValue,
-        })
+      if (optimisticFieldValue && currentFieldValue !== optimisticFieldValue) {
+        optimisticFieldValues[fieldID] = optimisticFieldValue
+        valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
       }
     })
+    commit('UPDATE_ROW_IN_BUFFER', {
+      row,
+      values: { ...optimisticFieldValues },
+    })
+    dispatch('onRowChange', { view, row, fields, primary })
 
     const fieldType = this.$registry.get('field', field._.type.type)
     const newValue = fieldType.prepareValueForUpdate(field, value)
@@ -1069,15 +1099,11 @@ export const actions = {
       )
       commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
     } catch (error) {
-      commit('UPDATE_ROW_FIELD_VALUE', { row, field, value: oldValue })
-
-      updatedFieldValues.forEach((item) => {
-        commit('UPDATE_ROW_FIELD_VALUE', {
-          row,
-          field: item.field,
-          value: item.oldValue,
-        })
+      commit('UPDATE_ROW_IN_BUFFER', {
+        row,
+        values: { ...valuesBeforeOptimisticUpdate },
       })
+
       dispatch('onRowChange', { view, row, fields, primary })
       throw error
     }

@@ -29,6 +29,21 @@
   @extend %grid-field-date__time;
 }
 
+.grid-field-date-read-only {
+  background-color: $color-neutral-50;
+  color: $color-neutral-400;
+}
+
+.grid-field-date-read-only__date {
+  @extend .grid-field-date__date;
+  @extend .grid-field-date-read-only;
+}
+
+.grid-field-date-read-only__time {
+  @extend .grid-field-date__time;
+  @extend .grid-field-date-read-only;
+}
+
 .grid-field-date__date-input {
   @extend .grid-field-text__input;
   @extend %grid-field-date__date;

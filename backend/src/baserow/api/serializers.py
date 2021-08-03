@@ -5,7 +5,6 @@ def get_example_pagination_serializer_class(
     results_serializer_class,
     additional_fields=None,
     serializer_name=None,
-    serializer_args=None,
 ):
     """
     Generates a pagination like response serializer that has the provided serializer
@@ -22,15 +21,9 @@ def get_example_pagination_serializer_class(
     :param serializer_name: The class name of the serializer. Generated serializer
         should be unique because serializer with the same class name are reused.
     :type serializer_name: str
-    :param serializer_args: A list of optional arguments to be passed onto the
-        results_serializer_class when instantiated.
-    :type serializer_args: list
     :return: The generated pagination serializer.
     :rtype: Serializer
     """
-
-    if serializer_args is None:
-        serializer_args = []
 
     fields = {
         "count": serializers.IntegerField(help_text="The total amount of results."),
@@ -40,7 +33,7 @@ def get_example_pagination_serializer_class(
         "previous": serializers.URLField(
             allow_blank=True, allow_null=True, help_text="URL to the previous page."
         ),
-        "results": results_serializer_class(*serializer_args, many=True),
+        "results": results_serializer_class(many=True),
     }
 
     if additional_fields:

@@ -3,7 +3,13 @@
     <div v-if="!loaded && loading" class="loading-absolute-center" />
     <div v-else>
       <div class="row-comments">
-        <div class="row-comments__body">
+        <div v-if="totalCount === 0" class="row-comments__empty">
+          <i class="row-comments__empty-icon fas fa-comments"></i>
+          <div class="row-comments__empty-text">
+            No comments for this row yet. Use the form below to add a comment.
+          </div>
+        </div>
+        <div v-else class="row-comments__body">
           <InfiniteScroll
             ref="infiniteScroll"
             :current-count="currentCount"
@@ -25,13 +31,14 @@
           </InfiniteScroll>
         </div>
         <div class="row-comments__foot">
-          <ExpandableTextarea
-            ref="expandableTextarea"
+          <AutoExpandableTextarea
+            ref="AutoExpandableTextarea"
             v-model="comment"
+            placeholder="Comment"
             :loading="postingComment"
             @entered="postComment"
           >
-          </ExpandableTextarea>
+          </AutoExpandableTextarea>
         </div>
       </div>
     </div>
@@ -43,11 +50,11 @@ import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
-import ExpandableTextarea from '@baserow_premium/components/helpers/ExpandableTextarea'
+import AutoExpandableTextarea from '@baserow_premium/components/helpers/AutoExpandableTextarea'
 
 export default {
   name: 'RowCommentsSidebar',
-  components: { ExpandableTextarea, InfiniteScroll, RowComment },
+  components: { AutoExpandableTextarea, InfiniteScroll, RowComment },
   props: {
     table: {
       required: true,
@@ -65,7 +72,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      comments: 'row_comments/getRowComments',
+      comments: 'row_comments/getSortedRowComments',
       loading: 'row_comments/getLoading',
       postingComment: 'row_comments/getPostingComment',
       loaded: 'row_comments/getLoaded',

@@ -41,10 +41,11 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
+import timezone from '@baserow/modules/database/mixins/timezone'
 
 export default {
   name: 'FieldDateSubForm',
-  mixins: [form, fieldSubForm],
+  mixins: [form, fieldSubForm, timezone],
   data() {
     return {
       allowedValues: ['date_format', 'date_include_time', 'date_time_format'],

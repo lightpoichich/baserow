@@ -10,11 +10,5 @@
 export default {
   name: 'GridViewRowExpandButton',
   functional: true,
-  props: {
-    row: {
-      required: true,
-      type: Object,
-    },
-  },
 }
 </script>

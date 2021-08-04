@@ -1,4 +1,5 @@
 import pytest
+from pytz import timezone
 from baserow.contrib.database.fields.models import LastModifiedField
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
@@ -11,13 +12,15 @@ def test_last_modified_field_type(data_fixture):
 
     field_handler = FieldHandler()
     row_handler = RowHandler()
+    timezone_to_test = "Europe/Berlin"
+    timezone_of_field = timezone(timezone_to_test)
 
     last_modified_field_date = field_handler.create_field(
         user=user,
         table=table,
         type_name="last_modified",
         name="Last Date",
-        timezone="Europe/Berlin",
+        timezone=timezone_to_test,
     )
     last_modified_field_datetime = field_handler.create_field(
         user=user,
@@ -25,7 +28,7 @@ def test_last_modified_field_type(data_fixture):
         type_name="last_modified",
         name="Last Datetime",
         date_include_time=True,
-        timezone="Europe/Berlin",
+        timezone=timezone_to_test,
     )
     assert last_modified_field_date.date_include_time is False
     assert last_modified_field_datetime.date_include_time is True
@@ -73,9 +76,15 @@ def test_last_modified_field_type(data_fixture):
 
     assert len(LastModifiedField.objects.all()) == 1
     row.refresh_from_db()
-    assert row.last_datetime == row_last_modified_2_before_alter.replace(
+    field_before_with_timezone = row_last_modified_2_before_alter.replace(
         microsecond=0, second=0
-    )
+    ).astimezone(timezone_of_field)
+    assert row.last_datetime.year == field_before_with_timezone.year
+    assert row.last_datetime.month == field_before_with_timezone.month
+    assert row.last_datetime.day == field_before_with_timezone.day
+    assert row.last_datetime.hour == field_before_with_timezone.hour
+    assert row.last_datetime.minute == field_before_with_timezone.minute
+    assert row.last_datetime.second == field_before_with_timezone.second
 
     # changing the field from LastModified with Datetime to Text Field should persist
     # the datetime as string
@@ -97,9 +106,9 @@ def test_last_modified_field_type(data_fixture):
     )
     row.refresh_from_db()
     assert len(LastModifiedField.objects.all()) == 1
-    assert row.last_datetime == row_last_modified_2_before_alter.strftime(
-        "%d/%m/%Y %H:%M"
-    )
+    assert row.last_datetime == row_last_modified_2_before_alter.astimezone(
+        timezone_of_field
+    ).strftime("%d/%m/%Y %H:%M")
 
     # deleting the fields
     field_handler.delete_field(user=user, field=last_modified_field_date)

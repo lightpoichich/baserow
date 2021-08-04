@@ -139,6 +139,10 @@ def setup_interesting_test_table(data_fixture):
         if val is not None:
             row_values[f"field_{name_to_field_id[field_type]}"] = val
     # Make a blank row to test empty field conversion also.
+
+    # We freeze time here so that we know what the values of the last_modified and
+    # created_on field types are going to be. Freezing the datetime will also freeze
+    # the current daylight savings time information.
     with freeze_time("2021-01-02 12:00"):
         blank_row = model.objects.create(**{})
         row = model.objects.create(**row_values)

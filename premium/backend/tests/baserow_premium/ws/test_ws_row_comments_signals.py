@@ -27,7 +27,7 @@ def test_row_comment_created(mock_broadcast_to_channel_group, data_fixture):
         "created_on": "2020-01-02T12:00:00Z",
         "first_name": "test_user",
         "id": c.id,
-        "own_comment": False,
+        "user_id": user.id,
         "row_id": rows[0].id,
         "table": table.id,
         "updated_on": "2020-01-02T12:00:00Z",

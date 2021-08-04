@@ -67,9 +67,7 @@ class RowCommentView(APIView):
         operation_id="get_row_comments",
         description="Returns all row comments for the specified table and row.",
         responses={
-            200: get_example_pagination_serializer_class(
-                RowCommentSerializer, serializer_args=[None]
-            ),
+            200: get_example_pagination_serializer_class(RowCommentSerializer),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(
                 [

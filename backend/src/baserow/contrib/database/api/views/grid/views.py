@@ -12,20 +12,21 @@ from baserow.api.schemas import get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.contrib.database.api.rows.serializers import (
     get_example_row_serializer_class,
+    get_example_row_metadata_field_serializer,
 )
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     RowSerializer,
 )
-from baserow.contrib.database.api.views.serializers import FieldOptionsField
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
+from baserow.contrib.database.api.views.serializers import FieldOptionsField
 from baserow.contrib.database.rows.registries import row_metadata_registry
-from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from .errors import ERROR_GRID_DOES_NOT_EXIST
 from .serializers import GridViewFilterSerializer
@@ -60,10 +61,12 @@ class GridViewView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description=(
-                    "Can contain `field_options` which will add an object with the "
-                    "same name to the response if included. That object contains "
-                    "user defined view settings for each field. For example the "
-                    "field's width is included in here."
+                    "A comma separated list allowing the values of `field_options` and "
+                    "`row_metadata` which will add the object/objects with the same "
+                    "name to the response if included. The `field_options` object "
+                    "contains user defined view settings for each field. For example "
+                    "the field's width is included in here. The `row_metadata` object"
+                    " includes extra row specific data on a per row basis."
                 ),
             ),
             OpenApiParameter(
@@ -128,7 +131,7 @@ class GridViewView(APIView):
                     "field_options": FieldOptionsField(
                         serializer_class=GridViewFieldOptionsSerializer, required=False
                     ),
-                    "row_metadata": {},  # TODO
+                    "row_metadata": get_example_row_metadata_field_serializer(),
                 },
                 serializer_name="PaginationSerializerWithGridViewFieldOptions",
             ),
@@ -142,8 +145,8 @@ class GridViewView(APIView):
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
         }
     )
-    @allowed_includes("field_options")
-    def get(self, request, view_id, field_options):
+    @allowed_includes("field_options", "row_metadata")
+    def get(self, request, view_id, field_options, row_metadata):
         """
         Lists all the rows of a grid view, paginated either by a page or offset/limit.
         If the limit get parameter is provided the limit/offset pagination will be used
@@ -186,19 +189,11 @@ class GridViewView(APIView):
             serializer_class = view_type.get_field_options_serializer_class()
             response.data.update(**serializer_class(view, context=context).data)
 
-        metadata_types = row_metadata_registry.get_all()
-        if len(metadata_types) > 0:
-            row_ids = [p.id for p in page]
-            row_metadata = {}
-            for metadata_type in metadata_types:
-                per_row_metadata = metadata_type.generate_metadata_for(
-                    view.table, row_ids
-                )
-                for row_id, metadata in per_row_metadata.items():
-                    single_row_metadata = row_metadata.setdefault(row_id, {})
-                    single_row_metadata[metadata_type.type] = metadata
-            context = {"row_metadata": row_metadata}
-            response.data.update(**context)
+        if row_metadata:
+            row_metadata = row_metadata_registry.generate_and_merge_metadata_for_rows(
+                view.table, (row.id for row in page)
+            )
+            response.data.update(row_metadata=row_metadata)
 
         return response
 

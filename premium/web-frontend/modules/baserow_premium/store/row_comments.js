@@ -134,7 +134,8 @@ export const actions = {
       // Immediately add the row comment to the UI to be replaced by the real comment
       // later from the server.
       const temporaryComment = {
-        created_on: moment().utc().format(),
+        created_on: moment().toISOString(),
+        updated_on: moment().toISOString(),
         comment,
         row_id: rowId,
         table: tableId,

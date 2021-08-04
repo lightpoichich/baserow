@@ -1,7 +1,7 @@
 <template functional>
   <GridViewRowExpandButton
-    v-if="!props.row._.metadata.row_comment_count"
-    :row="row"
+    v-if="!props.row || !props.row._.metadata.row_comment_count"
+    :row="props.row"
     v-on="listeners"
   >
   </GridViewRowExpandButton>
@@ -29,11 +29,5 @@ export default {
   name: 'GridViewRowExpandButtonWithCommentCount',
   functional: true,
   components: { GridViewRowExpandButton },
-  props: {
-    row: {
-      required: true,
-      type: Object,
-    },
-  },
 }
 </script>

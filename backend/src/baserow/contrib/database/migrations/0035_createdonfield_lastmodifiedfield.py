@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                             ("ISO", "ISO (Y-M-D)"),
                         ],
                         default="EU",
-                        help_text="EU (20/02/2020), US (02/20/2020) or ISO (2020-02-20)",
+                        help_text="EU (20/02/2020), US (02/20/2020) or ISO (2020-02-20)",  # noqa: E501
                         max_length=32,
                     ),
                 ),
@@ -728,7 +728,7 @@ class Migration(migrations.Migration):
                             ("ISO", "ISO (Y-M-D)"),
                         ],
                         default="EU",
-                        help_text="EU (20/02/2020), US (02/20/2020) or ISO (2020-02-20)",
+                        help_text="EU (20/02/2020), US (02/20/2020) or ISO (2020-02-20)",  # noqa: E501
                         max_length=32,
                     ),
                 ),

@@ -170,6 +170,21 @@ export class ViewType extends Registerable {
   rowDeleted(context, tableId, fields, primary, row, storePrefix) {}
 
   /**
+   * Event that is called when a piece of metadata is updated for a particular row.
+   * A function which takes the current metadata value and applies the update is
+   * provided and should be used to calculate and store the new metadata value for the
+   * specified metadata type and row.
+   */
+  rowMetadataUpdated(
+    { store },
+    tableId,
+    rowId,
+    metadataType,
+    updateFunction,
+    storePrefix = ''
+  ) {}
+
+  /**
    * @return object
    */
   serialize() {
@@ -378,6 +393,24 @@ export class GridViewType extends ViewType {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
         primary,
+      })
+    }
+  }
+
+  async rowMetadataUpdated(
+    { store },
+    tableId,
+    rowId,
+    rowMetadataType,
+    updateFunction,
+    storePrefix = ''
+  ) {
+    if (this.isCurrentView(store, tableId, storePrefix)) {
+      await store.dispatch(storePrefix + 'view/grid/updateRowMetadata', {
+        tableId,
+        rowId,
+        rowMetadataType,
+        updateFunction,
       })
     }
   }

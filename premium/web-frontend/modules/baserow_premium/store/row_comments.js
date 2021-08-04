@@ -110,7 +110,7 @@ export const actions = {
    * Posts a new comment to the server and updates the comments list once the server
    * responds with it's id and other related comment data.
    */
-  async postComment({ commit, state }, { tableId, rowId, comment }) {
+  async postComment({ commit, state, dispatch }, { tableId, rowId, comment }) {
     try {
       commit('SET_POSTING_COMMENT', true)
       const { data } = await RowCommentService(this.$client).create(
@@ -118,18 +118,32 @@ export const actions = {
         rowId,
         comment
       )
-      commit('ADD_ROW_COMMENTS', [data])
-      commit('SET_TOTAL_COUNT', state.totalCount + 1)
+      dispatch('forceCreate', { rowComment: data })
+      return data
     } finally {
       commit('SET_POSTING_COMMENT', false)
     }
   },
-  forceCreate({ commit, state }, comment) {
+  async forceCreate(context, { rowComment }) {
+    const { commit, state } = context
     if (
-      state.loadedTableId === comment.table &&
-      state.loadedRowId === comment.row_id
+      state.loadedTableId === rowComment.table &&
+      state.loadedRowId === rowComment.row_id
     ) {
-      commit('ADD_ROW_COMMENTS', [comment])
+      commit('ADD_ROW_COMMENTS', [rowComment])
+      commit('SET_TOTAL_COUNT', state.totalCount + 1)
+    }
+    // A new comment has been forcibly created so we need to let all views know that
+    // the row comment count metadata should be incremented atomically.
+    for (const viewType of Object.values(this.$registry.getAll('view'))) {
+      await viewType.rowMetadataUpdated(
+        { store: this },
+        rowComment.table,
+        rowComment.row_id,
+        'row_comment_count',
+        (count) => (count ? count + 1 : 1),
+        'page/'
+      )
     }
   },
 }

@@ -21,6 +21,7 @@ from baserow.contrib.database.api.views.serializers import FieldOptionsField
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
+from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
@@ -126,7 +127,8 @@ class GridViewView(APIView):
                 additional_fields={
                     "field_options": FieldOptionsField(
                         serializer_class=GridViewFieldOptionsSerializer, required=False
-                    )
+                    ),
+                    "row_metadata": {},  # TODO
                 },
                 serializer_name="PaginationSerializerWithGridViewFieldOptions",
             ),
@@ -183,6 +185,20 @@ class GridViewView(APIView):
             context = {"fields": [o["field"] for o in model._field_objects.values()]}
             serializer_class = view_type.get_field_options_serializer_class()
             response.data.update(**serializer_class(view, context=context).data)
+
+        metadata_types = row_metadata_registry.get_all()
+        if len(metadata_types) > 0:
+            row_ids = [p.id for p in page]
+            row_metadata = {}
+            for metadata_type in metadata_types:
+                per_row_metadata = metadata_type.generate_metadata_for(
+                    view.table, row_ids
+                )
+                for row_id, metadata in per_row_metadata.items():
+                    single_row_metadata = row_metadata.setdefault(row_id, {})
+                    single_row_metadata[metadata_type.type] = metadata
+            context = {"row_metadata": row_metadata}
+            response.data.update(**context)
 
         return response
 

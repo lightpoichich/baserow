@@ -15,8 +15,9 @@ import {
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 
-export function populateRow(row) {
+export function populateRow(row, rowMetadata = {}) {
   row._ = {
+    metadata: rowMetadata[row.id] || {},
     loading: false,
     hover: false,
     selectedBy: [],
@@ -293,6 +294,10 @@ export const mutations = {
   UPDATE_ROW_FIELD_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
   },
+  UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
+    const currentValue = row._.metadata[rowMetadataType]
+    Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
+  },
   FINALIZE_ROW_IN_BUFFER(state, { oldId, id, order }) {
     const index = state.rows.findIndex((item) => item.id === oldId)
     if (index !== -1) {
@@ -453,7 +458,7 @@ export const actions = {
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
-            populateRow(data.results[index])
+            populateRow(data.results[index], data.row_metadata)
           })
           commit('ADD_ROWS', {
             rows: data.results,
@@ -591,7 +596,7 @@ export const actions = {
       search: getters.getServerSearchTerm,
     })
     data.results.forEach((part, index) => {
-      populateRow(data.results[index])
+      populateRow(data.results[index], data.row_metadata)
     })
     commit('CLEAR_ROWS')
     commit('ADD_ROWS', {
@@ -663,7 +668,7 @@ export const actions = {
         // If there are results we can replace the existing rows so that the user stays
         // at the same scroll offset.
         data.results.forEach((part, index) => {
-          populateRow(data.results[index])
+          populateRow(data.results[index], data.row_metadata)
         })
         commit('ADD_ROWS', {
           rows: data.results,
@@ -1374,6 +1379,15 @@ export const actions = {
       fields,
       primary,
     })
+  },
+  updateRowMetadata(
+    { commit, getters, dispatch },
+    { tableId, rowId, rowMetadataType, updateFunction }
+  ) {
+    const row = getters.getRow(rowId)
+    if (row) {
+      commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
+    }
   },
 }
 

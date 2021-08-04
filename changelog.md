@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Made it possible to leave a group.
+* Changed web-frontend `/api/docs` route into `/api-docs`.
 * Bumped the dependencies.
 * The internal setting allowing Baserow to run with the user tables in a separate 
   database has been removed entirely to prevent data integrity issues.
@@ -12,6 +14,8 @@
 * Added password validation to password reset page.
 * Add backup and restore database management commands.
 * Hide view types that can't be exported in the export modal.
+* Relaxed the URL field validator and made it consistent between the backend and 
+  web-frontend.
 
 ## Released (2021-07-16)
 

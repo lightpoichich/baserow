@@ -6,13 +6,6 @@ import { populateTable } from '@baserow/modules/database/store/table'
 import GridViewRowExpandButton from '@baserow/modules/database/components/view/grid/GridViewRowExpandButton'
 
 export class DatabaseApplicationType extends ApplicationType {
-  constructor() {
-    super()
-    this.componentPlugins = {
-      RowEditModal: false,
-    }
-  }
-
   static getType() {
     return 'database'
   }

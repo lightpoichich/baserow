@@ -4,14 +4,21 @@ import moment from 'moment'
 
 export const state = () => ({
   comments: [],
-  postingComment: false,
   loading: false,
   loaded: false,
   currentCount: 0,
   totalCount: 0,
   loadedRowId: false,
   loadedTableId: false,
+  nextTemporaryCommentId: -1,
 })
+
+function populateComment(comment, loading) {
+  comment._ = {
+    loading,
+  }
+  return comment
+}
 
 export const mutations = {
   /**
@@ -23,8 +30,9 @@ export const mutations = {
    * We want to handle duplicates here as comments received as realtime events could
    * potentially be also loaded in via a normal backend api fetch call.
    */
-  ADD_ROW_COMMENTS(state, comments) {
+  ADD_ROW_COMMENTS(state, { comments, loading }) {
     comments.forEach((newComment) => {
+      newComment = populateComment(newComment, loading)
       const existingIndex = state.comments.findIndex(
         (c) => c.id === newComment.id
       )
@@ -37,6 +45,12 @@ export const mutations = {
     })
     state.currentCount = state.comments.length
   },
+  REMOVE_ROW_COMMENT(state, id) {
+    const existingIndex = state.comments.findIndex((c) => c.id === id)
+    if (existingIndex >= 0) {
+      state.comments.splice(existingIndex, 1)
+    }
+  },
   RESET_ROW_COMMENTS(state) {
     state.comments = []
   },
@@ -46,12 +60,12 @@ export const mutations = {
   SET_LOADED(state, loaded) {
     state.loaded = loaded
   },
+  SET_NEXT_TEMPORARY_COMMENT_ID(state, nextTemporaryCommentId) {
+    state.nextTemporaryCommentId = nextTemporaryCommentId
+  },
   SET_LOADED_TABLE_AND_ROW(state, { tableId, rowId }) {
     state.loadedRowId = rowId
     state.loadedTableId = tableId
-  },
-  SET_POSTING_COMMENT(state, postingComment) {
-    state.postingComment = postingComment
   },
   SET_TOTAL_COUNT(state, totalCount) {
     state.totalCount = totalCount
@@ -76,7 +90,7 @@ export const actions = {
         {}
       )
       commit('RESET_ROW_COMMENTS')
-      commit('ADD_ROW_COMMENTS', data.results)
+      commit('ADD_ROW_COMMENTS', { comments: data.results, loading: false })
       commit('SET_TOTAL_COUNT', data.count)
       commit('SET_LOADED_TABLE_AND_ROW', { tableId, rowId })
       commit('SET_LOADED', true)
@@ -100,7 +114,7 @@ export const actions = {
         rowId,
         { offset: state.currentCount }
       )
-      commit('ADD_ROW_COMMENTS', data.results)
+      commit('ADD_ROW_COMMENTS', { comments: data.results, loading: false })
       commit('SET_TOTAL_COUNT', data.count)
     } finally {
       commit('SET_LOADING', false)
@@ -110,18 +124,39 @@ export const actions = {
    * Posts a new comment to the server and updates the comments list once the server
    * responds with it's id and other related comment data.
    */
-  async postComment({ commit, state, dispatch }, { tableId, rowId, comment }) {
+  async postComment(
+    { commit, state, rootGetters, dispatch },
+    { tableId, rowId, comment }
+  ) {
+    const temporaryId = state.nextTemporaryCommentId
+    commit('SET_NEXT_TEMPORARY_COMMENT_ID', temporaryId - 1)
     try {
-      commit('SET_POSTING_COMMENT', true)
+      // Immediately add the row comment to the UI to be replaced by the real comment
+      // later from the server.
+      const temporaryComment = {
+        created_on: moment().utc().format(),
+        comment,
+        row_id: rowId,
+        table: tableId,
+        user_id: rootGetters['auth/getUserId'],
+        first_name: rootGetters['auth/getName'],
+        id: temporaryId,
+      }
+      commit('ADD_ROW_COMMENTS', {
+        comments: [temporaryComment],
+        loading: true,
+      })
       const { data } = await RowCommentService(this.$client).create(
         tableId,
         rowId,
         comment
       )
+      commit('REMOVE_ROW_COMMENT', temporaryId)
       dispatch('forceCreate', { rowComment: data })
-      return data
-    } finally {
-      commit('SET_POSTING_COMMENT', false)
+    } catch (e) {
+      // Make sure we remove the temporary comment if the create call failed.
+      commit('REMOVE_ROW_COMMENT', temporaryId)
+      throw e
     }
   },
   async forceCreate(context, { rowComment }) {
@@ -130,7 +165,7 @@ export const actions = {
       state.loadedTableId === rowComment.table &&
       state.loadedRowId === rowComment.row_id
     ) {
-      commit('ADD_ROW_COMMENTS', [rowComment])
+      commit('ADD_ROW_COMMENTS', { comments: [rowComment], loading: false })
       commit('SET_TOTAL_COUNT', state.totalCount + 1)
     }
     // A new comment has been forcibly created so we need to let all views know that
@@ -160,9 +195,6 @@ export const getters = {
   },
   getLoading(state) {
     return state.loading
-  },
-  getPostingComment(state) {
-    return state.postingComment
   },
   getLoaded(state) {
     return state.loaded

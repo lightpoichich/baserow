@@ -9,8 +9,8 @@ import {
   UsersAdminType,
 } from '@baserow_premium/adminTypes'
 import rowCommentsStore from '@baserow_premium/store/row_comments'
-import { registerRealtimeEvents } from '@baserow_premium/realtime'
 import { PremiumDatabaseApplicationType } from '@baserow_premium/applicationTypes'
+import { registerRealtimeEvents } from '@baserow_premium/realtime'
 
 export default ({ store, app }) => {
   store.registerModule('row_comments', rowCommentsStore)

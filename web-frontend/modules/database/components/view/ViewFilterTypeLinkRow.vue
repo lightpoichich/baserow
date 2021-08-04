@@ -51,9 +51,8 @@ export default {
         .toHumanReadableString(primary, row[`field_${primary.id}`])
     },
     setNameFromPreloadValues(values) {
-      const displayName = values.display_name
-      if (displayName) {
-        this.name = displayName
+      if (Object.prototype.hasOwnProperty.call(values, 'display_name')) {
+        this.name = values.display_name
       }
     },
     isValidValue() {

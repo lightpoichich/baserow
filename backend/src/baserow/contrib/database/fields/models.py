@@ -171,6 +171,7 @@ class LastModifiedField(Field, BaseDateMixin):
         blank=False,
         help_text="Timezone of User during field creation.",
         choices=TIMEZONE_CHOICES,
+        default="UTC",
     )
 
     def save(self, *args, **kwargs):
@@ -188,6 +189,7 @@ class CreatedOnField(Field, BaseDateMixin):
         blank=False,
         help_text="Timezone of User during field creation.",
         choices=TIMEZONE_CHOICES,
+        default="UTC",
     )
 
     def save(self, *args, **kwargs):

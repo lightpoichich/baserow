@@ -570,6 +570,17 @@ class LastModifiedFieldType(BaseDateFieldType):
         "timezone",
     ]
 
+    def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+        python_format = field_object["field"].get_python_format()
+        field = field_object["field"]
+        field_timezone = timezone(field.timezone)
+        if field.date_include_time:
+            return value.astimezone(field_timezone).strftime(python_format)
+        else:
+            return value.strftime(python_format)
+
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
 
@@ -618,6 +629,27 @@ class LastModifiedFieldType(BaseDateFieldType):
                 **{f"{to_field.db_column}": models.F("updated_on")}
             )
 
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type:
+            sql_format = from_field.get_psql_format()
+            timezone = from_field.timezone
+
+            if from_field.date_include_time:
+                return f"""p_in = TO_CHAR(p_in::timestamptz at time zone '{timezone}',
+                '{sql_format}');"""
+            else:
+                return f"""p_in = TO_CHAR(p_in::date, '{sql_format}';"""
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
 
 class CreatedOnFieldType(BaseDateFieldType):
     type = "created_on"
@@ -634,6 +666,19 @@ class CreatedOnFieldType(BaseDateFieldType):
         "date_time_format",
         "timezone",
     ]
+
+    def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+        python_format = field_object["field"].get_python_format()
+        field = field_object["field"]
+        print("HIER DAS FIELD OBJECT: ", field.timezone)
+        field_timezone = timezone(field.timezone)
+
+        if field.date_include_time:
+            return value.astimezone(field_timezone).strftime(python_format)
+        else:
+            return value.strftime(python_format)
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -682,6 +727,27 @@ class CreatedOnFieldType(BaseDateFieldType):
             to_model.objects.all().update(
                 **{f"{to_field.db_column}": models.F("created_on")}
             )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type:
+            sql_format = from_field.get_psql_format()
+            timezone = from_field.timezone
+
+            if from_field.date_include_time:
+                return f"""p_in = TO_CHAR(p_in::timestamptz at time zone '{timezone}',
+                '{sql_format}');"""
+            else:
+                return f"""p_in = TO_CHAR(p_in::date, '{sql_format}';"""
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
 
 
 class LinkRowFieldType(FieldType):

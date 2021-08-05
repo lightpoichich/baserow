@@ -608,7 +608,8 @@ class CreatedOnLastModifiedBaseFieldType(BaseDateFieldType):
             annotation={
                 f"formatted_date_{field_name}": Coalesce(
                     RawSQL(
-                        f"TO_CHAR({field_name} at time zone '{field.timezone}', '{field.get_psql_format()}')",
+                        f"""TO_CHAR({field_name} at time zone '{field.timezone}',
+                        '{field.get_psql_format()}')""",
                         [],
                         output_field=CharField(),
                     ),

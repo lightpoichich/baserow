@@ -1210,9 +1210,6 @@ def test_last_modified_date_equal_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
-    last_modified_field_date = data_fixture.create_last_modified_field(
-        table=table, timezone="Europe/Berlin"
-    )
     last_modified_field_datetime = data_fixture.create_last_modified_field(
         table=table, date_include_time=True, timezone="Europe/Berlin"
     )
@@ -1222,15 +1219,15 @@ def test_last_modified_date_equal_filter_type(data_fixture):
         row = model.objects.create(**{})
 
     with freeze_time("2021-08-04 22:01"):
-        row_1 = model.objects.create(**{})
+        model.objects.create(**{})
 
     with freeze_time("2021-08-04 23:01"):
-        row_2 = model.objects.create(**{})
+        model.objects.create(**{})
 
     handler = ViewHandler()
     model = table.get_model()
 
-    filter = data_fixture.create_view_filter(
+    data_fixture.create_view_filter(
         view=grid_view,
         field=last_modified_field_datetime,
         type="date_equal",

@@ -1117,8 +1117,6 @@ export const actions = {
     { commit, getters, dispatch },
     { view, fields, primary, row, values }
   ) {
-    console.log('HIER AUCH?', row)
-    console.log('HIER AUCH?', values)
     const oldRow = clone(row)
     const newRow = Object.assign(clone(row), values)
     populateRow(oldRow)

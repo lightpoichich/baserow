@@ -45,8 +45,5 @@ export default {
       default: '',
     },
   },
-  mounted() {
-    console.log('HELLO WHATUP')
-  },
 }
 </script>

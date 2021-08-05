@@ -4,12 +4,9 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
   config.vm.provision :shell, path: "bootstrap.sh", :args=>"https://gitlab.com/bramw/baserow.git 385-add-mjml-installation-instructions-in-the-ubuntu-installation-tutorial"
-  config.vm.network “private_network”, ip: “192.168.68.10”
-  config.dns.tld = "devel"
-  config.vm.hostname = "devel"
-  config.dns.patterns = [/^(\w+\.)baserow.devel$/, /^baserow.devel$/]
-  # Prevent TTY Errors (copied from laravel/homestead: "homestead.rb" file)... By default this is "bash -l".
-  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
+  config.vm.network "private_network", ip: "192.168.68.10"
+  config.landrush.enabled = true
+  config.vm.hostname = "baserow.vagrant.test"
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
     v.cpus = 2

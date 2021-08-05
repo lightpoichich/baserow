@@ -236,23 +236,26 @@ $ mkdir /var/log/baserow/
 # Move configuration files
 $ cd /baserow
 $ cp baserow/docs/guides/installation/configuration-files/supervisor.conf /etc/supervisor/conf.d/baserow.conf
-
-# Change the server_name values
-$ sed -i 's/\*YOUR_BACKEND_DOMAIN\*/api.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
-$ sed -i 's/\*YOUR_WEB_FRONTEND_DOMAIN\*/baserow.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
-$ sed -i 's/\*YOUR_MEDIA_DOMAIN\*/media.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
 ```
 
 You will need to edit the `baserow.conf` file (located now at 
 `/etc/supervisor/conf.d/`) in order to set the necessary environment
 variables. You will need to change at least the following variables which can be found
-in the `environment=` section.
+in the `environment=` section. Ensure these URL variables start with http:// or https://
+.
 
 - `PUBLIC_WEB_FRONTEND_URL`: The URL under which your frontend can be reached from the
   internet.
 - `PUBLIC_BACKEND_URL`: The URL under which your backend can be reached from the
   internet.
 - `MEDIA_URL`: The URL under which your media files can be reached from the internet.
+
+You can make the modifications using sed like so:
+```bash
+$ sed -i 's/\*YOUR_BACKEND_DOMAIN\*/https:\/\/api.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+$ sed -i 's/\*YOUR_WEB_FRONTEND_DOMAIN\*/https:\/\/baserow.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+$ sed -i 's/\*YOUR_MEDIA_DOMAIN\*/https:\/\/media.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+```
 
 **Backend**
 
@@ -264,6 +267,7 @@ in the `environment=` section.
 - `DATABASE_PASSWORD`: The password of the `baserow` database user
 - `DATABASE_HOST`: The host computer that runs the database (usually `localhost`)
 - `REDIS_HOST`: The host computer that runs the caching server (usually `localhost`)
+
 
 After modifying these files you need to make supervisor reread the files and apply the
 changes.

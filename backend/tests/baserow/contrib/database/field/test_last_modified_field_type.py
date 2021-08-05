@@ -15,6 +15,8 @@ def test_last_modified_field_type(data_fixture):
     timezone_to_test = "Europe/Berlin"
     timezone_of_field = timezone(timezone_to_test)
 
+    data_fixture.create_text_field(table=table, name="text_field", primary=True)
+
     last_modified_field_date = field_handler.create_field(
         user=user,
         table=table,
@@ -45,23 +47,25 @@ def test_last_modified_field_type(data_fixture):
     row_updated_on = row.updated_on.replace(microsecond=0)
     assert row_last_modified_2 == row_updated_on
 
-    # trying to set the fields at a specific date/datetime will still update
-    # the values with the updated_on timestamp
-    row = row_handler.create_row(
+    # Updating the text field will updated
+    # the last_modified datetime field.
+    row_last_datetime_before_update = row.last_datetime
+    row_handler.update_row(
         user=user,
         table=table,
+        row_id=row.id,
         values={
-            "last_date": "2020-4-1",
-            "last_datetime": "2020-4-1 12:30:30",
+            "text_field": "Hello Test",
         },
         model=model,
     )
-    row.refresh_from_db()
-    assert row.last_date == row.updated_on.date()
 
-    row_updated_on = row.updated_on.replace(microsecond=0)
-    row_last_modified_2 = row.last_datetime.replace(microsecond=0)
-    assert row_last_modified_2 == row_updated_on
+    row.refresh_from_db()
+
+    assert row.last_datetime >= row_last_datetime_before_update
+    assert row.last_datetime.replace(microsecond=0) == row.updated_on.replace(
+        microsecond=0
+    )
 
     row_last_modified_2_before_alter = row.last_datetime
 

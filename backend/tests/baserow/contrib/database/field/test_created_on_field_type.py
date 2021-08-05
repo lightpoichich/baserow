@@ -15,6 +15,7 @@ def test_created_on_field_type(data_fixture):
     timezone_to_test = "Europe/Berlin"
     timezone_of_field = timezone(timezone_to_test)
 
+    data_fixture.create_text_field(table=table, name="text_field", primary=True)
     created_on_field_date = field_handler.create_field(
         user=user,
         table=table,
@@ -45,23 +46,23 @@ def test_created_on_field_type(data_fixture):
     row_created_on = row.created_on.replace(microsecond=0)
     assert row_create_datetime == row_created_on
 
-    # trying to set the fields at a specific date/datetime will still update
-    # the values with the updated_on timestamp
-    row = row_handler.create_row(
+    # Updating the text field will NOT updated
+    # the created_on field.
+    row_create_datetime_before_update = row.create_datetime
+    row_create_date_before_update = row.create_date
+    row_handler.update_row(
         user=user,
         table=table,
+        row_id=row.id,
         values={
-            "create_date": "2020-4-1",
-            "create_datetime": "2020-4-1 12:30:30",
+            "text_field": "Hello Test",
         },
         model=model,
     )
-    row.refresh_from_db()
-    assert row.create_date == row.created_on.date()
 
-    assert row.created_on.replace(microsecond=0) == row.create_datetime.replace(
-        microsecond=0
-    )
+    row.refresh_from_db()
+    assert row.create_datetime == row_create_datetime_before_update
+    assert row.create_date == row_create_date_before_update
 
     row_create_datetime_before_alter = row.create_datetime
 

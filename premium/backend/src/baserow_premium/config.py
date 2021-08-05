@@ -12,6 +12,7 @@ class BaserowPremiumConfig(AppConfig):
         from baserow_premium.row_comments.row_metadata_types import (
             RowCommentCountMetadataType,
         )
+
         # noinspection PyUnresolvedReferences
         import baserow_premium.row_comments.recievers  # noqa: F401
 

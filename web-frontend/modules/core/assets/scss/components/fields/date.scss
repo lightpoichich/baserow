@@ -10,3 +10,24 @@
   width: 20%;
   margin-left: 4%;
 }
+
+.row-edit-field-date-read-only-container {
+  @extend .field-date__container;
+
+  max-width: 280px;
+  color: $color-neutral-400;
+}
+
+%row-edit-field-date-read-only__date {
+  flex: 0 0 100%;
+  width: 100%;
+
+  .row-edit-field-date-read-only--has-time & {
+    width: 60%;
+    flex-basis: 60%;
+  }
+}
+
+.row-edit-field-date-read-only__time {
+  margin-left: 4%;
+}

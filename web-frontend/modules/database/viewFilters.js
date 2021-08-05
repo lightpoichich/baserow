@@ -196,6 +196,7 @@ export class ContainsViewFilterType extends ViewFilterType {
       'phone_number',
       'date',
       'last_modified',
+      'created_on',
       'single_select',
       'number',
     ]
@@ -228,6 +229,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'phone_number',
       'date',
       'last_modified',
+      'created_on',
       'single_select',
       'number',
     ]
@@ -256,7 +258,7 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -289,7 +291,7 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -332,7 +334,7 @@ export class DateAfterViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -375,7 +377,7 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -404,7 +406,7 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified']
+    return ['date', 'last_modified', 'created_on']
   }
 
   getDefaultValue() {
@@ -642,6 +644,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'number',
       'date',
       'last_modified',
+      'created_on',
       'boolean',
       'link_row',
       'file',
@@ -686,6 +689,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'number',
       'date',
       'last_modified',
+      'created_on',
       'boolean',
       'link_row',
       'file',

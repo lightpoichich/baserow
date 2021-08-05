@@ -989,19 +989,7 @@ export class DateFieldType extends BaseDateFieldType {
   }
 }
 
-export class LastModifiedFieldType extends BaseDateFieldType {
-  static getType() {
-    return 'last_modified'
-  }
-
-  getIconClass() {
-    return 'edit'
-  }
-
-  getName() {
-    return 'Last Modified'
-  }
-
+export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
   getRowEditFieldComponent() {
     return RowEditFieldDateReadOnly
   }
@@ -1012,6 +1000,52 @@ export class LastModifiedFieldType extends BaseDateFieldType {
 
   getFunctionalGridViewFieldComponent() {
     return FunctionalGridViewFieldDate
+  }
+
+  getAdditionalProps() {
+    return {
+      isReadOnly: true,
+    }
+  }
+
+  shouldRefreshWhenAdded() {
+    return true
+  }
+
+  toHumanReadableString(field, value) {
+    const date = moment.tz(value, field.timezone)
+
+    if (date.isValid()) {
+      const dateFormat = getDateMomentFormat(field.date_format)
+      let dateString = date.format(dateFormat)
+
+      if (field.date_include_time) {
+        const timeFormat = getTimeMomentFormat(field.date_time_format)
+        dateString = `${dateString} ${date.format(timeFormat)}`
+      }
+
+      return dateString
+    } else {
+      return ''
+    }
+  }
+
+  prepareValueForCopy(field, value) {
+    return this.toHumanReadableString(field, value)
+  }
+}
+
+export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
+  static getType() {
+    return 'last_modified'
+  }
+
+  getIconClass() {
+    return 'edit'
+  }
+
+  getName() {
+    return 'Last Modified'
   }
 
   onRowChange(
@@ -1035,19 +1069,9 @@ export class LastModifiedFieldType extends BaseDateFieldType {
     const currentDate = moment().utc().format()
     return currentDate
   }
-
-  shouldRefreshWhenAdded() {
-    return true
-  }
-
-  getAdditionalProps() {
-    return {
-      isReadOnly: true,
-    }
-  }
 }
 
-export class CreatedOnFieldType extends BaseDateFieldType {
+export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
   static getType() {
     return 'created_on'
   }
@@ -1060,31 +1084,9 @@ export class CreatedOnFieldType extends BaseDateFieldType {
     return 'Created On'
   }
 
-  getRowEditFieldComponent() {
-    return RowEditFieldDateReadOnly
-  }
-
-  getGridViewFieldComponent() {
-    return GridViewFieldDateReadOnly
-  }
-
-  getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldDate
-  }
-
-  shouldRefreshWhenAdded() {
-    return true
-  }
-
   onRowAdd() {
     const currentDate = moment().utc().format()
     return currentDate
-  }
-
-  getAdditionalProps() {
-    return {
-      isReadOnly: true,
-    }
   }
 }
 

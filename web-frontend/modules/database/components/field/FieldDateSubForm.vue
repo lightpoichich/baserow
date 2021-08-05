@@ -14,6 +14,11 @@
         </Dropdown>
       </div>
     </div>
+    <div v-show="values.timezone" class="control">
+      <div class="control__elements">
+        <ViewFilterTypeTimeZone :value="values.timezone" />
+      </div>
+    </div>
     <div class="control">
       <div class="control__elements">
         <Checkbox v-model="values.date_include_time">Include time</Checkbox>
@@ -42,9 +47,11 @@ import form from '@baserow/modules/core/mixins/form'
 
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import timezone from '@baserow/modules/database/mixins/timezone'
+import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone.vue'
 
 export default {
   name: 'FieldDateSubForm',
+  components: { ViewFilterTypeTimeZone },
   mixins: [form, fieldSubForm, timezone],
   data() {
     return {

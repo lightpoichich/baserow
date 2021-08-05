@@ -7,13 +7,16 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Q, IntegerField, BooleanField, DateTimeField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
+from django.db.models.expressions import RawSQL
 from pytz import timezone, all_timezones
 
+from baserow.contrib.database.fields.field_filters import AnnotatedQ
 from baserow.contrib.database.fields.field_filters import (
     filename_contains_filter,
     OptionallyAnnotatedQ,
 )
 from baserow.contrib.database.fields.field_types import (
+    CreatedOnFieldType,
     TextFieldType,
     LongTextFieldType,
     URLFieldType,
@@ -106,6 +109,7 @@ class ContainsViewFilterType(ViewFilterType):
         PhoneNumberFieldType.type,
         DateFieldType.type,
         LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
         SingleSelectFieldType.type,
         NumberFieldType.type,
     ]
@@ -189,7 +193,11 @@ class DateEqualViewFilterType(ViewFilterType):
     """
 
     type = "date_equal"
-    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
 
     def get_filter(self, field_name, value, model_field, field):
         """
@@ -209,11 +217,35 @@ class DateEqualViewFilterType(ViewFilterType):
         except (ParserError, ValueError):
             return Q()
 
-        # If the length if string value is lower than 10 characters we know it is only
-        # a date so we can match only on year, month and day level. This way if a date
-        # is provided, but if it tries to compare with a models.DateTimeField it will
-        # still give back accurate results.
-        if len(value) <= 10:
+        # Since the
+        has_timezone = False
+        tmp_field_name = f"tmp_{field_name}"
+        if hasattr(field, "timezone"):
+            timezone_string = field.timezone
+            has_timezone = True
+        else:
+            timezone_string = "UTC"
+
+        # If the length of the string value is lower than 10 characters we know it is
+        # only a date so we can match only on year, month and day level. This way if a
+        # date is provided, but if it tries to compare with a models.DateTimeField it
+        # will still give back accurate results.
+        if len(value) <= 10 and has_timezone:
+            return AnnotatedQ(
+                annotation={
+                    f"{tmp_field_name}": RawSQL(
+                        f"{field_name} at time zone '{timezone_string}'",
+                        [],
+                        output_field=model_field,
+                    )
+                },
+                q={
+                    f"{tmp_field_name}__year": datetime.year,
+                    f"{tmp_field_name}__month": datetime.month,
+                    f"{tmp_field_name}__day": datetime.day,
+                },
+            )
+        elif len(value) <= 10 and not has_timezone:
             return Q(
                 **{
                     f"{field_name}__year": datetime.year,
@@ -273,8 +305,22 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
-            field_key = f"{field_name}{query_date_lookup}{self.query_field_lookup}"
-            return Q(**{field_key: parsed_date})
+            field_key = f"tmp_{field_name}{query_date_lookup}{self.query_field_lookup}"
+            if hasattr(field, "timezone"):
+                timezone_string = field.timezone
+            else:
+                timezone_string = "UTC"
+
+            return AnnotatedQ(
+                annotation={
+                    f"tmp_{field_name}": RawSQL(
+                        f"{field_name} at time zone '{timezone_string}'",
+                        [],
+                        output_field=model_field,
+                    )
+                },
+                q={field_key: parsed_date},
+            )
         except (ParserError, ValueError):
             return Q()
 
@@ -308,7 +354,11 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
     """
 
     type = "date_equals_today"
-    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
     query_for = ["year", "month", "day"]
 
     def get_filter(self, field_name, value, model_field, field):
@@ -317,12 +367,21 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
         now = datetime.utcnow().astimezone(timezone_object)
         query_dict = dict()
         if "year" in self.query_for:
-            query_dict[f"{field_name}__year"] = now.year
+            query_dict[f"tmp_{field_name}__year"] = now.year
         if "month" in self.query_for:
-            query_dict[f"{field_name}__month"] = now.month
+            query_dict[f"tmp_{field_name}__month"] = now.month
         if "day" in self.query_for:
-            query_dict[f"{field_name}__day"] = now.day
-        return Q(**query_dict)
+            query_dict[f"tmp_{field_name}__day"] = now.day
+        return AnnotatedQ(
+            annotation={
+                f"tmp_{field_name}": RawSQL(
+                    f"{field_name} at time zone '{timezone_string}'",
+                    [],
+                    output_field=model_field,
+                )
+            },
+            q=query_dict,
+        )
 
 
 class DateEqualsCurrentMonthViewFilterType(DateEqualsTodayViewFilterType):
@@ -433,6 +492,7 @@ class EmptyViewFilterType(ViewFilterType):
         BooleanFieldType.type,
         DateFieldType.type,
         LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
         LinkRowFieldType.type,
         EmailFieldType.type,
         FileFieldType.type,

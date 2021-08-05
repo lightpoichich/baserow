@@ -841,13 +841,22 @@ export const actions = {
   ) {
     // Fill the not provided values with the empty value of the field type so we can
     // immediately commit the created row to the state.
+    const valuesForApiRequest = {}
     const allFields = [primary].concat(fields)
     allFields.forEach((field) => {
       const name = `field_${field.id}`
       if (!(name in values)) {
         const fieldType = this.$registry.get('field', field._.type.type)
+        console.log('HIER BIN ICH MIT FIELD TYPE: ', fieldType)
         const empty = fieldType.getEmptyValue(field)
         values[name] = empty
+
+        // In case the fieldType is a read only field, we
+        // need to create a second values dictionary, which gets
+        // sent to the API without the fieldType.
+        if (!fieldType.isReadOnly()) {
+          valuesForApiRequest[name] = empty
+        }
       }
     })
 
@@ -881,7 +890,7 @@ export const actions = {
     try {
       const { data } = await RowService(this.$client).create(
         table.id,
-        values,
+        valuesForApiRequest,
         before !== null ? before.id : null
       )
       commit('FINALIZE_ROW_IN_BUFFER', {

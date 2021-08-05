@@ -408,16 +408,6 @@ export default {
       $right.scrollLeft = left
     },
     async addRow(before = null) {
-      const values = {}
-      const fieldsToCallOnRowAdd = [...this.fields, this.primary]
-      fieldsToCallOnRowAdd.forEach((field) => {
-        const fieldType = this.$registry.get('field', field._.type.type)
-        const fieldID = `field_${field.id}`
-        const updatedFieldValue = fieldType.onRowAdd()
-        if (updatedFieldValue) {
-          values[fieldID] = updatedFieldValue
-        }
-      })
       try {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/createNewRow',
@@ -427,7 +417,7 @@ export default {
             // We need a list of all fields including the primary one here.
             fields: this.fields,
             primary: this.primary,
-            values,
+            values: {},
             before,
           }
         )

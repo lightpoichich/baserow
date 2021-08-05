@@ -555,6 +555,7 @@ class DateFieldType(BaseDateFieldType):
 
 
 class CreatedOnLastModifiedBaseFieldType(BaseDateFieldType):
+    can_be_in_form_view = False
     allowed_fields = [
         "date_format",
         "date_include_time",
@@ -567,6 +568,19 @@ class CreatedOnLastModifiedBaseFieldType(BaseDateFieldType):
         "date_time_format",
         "timezone",
     ]
+
+    def prepare_value_for_db(self, instance, value):
+        """
+        Since the LastModified and CreatedOnFieldTypes are read only
+        fields, we raise a ValidationError when there is a value present.
+        """
+
+        if not value:
+            return value
+
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
 
     def get_export_value(self, value, field_object):
         if value is None:
@@ -655,7 +669,17 @@ class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
             return models.DateField(auto_now=True, **kwargs)
 
     def after_create(self, field, model, user, connection, before):
-        model.objects.all().update(**{f"{field.db_column}": models.F("updated_on")})
+        if field.date_include_time:
+            model.objects.all().update(**{f"{field.db_column}": models.F("updated_on")})
+        else:
+            query = RawSQL(
+                f"updated_on at time zone '{field.timezone}'",
+                params=[],
+                output_field=model,
+            )
+            model.objects.annotate(tmp_column=query).all().update(
+                **{f"{field.db_column}": models.F("tmp_column")}
+            )
 
     def after_update(
         self,
@@ -688,7 +712,17 @@ class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
             return models.DateField(auto_now_add=True, **kwargs)
 
     def after_create(self, field, model, user, connection, before):
-        model.objects.all().update(**{f"{field.db_column}": models.F("created_on")})
+        if field.date_include_time:
+            model.objects.all().update(**{f"{field.db_column}": models.F("created_on")})
+        else:
+            query = RawSQL(
+                f"created_on at time zone '{field.timezone}'",
+                params=[],
+                output_field=model,
+            )
+            model.objects.annotate(tmp_column=query).all().update(
+                **{f"{field.db_column}": models.F("tmp_column")}
+            )
 
     def after_update(
         self,

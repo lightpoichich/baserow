@@ -394,13 +394,6 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Runs every time a new row gets created.
-   */
-  onRowAdd() {
-    return null
-  }
-
-  /**
    * Runs every time a row gets moved.
    */
   onRowMove(row) {
@@ -421,6 +414,15 @@ export class FieldType extends Registerable {
    */
   getAdditionalProps() {
     return {}
+  }
+
+  /**
+   * Determines whether the fieldType is a read only field.
+   * Can be used in order to determine whether the field
+   * can be sent in API requests.
+   */
+  isReadOnly() {
+    return false
   }
 }
 
@@ -990,6 +992,10 @@ export class DateFieldType extends BaseDateFieldType {
 }
 
 export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
+  isReadOnly() {
+    return true
+  }
+
   getFormViewFieldComponent() {
     return null
   }
@@ -1010,6 +1016,15 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return {
       isReadOnly: true,
     }
+  }
+
+  // The "empty" value for the new row in the
+  // case of LastModified or CreatedOn Fields
+  // is simply the current time.
+  getEmptyValue() {
+    console.log('HERE I AM!')
+    const currentDate = moment().utc().format()
+    return currentDate
   }
 
   shouldRefreshWhenAdded() {
@@ -1064,11 +1079,6 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     return currentDate
   }
 
-  onRowAdd() {
-    const currentDate = moment().utc().format()
-    return currentDate
-  }
-
   onRowMove(row) {
     const currentDate = moment().utc().format()
     return currentDate
@@ -1086,11 +1096,6 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
 
   getName() {
     return 'Created On'
-  }
-
-  onRowAdd() {
-    const currentDate = moment().utc().format()
-    return currentDate
   }
 }
 

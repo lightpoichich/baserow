@@ -126,6 +126,24 @@ def test_create_row(send_mock, data_fixture):
         number_negative=False,
     )
 
+    last_modified_field_date = data_fixture.create_last_modified_field(
+        table=table,
+        name="Last Date",
+    )
+
+    last_modified_field_datetime = data_fixture.create_last_modified_field(
+        table=table, name="Last Datetime", date_include_time=True
+    )
+
+    created_on_field_date = data_fixture.create_created_on_field(
+        table=table,
+        name="Created Date",
+    )
+
+    created_on_field_datetime = data_fixture.create_created_on_field(
+        table=table, name="Created Datetime", date_include_time=True
+    )
+
     handler = RowHandler()
 
     with pytest.raises(UserNotInGroup):
@@ -243,6 +261,33 @@ def test_create_row(send_mock, data_fixture):
     row_8 = handler.create_row(user, table=table)
     assert row_8.order == Decimal("3.00000000000000000000")
 
+    # Trying to create a row with values for last_modified/
+    # created_on fields for date/datetime raises ValidationError
+
+    with pytest.raises(ValidationError):
+        handler.create_row(
+            user=user, table=table, values={last_modified_field_date.id: "2021-08-09"}
+        )
+
+    with pytest.raises(ValidationError):
+        handler.create_row(
+            user=user, table=table, values={created_on_field_date.id: "2021-08-09"}
+        )
+
+    with pytest.raises(ValidationError):
+        handler.create_row(
+            user=user,
+            table=table,
+            values={last_modified_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+        )
+
+    with pytest.raises(ValidationError):
+        handler.create_row(
+            user=user,
+            table=table,
+            values={created_on_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+        )
+
 
 @pytest.mark.django_db
 def test_get_row(data_fixture):
@@ -308,6 +353,24 @@ def test_update_row(send_mock, data_fixture):
         number_negative=False,
     )
 
+    last_modified_field_date = data_fixture.create_last_modified_field(
+        table=table,
+        name="Last Date",
+    )
+
+    last_modified_field_datetime = data_fixture.create_last_modified_field(
+        table=table, name="Last Datetime", date_include_time=True
+    )
+
+    created_on_field_date = data_fixture.create_created_on_field(
+        table=table,
+        name="Created Date",
+    )
+
+    created_on_field_datetime = data_fixture.create_created_on_field(
+        table=table, name="Created Datetime", date_include_time=True
+    )
+
     handler = RowHandler()
     row = handler.create_row(user=user, table=table)
 
@@ -320,6 +383,38 @@ def test_update_row(send_mock, data_fixture):
     with pytest.raises(ValidationError):
         handler.update_row(
             user=user, table=table, row_id=row.id, values={price_field.id: -10.99}
+        )
+
+    with pytest.raises(ValidationError):
+        handler.update_row(
+            user=user,
+            table=table,
+            row_id=row.id,
+            values={last_modified_field_date.id: "2021-08-09"},
+        )
+
+    with pytest.raises(ValidationError):
+        handler.update_row(
+            user=user,
+            table=table,
+            row_id=row.id,
+            values={created_on_field_date.id: "2021-08-09"},
+        )
+
+    with pytest.raises(ValidationError):
+        handler.update_row(
+            user=user,
+            row_id=row.id,
+            table=table,
+            values={last_modified_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+        )
+
+    with pytest.raises(ValidationError):
+        handler.update_row(
+            user=user,
+            row_id=row.id,
+            table=table,
+            values={created_on_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
         )
 
     with patch(

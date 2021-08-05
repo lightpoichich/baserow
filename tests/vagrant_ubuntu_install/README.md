@@ -13,6 +13,8 @@ bash from the install-on-ubuntu.md guide and runs it in a fresh new VM.
 1. On Ubuntu I had to follow the instructions in https://github.com/vagrant-landrush/landrush/blob/master/doc/Usage.adoc#visibility-on-the-host
    1. Also see https://gist.github.com/neuroticnerd/30b12648a933677ad2c4 for more 
       landrush dns tips.
+1. Change the branch found at the end of line 6 in the Vagrantfile to be the branch you 
+   want to test. 
 1. `vagrant up`
    1. You might need to interactively enter your password for the landrush dns plugin to 
       successfully add local dns entries on your host for Baserow running inside the vm.

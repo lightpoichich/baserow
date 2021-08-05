@@ -990,6 +990,10 @@ export class DateFieldType extends BaseDateFieldType {
 }
 
 export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
+  getFormViewFieldComponent() {
+    return null
+  }
+
   getRowEditFieldComponent() {
     return RowEditFieldDateReadOnly
   }

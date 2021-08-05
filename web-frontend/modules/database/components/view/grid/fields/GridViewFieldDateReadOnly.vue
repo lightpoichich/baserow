@@ -4,13 +4,13 @@
       class="grid-field-date"
       :class="{ 'grid-field-date--has-time': field.date_include_time }"
     >
-      <div ref="dateDisplay" class="grid-field-date-read-only__date">
+      <div ref="dateDisplay" class="grid-field-date__date">
         {{ getDate(field, value) }}
       </div>
       <div
         v-if="field.date_include_time"
         ref="timeDisplay"
-        class="grid-field-date-read-only__time"
+        class="grid-field-date__time"
       >
         {{ getTime(field, value) }}
       </div>

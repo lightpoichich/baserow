@@ -1043,11 +1043,11 @@ export const actions = {
     { commit, dispatch },
     { table, view, row, field, fields, primary, value, oldValue }
   ) {
-    const optimisticFieldValues = {}
+    // Immediately updated the store with the updated row field
+    // value.
+    commit('UPDATE_ROW_FIELD_VALUE', { row, field, value })
 
-    // Add the new value for the field that gets updated to our
-    // optimistic field updates object
-    optimisticFieldValues[field.id] = value
+    const optimisticFieldValues = {}
     const valuesBeforeOptimisticUpdate = {}
 
     // Store the before value of the field that gets updated
@@ -1056,7 +1056,7 @@ export const actions = {
 
     let fieldsToCallOnRowChange = [...fields, primary]
 
-    // We already added the updated field values to our updated objects
+    // We already added the updated field values to the store
     // so we can remove the field from our fieldsToCallOnRowChange
     fieldsToCallOnRowChange = fieldsToCallOnRowChange.filter((el) => {
       return el.id !== field.id

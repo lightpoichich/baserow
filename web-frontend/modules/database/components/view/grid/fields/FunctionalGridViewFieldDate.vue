@@ -7,7 +7,7 @@
       <div
         ref="dateDisplay"
         class="grid-field-date__date"
-        :class="{ 'grid-field-date-read-only__date': props.isReadOnly }"
+        :class="{ 'grid-field-date__date': props.isReadOnly }"
       >
         {{ $options.methods.getDate(props.field, props.value) }}
       </div>
@@ -15,7 +15,7 @@
         v-if="props.field.date_include_time"
         ref="timeDisplay"
         class="grid-field-date__time"
-        :class="{ 'grid-field-date-read-only__time': props.isReadOnly }"
+        :class="{ 'grid-field-date__time': props.isReadOnly }"
       >
         {{ $options.methods.getTime(props.field, props.value) }}
       </div>

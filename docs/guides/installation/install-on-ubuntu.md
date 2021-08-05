@@ -31,7 +31,7 @@ are new to firewalls.
 Baserow uses PostgreSQL in order to store its user data. You can install PostgreSQL
 with the following commands:
 
-```
+```bash
 $ sudo apt install postgresql postgresql-contrib -y
 # Make sure you replace 'yourpassword' below with a secure password for your database
 # user.
@@ -51,7 +51,7 @@ baserow user password.
 Baserow uses Redis for asynchronous tasks and the real time collaboration. You can
 install Redis with the following commands.
 
-```
+```bash
 $ sudo add-apt-repository ppa:chris-lea/redis-server
 $ sudo apt update
 $ sudo apt install redis-server -y
@@ -68,7 +68,7 @@ Git is required to download the source code of Baserow so you can install it in 
 following section. Curl will be required later in the guide to install nodejs. 
 Install them both using the following command:
 
-```
+```bash
 $ sudo apt install git curl -y 
 ```
 

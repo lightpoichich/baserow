@@ -6,7 +6,8 @@ bash from the install-on-ubuntu.md guide and runs it in a fresh new VM.
 
 ## How to run
 
-1. Install vagrant https://www.vagrantup.com/downloads
+1. Install virtualbox - https://www.virtualbox.org/wiki/Downloads
+1. Install vagrant - https://www.vagrantup.com/downloads
 1. `cd tests/vagrant_ubuntu_install`
 1. `vagrant plugin install landrush`
 1. On Ubuntu I had to follow the instructions in https://github.com/vagrant-landrush/landrush/blob/master/doc/Usage.adoc#visibility-on-the-host

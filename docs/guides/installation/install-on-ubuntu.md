@@ -219,6 +219,20 @@ $ baserow sync_templates
 $ deactivate
 ```
 
+## Install MJML used to generate email bodies
+
+Baserow sends invite and password reset emails to users. To do this it uses a technology 
+called MJML which generates the email bodies from a template. For email sending to work 
+in Baserow you will need to install and set up an MJML server by following the steps 
+below:
+
+```bash
+$ mkdir mjml_install
+$ cd mjml_install
+$ npm init -y && npm install mjml
+$ cd /baserow
+```
+
 ## Install & Configure Supervisor
 
 Supervisor is an application that starts and keeps track of processes and will restart
@@ -268,6 +282,23 @@ $ sed -i 's/\*YOUR_MEDIA_DOMAIN\*/https:\/\/media.domain.com/g' /etc/supervisor/
 - `DATABASE_HOST`: The host computer that runs the database (usually `localhost`)
 - `REDIS_HOST`: The host computer that runs the caching server (usually `localhost`)
 
+**Email SMTP configuration**
+
+If you want to configure Baserow to send emails you will have to add the following 
+environment variables to the `/etc/supervisor/conf.d/baserow.conf` environment block. 
+Otherwise, by default Baserow will not send emails and instead just log them in 
+`/var/log/baserow/worker.error`.
+
+* `EMAIL_SMTP` (default ``): Providing anything other than an empty string will enable
+  SMTP email.
+* `EMAIL_SMTP_HOST` (default `localhost`): The hostname of the SMTP server.
+* `EMAIL_SMTP_USE_TLS` (default ``): Providing anything other than an empty string will
+  enable connecting to the SMTP server via TLS.
+* `EMAIL_SMTP_PORT` (default `25`): The port of the SMTP server.
+* `EMAIL_SMTP_USER` (default ``): The username for the SMTP server.
+* `EMAIL_SMTP_PASSWORD` (default ``): The password of the SMTP server.
+* `FROM_EMAIL` (default `no-reply@localhost`): The 'from' email address of the emails
+  that the platform sends. Like when a user requests a password recovery.
 
 After modifying these files you need to make supervisor reread the files and apply the
 changes.

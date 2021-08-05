@@ -37,6 +37,12 @@ export function populateRow(row, rowMetadata = {}) {
   return row
 }
 
+function extractMetadataAndPopulateRow(data, rowIndex) {
+  const metadata = data.row_metadata || {}
+  const row = data.results[rowIndex]
+  populateRow(row, metadata[row.id])
+}
+
 export const state = () => ({
   // The last used grid id.
   lastGridId: -1,
@@ -458,7 +464,7 @@ export const actions = {
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
-            populateRow(data.results[index], data.row_metadata)
+            extractMetadataAndPopulateRow(data, index)
           })
           commit('ADD_ROWS', {
             rows: data.results,
@@ -596,7 +602,7 @@ export const actions = {
       search: getters.getServerSearchTerm,
     })
     data.results.forEach((part, index) => {
-      populateRow(data.results[index], data.row_metadata)
+      extractMetadataAndPopulateRow(data, index)
     })
     commit('CLEAR_ROWS')
     commit('ADD_ROWS', {
@@ -668,7 +674,7 @@ export const actions = {
         // If there are results we can replace the existing rows so that the user stays
         // at the same scroll offset.
         data.results.forEach((part, index) => {
-          populateRow(data.results[index], data.row_metadata)
+          extractMetadataAndPopulateRow(data, index)
         })
         commit('ADD_ROWS', {
           rows: data.results,

@@ -138,7 +138,7 @@ export const actions = {
         updated_on: moment().toISOString(),
         comment,
         row_id: rowId,
-        table: tableId,
+        table_id: tableId,
         user_id: rootGetters['auth/getUserId'],
         first_name: rootGetters['auth/getName'],
         id: temporaryId,
@@ -163,7 +163,7 @@ export const actions = {
   async forceCreate(context, { rowComment }) {
     const { commit, state } = context
     if (
-      state.loadedTableId === rowComment.table &&
+      state.loadedTableId === rowComment.table_id &&
       state.loadedRowId === rowComment.row_id
     ) {
       commit('ADD_ROW_COMMENTS', { comments: [rowComment], loading: false })
@@ -174,7 +174,7 @@ export const actions = {
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
       await viewType.rowMetadataUpdated(
         { store: this },
-        rowComment.table,
+        rowComment.table_id,
         rowComment.row_id,
         'row_comment_count',
         (count) => (count ? count + 1 : 1),

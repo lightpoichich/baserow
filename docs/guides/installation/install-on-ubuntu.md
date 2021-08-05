@@ -233,6 +233,9 @@ $ npm init -y && npm install mjml
 $ cd /baserow
 ```
 
+You will then later on need to set the environment variables discussed in the
+Email SMTP configuration section to get Baserow sending emails.
+
 ## Install & Configure Supervisor
 
 Supervisor is an application that starts and keeps track of processes and will restart

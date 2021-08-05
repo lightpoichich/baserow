@@ -33,14 +33,13 @@ with the following commands:
 
 ```
 $ sudo apt install postgresql postgresql-contrib -y
-$ sudo -u postgres psql
-postgres=# create database baserow;
-CREATE DATABASE
-postgres=# create user baserow with encrypted password 'yourpassword';
-CREATE ROLE
-postgres=# grant all privileges on database baserow to baserow;
-GRANT
-postgres=# \q
+# Make sure you replace 'yourpassword' below with a secure password for your database
+# user.
+$ sudo -u postgres psql << EOF
+create database baserow;
+create user baserow with encrypted password 'yourpassword';
+grant all privileges on database baserow to baserow;
+EOF
 ```
 
 Make sure that you use a secure password instead of `yourpassword`! Also take care that
@@ -82,8 +81,8 @@ In this section, we will install Baserow itself. We will need a new user called
 # Create baserow user
 $ sudo useradd baserow
 $ sudo passwd baserow
-Enter new UNIX password: yourpassword
-Retype new UNIX password: yourpassword
+# Enter new UNIX password: yourpassword
+# Retype new UNIX password: yourpassword
 
 # Change to root user
 $ sudo -i
@@ -322,7 +321,7 @@ aren't any additional instructions in the previous release blog posts.
 
 Follow these steps if you installed after June first 2021:
 
-```
+```bash
 $ cd /baserow/baserow
 $ git pull
 $ cd /baserow
@@ -344,7 +343,7 @@ $ supervisorctl restart all
 
 Follow these steps if you installed before June first 2021.
 
-```
+```bash
 $ cd /baserow
 $ git pull
 $ source backend/env/bin/activate

@@ -88,6 +88,7 @@ class RowMetadataType(Instance, abc.ABC):
         """
         Used to construct the rest api documentation. Should be a serializer field which
         represents the values in the dict returned by generate_metadata_for_rows.
+
         :return: A drf field with help_text and other example data set for use by the
             api documentation.
         """

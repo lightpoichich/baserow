@@ -153,7 +153,15 @@ export class ViewType extends Registerable {
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowCreated(context, tableId, fields, primary, values, storePrefix) {}
+  rowCreated(
+    context,
+    tableId,
+    fields,
+    primary,
+    values,
+    metadata,
+    storePrefix
+  ) {}
 
   /**
    * Event that is called when a row is updated from an outside source, so for example
@@ -339,6 +347,7 @@ export class GridViewType extends ViewType {
     fields,
     primary,
     values,
+    metadata,
     storePrefix = ''
   ) {
     if (this.isCurrentView(store, tableId)) {
@@ -347,6 +356,7 @@ export class GridViewType extends ViewType {
         fields,
         primary,
         values,
+        metadata,
       })
       await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],

@@ -17,7 +17,7 @@ import { RefreshCancelledError } from '@baserow/modules/core/errors'
 
 export function populateRow(row, rowMetadata = {}) {
   row._ = {
-    metadata: rowMetadata[row.id] || {},
+    metadata: rowMetadata,
     loading: false,
     hover: false,
     selectedBy: [],
@@ -913,10 +913,10 @@ export const actions = {
    */
   createdNewRow(
     { commit, getters, dispatch },
-    { view, fields, primary, values }
+    { view, fields, primary, values, metadata }
   ) {
     const row = clone(values)
-    populateRow(row)
+    populateRow(row, metadata)
 
     // Check if the row belongs into the current view by checking if it matches the
     // filters and search.

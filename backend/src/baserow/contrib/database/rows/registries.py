@@ -17,9 +17,19 @@ class RowMetadataRegistry(Registry):
 
     name = "row_metadata"
 
+    def generate_and_merge_metadata_for_row(self, table, row_id: int) -> Dict[str, Any]:
+        """
+        Alternative for generate_and_merge_metadata_for_rows which takes a single row
+        id.
+        """
+
+        return self.generate_and_merge_metadata_for_rows(
+            table, (i for i in [row_id])
+        ).get(row_id, {})
+
     def generate_and_merge_metadata_for_rows(
         self, table, row_ids: Generator[int, None, None]
-    ) -> Dict[str, Dict[int, Dict[str, Any]]]:
+    ) -> Dict[int, Dict[str, Any]]:
         """
         For every type of row metadata will generate that type of metadata for each
         provided row in the row_ids generator. Then returns a dictionary keyed by the

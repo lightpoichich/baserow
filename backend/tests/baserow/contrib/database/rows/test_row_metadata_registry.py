@@ -49,3 +49,5 @@ def test_merges_together_row_metadata_by_type_and_row_id():
         1: {"row_id": 1},
         2: {"is_even": True, "row_id": 2},
     }
+    result = registry.generate_and_merge_metadata_for_row(None, 0)
+    assert result == {"is_even": True, "row_id": 0}

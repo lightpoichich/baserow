@@ -117,6 +117,7 @@ export const registerRealtimeEvents = (realtime) => {
         store.getters['field/getAll'],
         store.getters['field/getPrimary'],
         data.row,
+        data.metadata,
         'page/'
       )
     }

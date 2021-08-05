@@ -236,6 +236,11 @@ $ mkdir /var/log/baserow/
 # Move configuration files
 $ cd /baserow
 $ cp baserow/docs/guides/installation/configuration-files/supervisor.conf /etc/supervisor/conf.d/baserow.conf
+
+# Change the server_name values
+$ sed -i 's/\*YOUR_BACKEND_DOMAIN\*/api.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+$ sed -i 's/\*YOUR_WEB_FRONTEND_DOMAIN\*/baserow.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+$ sed -i 's/\*YOUR_MEDIA_DOMAIN\*/media.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
 ```
 
 You will need to edit the `baserow.conf` file (located now at 

@@ -7,15 +7,7 @@ apt-get install git -y
 REPO_URL=$1
 BRANCH_NAME=$2
 
-# Setup a test user who represents the actual user following the guide
-USERNAME=test_user
-# Let this test user sudo without a password so we don't need to try and enter it interactively during the doc script test
-echo %$USERNAME ALL=NOPASSWD:ALL > /etc/sudoers.d/$USERNAME
-chmod 0440 /etc/sudoers.d/$USERNAME
-useradd -m -s /bin/bash -U $USERNAME 
-usermod -aG sudo $USERNAME  
-
-cd /home/$USERNAME/
+cd ~
 git clone -b $BRANCH_NAME $REPO_URL download_tutorial_repo
 cp download_tutorial_repo/docs/guides/installation/install-on-ubuntu.md install-on-ubuntu.md
 
@@ -39,5 +31,5 @@ sed 's/media.domain.com/media.baserow.vagrant.test/g' > install-on-ubuntu.sh
 # set. See https://stackoverflow.com/questions/42997258/virtualenv-activate-script-wont-run-in-bash-script-with-set-euo
 echo -e "set -eox pipefail\n$(cat install-on-ubuntu.sh)" > install-on-ubuntu.sh
 
-chown $USERNAME install-on-ubuntu.sh
-su $USERNAME -c "bash /home/$USERNAME/install-on-ubuntu.sh"
+# TODO Figure out the right sudo su incantation to run this as a normal user with sudo
+bash install-on-ubuntu.sh

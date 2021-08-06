@@ -16,6 +16,11 @@
     </div>
     <div class="control">
       <div class="control__elements">
+        <ViewFilterTypeTimeZone :value="values.timezone" />
+      </div>
+    </div>
+    <div class="control">
+      <div class="control__elements">
         <Checkbox v-model="values.date_include_time">Include time</Checkbox>
       </div>
     </div>
@@ -41,10 +46,13 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
+import timezone from '@baserow/modules/database/mixins/timezone'
+import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone.vue'
 
 export default {
   name: 'FieldDateSubForm',
-  mixins: [form, fieldSubForm],
+  components: { ViewFilterTypeTimeZone },
+  mixins: [form, fieldSubForm, timezone],
   data() {
     return {
       allowedValues: ['date_format', 'date_include_time', 'date_time_format'],

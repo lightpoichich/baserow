@@ -11,6 +11,7 @@ import { Registerable } from '@baserow/modules/core/registry'
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
+import FieldCreatedOnLastModifiedSubForm from '@baserow/modules/database/components/field/FieldCreatedOnLastModifiedSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSingleSelectSubForm from '@baserow/modules/database/components/field/FieldSingleSelectSubForm'
 
@@ -996,6 +997,10 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return true
   }
 
+  getFormComponent() {
+    return FieldCreatedOnLastModifiedSubForm
+  }
+
   getFormViewFieldComponent() {
     return null
   }
@@ -1022,7 +1027,6 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
   // case of LastModified or CreatedOn Fields
   // is simply the current time.
   getEmptyValue() {
-    console.log('HERE I AM!')
     const currentDate = moment().utc().format()
     return currentDate
   }

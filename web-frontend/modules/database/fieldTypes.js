@@ -1052,6 +1052,25 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
   prepareValueForCopy(field, value) {
     return this.toHumanReadableString(field, value)
   }
+
+  getDocsDataType(field) {
+    return null
+  }
+
+  getDocsDescription(field) {
+    const firstPart = 'This is a read only field.'
+    return field.date_include_time
+      ? `${firstPart} The response will be a datetime in ISO format.`
+      : `${firstPart} The response will be a date in ISO format.`
+  }
+
+  getDocsRequestExample(field) {
+    return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {

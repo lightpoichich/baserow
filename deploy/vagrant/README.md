@@ -4,7 +4,7 @@ This folder contains a vagrant file and bootstrap.sh which together will start u
 local Ubuntu 18.04 virtual machine with Baserow installed and working. To do this it
 extracts the bash from the install-on-ubuntu.md guide and runs it in a fresh new VM.
 
-> WARNING: Using this vagrant setup is currently intended only for local testing and 
+> WARNING: Using this vagrant setup is currently intended only for local testing and
 > development.
 
 ## How to run
@@ -12,7 +12,12 @@ extracts the bash from the install-on-ubuntu.md guide and runs it in a fresh new
 1. Install virtualbox - https://www.virtualbox.org/wiki/Downloads
 1. Install vagrant - https://www.vagrantup.com/downloads
 1. `cd tests/vagrant_ubuntu_install`
-1. `vagrant plugin install landrush`
+1. Install required vagrant plugins:
+    1. `vagrant plugin install landrush`
+       1. Used to setup a local dns server so you can visit Baserow using a domain
+    1. `vagrant plugin install vagrant-vbguest`
+       1. So we can mount in your local baserow repo and use that to install Baserow
+    1. `vagrant vbguest`
 1. On Ubuntu I had to follow the instructions
    in https://github.com/vagrant-landrush/landrush/blob/master/doc/Usage.adoc#visibility-on-the-host
     1. Also see https://gist.github.com/neuroticnerd/30b12648a933677ad2c4 for more

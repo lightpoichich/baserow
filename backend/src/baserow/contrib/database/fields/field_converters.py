@@ -1,6 +1,7 @@
 from .registries import FieldConverter
 from .models import CreatedOnField, LastModifiedField, LinkRowField, FileField
 from django.db import models
+from django.db.models.expressions import RawSQL
 
 
 class RecreateFieldConverter(FieldConverter):
@@ -58,9 +59,7 @@ class FileFieldConverter(RecreateFieldConverter):
         ) or (not isinstance(from_field, FileField) and isinstance(to_field, FileField))
 
 
-class LastModifiedFieldConverter(RecreateFieldConverter):
-    type = "last_modified"
-
+class CreatedOnLastModifiedBaseConverter(RecreateFieldConverter):
     def alter_field(
         self,
         from_field,
@@ -73,25 +72,51 @@ class LastModifiedFieldConverter(RecreateFieldConverter):
         connection,
     ):
         """
-        In case there is a conversion for the LastModifiedField from
-        'without timestamp' to 'with timestamp' we need to make sure
-        that the field gets the timestamp from the 'updated_on'
-        column.
+        Base class for converting to the correct update_on/created_on
+        Values, when changing from datetime to date or vice versa.
         """
 
+        if self.type == "last_modified":
+            db_column_to_use = "updated_on"
+        else:
+            db_column_to_use = "created_on"
+
+        is_from_datetime_to_date = (
+            from_field.date_include_time and not to_field.date_include_time
+        )
+        is_from_date_to_datetime = (
+            not from_field.date_include_time and to_field.date_include_time
+        )
         with connection.schema_editor() as schema_editor:
             schema_editor.remove_field(from_model, from_model_field)
             schema_editor.add_field(to_model, to_model_field)
 
-        to_model.objects.all().update(
-            **{f"{to_field.db_column}": models.F("updated_on")}
-        )
+        if is_from_date_to_datetime:
+            to_model.objects.all().update(
+                **{f"{to_field.db_column}": models.F(db_column_to_use)}
+            )
+            return
+
+        if is_from_datetime_to_date:
+            annotation_sql = f"{db_column_to_use} at time zone '{to_field.timezone}'"
+            sql = RawSQL(
+                annotation_sql,
+                params=[],
+                output_field=to_model_field,
+            )
+            to_model.objects.all().annotate(val=sql).update(
+                **{f"{to_field.db_column}": models.F("val")}
+            )
+
+
+class LastModifiedFieldConverter(CreatedOnLastModifiedBaseConverter):
+    type = "last_modified"
 
     def is_applicable(self, from_model, from_field, to_field):
         """
         The Field Converter for the LastModifiedField should only run if there is a
         conversion from LastModifiedField without timestamp to LastModifiedField
-        with timestamp.
+        with timestamp or vice versa.
         """
 
         if not isinstance(from_field, LastModifiedField) or not isinstance(
@@ -99,43 +124,22 @@ class LastModifiedFieldConverter(RecreateFieldConverter):
         ):
             return False
 
-        return not from_field.date_include_time and to_field.date_include_time
-
-
-class CreatedOnFieldConverter(RecreateFieldConverter):
-    type = "created_on"
-
-    def alter_field(
-        self,
-        from_field,
-        to_field,
-        from_model,
-        to_model,
-        from_model_field,
-        to_model_field,
-        user,
-        connection,
-    ):
-        """
-        In case there is a conversion for the CreatedOnField from
-        'without timestamp' to 'with timestamp' we need to make sure
-        that the field gets the timestamp from the 'created_on'
-        column.
-        """
-
-        with connection.schema_editor() as schema_editor:
-            schema_editor.remove_field(from_model, from_model_field)
-            schema_editor.add_field(to_model, to_model_field)
-
-        to_model.objects.all().update(
-            **{f"{to_field.db_column}": models.F("created_on")}
+        return (
+            not from_field.date_include_time
+            and to_field.date_include_time
+            or from_field.date_include_time
+            and not to_field.date_include_time
         )
+
+
+class CreatedOnFieldConverter(CreatedOnLastModifiedBaseConverter):
+    type = "created_on"
 
     def is_applicable(self, from_model, from_field, to_field):
         """
         The Field Converter for the CreatedOnField should only run if there is a
         conversion from CreatedOnField without timestamp to CreatedOnField
-        with timestamp.
+        with timestamp or vice versa.
         """
 
         if not isinstance(from_field, CreatedOnField) or not isinstance(
@@ -143,4 +147,6 @@ class CreatedOnFieldConverter(RecreateFieldConverter):
         ):
             return False
 
-        return not from_field.date_include_time and to_field.date_include_time
+        return (not from_field.date_include_time and to_field.date_include_time) or (
+            from_field.date_include_time and not to_field.date_include_time
+        )

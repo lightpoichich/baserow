@@ -123,6 +123,8 @@ class DatabaseConfig(AppConfig):
             BooleanViewFilterType,
             SingleSelectEqualViewFilterType,
             SingleSelectNotEqualViewFilterType,
+            LinkRowHasViewFilterType,
+            LinkRowHasNotViewFilterType,
         )
 
         view_filter_type_registry.register(EqualViewFilterType())
@@ -141,6 +143,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
+        view_filter_type_registry.register(LinkRowHasViewFilterType())
+        view_filter_type_registry.register(LinkRowHasNotViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())
         view_filter_type_registry.register(EmptyViewFilterType())
         view_filter_type_registry.register(NotEmptyViewFilterType())

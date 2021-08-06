@@ -275,7 +275,11 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
 
     type = "base_date_field_lookup_type"
     query_field_lookup = ""
-    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
 
     @staticmethod
     def parse_date(value: str) -> datetime.date:
@@ -334,7 +338,11 @@ class DateBeforeViewFilterType(BaseDateFieldLookupFilterType):
 
     type = "date_before"
     query_field_lookup = "__lt"
-    compatible_field_types = [DateFieldType.type, LastModifiedFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
 
 
 class DateAfterViewFilterType(BaseDateFieldLookupFilterType):

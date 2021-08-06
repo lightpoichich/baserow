@@ -847,7 +847,6 @@ export const actions = {
       const name = `field_${field.id}`
       if (!(name in values)) {
         const fieldType = this.$registry.get('field', field._.type.type)
-        console.log('HIER BIN ICH MIT FIELD TYPE: ', fieldType)
         const empty = fieldType.getEmptyValue(field)
         values[name] = empty
 

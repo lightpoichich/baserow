@@ -43,6 +43,9 @@ def before_row_update(sender, row, user, table, model, **kwargs):
 
 @receiver(row_signals.row_updated)
 def row_updated(sender, row, user, table, model, before_return, **kwargs):
+    from baserow.contrib.database.rows.registries import row_metadata_registry
+
+    metadata = row_metadata_registry.generate_and_merge_metadata_for_row(table, row.id)
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
@@ -56,6 +59,7 @@ def row_updated(sender, row, user, table, model, before_return, **kwargs):
                 "row": get_row_serializer_class(model, RowSerializer, is_response=True)(
                     row
                 ).data,
+                "metadata": metadata,
             },
             getattr(user, "web_socket_id", None),
             table_id=table.id,

@@ -30,7 +30,7 @@
             </template>
           </InfiniteScroll>
         </div>
-        <div class="row-comments__foot">
+        <div v-if="!readOnly" class="row-comments__foot">
           <AutoExpandableTextarea
             ref="AutoExpandableTextarea"
             v-model="comment"
@@ -63,6 +63,10 @@ export default {
       required: true,
       type: Object,
     },
+    readOnly: {
+      required: true,
+      type: Boolean,
+    },
   },
   data() {
     return {
@@ -93,7 +97,7 @@ export default {
   methods: {
     async postComment() {
       const comment = this.comment.trim()
-      if (!comment) {
+      if (!comment || this.readOnly) {
         return
       }
       try {

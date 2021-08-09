@@ -1,5 +1,3 @@
-import moment from 'moment'
-
 export default {
   data() {
     return {
@@ -11,7 +9,7 @@ export default {
   },
   methods: {
     getCurrentTimezone() {
-      return moment.tz.guess()
+      return new Intl.DateTimeFormat().resolvedOptions().timeZone
     },
   },
 }

@@ -7,12 +7,7 @@ import {
 export default {
   methods: {
     getTimezone(field) {
-      let timezone = 'UTC'
-
-      if (field.timezone) {
-        timezone = field.timezone
-      }
-      return timezone
+      return field.timezone || 'UTC'
     },
     getDate(field, value) {
       if (value === null) {

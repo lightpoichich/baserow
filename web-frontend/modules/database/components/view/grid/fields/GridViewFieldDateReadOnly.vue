@@ -23,6 +23,7 @@ import gridField from '@baserow/modules/database/mixins/gridField'
 import readOnlyDateField from '@baserow/modules/database/mixins/readOnlyDateField'
 
 export default {
+  name: 'GridViewFieldDateReadOnly',
   mixins: [gridField, readOnlyDateField],
   props: {
     isReadOnly: {

@@ -1,4 +1,3 @@
-import pytz
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
@@ -9,7 +8,7 @@ from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
 )
-from baserow.contrib.database.fields.mixins import BaseDateMixin
+from baserow.contrib.database.fields.mixins import BaseDateMixin, TimezoneMixin
 from baserow.core.utils import to_snake_case, remove_special_characters
 
 NUMBER_TYPE_INTEGER = "INTEGER"
@@ -163,40 +162,12 @@ class DateField(Field, BaseDateMixin):
     pass
 
 
-class LastModifiedField(Field, BaseDateMixin):
-    TIMEZONE_CHOICES = list(zip(pytz.all_timezones, pytz.all_timezones))
-    timezone = models.CharField(
-        max_length=255,
-        blank=False,
-        help_text="Timezone of User during field creation.",
-        choices=TIMEZONE_CHOICES,
-        default="UTC",
-    )
-
-    def save(self, *args, **kwargs):
-        """Check if the timezone is a valid choice."""
-
-        if not any(self.timezone in _tuple for _tuple in self.TIMEZONE_CHOICES):
-            raise ValueError(f"{self.timezone} is not a valid choice.")
-        super(LastModifiedField, self).save(*args, **kwargs)
+class LastModifiedField(Field, BaseDateMixin, TimezoneMixin):
+    pass
 
 
-class CreatedOnField(Field, BaseDateMixin):
-    TIMEZONE_CHOICES = list(zip(pytz.all_timezones, pytz.all_timezones))
-    timezone = models.CharField(
-        max_length=255,
-        blank=False,
-        help_text="Timezone of User during field creation.",
-        choices=TIMEZONE_CHOICES,
-        default="UTC",
-    )
-
-    def save(self, *args, **kwargs):
-        """Check if the timezone is a valid choice."""
-
-        if not any(self.timezone in _tuple for _tuple in self.TIMEZONE_CHOICES):
-            raise ValueError(f"{self.timezone} is not a valid choice.")
-        super(CreatedOnField, self).save(*args, **kwargs)
+class CreatedOnField(Field, BaseDateMixin, TimezoneMixin):
+    pass
 
 
 class LinkRowField(Field):

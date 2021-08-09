@@ -1,4 +1,5 @@
 from django.db import models
+import pytz
 
 
 DATE_FORMAT = {
@@ -87,3 +88,22 @@ class BaseDateMixin(models.Model):
             return f"{date_format} {time_format}"
         else:
             return date_format
+
+
+class TimezoneMixin(models.Model):
+    timezone = models.CharField(
+        max_length=255,
+        blank=False,
+        help_text="Timezone of User during field creation.",
+        default="UTC",
+    )
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        """Check if the timezone is a valid choice."""
+
+        if self.timezone not in pytz.all_timezones:
+            raise ValueError(f"{self.timezone} is not a valid choice.")
+        super().save(*args, **kwargs)

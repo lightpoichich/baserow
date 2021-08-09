@@ -1,3 +1,4 @@
+import pytz
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, date
@@ -551,6 +552,9 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     can_be_in_form_view = False
     allowed_fields = DateFieldType.allowed_fields + ["timezone"]
     serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
+    serializer_field_overrides = {
+        "timezone": serializers.ChoiceField(choices=pytz.all_timezones, required=True)
+    }
     source_field_name = None
     model_field_kwargs = {}
 

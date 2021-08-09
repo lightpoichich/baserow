@@ -655,8 +655,8 @@ class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
     model_class = LastModifiedField
 
     def get_model_field(self, instance, **kwargs):
-        kwargs["null"] = True
-        kwargs["blank"] = True
+        kwargs["null"] = False
+        kwargs["blank"] = False
 
         if instance.date_include_time:
             return models.DateTimeField(auto_now=True, **kwargs)
@@ -698,8 +698,8 @@ class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
     model_class = CreatedOnField
 
     def get_model_field(self, instance, **kwargs):
-        kwargs["null"] = True
-        kwargs["blank"] = True
+        kwargs["null"] = False
+        kwargs["blank"] = False
 
         if instance.date_include_time:
             return models.DateTimeField(auto_now_add=True, **kwargs)

@@ -217,42 +217,40 @@ class DateEqualViewFilterType(ViewFilterType):
         except (ParserError, ValueError):
             return Q()
 
-        # Since the
-        has_timezone = False
-        tmp_field_name = f"tmp_{field_name}"
-        if hasattr(field, "timezone"):
-            timezone_string = field.timezone
-            has_timezone = True
-        else:
-            timezone_string = "UTC"
-
         # If the length of the string value is lower than 10 characters we know it is
         # only a date so we can match only on year, month and day level. This way if a
         # date is provided, but if it tries to compare with a models.DateTimeField it
         # will still give back accurate results.
-        if len(value) <= 10 and has_timezone:
-            return AnnotatedQ(
-                annotation={
-                    f"{tmp_field_name}": RawSQL(
-                        f"{field_name} at time zone '{timezone_string}'",
-                        [],
-                        output_field=model_field,
-                    )
-                },
-                q={
-                    f"{tmp_field_name}__year": datetime.year,
-                    f"{tmp_field_name}__month": datetime.month,
-                    f"{tmp_field_name}__day": datetime.day,
-                },
-            )
-        elif len(value) <= 10 and not has_timezone:
-            return Q(
-                **{
-                    f"{field_name}__year": datetime.year,
-                    f"{field_name}__month": datetime.month,
-                    f"{field_name}__day": datetime.day,
-                }
-            )
+        # Since the LastModified and CreateOn fields are stored for a specific timezone
+        # we need to make sure to take this timezone into account when comparing to
+        # the "equals_date"
+        has_timezone = hasattr(field, "timezone")
+        if len(value) <= 10:
+            if has_timezone:
+                tmp_field_name = f"tmp_{field_name}"
+                timezone_string = field.timezone
+                return AnnotatedQ(
+                    annotation={
+                        f"{tmp_field_name}": RawSQL(
+                            f"{field_name} at time zone '{timezone_string}'",
+                            [],
+                            output_field=model_field,
+                        )
+                    },
+                    q={
+                        f"{tmp_field_name}__year": datetime.year,
+                        f"{tmp_field_name}__month": datetime.month,
+                        f"{tmp_field_name}__day": datetime.day,
+                    },
+                )
+            else:
+                return Q(
+                    **{
+                        f"{field_name}__year": datetime.year,
+                        f"{field_name}__month": datetime.month,
+                        f"{field_name}__day": datetime.day,
+                    }
+                )
         else:
             return Q(**{field_name: datetime})
 

@@ -8,8 +8,8 @@ from baserow.core.mixins import (
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
-    BaseDateMixin,
 )
+from baserow.contrib.database.fields.mixins import BaseDateMixin
 from baserow.core.utils import to_snake_case, remove_special_characters
 
 NUMBER_TYPE_INTEGER = "INTEGER"

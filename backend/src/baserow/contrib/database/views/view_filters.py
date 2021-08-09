@@ -6,8 +6,8 @@ from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Q, IntegerField, BooleanField, DateTimeField
-from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.db.models.expressions import RawSQL
+from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
 from baserow.contrib.database.fields.field_filters import AnnotatedQ
@@ -31,6 +31,7 @@ from baserow.contrib.database.fields.field_types import (
     PhoneNumberFieldType,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.core.expressions import Timezone
 
 from .registries import ViewFilterType
 
@@ -226,31 +227,25 @@ class DateEqualViewFilterType(ViewFilterType):
         # the "equals_date"
         has_timezone = hasattr(field, "timezone")
         if len(value) <= 10:
+
+            def query_dict(query_field_name):
+                return {
+                    f"{query_field_name}__year": datetime.year,
+                    f"{query_field_name}__month": datetime.month,
+                    f"{query_field_name}__day": datetime.day,
+                }
+
             if has_timezone:
-                tmp_field_name = f"tmp_{field_name}"
                 timezone_string = field.timezone
+                tmp_field_name = f"{field_name}_timezone_{timezone_string}"
                 return AnnotatedQ(
                     annotation={
-                        f"{tmp_field_name}": RawSQL(
-                            f"{field_name} at time zone '{timezone_string}'",
-                            [],
-                            output_field=model_field,
-                        )
+                        f"{tmp_field_name}": Timezone(field_name, timezone_string)
                     },
-                    q={
-                        f"{tmp_field_name}__year": datetime.year,
-                        f"{tmp_field_name}__month": datetime.month,
-                        f"{tmp_field_name}__day": datetime.day,
-                    },
+                    q=query_dict(tmp_field_name),
                 )
             else:
-                return Q(
-                    **{
-                        f"{field_name}__year": datetime.year,
-                        f"{field_name}__month": datetime.month,
-                        f"{field_name}__day": datetime.day,
-                    }
-                )
+                return Q(**query_dict(field_name))
         else:
             return Q(**{field_name: datetime})
 
@@ -307,15 +302,13 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
-            field_key = f"tmp_{field_name}{query_date_lookup}{self.query_field_lookup}"
-            if hasattr(field, "timezone"):
-                timezone_string = field.timezone
-            else:
-                timezone_string = "UTC"
+            timezone_string = getattr(field, "timezone", "UTC")
+            tmp_field_name = f"{field_name}_timezone_{timezone_string}"
+            field_key = f"{tmp_field_name}{query_date_lookup}{self.query_field_lookup}"
 
             return AnnotatedQ(
                 annotation={
-                    f"tmp_{field_name}": RawSQL(
+                    f"{tmp_field_name}": RawSQL(
                         f"{field_name} at time zone '{timezone_string}'",
                         [],
                         output_field=model_field,
@@ -372,20 +365,15 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
         timezone_object = timezone(timezone_string)
         now = datetime.utcnow().astimezone(timezone_object)
         query_dict = dict()
+        tmp_field_name = f"{field_name}_timezone_{timezone_string}"
         if "year" in self.query_for:
-            query_dict[f"tmp_{field_name}__year"] = now.year
+            query_dict[f"{tmp_field_name}__year"] = now.year
         if "month" in self.query_for:
-            query_dict[f"tmp_{field_name}__month"] = now.month
+            query_dict[f"{tmp_field_name}__month"] = now.month
         if "day" in self.query_for:
-            query_dict[f"tmp_{field_name}__day"] = now.day
+            query_dict[f"{tmp_field_name}__day"] = now.day
         return AnnotatedQ(
-            annotation={
-                f"tmp_{field_name}": RawSQL(
-                    f"{field_name} at time zone '{timezone_string}'",
-                    [],
-                    output_field=model_field,
-                )
-            },
+            annotation={f"{tmp_field_name}": Timezone(field_name, timezone_string)},
             q=query_dict,
         )
 

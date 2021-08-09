@@ -578,6 +578,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     def get_serializer_field(self, instance, **kwargs):
         if not instance.date_include_time:
             kwargs["format"] = "%Y-%m-%d"
+            kwargs["default_timezone"] = timezone(instance.timezone)
 
         return serializers.DateTimeField(
             **{

@@ -12,7 +12,6 @@
   >
     <component
       :is="$options.methods.getFunctionalComponent(parent, props)"
-      v-bind="$options.methods.getAdditionalProps(parent, props)"
       v-if="
         !parent.isCellSelected(props.field.id) &&
         // It could happen that the selected component needs to be alive in order to
@@ -29,7 +28,6 @@
     />
     <component
       :is="$options.methods.getComponent(parent, props)"
-      v-bind="$options.methods.getAdditionalProps(parent, props)"
       v-else
       ref="selectedField"
       :field="props.field"
@@ -68,11 +66,6 @@ export default {
       return parent.$registry
         .get('field', props.field.type)
         .getFunctionalGridViewFieldComponent()
-    },
-    getAdditionalProps(parent, props) {
-      return parent.$registry
-        .get('field', props.field.type)
-        .getAdditionalProps()
     },
     /**
      * Returns the component related to the field type. This component will only be

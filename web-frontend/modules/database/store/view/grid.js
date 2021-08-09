@@ -1083,7 +1083,7 @@ export const actions = {
         currentFieldValue
       )
 
-      if (optimisticFieldValue && currentFieldValue !== optimisticFieldValue) {
+      if (currentFieldValue !== optimisticFieldValue) {
         optimisticFieldValues[fieldID] = optimisticFieldValue
         valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
       }

@@ -4,18 +4,13 @@
       class="grid-field-date"
       :class="{ 'grid-field-date--has-time': props.field.date_include_time }"
     >
-      <div
-        ref="dateDisplay"
-        class="grid-field-date__date"
-        :class="{ 'grid-field-date__date': props.isReadOnly }"
-      >
+      <div ref="dateDisplay" class="grid-field-date__date">
         {{ $options.methods.getDate(props.field, props.value) }}
       </div>
       <div
         v-if="props.field.date_include_time"
         ref="timeDisplay"
         class="grid-field-date__time"
-        :class="{ 'grid-field-date__time': props.isReadOnly }"
       >
         {{ $options.methods.getTime(props.field, props.value) }}
       </div>
@@ -30,11 +25,6 @@ export default {
   name: 'FunctionalGridViewFieldDate',
   mixins: [readOnlyDateField],
   props: {
-    isReadOnly: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     field: {
       type: Object,
       required: true,

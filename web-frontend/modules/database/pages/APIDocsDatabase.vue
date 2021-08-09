@@ -1024,15 +1024,9 @@ export default {
     for (const i in database.tables) {
       const table = database.tables[i]
       const { data } = await FieldService(app.$client).fetchAll(table.id)
-      // filter out read only fields since we don't want to show those
-      // in certain areas.
-      const filteredData = data.filter((field) => {
-        const fieldType = app.$registry.get('field', field.type)
-        return !fieldType.isReadOnly()
-      })
       fields[table.id] = data.map((field) => populateField(field))
-      withoutReadOnly[table.id] = filteredData.map((field) =>
-        populateField(field)
+      withoutReadOnly[table.id] = fields[table.id].filter(
+        (field) => !field._.isReadOnly
       )
     }
 
@@ -1122,18 +1116,17 @@ export default {
     getRequestExample(table, response = false) {
       const item = {}
 
-      let fieldsToLoopOver
       // In case we are creating a sample response
       // read only fields need to be included.
       // They should be left out in the case of
       // creating a sample request.
+      let fieldsToLoopOver = this.fields[table.id]
       if (!response) {
-        fieldsToLoopOver = this.fields[table.id].filter(
+        fieldsToLoopOver = fieldsToLoopOver.filter(
           (field) => !field._.isReadOnly
         )
-      } else {
-        fieldsToLoopOver = this.fields[table.id]
       }
+
       fieldsToLoopOver.forEach((field) => {
         const example = response
           ? field._.responseExample

@@ -406,23 +406,15 @@ export class FieldType extends Registerable {
    * The return value can be used to immediately update the frontend (i.e. the vuex store).
    */
   getNewRowValue(field) {
-    return null
+    this.getEmptyValue(field)
   }
 
   /**
-   * Determines whether a grid refresh should be executed after the specific field
+   * Determines whether a data refresh should be executed after the specific field
    * has been added to a table.
    */
   shouldRefreshWhenAdded() {
     return false
-  }
-
-  /**
-   * Function which gets called in GridViewCells in order to
-   * pass additional FieldType specific props to the component.
-   */
-  getAdditionalProps() {
-    return {}
   }
 
   /**
@@ -466,10 +458,6 @@ export class TextFieldType extends FieldType {
 
   getEmptyValue(field) {
     return field.text_default
-  }
-
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
   }
 
   getSort(name, order) {
@@ -527,10 +515,6 @@ export class LongTextFieldType extends FieldType {
 
   getEmptyValue(field) {
     return ''
-  }
-
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
   }
 
   getSort(name, order) {
@@ -596,10 +580,6 @@ export class LinkRowFieldType extends FieldType {
 
   getEmptyValue(field) {
     return []
-  }
-
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
   }
 
   getCanSortInView() {
@@ -864,10 +844,6 @@ export class BooleanFieldType extends FieldType {
     return false
   }
 
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
-  }
-
   getSortIndicator() {
     return ['icon', 'square', 'check-square']
   }
@@ -913,6 +889,10 @@ class BaseDateFieldType extends FieldType {
 
   getFormComponent() {
     return FieldDateSubForm
+  }
+
+  getNewRowValue(field) {
+    return null
   }
 
   getSort(name, order) {
@@ -1039,12 +1019,6 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
 
   getFunctionalGridViewFieldComponent() {
     return FunctionalGridViewFieldDate
-  }
-
-  getAdditionalProps() {
-    return {
-      isReadOnly: true,
-    }
   }
 
   // The "new row" value for the new row in the
@@ -1205,10 +1179,6 @@ export class URLFieldType extends FieldType {
     return ''
   }
 
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
-  }
-
   getValidationError(field, value) {
     if (value === null || value === '') {
       return null
@@ -1279,10 +1249,6 @@ export class EmailFieldType extends FieldType {
 
   getEmptyValue(field) {
     return ''
-  }
-
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
   }
 
   getValidationError(field, value) {
@@ -1375,10 +1341,6 @@ export class FileFieldType extends FieldType {
 
   getEmptyValue(field) {
     return []
-  }
-
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
   }
 
   getCanSortInView() {
@@ -1589,10 +1551,6 @@ export class PhoneNumberFieldType extends FieldType {
 
   getEmptyValue(field) {
     return ''
-  }
-
-  getNewRowValue(field) {
-    return this.getEmptyValue(field)
   }
 
   getValidationError(field, value) {

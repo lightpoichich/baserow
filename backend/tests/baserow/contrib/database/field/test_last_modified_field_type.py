@@ -40,7 +40,7 @@ def test_last_modified_field_type(data_fixture):
 
     row = row_handler.create_row(user=user, table=table, values={}, model=model)
     assert row.last_date is not None
-    assert row.last_date == row.updated_on.date()
+    assert row.last_date.replace(microsecond=0) == row.updated_on.replace(microsecond=0)
 
     assert row.last_date is not None
     row_last_modified_2 = row.last_datetime.replace(microsecond=0)

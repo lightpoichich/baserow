@@ -89,14 +89,10 @@ class DatabaseConfig(AppConfig):
         from .fields.field_converters import (
             LinkRowFieldConverter,
             FileFieldConverter,
-            LastModifiedFieldConverter,
-            CreatedOnFieldConverter,
         )
 
         field_converter_registry.register(LinkRowFieldConverter())
         field_converter_registry.register(FileFieldConverter())
-        field_converter_registry.register(LastModifiedFieldConverter())
-        field_converter_registry.register(CreatedOnFieldConverter())
 
         from .views.view_types import GridViewType, FormViewType
 

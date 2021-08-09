@@ -33,6 +33,7 @@ from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.expressions import Timezone
 from .exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
@@ -373,9 +374,76 @@ class BooleanFieldType(FieldType):
         setattr(row, field_name, value == "true")
 
 
-class BaseDateFieldType(FieldType):
+class DateFieldType(FieldType):
+    type = "date"
+    model_class = DateField
     allowed_fields = ["date_format", "date_include_time", "date_time_format"]
     serializer_field_names = ["date_format", "date_include_time", "date_time_format"]
+
+    def prepare_value_for_db(self, instance, value):
+        """
+        This method accepts a string, date object or datetime object. If the value is a
+        string it will try to parse it using the dateutil's parser. Depending on the
+        field's date_include_time, a date or datetime object will be returned. A
+        datetime object will always have a UTC timezone. If the value is a datetime
+        object with another timezone it will be converted to UTC.
+
+        :param instance: The date field instance for which the value needs to be
+            prepared.
+        :type instance: DateField
+        :param value: The value that needs to be prepared.
+        :type value: str, date or datetime
+        :return: The date or datetime field with the correct value.
+        :rtype: date or datetime(tzinfo=UTC)
+        :raises ValidationError: When the provided date string could not be converted
+            to a date object.
+        """
+
+        if not value:
+            return value
+
+        utc = timezone("UTC")
+
+        if type(value) == str:
+            try:
+                value = parser.parse(value)
+            except ParserError:
+                raise ValidationError(
+                    "The provided string could not converted to a" "date."
+                )
+
+        if type(value) == date:
+            value = make_aware(datetime(value.year, value.month, value.day), utc)
+
+        if type(value) == datetime:
+            value = value.astimezone(utc)
+            return value if instance.date_include_time else value.date()
+
+        raise ValidationError(
+            "The value should be a date/time string, date object or " "datetime object."
+        )
+
+    def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+        python_format = field_object["field"].get_python_format()
+        return value.strftime(python_format)
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        if instance.date_include_time:
+            return models.DateTimeField(**kwargs)
+        else:
+            return models.DateField(**kwargs)
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        if not value:
+            return value
+
+        setattr(row, field_name, datetime.fromisoformat(value))
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -388,12 +456,6 @@ class BaseDateFieldType(FieldType):
             return serializers.DateField(
                 **{"required": required, "allow_null": not required, **kwargs}
             )
-
-    def get_export_value(self, value, field_object):
-        if value is None:
-            return value
-        python_format = field_object["field"].get_python_format()
-        return value.strftime(python_format)
 
     def random_value(self, instance, fake, cache):
         if instance.date_include_time:
@@ -485,84 +547,12 @@ class BaseDateFieldType(FieldType):
         return value.isoformat()
 
 
-class DateFieldType(BaseDateFieldType):
-    type = "date"
-    model_class = DateField
-
-    def prepare_value_for_db(self, instance, value):
-        """
-        This method accepts a string, date object or datetime object. If the value is a
-        string it will try to parse it using the dateutil's parser. Depending on the
-        field's date_include_time, a date or datetime object will be returned. A
-        datetime object will always have a UTC timezone. If the value is a datetime
-        object with another timezone it will be converted to UTC.
-
-        :param instance: The date field instance for which the value needs to be
-            prepared.
-        :type instance: DateField
-        :param value: The value that needs to be prepared.
-        :type value: str, date or datetime
-        :return: The date or datetime field with the correct value.
-        :rtype: date or datetime(tzinfo=UTC)
-        :raises ValidationError: When the provided date string could not be converted
-            to a date object.
-        """
-
-        if not value:
-            return value
-
-        utc = timezone("UTC")
-
-        if type(value) == str:
-            try:
-                value = parser.parse(value)
-            except ParserError:
-                raise ValidationError(
-                    "The provided string could not converted to a" "date."
-                )
-
-        if type(value) == date:
-            value = make_aware(datetime(value.year, value.month, value.day), utc)
-
-        if type(value) == datetime:
-            value = value.astimezone(utc)
-            return value if instance.date_include_time else value.date()
-
-        raise ValidationError(
-            "The value should be a date/time string, date object or " "datetime object."
-        )
-
-    def get_model_field(self, instance, **kwargs):
-        kwargs["null"] = True
-        kwargs["blank"] = True
-        if instance.date_include_time:
-            return models.DateTimeField(**kwargs)
-        else:
-            return models.DateField(**kwargs)
-
-    def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
-    ):
-        if not value:
-            return value
-
-        setattr(row, field_name, datetime.fromisoformat(value))
-
-
-class CreatedOnLastModifiedBaseFieldType(BaseDateFieldType):
+class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     can_be_in_form_view = False
-    allowed_fields = [
-        "date_format",
-        "date_include_time",
-        "date_time_format",
-        "timezone",
-    ]
-    serializer_field_names = [
-        "date_format",
-        "date_include_time",
-        "date_time_format",
-        "timezone",
-    ]
+    allowed_fields = DateFieldType.allowed_fields + ["timezone"]
+    serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
+    source_field_name = None
+    model_field_kwargs = {}
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -583,30 +573,24 @@ class CreatedOnLastModifiedBaseFieldType(BaseDateFieldType):
         python_format = field_object["field"].get_python_format()
         field = field_object["field"]
         field_timezone = timezone(field.timezone)
-        if field.date_include_time:
-            return value.astimezone(field_timezone).strftime(python_format)
-        else:
-            return value.strftime(python_format)
+        return value.astimezone(field_timezone).strftime(python_format)
 
     def get_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
+        if not instance.date_include_time:
+            kwargs["format"] = "%Y-%m-%d"
 
-        if instance.date_include_time:
-            return serializers.DateTimeField(
-                **{
-                    "required": required,
-                    "allow_null": not required,
-                    **kwargs,
-                }
-            )
-        else:
-            return serializers.DateField(
-                **{
-                    "required": required,
-                    "allow_null": not required,
-                    **kwargs,
-                }
-            )
+        return serializers.DateTimeField(
+            **{
+                "required": False,
+                **kwargs,
+            }
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        kwargs.update(self.model_field_kwargs)
+        return models.DateTimeField(**kwargs)
 
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
@@ -617,9 +601,9 @@ class CreatedOnLastModifiedBaseFieldType(BaseDateFieldType):
             annotation={
                 f"formatted_date_{field_name}": Coalesce(
                     RawSQL(
-                        f"""TO_CHAR({field_name} at time zone '{field.timezone}',
+                        f"""TO_CHAR({field_name} at time zone %s,
                         '{field.get_psql_format()}')""",
-                        [],
+                        [field.timezone],
                         output_field=CharField(),
                     ),
                     Value(""),
@@ -637,44 +621,33 @@ class CreatedOnLastModifiedBaseFieldType(BaseDateFieldType):
         to_field_type = field_type_registry.get_by_model(to_field)
         if to_field_type.type != self.type:
             sql_format = from_field.get_psql_format()
-            timezone = from_field.timezone
-
-            if from_field.date_include_time:
-                return f"""p_in = TO_CHAR(p_in::timestamptz at time zone '{timezone}',
-                '{sql_format}');"""
-            else:
-                return f"""p_in = TO_CHAR(p_in::date, '{sql_format}';"""
+            variables = {}
+            variable_name = f"{from_field.db_column}_timezone"
+            variables[variable_name] = from_field.timezone
+            return (
+                f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
+                '{sql_format}');""",
+                variables,
+            )
 
         return super().get_alter_column_prepare_old_value(
             connection, from_field, to_field
         )
 
-
-class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
-    type = "last_modified"
-    model_class = LastModifiedField
-
-    def get_model_field(self, instance, **kwargs):
-        kwargs["null"] = True
-        kwargs["blank"] = True
-
-        if instance.date_include_time:
-            return models.DateTimeField(auto_now=True, **kwargs)
-        else:
-            return models.DateField(auto_now=True, **kwargs)
-
     def after_create(self, field, model, user, connection, before):
+        """
+        Immediately after the field has been created, we need to populate the values
+        with the already existing source_field_name column.
+        """
+
         if field.date_include_time:
-            model.objects.all().update(**{f"{field.db_column}": models.F("updated_on")})
+            model.objects.all().update(
+                **{f"{field.db_column}": models.F(self.source_field_name)}
+            )
         else:
-            query = RawSQL(
-                f"updated_on at time zone '{field.timezone}'",
-                params=[],
-                output_field=model,
-            )
-            model.objects.annotate(tmp_column=query).all().update(
-                **{f"{field.db_column}": models.F("tmp_column")}
-            )
+            model.objects.annotate(
+                tmp_column=Timezone(self.source_field_name, field.timezone)
+            ).all().update(**{f"{field.db_column}": models.F("tmp_column")})
 
     def after_update(
         self,
@@ -687,53 +660,44 @@ class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
         altered_column,
         before,
     ):
+        """
+        If the field type has changed, we need to update the values from the from
+        the source_field_name column.
+        """
+
         if not isinstance(from_field, self.model_class):
             to_model.objects.all().update(
-                **{f"{to_field.db_column}": models.F("updated_on")}
+                **{f"{to_field.db_column}": models.F(self.source_field_name)}
             )
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        return None
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        setattr(
+            row,
+            field_name,
+            datetime.fromisoformat(getattr(row, self.source_field_name)),
+        )
+
+    def random_value(self, instance, fake, cache):
+        return getattr(instance, self.source_field_name)
+
+
+class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
+    type = "last_modified"
+    model_class = LastModifiedField
+    source_field_name = "updated_on"
+    model_field_kwargs = {"auto_now": True}
 
 
 class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
     type = "created_on"
     model_class = CreatedOnField
-
-    def get_model_field(self, instance, **kwargs):
-        kwargs["null"] = True
-        kwargs["blank"] = True
-
-        if instance.date_include_time:
-            return models.DateTimeField(auto_now_add=True, **kwargs)
-        else:
-            return models.DateField(auto_now_add=True, **kwargs)
-
-    def after_create(self, field, model, user, connection, before):
-        if field.date_include_time:
-            model.objects.all().update(**{f"{field.db_column}": models.F("created_on")})
-        else:
-            query = RawSQL(
-                f"created_on at time zone '{field.timezone}'",
-                params=[],
-                output_field=model,
-            )
-            model.objects.annotate(tmp_column=query).all().update(
-                **{f"{field.db_column}": models.F("tmp_column")}
-            )
-
-    def after_update(
-        self,
-        from_field,
-        to_field,
-        from_model,
-        to_model,
-        user,
-        connection,
-        altered_column,
-        before,
-    ):
-        if not isinstance(from_field, self.model_class):
-            to_model.objects.all().update(
-                **{f"{to_field.db_column}": models.F("created_on")}
-            )
+    source_field_name = "created_on"
+    model_field_kwargs = {"auto_now_add": True}
 
 
 class LinkRowFieldType(FieldType):

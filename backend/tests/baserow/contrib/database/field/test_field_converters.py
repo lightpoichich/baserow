@@ -2,8 +2,6 @@ import pytest
 
 from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.field_converters import (
-    CreatedOnFieldConverter,
-    LastModifiedFieldConverter,
     LinkRowFieldConverter,
 )
 
@@ -30,39 +28,3 @@ def test_link_row_field_converter_applicable(data_fixture):
     assert converter.is_applicable(None, link_row_field_1, link_row_field_2)
     assert converter.is_applicable(None, link_row_field_2, link_row_field_1)
     assert not converter.is_applicable(None, link_row_field_1, link_row_field_3)
-
-
-@pytest.mark.django_db
-def test_last_modified_field_converter_applicable(data_fixture):
-    table = data_fixture.create_database_table()
-    text_field = data_fixture.create_text_field(table=table)
-    last_modified_field_datetime = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True
-    )
-    last_modified_field_date = data_fixture.create_last_modified_field(table=table)
-    converter = LastModifiedFieldConverter()
-    assert not converter.is_applicable(None, text_field, last_modified_field_date)
-    assert converter.is_applicable(
-        None, last_modified_field_datetime, last_modified_field_date
-    )
-    assert converter.is_applicable(
-        None, last_modified_field_date, last_modified_field_datetime
-    )
-
-
-@pytest.mark.django_db
-def test_created_on_field_converter_applicable(data_fixture):
-    table = data_fixture.create_database_table()
-    text_field = data_fixture.create_text_field(table=table)
-    created_on_field_datetime = data_fixture.create_created_on_field(
-        table=table, date_include_time=True
-    )
-    created_on_field_date = data_fixture.create_created_on_field(table=table)
-    converter = CreatedOnFieldConverter()
-    assert not converter.is_applicable(None, text_field, created_on_field_date)
-    assert converter.is_applicable(
-        None, created_on_field_datetime, created_on_field_date
-    )
-    assert converter.is_applicable(
-        None, created_on_field_date, created_on_field_datetime
-    )

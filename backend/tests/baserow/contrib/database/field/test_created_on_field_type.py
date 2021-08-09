@@ -39,7 +39,9 @@ def test_created_on_field_type(data_fixture):
 
     row = row_handler.create_row(user=user, table=table, values={}, model=model)
     assert row.create_date is not None
-    assert row.create_date == row.created_on.date()
+    assert row.create_date.replace(microsecond=0) == row.created_on.replace(
+        microsecond=0
+    )
 
     assert row.create_date is not None
     row_create_datetime = row.create_datetime.replace(microsecond=0)

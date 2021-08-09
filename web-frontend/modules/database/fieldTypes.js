@@ -406,11 +406,11 @@ export class FieldType extends Registerable {
    * The return value can be used to immediately update the frontend (i.e. the vuex store).
    */
   getNewRowValue(field) {
-    this.getEmptyValue(field)
+    return this.getEmptyValue(field)
   }
 
   /**
-   * Determines whether a data refresh should be executed after the specific field
+   * Determines whether a view refresh should be executed after the specific field
    * has been added to a table.
    */
   shouldRefreshWhenAdded() {
@@ -889,10 +889,6 @@ class BaseDateFieldType extends FieldType {
 
   getFormComponent() {
     return FieldDateSubForm
-  }
-
-  getNewRowValue(field) {
-    return null
   }
 
   getSort(name, order) {

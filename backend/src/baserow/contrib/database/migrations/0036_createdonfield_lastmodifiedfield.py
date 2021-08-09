@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("database", "0034_form_view"),
+        ("database", "0035_remove_field_old_name"),
     ]
 
     operations = [

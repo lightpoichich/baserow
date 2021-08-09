@@ -64,7 +64,7 @@
           class="button button--large"
           :disabled="loading"
         >
-          Sign in
+          {{ $t('action.signIn') }}
           <i class="fas fa-lock-open"></i>
         </button>
       </div>

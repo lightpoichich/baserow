@@ -847,7 +847,7 @@ export const actions = {
       const name = `field_${field.id}`
       if (!(name in values)) {
         const fieldType = this.$registry.get('field', field._.type.type)
-        const empty = fieldType.getEmptyValue(field)
+        const empty = fieldType.getNewRowValue(field)
         values[name] = empty
 
         // In case the fieldType is a read only field, we

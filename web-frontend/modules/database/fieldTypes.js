@@ -402,6 +402,14 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Runs every time a new row gets created.
+   * The return value can be used to immediately update the frontend (i.e. the vuex store).
+   */
+  getNewRowValue(field) {
+    return null
+  }
+
+  /**
    * Determines whether a grid refresh should be executed after the specific field
    * has been added to a table.
    */
@@ -460,6 +468,10 @@ export class TextFieldType extends FieldType {
     return field.text_default
   }
 
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
+  }
+
   getSort(name, order) {
     return (a, b) => {
       const stringA = a[name] === null ? '' : '' + a[name]
@@ -515,6 +527,10 @@ export class LongTextFieldType extends FieldType {
 
   getEmptyValue(field) {
     return ''
+  }
+
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
   }
 
   getSort(name, order) {
@@ -580,6 +596,10 @@ export class LinkRowFieldType extends FieldType {
 
   getEmptyValue(field) {
     return []
+  }
+
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
   }
 
   getCanSortInView() {
@@ -844,6 +864,10 @@ export class BooleanFieldType extends FieldType {
     return false
   }
 
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
+  }
+
   getSortIndicator() {
     return ['icon', 'square', 'check-square']
   }
@@ -1023,10 +1047,10 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     }
   }
 
-  // The "empty" value for the new row in the
+  // The "new row" value for the new row in the
   // case of LastModified or CreatedOn Fields
   // is simply the current time.
-  getEmptyValue() {
+  getNewRowValue() {
     const currentDate = moment().utc().format()
     return currentDate
   }
@@ -1061,8 +1085,8 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return null
   }
 
-  getDocsDescription(field) {
-    const firstPart = 'This is a read only field.'
+  getDocsDescription(field, firstPartOverwrite) {
+    const firstPart = firstPartOverwrite || 'This is a read only field.'
     return field.date_include_time
       ? `${firstPart} The response will be a datetime in ISO format.`
       : `${firstPart} The response will be a date in ISO format.`
@@ -1090,6 +1114,13 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     return 'Last Modified'
   }
 
+  getDocsDescription(field) {
+    return super.getDocsDescription(
+      field,
+      'The last modified field is a read only field.'
+    )
+  }
+
   onRowChange(
     row,
     updatedField,
@@ -1115,6 +1146,13 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
 
   getIconClass() {
     return 'plus'
+  }
+
+  getDocsDescription(field) {
+    return super.getDocsDescription(
+      field,
+      'The created on field is a read only field.'
+    )
   }
 
   getName() {
@@ -1165,6 +1203,10 @@ export class URLFieldType extends FieldType {
 
   getEmptyValue(field) {
     return ''
+  }
+
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
   }
 
   getValidationError(field, value) {
@@ -1237,6 +1279,10 @@ export class EmailFieldType extends FieldType {
 
   getEmptyValue(field) {
     return ''
+  }
+
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
   }
 
   getValidationError(field, value) {
@@ -1329,6 +1375,10 @@ export class FileFieldType extends FieldType {
 
   getEmptyValue(field) {
     return []
+  }
+
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
   }
 
   getCanSortInView() {
@@ -1539,6 +1589,10 @@ export class PhoneNumberFieldType extends FieldType {
 
   getEmptyValue(field) {
     return ''
+  }
+
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
   }
 
   getValidationError(field, value) {

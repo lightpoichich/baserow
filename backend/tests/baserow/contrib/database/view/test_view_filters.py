@@ -1285,6 +1285,36 @@ def test_last_modified_day_filter_type(data_fixture):
         value="Europe/London",
     )
 
+    with freeze_time("2021-08-04 01:00"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+    with freeze_time("2021-08-04 22:59"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+    with freeze_time("2021-08-04 23:59"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
     with freeze_time("2021-08-04"):
 
         # LastModified Column is based on London Time

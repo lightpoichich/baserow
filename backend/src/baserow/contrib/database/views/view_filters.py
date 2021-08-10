@@ -366,19 +366,28 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
     def get_filter(self, field_name, value, model_field, field):
         timezone_string = value if value in all_timezones else "UTC"
         timezone_object = timezone(timezone_string)
+        field_has_timezone = hasattr(field, "timezone")
         now = datetime.utcnow().astimezone(timezone_object)
-        query_dict = dict()
-        tmp_field_name = f"{field_name}_timezone_{timezone_string}"
-        if "year" in self.query_for:
-            query_dict[f"{tmp_field_name}__year"] = now.year
-        if "month" in self.query_for:
-            query_dict[f"{tmp_field_name}__month"] = now.month
-        if "day" in self.query_for:
-            query_dict[f"{tmp_field_name}__day"] = now.day
-        return AnnotatedQ(
-            annotation={f"{tmp_field_name}": Timezone(field_name, timezone_string)},
-            q=query_dict,
-        )
+
+        def make_query_dict(query_field_name):
+            query_dict = dict()
+            if "year" in self.query_for:
+                query_dict[f"{query_field_name}__year"] = now.year
+            if "month" in self.query_for:
+                query_dict[f"{query_field_name}__month"] = now.month
+            if "day" in self.query_for:
+                query_dict[f"{query_field_name}__day"] = now.day
+
+            return query_dict
+
+        if field_has_timezone:
+            tmp_field_name = f"{field_name}_timezone_{timezone_string}"
+            return AnnotatedQ(
+                annotation={f"{tmp_field_name}": Timezone(field_name, timezone_string)},
+                q=make_query_dict(tmp_field_name),
+            )
+        else:
+            return Q(**make_query_dict(field_name))
 
 
 class DateEqualsCurrentMonthViewFilterType(DateEqualsTodayViewFilterType):

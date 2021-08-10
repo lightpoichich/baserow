@@ -904,25 +904,27 @@ def test_last_modified_field_type(api_client, data_fixture):
     # updated_on value
     text_field = data_fixture.create_text_field(user=user, table=table)
 
-    response = api_client.post(
-        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {f"field_{text_field.id}": "Test Text"},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
+    with freeze_time(time_under_test):
+        response = api_client.post(
+            reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+            {f"field_{text_field.id}": "Test Text"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
 
     # now add a last_modified field with datetime
-    response = api_client.post(
-        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {
-            "name": "Last",
-            "type": "last_modified",
-            "date_include_time": True,
-            "timezone": "Europe/Berlin",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
+    with freeze_time(time_under_test):
+        response = api_client.post(
+            reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+            {
+                "name": "Last",
+                "type": "last_modified",
+                "date_include_time": True,
+                "timezone": "Europe/Berlin",
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["type"] == "last_modified"

@@ -575,7 +575,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
             return value
         python_format = field_object["field"].get_python_format()
         field = field_object["field"]
-        field_timezone = timezone(field.timezone)
+        field_timezone = timezone(field.get_timezone())
         return value.astimezone(field_timezone).strftime(python_format)
 
     def get_serializer_field(self, instance, **kwargs):
@@ -607,7 +607,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
                     RawSQL(
                         f"""TO_CHAR({field_name} at time zone %s,
                         '{field.get_psql_format()}')""",
-                        [field.timezone],
+                        [field.get_timezone()],
                         output_field=CharField(),
                     ),
                     Value(""),
@@ -627,7 +627,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
             sql_format = from_field.get_psql_format()
             variables = {}
             variable_name = f"{from_field.db_column}_timezone"
-            variables[variable_name] = from_field.timezone
+            variables[variable_name] = from_field.get_timezone()
             return (
                 f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
                 '{sql_format}');""",

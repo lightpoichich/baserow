@@ -98,6 +98,9 @@ class TimezoneMixin(models.Model):
         default="UTC",
     )
 
+    def get_timezone(self, fallback="UTC"):
+        return self.timezone if self.timezone in pytz.all_timezones else fallback
+
     class Meta:
         abstract = True
 

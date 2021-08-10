@@ -236,7 +236,7 @@ class DateEqualViewFilterType(ViewFilterType):
                 }
 
             if has_timezone:
-                timezone_string = field.timezone
+                timezone_string = field.get_timezone()
                 tmp_field_name = f"{field_name}_timezone_{timezone_string}"
                 return AnnotatedQ(
                     annotation={
@@ -302,7 +302,9 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
-            timezone_string = getattr(field, "timezone", "UTC")
+            timezone_string = (
+                field.get_timezone() if hasattr(field, "timezone") else "UTC"
+            )
             tmp_field_name = f"{field_name}_timezone_{timezone_string}"
             field_key = f"{tmp_field_name}{query_date_lookup}{self.query_field_lookup}"
 

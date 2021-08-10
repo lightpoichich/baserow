@@ -187,6 +187,7 @@ export class FieldType extends Registerable {
     this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
     this.canBePrimaryField = this.getCanBePrimaryField()
+    this.isReadOnly = this.isReadOnly()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -219,6 +220,7 @@ export class FieldType extends Registerable {
       name: this.name,
       sortIndicator: this.sortIndicator,
       canSortInView: this.canSortInView,
+      isReadOnly: this.isReadOnly,
     }
   }
 
@@ -1091,6 +1093,10 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     )
   }
 
+  _onRowChangeOrMove() {
+    return moment().utc().format()
+  }
+
   onRowChange(
     row,
     updatedField,
@@ -1099,13 +1105,11 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     currentField,
     currentFieldValue
   ) {
-    const currentDate = moment().utc().format()
-    return currentDate
+    return this._onRowChangeOrMove()
   }
 
   onRowMove(row) {
-    const currentDate = moment().utc().format()
-    return currentDate
+    return this._onRowChangeOrMove()
   }
 }
 

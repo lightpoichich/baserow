@@ -997,7 +997,7 @@ export const actions = {
       const fieldID = `field_${field.id}`
       const currentFieldValue = row[fieldID]
       const fieldValue = fieldType.onRowMove(row)
-      if (fieldValue) {
+      if (currentFieldValue !== fieldValue) {
         optimisticFieldValues[fieldID] = fieldValue
         valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
       }

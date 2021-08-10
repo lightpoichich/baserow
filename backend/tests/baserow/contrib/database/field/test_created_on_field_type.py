@@ -104,19 +104,20 @@ def test_created_on_field_type(data_fixture):
     row_create_datetime_before_alter = row.create_datetime
 
     # changing the field from CreatedOn to Datetime should persist the date
-    # without microseconds and seconds in the corresponding timezone
-    field_handler.update_field(
-        user=user,
-        field=created_on_field_datetime,
-        new_type_name="date",
-        date_include_time=True,
-    )
+    # in the corresponding timezone
+    with freeze_time(time_to_freeze):
+        field_handler.update_field(
+            user=user,
+            field=created_on_field_datetime,
+            new_type_name="date",
+            date_include_time=True,
+        )
 
     assert len(CreatedOnField.objects.all()) == 1
     row.refresh_from_db()
-    field_before_with_timezone = row_create_datetime_before_alter.replace(
-        microsecond=0, second=0
-    ).astimezone(timezone_of_field)
+    field_before_with_timezone = row_create_datetime_before_alter.astimezone(
+        timezone_of_field
+    )
     assert row.create_datetime.year == field_before_with_timezone.year
     assert row.create_datetime.month == field_before_with_timezone.month
     assert row.create_datetime.day == field_before_with_timezone.day

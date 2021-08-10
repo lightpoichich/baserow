@@ -107,7 +107,6 @@ def test_last_modified_field_type(data_fixture):
     row_last_modified_2_before_alter = row.last_datetime
 
     # changing the field from LastModified to Datetime should persist the date
-    # without microseconds and seconds
     with freeze_time(time_to_freeze):
         field_handler.update_field(
             user=user,

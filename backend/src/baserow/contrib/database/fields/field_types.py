@@ -34,7 +34,6 @@ from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
-from baserow.core.expressions import Timezone
 from .exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
@@ -645,14 +644,9 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
         with the already existing source_field_name column.
         """
 
-        if field.date_include_time:
-            model.objects.all().update(
-                **{f"{field.db_column}": models.F(self.source_field_name)}
-            )
-        else:
-            model.objects.annotate(
-                tmp_column=Timezone(self.source_field_name, field.timezone)
-            ).all().update(**{f"{field.db_column}": models.F("tmp_column")})
+        model.objects.all().update(
+            **{f"{field.db_column}": models.F(self.source_field_name)}
+        )
 
     def after_update(
         self,

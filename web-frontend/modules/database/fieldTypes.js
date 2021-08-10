@@ -382,8 +382,10 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Runs every time any field changes in a given row. For every field.
-   * The return value can be used to immediately update the frontend (i.e. the vuex store).
+   * Is called for each field in the row when another field value in the row has
+   * changed. Optionally, a different value can be returned here for that field. This
+   * is for example used by the last modified field type to update the last modified
+   * value in real time when a row has changed.
    */
   onRowChange(
     row,
@@ -397,15 +399,19 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Runs every time a row gets moved.
+   * Is called for each field in the row when a row has moved to another position.
+   * Optionally, a different value can be returned here for that field. This is for
+   * example used by the last modified field type to update the last modified value
+   * in real time when a row has moved.
    */
   onRowMove(row, order, oldOrder, currentField, currentFieldValue) {
     return currentFieldValue
   }
 
   /**
-   * Runs every time a new row gets created.
-   * The return value can be used to immediately update the frontend (i.e. the vuex store).
+   * Is called for each field in a row when a new row is being created. This can be
+   * used to set a default value. This value will be added to the row before the
+   * call submitted to the backend, so the user will immediately see it.
    */
   getNewRowValue(field) {
     return this.getEmptyValue(field)
@@ -413,16 +419,17 @@ export class FieldType extends Registerable {
 
   /**
    * Determines whether a view refresh should be executed after the specific field
-   * has been added to a table.
+   * has been added to a table. This is for example needed when a value depends on
+   * the backend and can't be guessed or calculated by the web-frontend.
    */
   shouldRefreshWhenAdded() {
     return false
   }
 
   /**
-   * Determines whether the fieldType is a read only field.
-   * Can be used in order to determine whether the field
-   * can be sent in API requests.
+   * Determines whether the fieldType is a read only field. Read only fields will be
+   * excluded from update requests to the backend. It is also not possible to change
+   * the value by for example pasting.
    */
   getIsReadOnly() {
     return false
@@ -1019,12 +1026,12 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return FunctionalGridViewFieldDate
   }
 
-  // The "new row" value for the new row in the
-  // case of LastModified or CreatedOn Fields
-  // is simply the current time.
+  /**
+   * The "new row" value for the new row in the case of LastModified or CreatedOn Fields
+   * is simply the current time.
+   */
   getNewRowValue() {
-    const currentDate = moment().utc().format()
-    return currentDate
+    return moment().utc().format()
   }
 
   shouldRefreshWhenAdded() {

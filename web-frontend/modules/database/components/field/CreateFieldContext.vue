@@ -43,17 +43,24 @@ export default {
       delete values.type
 
       try {
-        await this.$store.dispatch('field/create', {
+        const forceCreateCallback = await this.$store.dispatch('field/create', {
           type,
           values,
           table: this.table,
+          forceCreate: false,
         })
-        if (fieldType.shouldRefreshWhenAdded()) {
-          this.$emit('refresh')
+        const callback = async () => {
+          await forceCreateCallback()
+          this.createdId = null
+          this.loading = false
+          this.$refs.form.reset()
+          this.hide()
         }
-        this.loading = false
-        this.$refs.form.reset()
-        this.hide()
+        if (fieldType.shouldRefreshWhenAdded()) {
+          this.$emit('refresh', { callback })
+        } else {
+          await callback()
+        }
       } catch (error) {
         this.loading = false
         notifyIf(error, 'field')

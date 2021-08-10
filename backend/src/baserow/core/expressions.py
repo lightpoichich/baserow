@@ -2,6 +2,19 @@ from django.db.models import Expression, DateTimeField, Value
 
 
 class Timezone(Expression):
+    """
+    This expression can convert an existing datetime value to another timezone. It
+    can for example by used like this:
+
+    ```
+    SomeModel.objects.all().annotate(
+        created_on_in_amsterdam=Timezone("created_on", "Europe/Amsterdam")
+    ).filter(created_on_in_amsterdam__day=1)
+    ```
+
+    It will eventually result in `created_on at time zone 'Europe/Amsterdam'`
+    """
+
     def __init__(self, expression, timezone):
         super().__init__(output_field=DateTimeField())
         self.source_expression = self._parse_expressions(expression)[0]

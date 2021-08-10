@@ -48,18 +48,19 @@ export const registerRealtimeEvents = (realtime) => {
     const table = store.getters['table/getSelected']
     const fieldType = app.$registry.get('field', data.field.type)
     if (table !== undefined && table.id === data.field.table_id) {
+      const callback = async () => {
+        await store.dispatch('field/forceCreate', {
+          table,
+          values: data.field,
+        })
+      }
       if (!fieldType.shouldRefreshWhenAdded()) {
-        store.dispatch('field/forceCreate', { table, values: data.field })
+        callback()
       } else {
         app.$bus.$emit('table-refresh', {
           tableId: store.getters['table/getSelectedId'],
           includeFieldOptions: true,
-          async callback() {
-            await store.dispatch('field/forceCreate', {
-              table,
-              values: data.field,
-            })
-          },
+          callback,
         })
       }
     }

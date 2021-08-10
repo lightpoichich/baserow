@@ -1,5 +1,4 @@
 from decimal import Decimal
-from freezegun import freeze_time
 
 import pytest
 from django.shortcuts import reverse
@@ -372,26 +371,6 @@ def test_create_row(api_client, data_fixture):
         table=table, order=3, name="Description"
     )
 
-    last_modified_field_date = data_fixture.create_last_modified_field(
-        table=table,
-        order=4,
-        name="Last Date",
-    )
-
-    last_modified_field_datetime = data_fixture.create_last_modified_field(
-        table=table, order=5, name="Last Datetime", date_include_time=True
-    )
-
-    created_on_field_date = data_fixture.create_created_on_field(
-        table=table,
-        order=6,
-        name="Created Date",
-    )
-
-    created_on_field_datetime = data_fixture.create_created_on_field(
-        table=table, order=7, name="Created Datetime", date_include_time=True
-    )
-
     token = TokenHandler().create_token(user, table.database.group, "Good")
     wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, False, True, True, True)
@@ -597,18 +576,17 @@ def test_create_row(api_client, data_fixture):
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
 
-    with freeze_time("2021-08-05 12:00", tz_offset=+2):
-        response = api_client.post(
-            f"{url}?user_field_names=true",
-            {
-                f"Color": "Red",
-                f"Horsepower": 480,
-                f"For Sale": False,
-                f"Description": "",
-            },
-            format="json",
-            HTTP_AUTHORIZATION=f"Token {token.key}",
-        )
+    response = api_client.post(
+        f"{url}?user_field_names=true",
+        {
+            f"Color": "Red",
+            f"Horsepower": 480,
+            f"For Sale": False,
+            f"Description": "",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
@@ -616,27 +594,22 @@ def test_create_row(api_client, data_fixture):
         "Description": "",
         "For sale": False,
         "Horsepower": "480",
-        "Created Date": "2021-08-05",
-        "Created Datetime": "2021-08-05T12:00:00Z",
-        "Last Date": "2021-08-05",
-        "Last Datetime": "2021-08-05T12:00:00Z",
         "id": 6,
         "order": "5.00000000000000000000",
     }
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
-    with freeze_time("2021-08-05 12:00", tz_offset=+2):
-        response = api_client.post(
-            f"{url}?user_field_names=true",
-            {
-                f"INVALID FIELD NAME": "Red",
-                f"Horsepower": 480,
-                f"For Sale": False,
-                f"Description": "",
-            },
-            format="json",
-            HTTP_AUTHORIZATION=f"Token {token.key}",
-        )
+    response = api_client.post(
+        f"{url}?user_field_names=true",
+        {
+            f"INVALID FIELD NAME": "Red",
+            f"Horsepower": 480,
+            f"For Sale": False,
+            f"Description": "",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
@@ -644,61 +617,9 @@ def test_create_row(api_client, data_fixture):
         "Description": "",
         "For sale": False,
         "Horsepower": "480",
-        "Created Date": "2021-08-05",
-        "Created Datetime": "2021-08-05T12:00:00Z",
-        "Last Date": "2021-08-05",
-        "Last Datetime": "2021-08-05T12:00:00Z",
         "id": 7,
         "order": "6.00000000000000000000",
     }
-
-    response = api_client.post(
-        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {
-            f"field_{last_modified_field_date.id}": "2021-08-05",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-
-    response = api_client.post(
-        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {
-            f"field_{last_modified_field_datetime.id}": "2021-08-09T14:14:33.574356Z",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-
-    response = api_client.post(
-        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {
-            f"field_{created_on_field_date.id}": "2021-08-05",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-
-    response = api_client.post(
-        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {
-            f"field_{created_on_field_datetime.id}": "2021-08-09T14:14:33.574356Z",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
 
 @pytest.mark.django_db

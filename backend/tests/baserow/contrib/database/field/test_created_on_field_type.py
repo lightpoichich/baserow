@@ -3,6 +3,7 @@ from pytz import timezone
 from datetime import datetime
 from freezegun import freeze_time
 from io import BytesIO
+from django.core.exceptions import ValidationError
 
 from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.models import CreatedOnField
@@ -19,6 +20,7 @@ def test_created_on_field_type(data_fixture):
     row_handler = RowHandler()
     timezone_to_test = "Europe/Berlin"
     timezone_of_field = timezone(timezone_to_test)
+    time_to_freeze = "2021-08-10 12:00"
 
     data_fixture.create_text_field(table=table, name="text_field", primary=True)
     created_on_field_date = field_handler.create_field(
@@ -42,16 +44,44 @@ def test_created_on_field_type(data_fixture):
 
     model = table.get_model(attribute_names=True)
 
-    row = row_handler.create_row(user=user, table=table, values={}, model=model)
+    with pytest.raises(ValidationError):
+        row_handler.create_row(
+            user=user, table=table, values={created_on_field_date.id: "2021-08-09"}
+        )
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={created_on_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+        )
+
+    with freeze_time(time_to_freeze):
+        row = row_handler.create_row(user=user, table=table, values={}, model=model)
     assert row.create_date is not None
-    assert row.create_date.replace(microsecond=0) == row.created_on.replace(
-        microsecond=0
-    )
+    assert row.create_date == row.created_on
 
     assert row.create_date is not None
-    row_create_datetime = row.create_datetime.replace(microsecond=0)
-    row_created_on = row.created_on.replace(microsecond=0)
+    row_create_datetime = row.create_datetime
+    row_created_on = row.created_on
     assert row_create_datetime == row_created_on
+
+    # Trying to update the the created_on field will raise error
+    with pytest.raises(ValidationError):
+        row_handler.update_row(
+            user=user,
+            row_id=row.id,
+            table=table,
+            values={created_on_field_date.id: "2021-08-09"},
+        )
+
+    with pytest.raises(ValidationError):
+        row_handler.update_row(
+            user=user,
+            table=table,
+            row_id=row.id,
+            values={created_on_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+        )
 
     # Updating the text field will NOT updated
     # the created_on field.

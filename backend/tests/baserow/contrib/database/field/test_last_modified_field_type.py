@@ -3,6 +3,7 @@ from pytz import timezone
 from datetime import datetime
 from freezegun import freeze_time
 from io import BytesIO
+from django.core.exceptions import ValidationError
 
 from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.models import LastModifiedField
@@ -19,6 +20,7 @@ def test_last_modified_field_type(data_fixture):
     row_handler = RowHandler()
     timezone_to_test = "Europe/Berlin"
     timezone_of_field = timezone(timezone_to_test)
+    time_to_freeze = "2021-08-10 12:00"
 
     data_fixture.create_text_field(table=table, name="text_field", primary=True)
 
@@ -43,51 +45,82 @@ def test_last_modified_field_type(data_fixture):
 
     model = table.get_model(attribute_names=True)
 
-    row = row_handler.create_row(user=user, table=table, values={}, model=model)
-    assert row.last_date is not None
-    assert row.last_date.replace(microsecond=0) == row.updated_on.replace(microsecond=0)
+    # trying to create a row with values for the last_modified_field
+    # set will result in a ValidationError
+    with pytest.raises(ValidationError):
+        row_handler.create_row(
+            user=user, table=table, values={last_modified_field_date.id: "2021-08-09"}
+        )
 
+    with pytest.raises(ValidationError):
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={last_modified_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+        )
+
+    with freeze_time(time_to_freeze):
+        row = row_handler.create_row(user=user, table=table, values={}, model=model)
     assert row.last_date is not None
-    row_last_modified_2 = row.last_datetime.replace(microsecond=0)
-    row_updated_on = row.updated_on.replace(microsecond=0)
+    assert row.last_date == row.updated_on
+    assert row.last_datetime is not None
+    row_last_modified_2 = row.last_datetime
+    row_updated_on = row.updated_on
     assert row_last_modified_2 == row_updated_on
+
+    # Trying to update the the last_modified field will raise error
+    with pytest.raises(ValidationError):
+        row_handler.update_row(
+            user=user,
+            row_id=row.id,
+            table=table,
+            values={last_modified_field_date.id: "2021-08-09"},
+        )
+
+    with pytest.raises(ValidationError):
+        row_handler.update_row(
+            user=user,
+            table=table,
+            row_id=row.id,
+            values={last_modified_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+        )
 
     # Updating the text field will updated
     # the last_modified datetime field.
     row_last_datetime_before_update = row.last_datetime
-    row_handler.update_row(
-        user=user,
-        table=table,
-        row_id=row.id,
-        values={
-            "text_field": "Hello Test",
-        },
-        model=model,
-    )
+    with freeze_time(time_to_freeze):
+        row_handler.update_row(
+            user=user,
+            table=table,
+            row_id=row.id,
+            values={
+                "text_field": "Hello Test",
+            },
+            model=model,
+        )
 
     row.refresh_from_db()
 
     assert row.last_datetime >= row_last_datetime_before_update
-    assert row.last_datetime.replace(microsecond=0) == row.updated_on.replace(
-        microsecond=0
-    )
+    assert row.last_datetime == row.updated_on
 
     row_last_modified_2_before_alter = row.last_datetime
 
     # changing the field from LastModified to Datetime should persist the date
     # without microseconds and seconds
-    field_handler.update_field(
-        user=user,
-        field=last_modified_field_datetime,
-        new_type_name="date",
-        date_include_time=True,
-    )
+    with freeze_time(time_to_freeze):
+        field_handler.update_field(
+            user=user,
+            field=last_modified_field_datetime,
+            new_type_name="date",
+            date_include_time=True,
+        )
 
     assert len(LastModifiedField.objects.all()) == 1
     row.refresh_from_db()
-    field_before_with_timezone = row_last_modified_2_before_alter.replace(
-        microsecond=0, second=0
-    ).astimezone(timezone_of_field)
+    field_before_with_timezone = row_last_modified_2_before_alter.astimezone(
+        timezone_of_field
+    )
     assert row.last_datetime.year == field_before_with_timezone.year
     assert row.last_datetime.month == field_before_with_timezone.month
     assert row.last_datetime.day == field_before_with_timezone.day
@@ -97,17 +130,19 @@ def test_last_modified_field_type(data_fixture):
 
     # changing the field from LastModified with Datetime to Text Field should persist
     # the datetime as string
-    field_handler.update_field(
-        user=user,
-        field=last_modified_field_datetime,
-        new_type_name="last_modified",
-        date_include_time=True,
-        timezone="Europe/Berlin",
-    )
+    with freeze_time(time_to_freeze):
+        field_handler.update_field(
+            user=user,
+            field=last_modified_field_datetime,
+            new_type_name="last_modified",
+            date_include_time=True,
+            timezone="Europe/Berlin",
+        )
     assert len(LastModifiedField.objects.all()) == 2
 
     row.refresh_from_db()
     row_last_modified_2_before_alter = row.last_datetime
+
     field_handler.update_field(
         user=user,
         field=last_modified_field_datetime,

@@ -892,9 +892,12 @@ def test_phone_number_field_type(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_last_modified_field_type(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
-    )
+    time_under_test = "2021-08-10 12:00"
+
+    with freeze_time(time_under_test):
+        user, token = data_fixture.create_user_and_token(
+            email="test@test.nl", password="password", first_name="Test1"
+        )
     table = data_fixture.create_database_table(user=user)
 
     # first add text field so that there is already a row with an
@@ -934,22 +937,49 @@ def test_last_modified_field_type(api_client, data_fixture):
 
     # change the text_field value so that we can verify that the
     # last_modified column gets updated as well
-    response = api_client.patch(
-        reverse(
-            "api:database:rows:item",
-            kwargs={"table_id": table.id, "row_id": row.id},
-        ),
-        {f"field_{text_field.id}": "test_second"},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
+    with freeze_time(time_under_test):
+        response = api_client.patch(
+            reverse(
+                "api:database:rows:item",
+                kwargs={"table_id": table.id, "row_id": row.id},
+            ),
+            {f"field_{text_field.id}": "test_second"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        response_json = response.json()
     assert response.status_code == HTTP_200_OK
 
-    last_datetime = row.last.replace(microsecond=0)
-    updated_on_datetime = row.updated_on.replace(microsecond=0)
+    last_datetime = row.last
+    updated_on_datetime = row.updated_on
 
     assert last_datetime == updated_on_datetime
+
+    with freeze_time(time_under_test):
+        response = api_client.post(
+            reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+            {
+                f"field_{last_modified_field_id}": "2021-08-05",
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    with freeze_time(time_under_test):
+        response = api_client.post(
+            reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+            {
+                f"field_{last_modified_field_id}": "2021-08-09T14:14:33.574356Z",
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
 
 @pytest.mark.django_db
@@ -1013,3 +1043,27 @@ def test_created_on_field_type(api_client, data_fixture):
     created_on_datetime = row.created_on
 
     assert create_datetime == created_on_datetime
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{created_on_field_id}": "2021-08-05",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{created_on_field_id}": "2021-08-09T14:14:33.574356Z",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"

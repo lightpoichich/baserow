@@ -269,7 +269,7 @@ export class DateEqualViewFilterType extends ViewFilterType {
     }
 
     if (field.timezone) {
-      rowValue = moment.utc(rowValue).tz(filterValue).format('YYYY-MM-DD')
+      rowValue = moment.utc(rowValue).tz(field.timezone).format('YYYY-MM-DD')
     } else {
       rowValue = rowValue.toString().toLowerCase().trim()
       rowValue = rowValue.slice(0, 10)
@@ -303,8 +303,12 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   matches(rowValue, filterValue, field, fieldType) {
     // parse the provided string values as moment objects in order to make
     // date comparisons
-    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
-    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+    let rowDate = moment.utc(rowValue)
+    const filterDate = moment.utc(filterValue)
+
+    if (field.timezone) {
+      rowDate = rowDate.tz(field.timezone)
+    }
 
     // if the filter date is not a valid date we can immediately return
     // true because without a valid date the filter won't be applied
@@ -318,7 +322,7 @@ export class DateBeforeViewFilterType extends ViewFilterType {
       return false
     }
 
-    return rowDate.isBefore(filterDate)
+    return rowDate.isBefore(filterDate, 'day')
   }
 }
 
@@ -346,8 +350,12 @@ export class DateAfterViewFilterType extends ViewFilterType {
   matches(rowValue, filterValue, field, fieldType) {
     // parse the provided string values as moment objects in order to make
     // date comparisons
-    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
-    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+    let rowDate = moment.utc(rowValue)
+    const filterDate = moment.utc(filterValue)
+
+    if (field.timezone) {
+      rowDate = rowDate.tz(field.timezone)
+    }
 
     // if the filter date is not a valid date we can immediately return
     // true because without a valid date the filter won't be applied
@@ -361,7 +369,7 @@ export class DateAfterViewFilterType extends ViewFilterType {
       return false
     }
 
-    return rowDate.isAfter(filterDate)
+    return rowDate.isAfter(filterDate, 'day')
   }
 }
 
@@ -391,8 +399,12 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
       rowValue = ''
     }
 
-    rowValue = rowValue.toString().toLowerCase().trim()
-    rowValue = rowValue.slice(0, 10)
+    if (field.timezone) {
+      rowValue = moment.utc(rowValue).tz(field.timezone).format('YYYY-MM-DD')
+    } else {
+      rowValue = rowValue.toString().toLowerCase().trim()
+      rowValue = rowValue.slice(0, 10)
+    }
 
     return filterValue === '' || rowValue !== filterValue
   }
@@ -438,7 +450,7 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     const today = moment().tz(filterValue).format(format)
 
     if (field.timezone) {
-      rowValue = moment.utc(rowValue).tz(filterValue).format(format)
+      rowValue = moment.utc(rowValue).tz(field.timezone).format(format)
     } else {
       rowValue = rowValue.toString().toLowerCase().trim()
       rowValue = rowValue.slice(0, sliceLength)

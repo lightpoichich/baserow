@@ -187,7 +187,7 @@ export class FieldType extends Registerable {
     this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
     this.canBePrimaryField = this.getCanBePrimaryField()
-    this.isReadOnly = this.isReadOnly()
+    this.isReadOnly = this.getIsReadOnly()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -220,7 +220,7 @@ export class FieldType extends Registerable {
       name: this.name,
       sortIndicator: this.sortIndicator,
       canSortInView: this.canSortInView,
-      isReadOnly: this.isReadOnly,
+      isReadOnly: this.getIsReadOnly,
     }
   }
 
@@ -424,7 +424,7 @@ export class FieldType extends Registerable {
    * Can be used in order to determine whether the field
    * can be sent in API requests.
    */
-  isReadOnly() {
+  getIsReadOnly() {
     return false
   }
 }
@@ -995,7 +995,7 @@ export class DateFieldType extends BaseDateFieldType {
 }
 
 export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
-  isReadOnly() {
+  getIsReadOnly() {
     return true
   }
 

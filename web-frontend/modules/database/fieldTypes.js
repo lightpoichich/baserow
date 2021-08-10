@@ -220,7 +220,7 @@ export class FieldType extends Registerable {
       name: this.name,
       sortIndicator: this.sortIndicator,
       canSortInView: this.canSortInView,
-      isReadOnly: this.getIsReadOnly,
+      isReadOnly: this.isReadOnly,
     }
   }
 

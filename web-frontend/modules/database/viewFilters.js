@@ -268,8 +268,12 @@ export class DateEqualViewFilterType extends ViewFilterType {
       rowValue = ''
     }
 
-    rowValue = rowValue.toString().toLowerCase().trim()
-    rowValue = rowValue.slice(0, 10)
+    if (field.timezone) {
+      rowValue = moment.utc(rowValue).tz(filterValue).format('YYYY-MM-DD')
+    } else {
+      rowValue = rowValue.toString().toLowerCase().trim()
+      rowValue = rowValue.slice(0, 10)
+    }
 
     return filterValue === '' || rowValue === filterValue
   }
@@ -424,16 +428,21 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     return 10
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field) {
     if (rowValue === null) {
       rowValue = ''
     }
 
     const sliceLength = this.getSliceLength()
-    rowValue = rowValue.toString().toLowerCase().trim()
-    rowValue = rowValue.slice(0, sliceLength)
     const format = 'YYYY-MM-DD'.slice(0, sliceLength)
     const today = moment().tz(filterValue).format(format)
+
+    if (field.timezone) {
+      rowValue = moment.utc(rowValue).tz(filterValue).format(format)
+    } else {
+      rowValue = rowValue.toString().toLowerCase().trim()
+      rowValue = rowValue.slice(0, sliceLength)
+    }
 
     return rowValue === today
   }

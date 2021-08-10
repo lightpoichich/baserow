@@ -7,26 +7,6 @@ export default function (base = '@') {
     : []
 
   const baseModules = [
-    [
-      '@nuxtjs/i18n',
-      {
-        vueI18nLoader: true,
-        strategy: 'no_prefix',
-        defaultLocale: 'en',
-        detectBrowserLanguage: {
-          useCookie: true,
-          cookieKey: 'i18n-language',
-        },
-        locales: [
-          { code: 'fr', name: 'Français', file: 'fr.js' },
-          { code: 'en', name: 'English', file: 'en.js' },
-        ],
-        langDir: 'locales/',
-        vueI18n: {
-          fallbackLocale: 'en',
-        },
-      },
-    ],
     base + '/modules/core/module.js',
     base + '/modules/database/module.js',
   ]

@@ -60,6 +60,27 @@ export default function DatabaseModule(options) {
       ],
     },
   ])
+  this.requireModule([
+    '@nuxtjs/i18n',
+    {
+      vueI18nLoader: true,
+      strategy: 'no_prefix',
+      defaultLocale: 'en',
+      detectBrowserLanguage: {
+        useCookie: true,
+        cookieKey: 'i18n-language',
+      },
+      locales: [
+        { code: 'en', name: 'English', file: 'en.js' },
+        { code: 'fr', name: 'Français', file: 'fr.js' },
+      ],
+      langDir: 'locales/',
+      vueI18n: {
+        fallbackLocale: 'en',
+        silentFallbackWarn: true,
+      },
+    },
+  ])
 
   // Serve the static directory
   // @TODO we might need to change some things here for production. (See:

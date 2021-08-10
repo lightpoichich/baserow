@@ -292,13 +292,9 @@ const dateToday = [
 
 describe('All Tests', () => {
   let testApp = null
-  let mockServer = null
-  let store = null
 
   beforeAll(() => {
     testApp = new TestApp()
-    mockServer = testApp.mockServer
-    store = testApp.store
   })
 
   afterEach(() => {

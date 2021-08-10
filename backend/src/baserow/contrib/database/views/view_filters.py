@@ -6,7 +6,6 @@ from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Q, IntegerField, BooleanField, DateTimeField
-from django.db.models.expressions import RawSQL
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
@@ -302,22 +301,24 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
-            timezone_string = (
-                field.get_timezone() if hasattr(field, "timezone") else "UTC"
-            )
-            tmp_field_name = f"{field_name}_timezone_{timezone_string}"
-            field_key = f"{tmp_field_name}{query_date_lookup}{self.query_field_lookup}"
+            has_timezone = hasattr(field, "timezone")
+            field_key = f"{field_name}{query_date_lookup}{self.query_field_lookup}"
 
-            return AnnotatedQ(
-                annotation={
-                    f"{tmp_field_name}": RawSQL(
-                        f"{field_name} at time zone '{timezone_string}'",
-                        [],
-                        output_field=model_field,
-                    )
-                },
-                q={field_key: parsed_date},
-            )
+            if has_timezone:
+                timezone_string = field.get_timezone()
+                tmp_field_name = f"{field_name}_timezone_{timezone_string}"
+                field_key = (
+                    f"{tmp_field_name}{query_date_lookup}{self.query_field_lookup}"
+                )
+
+                return AnnotatedQ(
+                    annotation={
+                        f"{tmp_field_name}": Timezone(field_name, timezone_string)
+                    },
+                    q={field_key: parsed_date},
+                )
+            else:
+                return Q(**{field_key: parsed_date})
         except (ParserError, ValueError):
             return Q()
 

@@ -429,22 +429,6 @@ class DateFieldType(FieldType):
         python_format = field_object["field"].get_python_format()
         return value.strftime(python_format)
 
-    def get_model_field(self, instance, **kwargs):
-        kwargs["null"] = True
-        kwargs["blank"] = True
-        if instance.date_include_time:
-            return models.DateTimeField(**kwargs)
-        else:
-            return models.DateField(**kwargs)
-
-    def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
-    ):
-        if not value:
-            return value
-
-        setattr(row, field_name, datetime.fromisoformat(value))
-
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
 
@@ -456,6 +440,14 @@ class DateFieldType(FieldType):
             return serializers.DateField(
                 **{"required": required, "allow_null": not required, **kwargs}
             )
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        if instance.date_include_time:
+            return models.DateTimeField(**kwargs)
+        else:
+            return models.DateField(**kwargs)
 
     def random_value(self, instance, fake, cache):
         if instance.date_include_time:
@@ -546,6 +538,14 @@ class DateFieldType(FieldType):
 
         return value.isoformat()
 
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        if not value:
+            return value
+
+        setattr(row, field_name, datetime.fromisoformat(value))
+
 
 class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     can_be_in_form_view = False
@@ -559,8 +559,8 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
 
     def prepare_value_for_db(self, instance, value):
         """
-        Since the LastModified and CreatedOnFieldTypes are read only
-        fields, we raise a ValidationError when there is a value present.
+        Since the LastModified and CreatedOnFieldTypes are read only fields, we raise a
+        ValidationError when there is a value present.
         """
 
         if not value:

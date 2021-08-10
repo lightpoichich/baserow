@@ -1,5 +1,10 @@
 import pytest
 from pytz import timezone
+from datetime import datetime
+from freezegun import freeze_time
+from io import BytesIO
+
+from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.models import CreatedOnField
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
@@ -134,3 +139,52 @@ def test_created_on_field_type_wrong_timezone(data_fixture):
             name="Create Date",
             timezone="SDj",
         )
+
+
+@pytest.mark.django_db
+def test_import_export_last_modified_field(data_fixture):
+    user = data_fixture.create_user()
+    imported_group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    field_handler = FieldHandler()
+    created_on_field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Created On",
+        type_name="created_on",
+    )
+
+    row_handler = RowHandler()
+
+    with freeze_time("2020-01-01 12:00"):
+        row = row_handler.create_row(
+            user=user,
+            table=table,
+            values={},
+        )
+
+    assert getattr(row, f"field_{created_on_field.id}") == datetime(
+        2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
+    )
+
+    core_handler = CoreHandler()
+    exported_applications = core_handler.export_group_applications(
+        database.group, BytesIO()
+    )
+
+    with freeze_time("2020-01-02 12:00"):
+        imported_applications, id_mapping = core_handler.import_applications_to_group(
+            imported_group, exported_applications, BytesIO(), None
+        )
+
+    imported_database = imported_applications[0]
+    imported_tables = imported_database.table_set.all()
+    imported_table = imported_tables[0]
+    import_created_on_field = imported_table.field_set.all().first().specific
+
+    imported_row = row_handler.get_row(user=user, table=imported_table, row_id=row.id)
+    assert imported_row.id == row.id
+    assert getattr(imported_row, f"field_{import_created_on_field.id}") == datetime(
+        2020, 1, 2, 12, 00, tzinfo=timezone("UTC")
+    )

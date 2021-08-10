@@ -675,11 +675,10 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, files_zip, storage
     ):
-        setattr(
-            row,
-            field_name,
-            datetime.fromisoformat(getattr(row, self.source_field_name)),
-        )
+        """
+        We don't want to do anything here because we don't have the right value yet
+        and it will automatically be set when the row is saved.
+        """
 
     def random_value(self, instance, fake, cache):
         return getattr(instance, self.source_field_name)

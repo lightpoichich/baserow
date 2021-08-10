@@ -1011,7 +1011,13 @@ export const actions = {
       const fieldType = this.$registry.get('field', field._.type.type)
       const fieldID = `field_${field.id}`
       const currentFieldValue = row[fieldID]
-      const fieldValue = fieldType.onRowMove(row)
+      const fieldValue = fieldType.onRowMove(
+        row,
+        order,
+        oldOrder,
+        field,
+        currentFieldValue
+      )
       if (currentFieldValue !== fieldValue) {
         optimisticFieldValues[fieldID] = fieldValue
         valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue

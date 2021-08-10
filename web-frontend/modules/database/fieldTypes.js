@@ -399,8 +399,8 @@ export class FieldType extends Registerable {
   /**
    * Runs every time a row gets moved.
    */
-  onRowMove(row) {
-    return null
+  onRowMove(row, order, oldOrder, currentField, currentFieldValue) {
+    return currentFieldValue
   }
 
   /**
@@ -1108,7 +1108,7 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     return this._onRowChangeOrMove()
   }
 
-  onRowMove(row) {
+  onRowMove(row, order, oldOrder, currentField, currentFieldValue) {
     return this._onRowChangeOrMove()
   }
 }

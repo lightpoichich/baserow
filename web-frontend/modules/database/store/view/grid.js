@@ -853,7 +853,7 @@ export const actions = {
         // In case the fieldType is a read only field, we
         // need to create a second values dictionary, which gets
         // sent to the API without the fieldType.
-        if (!fieldType.isReadOnly()) {
+        if (!fieldType.isReadOnly) {
           valuesForApiRequest[name] = empty
         }
       }

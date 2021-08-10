@@ -1016,7 +1016,7 @@ export default {
         requestExample: fieldType.getDocsRequestExample(field),
         responseExample: fieldType.getDocsResponseExample(field),
         fieldResponseExample: fieldType.getDocsFieldResponseExample(field),
-        isReadOnly: fieldType.isReadOnly(),
+        isReadOnly: fieldType.isReadOnly,
       }
       return field
     }

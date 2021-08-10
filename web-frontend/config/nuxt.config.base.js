@@ -10,7 +10,7 @@ export default function (base = '@') {
     [
       '@nuxtjs/i18n',
       {
-        // vueI18nLoader: true,
+        vueI18nLoader: true,
         strategy: 'no_prefix',
         defaultLocale: 'en',
         detectBrowserLanguage: {

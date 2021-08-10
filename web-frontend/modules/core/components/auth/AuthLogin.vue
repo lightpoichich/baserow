@@ -53,7 +53,7 @@
             @blur="$v.credentials.password.$touch()"
           />
           <div v-if="$v.credentials.password.$error" class="error">
-            A password is required.
+            {{ $t('passwordRequired') }}
           </div>
         </div>
       </div>
@@ -71,6 +71,17 @@
     </form>
   </div>
 </template>
+
+<i18n>
+{
+  "en": {
+    "passwordRequired": "Password is required"
+  },
+  "fr": {
+    "passwordRequired": "Le mot de passe est requis"
+  }
+}
+</i18n>
 
 <script>
 import { required, email } from 'vuelidate/lib/validators'

@@ -4,6 +4,9 @@
 
 * Fixed bug where a user could not be edited in the admin interface without providing 
   a password.
+* Fixed error when pasting into a single select field.
+* Pasting the value of a single select option into a single select field now selects the
+  first option with that value.
 
 ## Released (2021-08-11)
 

@@ -11,6 +11,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
 from baserow.core.exceptions import BaseURLHostnameNotAllowed
 from baserow.core.exceptions import GroupInvitationEmailMismatch
+from baserow.core.models import UserProfile
 
 from .exceptions import (
     UserAlreadyExist,
@@ -21,7 +22,6 @@ from .exceptions import (
 )
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
-from ..models import UserProfile
 
 
 User = get_user_model()
@@ -140,7 +140,9 @@ class UserHandler:
 
         user.save()
 
-        # Add profile information
+        # Since there is a one-to-one relationship between the user and their
+        # profile, we create and populate it here because this way
+        # you can assume safely that, everywhere else in the code, it exists.
         UserProfile.objects.create(user=user, language=language)
 
         if group_invitation_token:

@@ -9,7 +9,7 @@ from django.conf import settings
 
 from baserow.contrib.database.models import Database, Table
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group, GroupUser, UserProfile
+from baserow.core.models import Group, GroupUser
 from baserow.core.user.handler import UserHandler
 
 User = get_user_model()

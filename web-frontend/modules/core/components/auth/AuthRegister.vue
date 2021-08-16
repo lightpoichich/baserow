@@ -109,9 +109,6 @@
 {
   "en":{
     "error":{
-      "minLength": "A minimum of {min} characters is required here.",
-      "maxLength": "A maximum of {max} characters is required here.",
-      "passwordRequired": "A password is required.",
       "invalidEmail": "Please enter a valid e-mail address.",
       "notMatchingPassword": "This field must match your password field.",
       "alreadyExistsTitle": "User already exists",
@@ -130,9 +127,6 @@
   },
   "fr": {
     "error":{
-      "minLength": "Un minimum de {min} charactères sont attendus ici.",
-      "maxLength": "Un maximum de {max} charactères sont attendus ici.",
-      "passwordRequired": "Le mot de passe est obligatoire.",
       "invalidEmail": "Veuillez entrer une adresse électronique valide.",
       "notMatchingPassword": "Les mots de passe ne correspondent pas.",
       "alreadyExistsTitle": "l'Utilisateur existe déjà",

@@ -71,7 +71,7 @@ class UserProfile(models.Model):
     language = models.TextField(
         max_length=10,
         choices=settings.LANGUAGES,
-        default="en",
+        default=settings.LANGUAGE_CODE,
         help_text="An ISO 639 language code (with optional variant) "
         "selected by the user. Ex: en-GB.",
     )

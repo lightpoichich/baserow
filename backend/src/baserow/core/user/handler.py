@@ -65,7 +65,7 @@ class UserHandler:
         name,
         email,
         password,
-        language="en",
+        language=settings.LANGUAGE_CODE,
         group_invitation_token=None,
         template=None,
     ):

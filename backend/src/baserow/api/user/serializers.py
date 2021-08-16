@@ -3,6 +3,7 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
+from django.conf import settings
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
@@ -35,7 +36,7 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(validators=[password_validation])
     language = serializers.CharField(
         required=False,
-        default="en",
+        default=settings.LANGUAGE_CODE,
         max_length=10,
         validators=[language_validation],
         help_text="An ISO 639 language code (with optional variant) "

@@ -5,7 +5,7 @@
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
       </nuxt-link>
       <!-- next component is hidden while frontend translation is partial -->
-      <LangSwitcher class="dropdown--noborder" v-if="false" />
+      <LangSwitcher v-if="false" class="dropdown--noborder" />
     </h1>
     <AuthLogin :invitation="invitation" @success="success">
       <ul class="action__links">

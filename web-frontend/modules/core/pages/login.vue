@@ -4,7 +4,8 @@
       <nuxt-link :to="{ name: 'index' }">
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
       </nuxt-link>
-      <LangSwitcher class="dropdown--noborder" />
+      <!-- next component is hidden while frontend translation is partial -->
+      <LangSwitcher class="dropdown--noborder" v-if="false" />
     </h1>
     <AuthLogin :invitation="invitation" @success="success">
       <ul class="action__links">

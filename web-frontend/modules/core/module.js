@@ -72,7 +72,8 @@ export default function DatabaseModule(options) {
       },
       locales: [
         { code: 'en', name: 'English', file: 'en.js' },
-        { code: 'fr', name: 'Français', file: 'fr.js' },
+        // Disabled while frontend translation is partial
+        // { code: 'fr', name: 'Français', file: 'fr.js' },
       ],
       langDir: 'locales/',
       vueI18n: {

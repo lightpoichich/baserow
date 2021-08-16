@@ -19,7 +19,8 @@
     </div>
     <Error :error="error"></Error>
     <form @submit.prevent="register">
-      <div class="control">
+      <!-- next component is hidden while frontend translation is partial -->
+      <div class="control" v-show="false">
         <label class="control__label">{{ $t('field.language') }}</label>
         <div class="control__elements">
           <LangSwitcher />

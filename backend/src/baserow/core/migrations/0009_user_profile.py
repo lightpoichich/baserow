@@ -5,6 +5,16 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def forward(apps, schema_editor):
+    """
+    Add missing Profile to existing users.
+    """
+    User = apps.get_model("auth", "User")
+    UserProfile = apps.get_model("core", "UserProfile")
+    for user in User.objects.all():
+        UserProfile.objects.create(user=user)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -45,4 +55,5 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
+        migrations.RunPython(forward, migrations.RunPython.noop),
     ]

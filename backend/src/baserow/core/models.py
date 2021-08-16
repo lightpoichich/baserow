@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 from rest_framework.exceptions import NotAuthenticated
 
@@ -66,12 +67,10 @@ class UserProfile(models.Model):
     default user model.
     """
 
-    LANGUAGE = [("en", "English"), ("fr", "French")]
-
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     language = models.TextField(
         max_length=10,
-        choices=LANGUAGE,
+        choices=settings.LANGUAGES,
         default="en",
         help_text="An ISO 639 language code (with optional variant) "
         "selected by the user. Ex: en-GB.",

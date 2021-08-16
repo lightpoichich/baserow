@@ -167,6 +167,11 @@ AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.AllowAllUsersModelBacke
 
 LANGUAGE_CODE = "en-us"
 
+LANGUAGES = [
+    ("en", "English"),
+    ("fr", "French"),
+]
+
 TIME_ZONE = "UTC"
 
 USE_I18N = True

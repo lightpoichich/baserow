@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from baserow.core.models import UserProfile
 
 
@@ -24,7 +25,7 @@ def language_validation(value):
     """
     Verifies that the provided language is known.
     """
-    valid_languages = [l[0] for l in UserProfile.LANGUAGE]
+    valid_languages = [l[0] for l in settings.LANGUAGES]
     if value not in valid_languages:
         raise serializers.ValidationError(
             f"Only the following language keys are valid: {','.join(valid_languages)}",

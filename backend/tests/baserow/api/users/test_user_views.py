@@ -144,7 +144,7 @@ def test_create_user(client, data_fixture):
     assert response_json["detail"]["language"][0]["code"] == "invalid_language"
     assert response_json["detail"]["language"][0]["error"] == (
         "Only the following language keys are "
-        f"valid: {','.join([l[0] for l in UserProfile.LANGUAGE])}"
+        f"valid: {','.join([l[0] for l in settings.LANGUAGES])}"
     )
 
 

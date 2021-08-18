@@ -69,16 +69,12 @@ modules/core/validators.js
 {
   "en":{
     "error":{
-      "minLength": "A minimum of {min} characters is required here.",
-      "maxLength": "A maximum of {max} characters is allowed here.",
       "inputRequired": "Input is required."
 
     }
   },
   "fr": {
     "error":{
-      "minLength": "Un minimum de {min} charactères sont attendus ici.",
-      "maxLength": "Un maximum de {max} charactères sont attendus ici.",
       "inputRequired": "Ce champ est obligatoire."
     }
   }

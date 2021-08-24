@@ -180,7 +180,7 @@ class TableHandler:
         if len(field_name_set) != len(fields):
             raise InitialTableDataDuplicateName()
 
-        max_field_name_length = Field._meta.get_field("name").max_length
+        max_field_name_length = Field.get_max_name_length()
         long_field_names = [x for x in field_name_set if len(x) > max_field_name_length]
 
         if len(long_field_names) > 0:

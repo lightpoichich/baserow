@@ -98,7 +98,7 @@ export default {
             -suffixToAppend.length
           )}${suffixToAppend}`
         } else {
-          nextColumnNameToCheck = `${originalColumnName} ${i}`
+          nextColumnNameToCheck = `${originalColumnName}${suffixToAppend}`
         }
         if (!nextFreeIndexMap.has(nextColumnNameToCheck)) {
           nextFreeIndexMap.set(originalColumnName, i + 1)

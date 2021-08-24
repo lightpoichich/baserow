@@ -54,7 +54,7 @@ class MaxFieldNameLengthExceeded(Exception):
     """ Raised when the field name exceeds the max length."""
 
     def __init__(self, *args, **kwargs):
-        self.max_field_name_length = Field._meta.get_field("name").max_length
+        self.max_field_name_length = Field.get_max_name_length()
         super().__init__(*args, **kwargs)
 
 

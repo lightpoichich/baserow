@@ -9,6 +9,9 @@
 * Fixed error when pasting into a single select field.
 * Pasting the value of a single select option into a single select field now selects the
   first option with that value.
+* Added field name length check to Field- and TableHandler so that it throws an error
+  when trying to set a name longer than the allowed length.
+* Importing table data with a column name that is too long will now truncate that name.
 
 ## Released (2021-08-11)
 

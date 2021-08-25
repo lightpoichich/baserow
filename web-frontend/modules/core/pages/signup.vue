@@ -1,6 +1,11 @@
 <template>
   <div>
-    <h1 class="box__title">{{ $t('signup.title') }}</h1>
+    <div class="box__head">
+      <h1 class="box__head-title">
+        {{ $t('signup.title') }}
+      </h1>
+      <LangPicker />
+    </div>
     <template v-if="!settings.allow_new_signups">
       <div class="alert alert--simple alert--error alert--has-icon">
         <div class="alert__icon">
@@ -59,11 +64,13 @@
 
 <script>
 import { mapGetters } from 'vuex'
+
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 import AuthRegister from '@baserow/modules/core/components/auth/AuthRegister'
+import LangPicker from '@baserow/modules/core/components/LangPicker'
 
 export default {
-  components: { AuthRegister },
+  components: { AuthRegister, LangPicker },
   mixins: [groupInvitationToken],
   layout: 'login',
   head() {

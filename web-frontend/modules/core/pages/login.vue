@@ -1,12 +1,13 @@
 <template>
-  <div class="login">
-    <h1 class="box__title">
-      <nuxt-link :to="{ name: 'index' }">
-        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
-      </nuxt-link>
-      <!-- next component is hidden while frontend translation is partial -->
-      <LangSwitcher v-if="false" class="dropdown--noborder" />
-    </h1>
+  <div>
+    <div class="box__head">
+      <h1 class="box__head-title">
+        <nuxt-link :to="{ name: 'index' }">
+          <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+        </nuxt-link>
+      </h1>
+      <LangPicker />
+    </div>
     <AuthLogin :invitation="invitation" @success="success">
       <ul class="action__links">
         <li v-if="settings.allow_new_signups">
@@ -44,10 +45,10 @@ import { mapGetters } from 'vuex'
 
 import AuthLogin from '@baserow/modules/core/components/auth/AuthLogin'
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
-import LangSwitcher from '@baserow/modules/core/components/LangSwitcher'
+import LangPicker from '@baserow/modules/core/components/LangPicker'
 
 export default {
-  components: { AuthLogin, LangSwitcher },
+  components: { AuthLogin, LangPicker },
   mixins: [groupInvitationToken],
   layout: 'login',
   head() {

@@ -19,13 +19,6 @@
     </div>
     <Error :error="error"></Error>
     <form @submit.prevent="register">
-      <!-- next component is hidden while frontend translation is partial -->
-      <div v-show="false" class="control">
-        <label class="control__label">{{ $t('field.language') }}</label>
-        <div class="control__elements">
-          <LangSwitcher />
-        </div>
-      </div>
       <div class="control">
         <label class="control__label">{{ $t('field.emailAddress') }}</label>
         <div class="control__elements">
@@ -148,14 +141,13 @@
 <script>
 import { email, minLength, required, sameAs } from 'vuelidate/lib/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
-import LangSwitcher from '@baserow/modules/core/components/LangSwitcher'
 import error from '@baserow/modules/core/mixins/error'
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
 import { passwordValidation } from '@baserow/modules/core/validators'
 
 export default {
   name: 'AuthRegister',
-  components: { PasswordInput, LangSwitcher },
+  components: { PasswordInput },
   mixins: [error],
   props: {
     invitation: {

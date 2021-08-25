@@ -1,0 +1,13 @@
+.lang-picker {
+  color: $color-primary-900;
+  user-select: none;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.lang-picker__icon {
+  color: $color-neutral-600;
+  margin-left: 6px;
+}

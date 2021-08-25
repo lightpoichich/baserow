@@ -77,43 +77,6 @@
   </div>
 </template>
 
-<i18n>
-{
-  "en":{
-    "error":{
-      "passwordRequired": "A password is required.",
-      "invalidEmail": "Please enter a valid e-mail address.",
-      "disabledAccountTitle": "Account disabled",
-      "disabledAccountMessage": "This user account has been disabled.",
-      "incorrectCredentialTitle": "Incorrect credentials",
-      "incorrectCredentialMessage": "The provided e-mail address or password is incorrect."
-    },
-    "field":{
-      "emailAddress": "E-mail address",
-      "password": "Password"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} has invited you to join {group}."
-  },
-  "fr": {
-    "error":{
-      "passwordRequired": "Le mot de passe est obligatoire.",
-      "invalidEmail": "Veuillez entrer une adresse électronique valide.",
-      "disabledAccountTitle": "Compte désactivé",
-      "disabledAccountMessage": "Ce compte utilisateur est desactivé.",
-      "incorrectCredentialTitle": "Identifiants incorrects",
-      "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects."
-    },
-    "field":{
-      "emailAddress": "Adresse électronique",
-      "password": "Mot de passe"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}."
-  }
-}
-</i18n>
-
 <script>
 import { required, email } from 'vuelidate/lib/validators'
 import error from '@baserow/modules/core/mixins/error'
@@ -215,3 +178,40 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "error":{
+      "passwordRequired": "A password is required.",
+      "invalidEmail": "Please enter a valid e-mail address.",
+      "disabledAccountTitle": "Account disabled",
+      "disabledAccountMessage": "This user account has been disabled.",
+      "incorrectCredentialTitle": "Incorrect credentials",
+      "incorrectCredentialMessage": "The provided e-mail address or password is incorrect."
+    },
+    "field":{
+      "emailAddress": "E-mail address",
+      "password": "Password"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} has invited you to join {group}."
+  },
+  "fr": {
+    "error":{
+      "passwordRequired": "Le mot de passe est obligatoire.",
+      "invalidEmail": "Veuillez entrer une adresse électronique valide.",
+      "disabledAccountTitle": "Compte désactivé",
+      "disabledAccountMessage": "Ce compte utilisateur est desactivé.",
+      "incorrectCredentialTitle": "Identifiants incorrects",
+      "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects."
+    },
+    "field":{
+      "emailAddress": "Adresse électronique",
+      "password": "Mot de passe"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}."
+  }
+}
+</i18n>

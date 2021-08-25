@@ -98,46 +98,6 @@
   </div>
 </template>
 
-<i18n>
-{
-  "en":{
-    "error":{
-      "invalidEmail": "Please enter a valid e-mail address.",
-      "notMatchingPassword": "This field must match your password field.",
-      "alreadyExistsTitle": "User already exists",
-      "alreadyExistsMessage": "A user with the provided e-mail address already exists."
-
-    },
-    "field":{
-      "language": "Language",
-      "emailAddress": "E-mail address",
-      "name":"Your name",
-      "password": "Password",
-      "passwordRepeat":"Repeat password"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} has invited you to join {group}."
-  },
-  "fr": {
-    "error":{
-      "invalidEmail": "Veuillez entrer une adresse électronique valide.",
-      "notMatchingPassword": "Les mots de passe ne correspondent pas.",
-      "alreadyExistsTitle": "l'Utilisateur existe déjà",
-      "alreadyExistsMessage": "Un utilisateur avec la même adresse électronique existe déjà."
-    },
-    "field":{
-      "language": "Langue",
-      "emailAddress": "Adresse électronique",
-      "name":"Votre nom",
-      "password": "Mot de passe",
-      "passwordRepeat":"Répetez votre mot de passe"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}."
-  }
-}
-</i18n>
-
 <script>
 import { email, minLength, required, sameAs } from 'vuelidate/lib/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
@@ -242,3 +202,42 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "error":{
+      "invalidEmail": "Please enter a valid e-mail address.",
+      "notMatchingPassword": "This field must match your password field.",
+      "alreadyExistsTitle": "User already exists",
+      "alreadyExistsMessage": "A user with the provided e-mail address already exists."
+    },
+    "field":{
+      "language": "Language",
+      "emailAddress": "E-mail address",
+      "name":"Your name",
+      "password": "Password",
+      "passwordRepeat":"Repeat password"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} has invited you to join {group}."
+  },
+  "fr": {
+    "error":{
+      "invalidEmail": "Veuillez entrer une adresse électronique valide.",
+      "notMatchingPassword": "Les mots de passe ne correspondent pas.",
+      "alreadyExistsTitle": "l'Utilisateur existe déjà",
+      "alreadyExistsMessage": "Un utilisateur avec la même adresse électronique existe déjà."
+    },
+    "field":{
+      "language": "Langue",
+      "emailAddress": "Adresse électronique",
+      "name":"Votre nom",
+      "password": "Mot de passe",
+      "passwordRepeat":"Répetez votre mot de passe"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}."
+  }
+}
+</i18n>

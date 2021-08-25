@@ -37,31 +37,6 @@
   </div>
 </template>
 
-<i18n>
-{
-  "en":{
-    "action": {
-      "backToLogin": "Back to login"
-    },
-    "signup": {
-      "title": "Sign up",
-      "disabled": "Sign up is disabled",
-      "disabledMessage": "It's not possible to create an account because it has been disabled."
-    }
-  },
-  "fr":{
-    "action": {
-      "backToLogin": "Retour à l'identification"
-    },
-    "signup": {
-      "title": "Création de compte",
-      "disabled": "Création de compte desactivée",
-      "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée."
-    }
-  }
-}
-</i18n>
-
 <script>
 import { mapGetters } from 'vuex'
 
@@ -90,3 +65,28 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "action": {
+      "backToLogin": "Back to login"
+    },
+    "signup": {
+      "title": "Sign up",
+      "disabled": "Sign up is disabled",
+      "disabledMessage": "It's not possible to create an account because it has been disabled."
+    }
+  },
+  "fr":{
+    "action": {
+      "backToLogin": "Retour à l'identification"
+    },
+    "signup": {
+      "title": "Création de compte",
+      "disabled": "Création de compte desactivée",
+      "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée."
+    }
+  }
+}
+</i18n>

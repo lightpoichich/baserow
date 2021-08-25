@@ -65,22 +65,6 @@ modules/core/validators.js
   </div>
 </template>
 
-<i18n>
-{
-  "en":{
-    "error":{
-      "inputRequired": "Input is required."
-
-    }
-  },
-  "fr": {
-    "error":{
-      "inputRequired": "Ce champ est obligatoire."
-    }
-  }
-}
-</i18n>
-
 <script>
 export default {
   name: 'PasswordInput',
@@ -96,3 +80,19 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "error":{
+      "inputRequired": "Input is required."
+
+    }
+  },
+  "fr": {
+    "error":{
+      "inputRequired": "Ce champ est obligatoire."
+    }
+  }
+}
+</i18n>

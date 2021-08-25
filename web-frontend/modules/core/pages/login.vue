@@ -25,21 +25,6 @@
   </div>
 </template>
 
-<i18n>
-{
-  "en": {
-    "action": {
-      "forgotPassword": "Forgot password"
-    }
-  },
-  "fr": {
-    "action": {
-      "forgotPassword": "Mot de passe oublié"
-    }
-  }
-}
-</i18n>
-
 <script>
 import { mapGetters } from 'vuex'
 
@@ -79,3 +64,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "action": {
+      "forgotPassword": "Forgot password"
+    }
+  },
+  "fr": {
+    "action": {
+      "forgotPassword": "Mot de passe oublié"
+    }
+  }
+}
+</i18n>

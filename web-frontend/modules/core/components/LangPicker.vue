@@ -1,5 +1,5 @@
 <template>
-  <div class="lang-picker">
+  <div v-if="$env.ENABLE_I18N" class="lang-picker">
     <a
       class="lang-picker__link"
       ref="dropdownLink"

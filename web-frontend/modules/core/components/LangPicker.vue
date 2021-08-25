@@ -1,14 +1,18 @@
 <template>
-  <div>
+  <div class="lang-picker">
     <a
+      class="lang-picker__link"
       ref="dropdownLink"
-      class="lang-picker"
       @click="$refs.dropdown.toggle($refs.dropdownLink)"
     >
       {{ visibleLanguageName }}
       <i class="fa fa-caret-down lang-picker__icon"></i>
     </a>
-    <LanguageSwitcherDropdown ref="dropdown" :show-input="false" />
+    <LanguageSwitcherDropdown
+      class="lang-picker__dropdown"
+      ref="dropdown"
+      :show-input="false"
+    />
   </div>
 </template>
 

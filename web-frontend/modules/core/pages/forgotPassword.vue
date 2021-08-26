@@ -130,7 +130,12 @@ export default {
     }
   },
   "fr": {
-
+    "forgotPassword": {
+      "title": "Mot de passe oublié",
+      "message": "Veuillez saisir votre adresse email dans le formulaire. Si nous trouvons un compte correspondant, nous vous enverrons un email avec un lien pour réinitialiser votre mot de passe.",
+      "submit": "Envoyer le lien",
+      "confirmation": "Si un compte correspondant à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie dans quelques minutes."
+    }
   }
 }
 </i18n>

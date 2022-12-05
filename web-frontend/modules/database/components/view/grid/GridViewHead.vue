@@ -27,7 +27,7 @@
       :store-prefix="storePrefix"
       @refresh="$emit('refresh', $event)"
       @dragging="$emit('dragging', $event)"
-      @field-created="$emit('field-created', $event)"
+      @field-created="$emit('field-created', $event)"      
       @move-field="moveField"
     ></GridViewFieldType>
     <div
@@ -50,6 +50,7 @@
         ref="createFieldContext"
         :table="table"
         @field-created="$emit('field-created', $event)"
+        @shown="focusFieldTypeDropdown"
       ></CreateFieldContext>
     </div>
   </div>
@@ -149,6 +150,9 @@ export default {
       } catch (error) {
         notifyIf(error, 'view')
       }
+    },
+    focusFieldTypeDropdown() {
+      this.$refs.createFieldContext.focusFieldTypeDropdown(this.$el)
     },
   },
 }

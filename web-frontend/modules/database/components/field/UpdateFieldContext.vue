@@ -50,6 +50,11 @@ export default {
       loading: false,
     }
   },
+  computed: {
+    fieldTypes() {
+      return this.$registry.getAll('field')
+    },
+  },
   watch: {
     field() {
       // If the field values are updated via an outside source, think of real time
@@ -69,6 +74,9 @@ export default {
 
       const type = values.type
       delete values.type
+
+      // Default name to the name of the field type
+      values.name = values.name ? values.name : this.fieldTypes[type].getName()
 
       try {
         const forceUpdateCallback = await this.$store.dispatch('field/update', {

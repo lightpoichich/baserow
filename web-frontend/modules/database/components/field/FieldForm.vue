@@ -1,5 +1,8 @@
 <template>
-  <form class="context__form" @submit.prevent="submit">
+  <form
+    class="context__form context__form--field_form"
+    @submit.prevent="submit"
+  >
     <FormElement :error="fieldHasErrors('name')" class="control">
       <div class="control__elements">
         <input
@@ -8,17 +11,11 @@
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input"
-          :placeholder="$t('fieldForm.name')"
+          :placeholder="(!values.name && values.type) ? fieldTypes[values.type].getName() : $t('fieldForm.name')"
           @blur="$v.values.name.$touch()"
         />
         <div
-          v-if="$v.values.name.$dirty && !$v.values.name.required"
-          class="error"
-        >
-          {{ $t('error.requiredField') }}
-        </div>
-        <div
-          v-else-if="
+          v-if="
             $v.values.name.$dirty && !$v.values.name.mustHaveUniqueFieldName
           "
           class="error"
@@ -45,7 +42,9 @@
     <div v-if="forcedType === null" class="control">
       <div class="control__elements">
         <Dropdown
+          ref="fieldType"
           v-model="values.type"
+          class="dropdown--field-type"
           :class="{ 'dropdown--error': $v.values.type.$error }"
           @hide="$v.values.type.$touch()"
         >
@@ -88,7 +87,6 @@ import {
   MAX_FIELD_NAME_LENGTH,
 } from '@baserow/modules/database/utils/constants'
 
-// @TODO focus form on open
 export default {
   name: 'FieldForm',
   mixins: [form],
@@ -135,7 +133,6 @@ export default {
     return {
       values: {
         name: {
-          required,
           maxLength: maxLength(MAX_FIELD_NAME_LENGTH),
           mustHaveUniqueFieldName: this.mustHaveUniqueFieldName,
           mustNotClashWithReservedName: this.mustNotClashWithReservedName,
@@ -146,6 +143,8 @@ export default {
   },
   methods: {
     mustHaveUniqueFieldName(param) {
+      param = param ? param : this.fieldTypes[this.values.type].getName()
+
       let fields = this.fields
       if (this.existingFieldId !== null) {
         fields = fields.filter((f) => f.id !== this.existingFieldId)
@@ -157,6 +156,9 @@ export default {
     },
     getFormComponent(type) {
       return this.$registry.get('field', type).getFormComponent()
+    },
+    focusFieldTypeDropdown(target) {
+      return this.$refs.fieldType.show(target)
     },
   },
 }

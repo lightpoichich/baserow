@@ -1,5 +1,5 @@
 <template>
-  <Context ref="context">
+  <Context ref="context" @shown="$emit('shown', $event)">
     <FieldForm
       ref="form"
       :table="table"
@@ -50,12 +50,21 @@ export default {
       loading: false,
     }
   },
+  computed: {
+    fieldTypes() {
+      return this.$registry.getAll('field')
+    },
+  },
   methods: {
     async submit(values) {
       this.loading = true
 
       const type = values.type
       delete values.type
+
+      // Default name to the name of the field type
+      values.name = values.name ? values.name : this.fieldTypes[type].getName()
+
       const actionGroupId = this.useActionGroupId
         ? createNewUndoRedoActionGroupId()
         : null
@@ -91,6 +100,9 @@ export default {
           notifyIf(error, 'field')
         }
       }
+    },
+    focusFieldTypeDropdown(target) {
+      this.$refs.form.focusFieldTypeDropdown(target)
     },
   },
 }

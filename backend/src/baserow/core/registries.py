@@ -20,6 +20,8 @@ from .exceptions import (
     ApplicationTypeDoesNotExist,
     AuthenticationProviderTypeAlreadyRegistered,
     AuthenticationProviderTypeDoesNotExist,
+    ConnectionTypeAlreadyRegistered,
+    ConnectionTypeDoesNotExist,
     ObjectScopeTypeAlreadyRegistered,
     ObjectScopeTypeDoesNotExist,
     OperationTypeAlreadyRegistered,
@@ -27,6 +29,8 @@ from .exceptions import (
     PermissionException,
     PermissionManagerTypeAlreadyRegistered,
     PermissionManagerTypeDoesNotExist,
+    UserActionTypeAlreadyRegistered,
+    UserActionTypeDoesNotExist,
 )
 from .export_serialized import CoreExportSerializedStructure
 from .registry import (
@@ -46,6 +50,7 @@ if TYPE_CHECKING:
 
     from baserow.core.models import (
         Application,
+        Connection,
         Template,
         Workspace,
         WorkspaceInvitation,
@@ -1037,6 +1042,66 @@ class OperationTypeRegistry(Registry[OperationType]):
     already_registered_exception_class = OperationTypeAlreadyRegistered
 
 
+ConnectionSubClassInstance = TypeVar("ConnectionSubClassInstance", bound="Connection")
+
+
+class ConnectionType(
+    ModelInstanceMixin["Connection"],
+    Instance,
+):
+    """
+    @TODO docs
+    """
+
+    def enhance_queryset(self, queryset):
+        return queryset
+
+
+class ConnectionTypeRegistry(
+    ModelRegistryMixin[ConnectionSubClassInstance, ConnectionType],
+    Registry[ConnectionType],
+):
+    """
+    @TODO docs
+    """
+
+    name = "connection"
+    does_not_exist_exception_class = ConnectionTypeDoesNotExist
+    already_registered_exception_class = ConnectionTypeAlreadyRegistered
+
+
+UserActionTypeSubClassInstance = TypeVar(
+    "UserActionTypeSubClassInstance", bound="UserAction"
+)
+
+
+class UserActionType(
+    ModelInstanceMixin["UserAction"],
+    Instance,
+):
+    """
+    @TODO docs
+    """
+
+    connection_type = None
+
+    def dispatch(self, instance):
+        raise NotImplementedError
+
+
+class UserActionTypeRegistry(
+    ModelRegistryMixin[UserActionTypeSubClassInstance, UserActionType],
+    Registry[UserActionType],
+):
+    """
+    @TODO docs
+    """
+
+    name = "user_action"
+    does_not_exist_exception_class = UserActionTypeDoesNotExist
+    already_registered_exception_class = UserActionTypeAlreadyRegistered
+
+
 # A default plugin and application registry is created here, this is the one that is
 # used throughout the whole Baserow application. To add a new plugin or application use
 # these registries.
@@ -1050,3 +1115,5 @@ permission_manager_type_registry: PermissionManagerTypeRegistry = (
 object_scope_type_registry: ObjectScopeTypeRegistry = ObjectScopeTypeRegistry()
 subject_type_registry: SubjectTypeRegistry = SubjectTypeRegistry()
 operation_type_registry: OperationTypeRegistry = OperationTypeRegistry()
+connection_type_registry: ConnectionTypeRegistry = ConnectionTypeRegistry()
+user_action_type_registry: UserActionTypeRegistry = UserActionTypeRegistry()

@@ -81,6 +81,10 @@ INSTALLED_APPS = [
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")
 
+if "automation" in FEATURE_FLAGS:
+    INSTALLED_APPS.append("baserow.contrib.automation")
+    INSTALLED_APPS.append("baserow.contrib.connections.baserow")
+
 BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
 if BASEROW_FULL_HEALTHCHECKS is not None:
     INSTALLED_APPS += ["health_check.storage", "health_check.contrib.psutil"]

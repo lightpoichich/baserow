@@ -212,6 +212,22 @@ class TrashItemDoesNotExist(Exception):
     """
 
 
+class ConnectionTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
+    pass
+
+
+class ConnectionTypeDoesNotExist(InstanceTypeDoesNotExist):
+    pass
+
+
+class UserActionTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
+    pass
+
+
+class UserActionTypeDoesNotExist(InstanceTypeDoesNotExist):
+    pass
+
+
 class LockConflict(Exception):
     """
     Generic base class used for exceptions raised when an operation fails as part of

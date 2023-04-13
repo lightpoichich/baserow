@@ -42,6 +42,7 @@ __all__ = [
     "Snapshot",
     "DuplicateApplicationJob",
     "InstallTemplateJob",
+    "Connection",
 ]
 
 
@@ -486,3 +487,22 @@ class InstallTemplateJob(
         help_text="The template that is installed.",
     )
     installed_applications = models.JSONField(default=list)
+
+
+def get_default_connection():
+    return ContentType.objects.get_for_model(Connection)
+
+
+class Connection(PolymorphicContentTypeMixin, models.Model):
+    application = models.ForeignKey(
+        Application,
+        related_name="connections",
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+    content_type = models.ForeignKey(
+        ContentType,
+        verbose_name="content type",
+        related_name="connections",
+        on_delete=models.SET(get_default_connection),
+    )

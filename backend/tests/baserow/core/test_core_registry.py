@@ -17,6 +17,7 @@ from baserow.core.registry import (
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
+    inherit_registry,
 )
 
 
@@ -199,3 +200,47 @@ def test_get_serializer(data_fixture):
 
     serializer = registry.get_serializer(database, request=True)
     assert "order" in serializer.data
+
+
+def test_inherit_registry():
+    class TmpRegistry(Registry):
+        name = "tmp"
+
+    class Tmp1Instance(Instance):
+        type = "tmp_1"
+
+    class Tmp2Instance(Instance):
+        type = "tmp_2"
+
+    class Tmp3Instance(Instance):
+        type = "tmp_3"
+
+    tmp_registry = TmpRegistry()
+    tmp_registry.register(Tmp1Instance())
+
+    inherited_tmp_registry = inherit_registry(tmp_registry)
+    inherited_tmp_registry.register(Tmp3Instance())
+
+    tmp_registry.register(Tmp2Instance())
+
+    assert tmp_registry.get("tmp_1").type == "tmp_1"
+    assert tmp_registry.get("tmp_2").type == "tmp_2"
+
+    with pytest.raises(TmpRegistry.does_not_exist_exception_class):
+        assert tmp_registry.get("tmp_3").type == "tmp_3"
+
+    assert inherited_tmp_registry.get("tmp_1").type == "tmp_1"
+    assert inherited_tmp_registry.get("tmp_2").type == "tmp_2"
+    assert inherited_tmp_registry.get("tmp_3").type == "tmp_3"
+
+    assert len(tmp_registry.get_all()) == 2
+    assert len(inherited_tmp_registry.get_all()) == 3
+
+    assert tmp_registry.get_types() == ["tmp_1", "tmp_2"]
+    assert inherited_tmp_registry.get_types() == ["tmp_1", "tmp_2", "tmp_3"]
+
+    tmp_registry.unregister("tmp_2")
+    inherited_tmp_registry.unregister("tmp_3")
+
+    assert tmp_registry.get_types() == ["tmp_1"]
+    assert inherited_tmp_registry.get_types() == ["tmp_1"]

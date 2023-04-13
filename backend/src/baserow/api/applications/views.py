@@ -100,13 +100,24 @@ class AllApplicationsView(APIView):
         returned.
         """
 
+        # @TODO remove the line below. It's used to filter out automation
+        #       applications, so that the frontend doesn't crash.
+        from django.contrib.contenttypes.models import ContentType
+        from django.db.models import Q
+
+        from baserow.contrib.automation.models import Automation
+
         workspaces = Workspace.objects.filter(users=request.user)
 
         # Compute list of readable application ids
         applications_ids = []
         for workspace in workspaces:
             applications = Application.objects.filter(
-                workspace=workspace, workspace__trashed=False
+                # @TODO remove the line below. It's used to filter out automation
+                #       applications, so that the frontend doesn't crash.
+                ~Q(content_type=ContentType.objects.get_for_model(Automation)),
+                workspace=workspace,
+                workspace__trashed=False,
             )
             applications = CoreHandler().filter_queryset(
                 request.user,

@@ -578,3 +578,39 @@ class APIUrlsRegistryMixin:
         for types in self.registry.values():
             api_urls += types.get_api_urls()
         return api_urls
+
+
+def inherit_registry(registry_instance):
+    registry_class = registry_instance.__class__
+
+    class InheritedRegistryDict(dict):
+        def __getitem__(self, item):
+            try:
+                return super().__getitem__(item)
+            except KeyError:
+                return registry_instance.registry[item]
+
+        def __contains__(self, item):
+            if super().__contains__(item):
+                return True
+            if registry_instance.registry.__contains__(item):
+                return True
+            return False
+
+        def get(self, key, default=None):
+            return super().get(
+                key, default=registry_instance.registry.get(key, default)
+            )
+
+        def items(self):
+            return {**registry_instance.registry, **self}.items()
+
+        def keys(self):
+            return {**registry_instance.registry, **self}.keys()
+
+        def values(self):
+            return {**registry_instance.registry, **self}.values()
+
+    new_registry = registry_class()
+    new_registry.registry = InheritedRegistryDict()
+    return new_registry

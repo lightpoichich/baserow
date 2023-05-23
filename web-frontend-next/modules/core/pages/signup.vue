@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { useStore, mapGetters } from "vuex";
 import PasswordRegister from "@baserow/modules/core/components/auth/PasswordRegister";
 import LangPicker from "@baserow/modules/core/components/LangPicker";
 import LoginButtons from "@baserow/modules/core/components/auth/LoginButtons";
@@ -71,19 +71,21 @@ definePageMeta({
 
 export default {
   components: { PasswordRegister, LangPicker, LoginButtons, LoginActions },
-  async asyncData({ app, route, store, redirect }) {
+  async setup() {
+    const { t } = useI18n();
+    const store = useStore();
+    const route = useRoute();
+    const nuxtApp = useNuxtApp();
+
+    useHead({
+      title: t("signup.headTitle"),
+    });
+
     if (store.getters["auth/isAuthenticated"]) {
-      return redirect({ name: "dashboard" });
+      return navigateTo({ name: "dashboard" });
     }
     await store.dispatch("authProvider/fetchLoginOptions");
-    return await workspaceInvitationToken.asyncData({ route, app });
-  },
-
-  setup() {
-    const { t } = useI18n();
-    useHead({
-      title: t("ignup.headTitle"),
-    });
+    return await workspaceInvitationToken.asyncData({ route, nuxtApp });
   },
   data() {
     return {

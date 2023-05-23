@@ -35,12 +35,12 @@
             v-else
             ref="email"
             v-model="account.email"
-            :class="{ 'input--error': $v.account.email.$error }"
+            :class="{ 'input--error': v$.account.email.$error }"
             type="text"
             autocomplete="username"
             class="input input--large"
             :placeholder="$t('signup.emailPlaceholder')"
-            @blur="$v.account.email.$touch()"
+            @blur="v$.account.email.$touch()"
           />
           <div class="auth__control-error">
             <div v-if="v$.account.email.$error" class="error">
@@ -55,14 +55,14 @@
         <div class="control__elements">
           <input
             v-model="account.name"
-            :class="{ 'input--error': $v.account.name.$error }"
+            :class="{ 'input--error': v$.account.name.$error }"
             type="text"
             class="input input--large"
             :placeholder="$t('signup.namePlaceholder')"
             @blur="v$.account.name.$touch()"
           />
           <div class="auth__control-error">
-            <div v-if="$v.account.name.$error" class="error">
+            <div v-if="v$.account.name.$error" class="error">
               <i class="fas fa-warning fa-exclamation-triangle"></i>
               {{ $t("error.minMaxLength", { min: 2, max: 150 }) }}
             </div>
@@ -88,7 +88,7 @@
         <div class="control__elements">
           <input
             v-model="account.passwordConfirm"
-            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
+            :class="{ 'input--error': v$.account.passwordConfirm.$error }"
             type="password"
             class="input input--large"
             :placeholder="$t('signup.passwordRepeatPlaceholder')"
@@ -137,11 +137,13 @@ import {
 import { ResponseErrorMessage } from "~/modules/core/plugins/clientHandler";
 import error from "@baserow/modules/core/mixins/error";
 import PasswordInput from "@baserow/modules/core/components/helpers/PasswordInput";
+import Error from "@baserow/modules/core/components/Error";
+import Alert from "@baserow/modules/core/components/Alert";
 import { passwordValidation } from "@baserow/modules/core/validators";
 
 export default {
   name: "PasswordRegister",
-  components: { PasswordInput },
+  components: { PasswordInput, Error, Alert },
   mixins: [error],
   props: {
     invitation: {
@@ -199,7 +201,7 @@ export default {
   },
   methods: {
     async register() {
-      this.$v.$touch();
+      this.v$.$touch();
       let registerComponentsValid = true;
 
       for (let i = 0; i < this.registerComponents.length; i++) {
@@ -212,7 +214,7 @@ export default {
         }
       }
 
-      if (this.$v.$invalid || !registerComponentsValid) {
+      if (this.v$.$invalid || !registerComponentsValid) {
         return;
       }
 

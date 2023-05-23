@@ -16,16 +16,16 @@ export const routes = [
     path: "/login",
     file: resolve(__dirname, "./pages/login.vue"),
   },
-  // {
-  //   name: "signup",
-  //   path: "/signup",
-  //   file: resolve(__dirname, "./pages/signup.vue"),
-  // },
-  // {
-  //   name: "forgot-password",
-  //   path: "/forgot-password",
-  //   file: resolve(__dirname, "./pages/forgotPassword.vue"),
-  // },
+  {
+    name: "signup",
+    path: "/signup",
+    file: resolve(__dirname, "./pages/signup.vue"),
+  },
+  {
+    name: "forgot-password",
+    path: "/forgot-password",
+    file: resolve(__dirname, "./pages/forgotPassword.vue"),
+  },
   // {
   //   name: "reset-password",
   //   path: "/reset-password/:token",

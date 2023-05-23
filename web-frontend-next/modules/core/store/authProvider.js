@@ -21,6 +21,26 @@ export default {
     },
   },
 
+  actions: {
+    async fetchLoginOptions({ commit }) {
+      const nuxtApp = useNuxtApp();
+
+      const { data } = await authProviderService(
+        nuxtApp.$client
+      ).fetchLoginOptions();
+      const loginOptions = {};
+      for (const providerTypeLoginOption of Object.values(data)) {
+        const loginOption = populateProviderLoginOptions(
+          providerTypeLoginOption,
+          nuxtApp.$registry
+        );
+        loginOptions[providerTypeLoginOption.type] = loginOption;
+      }
+      commit("SET_LOGIN_OPTIONS", loginOptions);
+      return loginOptions;
+    },
+  },
+
   getters: {
     areLoginOptionsLoaded(state) {
       return state.loginOptionsLoaded;
@@ -48,6 +68,7 @@ export default {
           loginActions.push(loginOption);
         }
       }
+
       return loginActions;
     },
     getPasswordLoginEnabled: (state) => {
@@ -65,21 +86,6 @@ export default {
         return possibleRedirectLoginOptions[0].default_redirect_url;
       }
       return null;
-    },
-    async fetchLoginOptions({ commit }) {
-      const { data } = await authProviderService(
-        this.$client
-      ).fetchLoginOptions();
-      const loginOptions = {};
-      for (const providerTypeLoginOption of Object.values(data)) {
-        const loginOption = populateProviderLoginOptions(
-          providerTypeLoginOption,
-          this.$registry
-        );
-        loginOptions[providerTypeLoginOption.type] = loginOption;
-      }
-      commit("SET_LOGIN_OPTIONS", loginOptions);
-      return loginOptions;
     },
   },
 };

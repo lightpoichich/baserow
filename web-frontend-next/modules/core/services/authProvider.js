@@ -1,7 +1,7 @@
 export default (client) => {
   return {
     fetchLoginOptions() {
-      return client.get('/auth-provider/login-options/')
+      return client.get("/auth-provider/login-options/");
     },
-  }
-}
+  };
+};

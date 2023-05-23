@@ -7,6 +7,7 @@ import {
   extendPages,
   addLayout,
   createResolver,
+  addRouteMiddleware,
   addTemplate,
 } from "@nuxt/kit";
 import { routes } from "./routes";
@@ -68,6 +69,7 @@ export default defineNuxtModule({
     nuxt.options.runtimeConfig.public = defu(
       nuxt.options.runtimeConfig.public,
       {
+        baserowPublicUrl: "http://localhost",
         downloadFileViaXhr: false,
         privateBackendUrl: "http://backend:8000",
         baserowDisablePublicUrlCheck: false,
@@ -117,6 +119,17 @@ export default defineNuxtModule({
     // Load the client handler plugin. `append` is set to true to make sure
     // it's loaded after the store plugin (as client handler depends on it)
     addPlugin(resolve("./plugins/clientHandler"), { append: true });
+    addPlugin(resolve("./plugin"), { append: true });
+
+    addRouteMiddleware({
+      name: "settings",
+      path: resolve("./middleware/settings"),
+    });
+
+    addRouteMiddleware({
+      name: "urlCheck",
+      path: resolve("./middleware/urlCheck"),
+    });
 
     // Add the main scss file which contains all the generic scss code.
     nuxt.options.css.push(resolve("./assets/scss/default.scss"));

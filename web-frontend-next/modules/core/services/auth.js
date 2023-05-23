@@ -1,8 +1,6 @@
 export default (client) => {
   return {
     login(email, password) {
-      console.log(email, password);
-      console.log(client.post("/user/token-auth/", { email, password }));
       return client.post("/user/token-auth/", { email, password });
     },
     refresh(refreshToken) {

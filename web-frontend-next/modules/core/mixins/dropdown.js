@@ -223,7 +223,6 @@ export default {
      * Selects a new value which will also be
      */
     select(value) {
-      console.log(value);
       this.$emit("input", value);
       this.$emit("change", value);
       this.hide();
@@ -234,7 +233,6 @@ export default {
     search(query) {
       this.hasItems = query === "";
       const dropdownItemComponents = this.getDropdownItemComponents();
-      console.log(dropdownItemComponents);
       if (dropdownItemComponents)
         for (let i = 0; i < dropdownItemComponents.length; i++) {
           const item = dropdownItemComponents[i];

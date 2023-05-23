@@ -2,7 +2,6 @@
   <div>
     <!-- <Notifications></Notifications> -->
     <div class="auth__page">
-      <p>Login layout</p>
       <slot />
     </div>
   </div>
@@ -13,7 +12,6 @@
 
 export default {
   components: {},
-  middleware: ["settings", "urlCheck"],
   head() {
     return {
       bodyAttrs: {

@@ -27,11 +27,14 @@ export default {
 
   actions: {
     async load({ commit }) {
-      const { data } = await SettingsService(this.$client).get();
+      const nuxtApp = useNuxtApp();
+      const { data } = await SettingsService(nuxtApp.$client).get();
+
       commit("SET_SETTINGS", data);
       commit("SET_LOADED", true);
     },
     async update({ commit, getters }, values) {
+      console.log(getters);
       const oldValues = clone(getters.get);
       commit("UPDATE_SETTINGS", values);
 

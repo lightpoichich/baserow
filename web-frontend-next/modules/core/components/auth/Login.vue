@@ -35,16 +35,16 @@
           </a>
         </li>
         <li v-if="settings.allow_reset_password && !passwordLoginHidden">
-          <nuxt-link :to="{ name: 'forgot-password' }">
+          <NuxtLink :to="{ name: 'forgot-password' }">
             {{ $t("login.forgotPassword") }}
-          </nuxt-link>
+          </NuxtLink>
         </li>
         <li v-if="settings.allow_new_signups">
           <slot name="signup">
             {{ $t("login.signUpText") }}
-            <nuxt-link :to="{ name: 'signup' }">
+            <NuxtLink :to="{ name: 'signup' }">
               {{ $t("login.signUp") }}
-            </nuxt-link>
+            </NuxtLink>
           </slot>
         </li>
       </LoginActions>
@@ -124,10 +124,10 @@ export default {
     },
   },
   mounted() {
+    const route = useRoute();
     if (this.redirectByDefault) {
       if (this.defaultRedirectUrl !== null) {
-        const { groupInvitationToken, workspaceInvitationToken } =
-          this.$route.query;
+        const { groupInvitationToken, workspaceInvitationToken } = route.query;
         const url = addQueryParamsToRedirectUrl(this.defaultRedirectUrl, {
           original: this.computedOriginal,
           invitationToken: workspaceInvitationToken || groupInvitationToken,
@@ -141,9 +141,9 @@ export default {
       if (this.redirectOnSuccess) {
         const original = this.computedOriginal;
         if (original && isRelativeUrl(original)) {
-          this.$nuxt.$router.push(original);
+          this.$router.push(original);
         } else {
-          this.$nuxt.$router.push({ name: "dashboard" });
+          this.$router.push({ name: "dashboard" });
         }
       }
       this.$emit("success");

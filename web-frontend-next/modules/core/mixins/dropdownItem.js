@@ -41,7 +41,6 @@ export default {
   },
   methods: {
     select(value, disabled) {
-      console.log(value);
       if (!disabled) {
         this.$parent.select(value);
       }

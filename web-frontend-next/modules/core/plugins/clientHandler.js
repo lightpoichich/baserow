@@ -469,10 +469,8 @@ const prepareRequestHeaders = (store) => (config) => {
 
 const createAxiosInstance = (app) => {
   const runtimeConfig = useRuntimeConfig();
-  const url =
-    (process.client
-      ? runtimeConfig.public.publicBackendUrl
-      : runtimeConfig.public.privateBackendUrl) + "/api";
+  const url = `${runtimeConfig.public.publicBackendUrl}/api/`;
+
   return axios.create({
     baseURL: url,
     withCredentials: false,

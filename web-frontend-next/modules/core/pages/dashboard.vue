@@ -36,7 +36,7 @@
                 @click="$refs.createWorkspaceModal.show()"
               >
                 <i class="fas fa-plus"></i>
-                {{ $t('dashboard.createWorkspace') }}
+                {{ $t("dashboard.createWorkspace") }}
               </a>
             </div>
           </template>
@@ -48,15 +48,15 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
+import { mapState, mapGetters } from "vuex";
 
-import CreateWorkspaceModal from '@baserow/modules/core/components/workspace/CreateWorkspaceModal'
-import WorkspaceInvitation from '@baserow/modules/core/components/workspace/WorkspaceInvitation'
-import DashboardWorkspace from '@baserow/modules/core/components/dashboard/DashboardWorkspace'
-import DashboardHelp from '@baserow/modules/core/components/dashboard/DashboardHelp'
-import DashboardNoWorkspaces from '@baserow/modules/core/components/dashboard/DashboardNoWorkspaces'
-import DashboardSidebar from '@baserow/modules/core/components/dashboard/DashboardSidebar'
-import AuthService from '@baserow/modules/core/services/auth'
+import CreateWorkspaceModal from "@baserow/modules/core/components/workspace/CreateWorkspaceModal";
+import WorkspaceInvitation from "@baserow/modules/core/components/workspace/WorkspaceInvitation";
+import DashboardWorkspace from "@baserow/modules/core/components/dashboard/DashboardWorkspace";
+import DashboardHelp from "@baserow/modules/core/components/dashboard/DashboardHelp";
+import DashboardNoWorkspaces from "@baserow/modules/core/components/dashboard/DashboardNoWorkspaces";
+import DashboardSidebar from "@baserow/modules/core/components/dashboard/DashboardSidebar";
+import AuthService from "@baserow/modules/core/services/auth";
 
 export default {
   components: {
@@ -67,39 +67,42 @@ export default {
     DashboardWorkspace,
     WorkspaceInvitation,
   },
-  layout: 'app',
+  layout: "app",
   /**
    * Fetches the data that must be shown on the dashboard, this could for example be
    * pending workspace invitations.
    */
   async asyncData(context) {
-    const { error, app } = context
+    const { error, app } = context;
     try {
-      const { data } = await AuthService(app.$client).dashboard()
+      const { data } = await AuthService(app.$client).dashboard();
       let asyncData = {
         workspaceInvitations: data.workspace_invitations,
         workspaceComponentArguments: {},
-      }
+      };
       // Loop over all the plugin and call the `fetchAsyncDashboardData` because there
       // might be plugins that extend the dashboard and we want to fetch that async data
       // here.
-      const plugins = Object.values(app.$registry.getAll('plugin'))
+      const plugins = Object.values(app.$registry.getAll("plugin"));
       for (let i = 0; i < plugins.length; i++) {
-        asyncData = await plugins[i].fetchAsyncDashboardData(context, asyncData)
+        asyncData = await plugins[i].fetchAsyncDashboardData(
+          context,
+          asyncData
+        );
       }
-      return asyncData
+      return asyncData;
     } catch (e) {
-      return error({ statusCode: 400, message: 'Error loading dashboard.' })
+      return error({ statusCode: 400, message: "Error loading dashboard." });
     }
   },
   head() {
     return {
-      title: this.$t('dashboard.title'),
-    }
+      title: this.$t("dashboard.title"),
+    };
   },
   computed: {
     ...mapGetters({
-      sortedWorkspaces: 'workspace/getAllSorted',
+      sortedWorkspaces: "workspace/getAllSorted",
     }),
     ...mapState({
       user: (state) => state.auth.user,
@@ -115,19 +118,19 @@ export default {
     removeInvitation(invitation) {
       const index = this.workspaceInvitations.findIndex(
         (i) => i.id === invitation.id
-      )
-      this.workspaceInvitations.splice(index, 1)
+      );
+      this.workspaceInvitations.splice(index, 1);
     },
     /**
      * Make sure that the selected workspace is visible.
      */
     scrollToWorkspace(workspace) {
-      const ref = this.$refs['workspace-' + workspace.id]
+      const ref = this.$refs["workspace-" + workspace.id];
       if (ref) {
-        const element = ref[0].$el
-        element.scrollIntoView({ behavior: 'smooth' })
+        const element = ref[0].$el;
+        element.scrollIntoView({ behavior: "smooth" });
       }
     },
   },
-}
+};
 </script>

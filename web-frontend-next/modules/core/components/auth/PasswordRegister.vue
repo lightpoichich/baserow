@@ -43,7 +43,7 @@
             @blur="$v.account.email.$touch()"
           />
           <div class="auth__control-error">
-            <div v-if="$v.account.email.$error" class="error">
+            <div v-if="v$.account.email.$error" class="error">
               <i class="fas fa-warning fa-exclamation-triangle"></i>
               {{ $t("error.invalidEmail") }}
             </div>
@@ -59,7 +59,7 @@
             type="text"
             class="input input--large"
             :placeholder="$t('signup.namePlaceholder')"
-            @blur="$v.account.name.$touch()"
+            @blur="v$.account.name.$touch()"
           />
           <div class="auth__control-error">
             <div v-if="$v.account.name.$error" class="error">
@@ -74,7 +74,7 @@
         <div class="control__elements">
           <PasswordInput
             v-model="account.password"
-            :validation-state="$v.account.password"
+            :validation-state="v$.account.password"
             :placeholder="$t('signup.passwordPlaceholder')"
             :error-placeholder-class="'auth__control-error'"
             :show-error-icon="true"
@@ -92,10 +92,10 @@
             type="password"
             class="input input--large"
             :placeholder="$t('signup.passwordRepeatPlaceholder')"
-            @blur="$v.account.passwordConfirm.$touch()"
+            @blur="v$.account.passwordConfirm.$touch()"
           />
           <div class="auth__control-error">
-            <div v-if="$v.account.passwordConfirm.$error" class="error">
+            <div v-if="v$.account.passwordConfirm.$error" class="error">
               <i class="fas fa-warning fa-exclamation-triangle"></i>
               {{ $t("error.notMatchingPassword") }}
             </div>
@@ -126,13 +126,14 @@
 </template>
 
 <script>
+import { useVuelidate } from "@vuelidate/core";
 import {
   email,
   maxLength,
   minLength,
   required,
   sameAs,
-} from "vuelidate/lib/validators";
+} from "@vuelidate/validators";
 import { ResponseErrorMessage } from "~/modules/core/plugins/clientHandler";
 import error from "@baserow/modules/core/mixins/error";
 import PasswordInput from "@baserow/modules/core/components/helpers/PasswordInput";
@@ -154,6 +155,9 @@ export default {
       default: null,
     },
   },
+  setup() {
+    return { v$: useVuelidate() };
+  },
   data() {
     return {
       loading: false,
@@ -162,6 +166,22 @@ export default {
         name: "",
         password: "",
         passwordConfirm: "",
+      },
+    };
+  },
+  validations() {
+    return {
+      account: {
+        email: { required, email },
+        name: {
+          required,
+          minLength: minLength(2),
+          maxLength: maxLength(150),
+        },
+        password: passwordValidation,
+        passwordConfirm: {
+          sameAsPassword: sameAs("password"),
+        },
       },
     };
   },
@@ -246,20 +266,6 @@ export default {
     },
     updatedAccount({ key, value }) {
       this.$set(this.account, key, value);
-    },
-  },
-  validations: {
-    account: {
-      email: { required, email },
-      name: {
-        required,
-        minLength: minLength(2),
-        maxLength: maxLength(150),
-      },
-      password: passwordValidation,
-      passwordConfirm: {
-        sameAsPassword: sameAs("password"),
-      },
     },
   },
 };

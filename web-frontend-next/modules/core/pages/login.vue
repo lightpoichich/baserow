@@ -17,6 +17,7 @@ import workspaceInvitationToken from "@baserow/modules/core/mixins/workspaceInvi
 
 definePageMeta({
   layout: "login",
+  middleware: ["settings", "urlCheck"],
 });
 
 export default {
@@ -41,7 +42,7 @@ export default {
     if (store.getters["settings/get"].show_admin_signup_page === true)
       navigateTo("/signup");
     else if (store.getters["auth/isAuthenticated"]) navigateTo("/dashboard");
-
+    await store.dispatch("authProvider/fetchLoginOptions");
     return await workspaceInvitationToken.asyncData({ route, app });
   },
 

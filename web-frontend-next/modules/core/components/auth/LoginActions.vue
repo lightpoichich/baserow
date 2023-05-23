@@ -14,13 +14,13 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters } from "vuex";
 
 export default {
   props: {
     invitation: {
       required: false,
-      validator: (prop) => typeof prop === 'object' || prop === null,
+      validator: (prop) => typeof prop === "object" || prop === null,
       default: null,
     },
     original: {
@@ -31,22 +31,23 @@ export default {
   },
   computed: {
     ...mapGetters({
-      loginActions: 'authProvider/getAllLoginActions',
+      loginActions: "authProvider/getAllLoginActions",
     }),
     computedOriginal() {
-      let original = this.original
+      let original = this.original;
       if (!original) {
-        original = this.$route.query.original
+        original = this.$route.query.original;
       }
-      return original
+      return original;
     },
   },
   methods: {
     getLoginActionComponent(loginAction) {
-      return this.$registry
-        .get('authProvider', loginAction.type)
-        .getLoginActionComponent()
+      const nuxtApp = useNuxtApp();
+      return nuxtApp.$registry
+        .get("authProvider", loginAction.type)
+        .getLoginActionComponent();
     },
   },
-}
+};
 </script>

@@ -29,74 +29,58 @@ modules/core/validators.js
 <template>
   <div>
     <input
-      :class="{ 'input--error': validationState.$error }"
+      v-model="password"
+      :class="{ 'input--error': v$.$error }"
       type="password"
       class="input input--large"
       :autocomplete="autocomplete"
-      :value="value"
       :placeholder="placeholder"
-      @blur="validationState.$touch()"
-      @input="$emit('input', $event.target.value)"
+      @blur="v$.password.$touch"
+      @input="$emit('update:password', $event.target.value)"
     />
     <div :class="errorPlaceholderClass">
-      <div
-        v-if="validationState.$error && !validationState.required"
-        class="error"
-      >
-        <i
-          v-if="showErrorIcon"
-          class="fas fa-warning fa-exclamation-triangle"
-        ></i>
-        {{ $t('error.inputRequired') }}
-      </div>
-      <div
-        v-if="validationState.$error && !validationState.maxLength"
-        class="error"
-      >
-        <i
-          v-if="showErrorIcon"
-          class="fas fa-warning fa-exclamation-triangle"
-        ></i>
-        {{
-          $t('error.maxLength', {
-            max: validationState.$params.maxLength.max,
-          })
-        }}
-      </div>
-      <div
-        v-if="validationState.$error && !validationState.minLength"
-        class="error"
-      >
-        <i
-          v-if="showErrorIcon"
-          class="fas fa-warning fa-exclamation-triangle"
-        ></i>
-        {{
-          $t('error.minLength', {
-            min: validationState.$params.minLength.min,
-          })
-        }}
+      <div class="error">
+        <p class="error" v-for="error of v$.password.$errors" :key="error.$uid">
+          <i
+            v-if="showErrorIcon"
+            class="fas fa-warning fa-exclamation-triangle"
+          ></i>
+
+          <span v-if="error.$validator === 'required'">{{
+            $t("error.inputRequired")
+          }}</span>
+
+          <span v-if="error.$validator === 'minLength'">
+            {{
+              $t("error.minLength", {
+                min: error.$params.min,
+              })
+            }}</span
+          >
+
+          <span v-if="error.$validator === 'maxLength'">
+            {{
+              $t("error.maxLength", {
+                max: error.$params.max,
+              })
+            }}</span
+          >
+        </p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { useVuelidate } from "@vuelidate/core";
+import { passwordValidation } from "@baserow/modules/core/validators";
 export default {
-  name: 'PasswordInput',
+  name: "PasswordInput",
   props: {
-    validationState: {
-      type: Object,
-      required: true,
-    },
-    value: {
-      type: String,
-      required: true,
-    },
     autocomplete: {
       type: String,
       required: false,
-      default: 'new-password',
+      default: "new-password",
     },
     placeholder: {
       type: String,
@@ -106,7 +90,7 @@ export default {
     errorPlaceholderClass: {
       type: String,
       required: false,
-      default: '',
+      default: "",
     },
     showErrorIcon: {
       type: Boolean,
@@ -114,5 +98,24 @@ export default {
       default: false,
     },
   },
-}
+  emits: ["update:password"],
+  setup() {
+    return { v$: useVuelidate() };
+  },
+  data() {
+    return {
+      password: "",
+    };
+  },
+  watch: {
+    "v$.password.$errors"(value) {
+      console.log(value);
+    },
+  },
+  validations() {
+    return {
+      password: passwordValidation,
+    };
+  },
+};
 </script>

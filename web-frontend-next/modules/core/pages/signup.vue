@@ -16,6 +16,7 @@
         $t("signup.requireFirstUserMessage")
       }}</Alert>
     </template>
+
     <template v-if="!isSignupEnabled">
       <Alert
         simple
@@ -28,7 +29,7 @@
         {{ $t("action.backToLogin") }}
       </NuxtLink>
     </template>
-    <template v-else>
+    <div v-else>
       <PasswordRegister
         v-if="afterSignupStep < 0 && passwordLoginEnabled"
         :invitation="invitation"
@@ -52,7 +53,7 @@
         :is="afterSignupStepComponents[afterSignupStep]"
         @success="next"
       ></component>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -60,17 +61,24 @@
 import { useStore, mapGetters } from "vuex";
 import PasswordRegister from "@baserow/modules/core/components/auth/PasswordRegister";
 import LangPicker from "@baserow/modules/core/components/LangPicker";
+import Alert from "@baserow/modules/core/components/Alert";
 import LoginButtons from "@baserow/modules/core/components/auth/LoginButtons";
 import LoginActions from "@baserow/modules/core/components/auth/LoginActions";
 import workspaceInvitationToken from "@baserow/modules/core/mixins/workspaceInvitationToken";
 
 definePageMeta({
   layout: "login",
-  middleware: ["settings"],
+  middleware: ["settings", "urlCheck"],
 });
 
 export default {
-  components: { PasswordRegister, LangPicker, LoginButtons, LoginActions },
+  components: {
+    PasswordRegister,
+    LangPicker,
+    LoginButtons,
+    LoginActions,
+    Alert,
+  },
   async setup() {
     const { t } = useI18n();
     const store = useStore();
@@ -104,7 +112,8 @@ export default {
       return this.settings.show_admin_signup_page;
     },
     afterSignupStepComponents() {
-      return Object.values(this.$registry.getAll("plugin"))
+      const nuxtApp = useNuxtApp();
+      return Object.values(nuxtApp.$registry.getAll("plugin"))
         .reduce((components, plugin) => {
           components = components.concat(plugin.getAfterSignupStepComponent());
           return components;

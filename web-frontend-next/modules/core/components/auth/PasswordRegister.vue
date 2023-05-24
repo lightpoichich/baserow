@@ -73,8 +73,7 @@
         <label class="auth__control-label">{{ $t("field.password") }}</label>
         <div class="control__elements">
           <PasswordInput
-            v-model="account.password"
-            :validation-state="v$.account.password"
+            v-model:password="account.password"
             :placeholder="$t('signup.passwordPlaceholder')"
             :error-placeholder-class="'auth__control-error'"
             :show-error-icon="true"
@@ -180,16 +179,16 @@ export default {
           minLength: minLength(2),
           maxLength: maxLength(150),
         },
-        password: passwordValidation,
         passwordConfirm: {
-          sameAsPassword: sameAs("password"),
+          sameAsPassword: sameAs(this.account.password),
         },
       },
     };
   },
   computed: {
     registerComponents() {
-      return Object.values(this.$registry.getAll("plugin"))
+      const nuxtApp = useNuxtApp();
+      return Object.values(nuxtApp.$registry.getAll("plugin"))
         .map((plugin) => plugin.getRegisterComponent())
         .filter((component) => component !== null);
     },

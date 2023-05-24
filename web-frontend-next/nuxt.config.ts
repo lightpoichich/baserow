@@ -14,7 +14,7 @@ const locales = [
 
 export default defineNuxtConfig({
     alias: {
-        "@baserow": "./",
+        "@baserow": "",
     },
     css: [],
     modules: ["@/modules/core/module.js", "@nuxtjs/i18n"],

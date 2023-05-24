@@ -39,7 +39,7 @@ export default {
       commit("UPDATE_SETTINGS", values);
 
       try {
-        await SettingsService(this.$client).update(values);
+        await SettingsService(nuxtApp.$client).update(values);
       } catch (e) {
         commit("SET_SETTINGS", oldValues);
         throw e;

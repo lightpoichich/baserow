@@ -131,7 +131,8 @@ export default {
         templateId = null,
       }
     ) {
-      const { data } = await AuthService(this.$client).register(
+      const nuxtApp = useNuxtApp();
+      const { data } = await AuthService(nuxtApp.$client).register(
         email,
         name,
         password,
@@ -140,7 +141,8 @@ export default {
         workspaceInvitationToken,
         templateId
       );
-      setToken(this.app, data.refresh_token);
+      console.log(data.refresh_token);
+      setToken(data.refresh_token);
       commit("SET_USER_DATA", data);
     },
     /**
@@ -148,8 +150,8 @@ export default {
      * data.
      */
     logoff({ commit }) {
-      unsetToken(this.app);
-      unsetWorkspaceCookie(this.app);
+      unsetToken();
+      unsetWorkspaceCookie();
       commit("LOGOFF");
     },
     /**
@@ -183,12 +185,12 @@ export default {
           ...data,
         });
         if (!getters.getPreventSetToken && data.refresh_token) {
-          setToken(this.app, getters.refreshToken);
+          setToken(getters.refreshToken);
         }
       } catch (error) {
         if (error.response?.status === 401) {
-          unsetToken(this.app);
-          unsetWorkspaceCookie(this.app);
+          unsetToken();
+          unsetWorkspaceCookie();
           if (getters.isAuthenticated) {
             dispatch("setUserSessionExpired", true);
           }
@@ -235,8 +237,8 @@ export default {
       commit("SET_PREVENT_SET_TOKEN", true);
     },
     setUserSessionExpired({ commit }, value) {
-      unsetToken(this.app);
-      unsetWorkspaceCookie(this.app);
+      unsetToken();
+      unsetWorkspaceCookie();
       commit("SET_USER_SESSION_EXPIRED", value);
     },
   },

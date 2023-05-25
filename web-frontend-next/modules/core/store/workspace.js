@@ -388,7 +388,7 @@ export default {
      */
     unselect({ commit, dispatch, getters }, workspace) {
       commit("UNSELECT", {});
-      unsetWorkspaceCookie(this.app);
+      unsetWorkspaceCookie();
       dispatch(
         "undoRedo/updateCurrentScopeSet",
         CORE_ACTION_SCOPES.workspace(null),

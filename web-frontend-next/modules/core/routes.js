@@ -31,11 +31,11 @@ export const routes = [
   //   path: "/reset-password/:token",
   //   file: resolve(__dirname, "./pages/resetPassword.vue"),
   // },
-  // {
-  //   name: "dashboard",
-  //   path: "/dashboard",
-  //   file: resolve(__dirname, "./pages/dashboard.vue"),
-  // },
+  {
+    name: "dashboard",
+    path: "/dashboard",
+    file: resolve(__dirname, "./pages/dashboard.vue"),
+  },
   // {
   //   name: "group-invitation",
   //   path: "/group-invitation/:token",

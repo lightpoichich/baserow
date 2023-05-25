@@ -107,11 +107,6 @@ export default {
       password: "",
     };
   },
-  watch: {
-    "v$.password.$errors"(value) {
-      console.log(value);
-    },
-  },
   validations() {
     return {
       password: passwordValidation,

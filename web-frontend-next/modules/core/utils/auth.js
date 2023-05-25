@@ -3,10 +3,13 @@ import jwtDecode from "jwt-decode";
 
 const cookieTokenName = "jwt_token";
 
-export const setToken = ({ $cookies, $env }, token, key = cookieTokenName) => {
+export const setToken = (token, key = cookieTokenName) => {
   if (process.SERVER_BUILD) return;
-  const secure = isSecureURL($env.PUBLIC_WEB_FRONTEND_URL);
-  $cookies.set(key, token, {
+  const runtimeConfig = useRuntimeConfig();
+  const secure = isSecureURL(runtimeConfig.public.publicWebFrontendUrl);
+
+  const cookie = useCookie(key, {
+    default: () => token,
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
     sameSite: "lax",
@@ -14,20 +17,19 @@ export const setToken = ({ $cookies, $env }, token, key = cookieTokenName) => {
   });
 };
 
-export const unsetToken = ({ $cookies }, key = cookieTokenName) => {
+export const unsetToken = (key = cookieTokenName) => {
   if (process.SERVER_BUILD) return;
-  $cookies.remove(key);
+  const cookie = useCookie(key);
+  cookie.value = null;
 };
 
-export const getToken = ({ $cookies }, key = cookieTokenName) => {
-  return $cookies.get(key);
+export const getToken = (key = cookieTokenName) => {
+  const cookie = useCookie(key);
+  return cookie.value;
 };
 
-export const getTokenIfEnoughTimeLeft = (
-  { $cookies },
-  key = cookieTokenName
-) => {
-  const token = getToken({ $cookies }, key);
+export const getTokenIfEnoughTimeLeft = (key = cookieTokenName) => {
+  const token = getToken(key);
   const now = Math.ceil(new Date().getTime() / 1000);
 
   let data;

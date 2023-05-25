@@ -221,6 +221,7 @@ export default {
       this.hideError();
 
       try {
+        const nuxtApp = useNuxtApp();
         const values = {
           name: this.account.name,
           email: this.account.email,
@@ -246,7 +247,7 @@ export default {
         }
 
         await this.$store.dispatch("auth/register", values);
-        Object.values(this.$registry.getAll("plugin")).forEach((plugin) => {
+        Object.values(nuxtApp.$registry.getAll("plugin")).forEach((plugin) => {
           plugin.userCreated(this.account, this);
         });
 

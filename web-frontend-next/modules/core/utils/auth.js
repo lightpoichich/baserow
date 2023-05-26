@@ -29,6 +29,7 @@ export const getToken = (key = cookieTokenName) => {
 };
 
 export const getTokenIfEnoughTimeLeft = (key = cookieTokenName) => {
+  console.log(key);
   const token = getToken(key);
   const now = Math.ceil(new Date().getTime() / 1000);
 
@@ -38,6 +39,8 @@ export const getTokenIfEnoughTimeLeft = (key = cookieTokenName) => {
   } catch (error) {
     return null;
   }
+
+  console.log(data);
   // Return the token if it is still valid for more of the 10% of the lifespan.
   return data && (data.exp - now) / (data.exp - data.iat) > 0.1 ? token : null;
 };

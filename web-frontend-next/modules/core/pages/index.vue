@@ -1,4 +1,4 @@
-<template><p>Homepage</p></template>
+<template><p>Index</p></template>
 
 <script>
 import { useStore } from "vuex";
@@ -8,7 +8,9 @@ export default {
     const pageRedirect = store.getters["auth/isAuthenticated"]
       ? "/dashboard"
       : "/login";
-    navigateTo(pageRedirect);
+
+    console.log(pageRedirect);
+    // navigateTo(pageRedirect);
   },
 };
 </script>

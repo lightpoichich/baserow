@@ -174,9 +174,13 @@ export default {
         throw new Error("Invalid refresh token");
       }
 
+      const nuxtApp = useNuxtApp();
+
       try {
         const tokenUpdatedAt = new Date().getTime();
-        const { data } = await AuthService(this.$client).refresh(refreshToken);
+        const { data } = await AuthService(nuxtApp.$client).refresh(
+          refreshToken
+        );
         // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
         // a new refresh token. In that case, we keep the one we just used.
         commit("SET_USER_DATA", {

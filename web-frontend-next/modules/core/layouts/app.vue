@@ -1,18 +1,19 @@
 <template>
   <div>
-    <p>App layout</p>
-    <!-- <Notifications></Notifications> -->
+    <!-- <Notifications></Notifications>
     <div :class="{ 'layout--collapsed': isCollapsed }" class="layout">
       <div class="layout__col-1">
-        <!-- <Sidebar></Sidebar> -->
-      </div>
-      <div class="layout__col-2"><slot /></div>
-      <component
+        <Sidebar></Sidebar>
+      </div> -->
+
+    <div class="layout__col-2"><slot /></div>
+
+    <!-- <component
         :is="component"
         v-for="(component, index) in appLayoutComponents"
         :key="index"
       ></component>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -26,90 +27,90 @@ import { CORE_ACTION_SCOPES } from "@baserow/modules/core/utils/undoRedoConstant
 import { isOsSpecificModifierPressed } from "@baserow/modules/core/utils/events";
 
 export default {
-  components: {
-    Notifications,
-    Sidebar,
-  },
-  mixins: [undoRedo],
+  // components: {
+  //   Notifications,
+  //   Sidebar,
+  // },
+  // mixins: [undoRedo],
   middleware: [
     "settings",
     "authenticated",
     "workspacesAndApplications",
     "pendingJobs",
   ],
-  computed: {
-    appLayoutComponents() {
-      return Object.values(this.$registry.getAll("plugin"))
-        .map((plugin) => plugin.getAppLayoutComponent())
-        .filter((component) => component !== null);
-    },
-    ...mapGetters({
-      isCollapsed: "sidebar/isCollapsed",
-    }),
-  },
-  created() {
-    /*
-     The authentication middleware supports loading a refresh token from a query
-     param called token. If used we don't want to fill up the users URL bar with a
-     massive token, so we want remove it.
+  // computed: {
+  //   appLayoutComponents() {
+  //     return Object.values(this.$registry.getAll("plugin"))
+  //       .map((plugin) => plugin.getAppLayoutComponent())
+  //       .filter((component) => component !== null);
+  //   },
+  //   ...mapGetters({
+  //     isCollapsed: "sidebar/isCollapsed",
+  //   }),
+  // },
+  // created() {
+  //   /*
+  //    The authentication middleware supports loading a refresh token from a query
+  //    param called token. If used we don't want to fill up the users URL bar with a
+  //    massive token, so we want remove it.
 
-     However, crucially, we cannot remove it by issuing a 302 redirect from nuxt
-     server as this completely throws away vuex's state, which will
-     throw away any authorization obtained by the query param in the auth store.
+  //    However, crucially, we cannot remove it by issuing a 302 redirect from nuxt
+  //    server as this completely throws away vuex's state, which will
+  //    throw away any authorization obtained by the query param in the auth store.
 
-     Normally this is fine as the client can just reload the token from a cookie,
-     however when Baserow is embedded in an iframe on a 3rd party site it cannot
-     access these cookies as they are sameSite:lax. So by not issuing a redirect in
-     the server to remove the query.token, but instead doing it here, we preserve
-     the auth stores state as nuxt will populate it server side and ship it to client.
+  //    Normally this is fine as the client can just reload the token from a cookie,
+  //    however when Baserow is embedded in an iframe on a 3rd party site it cannot
+  //    access these cookies as they are sameSite:lax. So by not issuing a redirect in
+  //    the server to remove the query.token, but instead doing it here, we preserve
+  //    the auth stores state as nuxt will populate it server side and ship it to client.
 
-     This way the client does not need to read the token from the cookies unless they
-     refresh the page.
-    */
-    if (this.$route.query.token) {
-      const queryWithoutToken = { ...this.$route.query };
-      delete queryWithoutToken.token;
-      this.$router.replace({ query: queryWithoutToken });
-    }
-  },
-  mounted() {
-    // Connect to the web socket so we can start receiving real time updates.
-    this.$realtime.connect();
-    this.$el.keydownEvent = (event) => this.keyDown(event);
-    document.body.addEventListener("keydown", this.$el.keydownEvent);
-    this.$store.dispatch(
-      "undoRedo/updateCurrentScopeSet",
-      CORE_ACTION_SCOPES.root()
-    );
-    this.$store.dispatch("job/initializePoller");
-  },
-  beforeDestroy() {
-    this.$realtime.disconnect();
-    document.body.removeEventListener("keydown", this.$el.keydownEvent);
-    this.$store.dispatch(
-      "undoRedo/updateCurrentScopeSet",
-      CORE_ACTION_SCOPES.root(false)
-    );
-  },
-  methods: {
-    keyDown(event) {
-      if (
-        isOsSpecificModifierPressed(event) &&
-        event.key.toLowerCase() === "z"
-      ) {
-        // input/textareas/selects/editable dom elements have their own browser
-        // controlled undo/redo functionality so don't use our own if they have the
-        // focus.
-        if (
-          !["input", "textarea", "select"].includes(
-            document.activeElement.tagName.toLowerCase()
-          ) &&
-          !document.activeElement.isContentEditable
-        ) {
-          event.shiftKey ? this.redo() : this.undo();
-        }
-      }
-    },
-  },
+  //    This way the client does not need to read the token from the cookies unless they
+  //    refresh the page.
+  //   */
+  //   if (this.$route.query.token) {
+  //     const queryWithoutToken = { ...this.$route.query };
+  //     delete queryWithoutToken.token;
+  //     this.$router.replace({ query: queryWithoutToken });
+  //   }
+  // },
+  // mounted() {
+  //   // Connect to the web socket so we can start receiving real time updates.
+  //   this.$realtime.connect();
+  //   this.$el.keydownEvent = (event) => this.keyDown(event);
+  //   document.body.addEventListener("keydown", this.$el.keydownEvent);
+  //   this.$store.dispatch(
+  //     "undoRedo/updateCurrentScopeSet",
+  //     CORE_ACTION_SCOPES.root()
+  //   );
+  //   this.$store.dispatch("job/initializePoller");
+  // },
+  // beforeDestroy() {
+  //   this.$realtime.disconnect();
+  //   document.body.removeEventListener("keydown", this.$el.keydownEvent);
+  //   this.$store.dispatch(
+  //     "undoRedo/updateCurrentScopeSet",
+  //     CORE_ACTION_SCOPES.root(false)
+  //   );
+  // },
+  // methods: {
+  //   keyDown(event) {
+  //     if (
+  //       isOsSpecificModifierPressed(event) &&
+  //       event.key.toLowerCase() === "z"
+  //     ) {
+  //       // input/textareas/selects/editable dom elements have their own browser
+  //       // controlled undo/redo functionality so don't use our own if they have the
+  //       // focus.
+  //       if (
+  //         !["input", "textarea", "select"].includes(
+  //           document.activeElement.tagName.toLowerCase()
+  //         ) &&
+  //         !document.activeElement.isContentEditable
+  //       ) {
+  //         event.shiftKey ? this.redo() : this.undo();
+  //       }
+  //     }
+  //   },
+  // },
 };
 </script>

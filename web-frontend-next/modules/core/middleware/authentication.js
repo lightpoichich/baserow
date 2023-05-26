@@ -1,25 +1,29 @@
 import {
   getTokenIfEnoughTimeLeft,
   setToken,
-} from '@baserow/modules/core/utils/auth'
+} from "@baserow/modules/core/utils/auth";
 
-export default function ({ store, req, app, route, redirect }) {
+export default defineNuxtRouteMiddleware((to) => {
+  const nuxtApp = useNuxtApp();
+  const route = useRoute();
   // If nuxt generate or already authenticated, pass this middleware
-  if ((process.server && !req) || store.getters['auth/isAuthenticated']) return
+  if (process.server || nuxtApp.$store.getters["auth/isAuthenticated"]) return;
 
   // token can be in the query string (SSO) or in the cookies (previous session)
-  let refreshToken = route.query.token
+  let refreshToken = route.params.token;
   if (refreshToken) {
-    setToken(app, refreshToken)
+    setToken(refreshToken);
   } else {
-    refreshToken = getTokenIfEnoughTimeLeft(app)
+    refreshToken = getTokenIfEnoughTimeLeft();
   }
 
   if (refreshToken) {
-    return store.dispatch('auth/refresh', refreshToken).catch((error) => {
-      if (error.response?.status === 401) {
-        return redirect({ name: 'login' })
-      }
-    })
+    return nuxtApp.$store
+      .dispatch("auth/refresh", refreshToken)
+      .catch((error) => {
+        if (error.response?.status === 401) {
+          return redirect({ name: "login" });
+        }
+      });
   }
-}
+});

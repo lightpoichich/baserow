@@ -122,6 +122,12 @@ export default defineNuxtModule({
     addPlugin(resolve("./plugin"), { append: true });
 
     addRouteMiddleware({
+      name: "authentication",
+      path: resolve("./middleware/authentication"),
+      global: true, // make sure the middleware is added to every route
+    });
+
+    addRouteMiddleware({
       name: "settings",
       path: resolve("./middleware/settings"),
     });

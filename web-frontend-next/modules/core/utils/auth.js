@@ -29,7 +29,6 @@ export const getToken = (key = cookieTokenName) => {
 };
 
 export const getTokenIfEnoughTimeLeft = (key = cookieTokenName) => {
-  console.log(key);
   const token = getToken(key);
   const now = Math.ceil(new Date().getTime() / 1000);
 

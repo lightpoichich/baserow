@@ -65,13 +65,17 @@ export default defineNuxtModule({
       pages.push(...routes);
     });
 
-    // Env vars
+    // Private env vars
+    nuxt.options.runtimeConfig = defu(nuxt.options.runtimeConfig, {
+      privateBackendUrl: "http://backend:8000",
+    });
+
+    // Public env vars
     nuxt.options.runtimeConfig.public = defu(
       nuxt.options.runtimeConfig.public,
       {
         baserowPublicUrl: "http://localhost",
         downloadFileViaXhr: false,
-        privateBackendUrl: "http://backend:8000",
         baserowDisablePublicUrlCheck: false,
         publicBackendUrl: "http://localhost:8000",
         publicWebFrontendUrl: "http://localhost:3000",
@@ -117,7 +121,7 @@ export default defineNuxtModule({
     addPlugin(resolve("./plugins/store"));
 
     // Load the client handler plugin. `append` is set to true to make sure
-    // it's loaded after the store plugin (as client handler depends on it)
+    // it's loaded after the store as client handler depends on it.
     addPlugin(resolve("./plugins/clientHandler"), { append: true });
     addPlugin(resolve("./plugin"), { append: true });
 

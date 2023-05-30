@@ -9,12 +9,13 @@ export const setToken = (token, key = cookieTokenName) => {
   const secure = isSecureURL(runtimeConfig.public.publicWebFrontendUrl);
 
   const cookie = useCookie(key, {
-    default: () => token,
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
     sameSite: "lax",
     secure,
   });
+
+  cookie.value = token;
 };
 
 export const unsetToken = (key = cookieTokenName) => {
@@ -31,7 +32,6 @@ export const getToken = (key = cookieTokenName) => {
 export const getTokenIfEnoughTimeLeft = (key = cookieTokenName) => {
   const token = getToken(key);
   const now = Math.ceil(new Date().getTime() / 1000);
-
   let data;
   try {
     data = jwtDecode(token);
@@ -39,7 +39,6 @@ export const getTokenIfEnoughTimeLeft = (key = cookieTokenName) => {
     return null;
   }
 
-  console.log(data);
   // Return the token if it is still valid for more of the 10% of the lifespan.
   return data && (data.exp - now) / (data.exp - data.iat) > 0.1 ? token : null;
 };

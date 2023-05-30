@@ -112,7 +112,7 @@ export default {
       commit("SET_USER_DATA", data);
 
       if (!getters.getPreventSetToken) {
-        setToken(this.app, getters.refreshToken);
+        setToken(getters.refreshToken);
       }
       return data.user;
     },
@@ -141,7 +141,6 @@ export default {
         workspaceInvitationToken,
         templateId
       );
-      console.log(data.refresh_token);
       setToken(data.refresh_token);
       commit("SET_USER_DATA", data);
     },

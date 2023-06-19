@@ -1,5 +1,10 @@
 # Changelog
 
+## Released 1.18.1
+
+### New features
+* Added `length is greater than` filter: [#1770](https://gitlab.com/baserow/baserow/-/issues/1770)
+
 ## Released 1.18.0
 
 ### New features

@@ -473,7 +473,7 @@ export class LengthIsLowerThanViewFilterType extends ViewFilterType {
     return (
       isNaN(filterValue) ||
       rowValue === null ||
-      filterValue === 0 ||
+      Number(filterValue) === 0 ||
       rowValue.toString().length < filterValue
     )
   }

@@ -148,6 +148,7 @@
         "inThisMonth": "est ce mois-ci",
         "inThisYear": "est cette année",
         "lowerThan": "est plus petit que",
+        "lengthIsGreaterThan": "a une longueur supérieure à",
         "lengthIsLowerThan": "a une longueur inférieure à",
         "hasFileType": "est de type",
         "isDaysAgo": "il y a X jours",

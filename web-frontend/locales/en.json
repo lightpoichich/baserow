@@ -167,6 +167,7 @@
         "isWithinWeeks": "is within weeks",
         "isWithinMonths": "is within months",
         "lowerThan": "lower than",
+        "lengthIsGreaterThan": "length is greater than",
         "lengthIsLowerThan": "length is lower than",
         "hasFileType": "has file type"
     },

@@ -221,6 +221,34 @@ class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):
     type = "contains_not"
 
 
+class LengthIsGreaterThanViewFilterType(ViewFilterType):
+    """
+    The length is greater than filter checks if the fields character
+    length is greater than x
+    """
+
+    type = "length_is_greater_than"
+    compatible_field_types = [
+        TextFieldType.type,
+        LongTextFieldType.type,
+        URLFieldType.type,
+        EmailFieldType.type,
+        PhoneNumberFieldType.type,
+    ]
+
+    def get_filter(self, field_name, value, model_field, field):
+        if value == 0:
+            return Q()
+
+        try:
+            return AnnotatedQ(
+                annotation={f"{field_name}_len": Length(field_name)},
+                q={f"{field_name}_len__gt": int(value)},
+            )
+        except ValueError:
+            return self.default_filter_on_exception()
+
+
 class LengthIsLowerThanViewFilterType(ViewFilterType):
     """
     The length is lower than filter checks if the fields character

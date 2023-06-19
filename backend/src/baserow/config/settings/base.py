@@ -551,6 +551,7 @@ SPECTACULAR_SETTINGS = {
             "has_file_type",
             "contains",
             "contains_not",
+            "length_is_greater_than",
             "length_is_lower_than",
             "higher_than",
             "lower_than",

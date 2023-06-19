@@ -19,6 +19,7 @@ import {
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
   HasFileTypeViewFilterType,
+  LengthIsGreaterThanViewFilterType,
   LengthIsLowerThanViewFilterType,
   LinkRowContainsFilterType,
   LinkRowNotContainsFilterType,
@@ -810,6 +811,34 @@ const multipleSelectValuesHasNot = [
   },
 ]
 
+const lengthIsGreaterThanCases = [
+  {
+    rowValue: 'bill',
+    filterValue: 0,
+    expected: true,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 3,
+    expected: true,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 4,
+    expected: false,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 5,
+    expected: false,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 'a',
+    expected: true,
+  },
+]
+
 const lengthIsLowerThanCases = [
   {
     rowValue: 'bill',
@@ -1110,6 +1139,17 @@ describe('All Tests', () => {
     )
     expect(result).toBe(values.expected)
   })
+
+  test.each(lengthIsGreaterThanCases)(
+    'LengthIsGreaterThanViewFilterType',
+    (values) => {
+      const result = new LengthIsGreaterThanViewFilterType().matches(
+        values.rowValue,
+        values.filterValue
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
 
   test.each(lengthIsLowerThanCases)(
     'LengthIsLowerThanViewFilterType',

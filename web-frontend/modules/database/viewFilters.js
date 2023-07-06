@@ -415,6 +415,38 @@ export class DoesntContainWordViewFilterType extends ContainsWordViewFilterType 
   }
 }
 
+export class LengthIsGreaterThanViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'length_is_greater_than'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.lengthIsGreaterThan')
+  }
+
+  getExample() {
+    return '5'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumber
+  }
+
+  getCompatibleFieldTypes() {
+    return ['text', 'long_text', 'url', 'email', 'phone_number']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return (
+      isNaN(filterValue) ||
+      rowValue === null ||
+      Number(filterValue) === 0 ||
+      rowValue.toString().length > filterValue
+    )
+  }
+}
+
 export class LengthIsLowerThanViewFilterType extends ViewFilterType {
   static getType() {
     return 'length_is_lower_than'
@@ -441,7 +473,7 @@ export class LengthIsLowerThanViewFilterType extends ViewFilterType {
     return (
       isNaN(filterValue) ||
       rowValue === null ||
-      filterValue === 0 ||
+      Number(filterValue) === 0 ||
       rowValue.toString().length < filterValue
     )
   }

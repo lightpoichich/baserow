@@ -402,6 +402,28 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                      
                     <span
                       class="select__item-name-text"
+                      title="viewFilter.lengthIsGreaterThan"
+                    >
+                      viewFilter.lengthIsGreaterThan
+                    </span>
+                  </div>
+                   
+                  <!---->
+                </a>
+              </li>
+              <li
+                class="select__item"
+              >
+                <a
+                  class="select__item-link"
+                >
+                  <div
+                    class="select__item-name"
+                  >
+                    <!---->
+                     
+                    <span
+                      class="select__item-name-text"
                       title="viewFilter.lengthIsLowerThan"
                     >
                       viewFilter.lengthIsLowerThan

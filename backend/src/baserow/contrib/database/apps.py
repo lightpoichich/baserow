@@ -301,6 +301,7 @@ class DatabaseConfig(AppConfig):
             FilenameContainsViewFilterType,
             HasFileTypeViewFilterType,
             HigherThanViewFilterType,
+            LengthIsGreaterThanViewFilterType,
             LengthIsLowerThanViewFilterType,
             LinkRowContainsViewFilterType,
             LinkRowHasNotViewFilterType,
@@ -325,6 +326,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(ContainsNotViewFilterType())
         view_filter_type_registry.register(ContainsWordViewFilterType())
         view_filter_type_registry.register(DoesntContainWordViewFilterType())
+        view_filter_type_registry.register(LengthIsGreaterThanViewFilterType())
         view_filter_type_registry.register(LengthIsLowerThanViewFilterType())
         view_filter_type_registry.register(HigherThanViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())

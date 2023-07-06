@@ -150,6 +150,7 @@
         "inThisMonth": "本月内",
         "inThisYear": "今年内",
         "lowerThan": "低于",
+        "lengthIsGreaterThan": "长度大于",
         "lengthIsLowerThan": "长度小于",
         "hasFileType": "有文件类型"
     },

@@ -156,6 +156,7 @@
         "inThisMonth": "",
         "inThisYear": "",
         "lowerThan": "",
+        "lengthIsGreaterThan": "",
         "lengthIsLowerThan": "",
         "hasFileType": ""
     },

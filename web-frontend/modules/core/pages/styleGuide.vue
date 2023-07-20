@@ -1252,7 +1252,11 @@
               <i class="fas fa-times"></i>
             </a>
             <div
-              class="modal__box-sidebar modal__box-sidebar--left modal__box-sidebar--scrollable"
+              class="
+                modal__box-sidebar
+                modal__box-sidebar--left
+                modal__box-sidebar--scrollable
+              "
             >
               <div class="modal-sidebar__head">
                 <div class="modal-sidebar__head-initials-icon">B</div>
@@ -1342,7 +1346,10 @@
                         </span>
                       </div>
                       <div
-                        class="card-many-to-many__item card-link-row card-link-row--unnamed"
+                        class="
+                          card-many-to-many__item
+                          card-link-row card-link-row--unnamed
+                        "
                       >
                         <span class="card-many-to-many__name">
                           unnamed row 1
@@ -1454,21 +1461,33 @@
                   <div class="card-many-to-many__list-wrapper">
                     <div class="card-many-to-many__list">
                       <div
-                        class="card-many-to-many__item card-multiple-select-option background-color--green"
+                        class="
+                          card-many-to-many__item
+                          card-multiple-select-option
+                          background-color--green
+                        "
                       >
                         <span class="card-many-to-many__name">
                           Option value 1
                         </span>
                       </div>
                       <div
-                        class="card-many-to-many__item card-multiple-select-option background-color--blue"
+                        class="
+                          card-many-to-many__item
+                          card-multiple-select-option
+                          background-color--blue
+                        "
                       >
                         <span class="card-many-to-many__name">
                           Option 2 with a very long name that doesn't fit
                         </span>
                       </div>
                       <div
-                        class="card-many-to-many__item card-multiple-select-option background-color--blue"
+                        class="
+                          card-many-to-many__item
+                          card-multiple-select-option
+                          background-color--blue
+                        "
                       >
                         <span class="card-many-to-many__name"> Option 3 </span>
                       </div>
@@ -1513,7 +1532,11 @@
                 <thead>
                   <tr class="data-table__table-row">
                     <th
-                      class="data-table__table-cell data-table__table-cell--sticky-left data-table__table-cell--header"
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--sticky-left
+                        data-table__table-cell--header
+                      "
                     >
                       <div class="data-table__table-cell-head">
                         <Checkbox
@@ -1523,7 +1546,9 @@
                       </div>
                     </th>
                     <th
-                      class="data-table__table-cell data-table__table-cell--header"
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
                     >
                       <div class="data-table__table-cell-head">
                         <a href="#" class="data-table__table-cell-head-link"
@@ -1536,12 +1561,16 @@
                       </div>
                     </th>
                     <th
-                      class="data-table__table-cell data-table__table-cell--header"
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
                     >
                       <div class="data-table__table-cell-head">Email</div>
                     </th>
                     <th
-                      class="data-table__table-cell data-table__table-cell--header"
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
                     >
                       <div class="data-table__table-cell-head">
                         Workspace permissions
@@ -1552,12 +1581,18 @@
                       </div>
                     </th>
                     <th
-                      class="data-table__table-cell data-table__table-cell--header"
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
                     >
                       <div class="data-table__table-cell-head">Team</div>
                     </th>
                     <th
-                      class="data-table__table-cell data-table__table-cell--header data-table__table-cell--sticky-right"
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--header
+                        data-table__table-cell--sticky-right
+                      "
                     >
                       <div class="data-table__table-cell-head"></div>
                     </th>
@@ -1574,7 +1609,10 @@
                     }"
                   >
                     <td
-                      class="data-table__table-cell data-table__table-cell--sticky-left"
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--sticky-left
+                      "
                     >
                       <div class="data-table__table-cell-content">
                         <Checkbox
@@ -1604,7 +1642,10 @@
                       </div>
                     </td>
                     <td
-                      class="data-table__table-cell data-table__table-cell--sticky-right"
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--sticky-right
+                      "
                     >
                       <div class="data-table__table-cell-content">
                         <div class="data-table__more-wrapper">

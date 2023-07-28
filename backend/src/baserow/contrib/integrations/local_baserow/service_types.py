@@ -17,6 +17,7 @@ from baserow.contrib.integrations.local_baserow.integration_types import (
 )
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
+    LocalBaserowIntegration,
     LocalBaserowListRows,
 )
 from baserow.core.formula.registries import formula_runtime_function_registry
@@ -97,7 +98,7 @@ class LocalBaserowListRowsUserServiceType(ServiceType):
         :return: The list of rows.
         """
 
-        integration = service.integration.specific
+        integration = LocalBaserowIntegration.objects.get(id=service.integration_id)
 
         table = service.table
         if table is None:
@@ -201,7 +202,9 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
         :return: The rows.
         """
 
-        integration = service.integration.specific
+        integration = runtime_formula_context.application_context["integrations"][
+            service.integration_id
+        ]
 
         table = service.table
         if table is None:

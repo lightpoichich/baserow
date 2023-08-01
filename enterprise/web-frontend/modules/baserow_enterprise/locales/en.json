@@ -147,10 +147,6 @@
         "errorSignupDisabled": "sign up has been disabled by the administrator."
     },
     "roles": {
-        "admin": {
-            "name": "Admin",
-            "description": "Can fully configure and edit workspaces and applications."
-        },
         "builder": {
             "name": "Builder",
             "description": "Can fully configure and edit applications."
@@ -280,5 +276,11 @@
     "auditLogSidebarWorkspace": {
         "title": "Audit log",
         "deactivated": "Available in the advanced/enterprise version"
+    },
+    "permission": {
+        "builder": "Builder",
+        "editor": "Editor",
+        "commenter": "Commenter",
+        "viewer": "Viewer"
     }
 }

@@ -23,6 +23,11 @@ class IntegrationAuthorizedUserSerializerField(serializers.PrimaryKeyRelatedFiel
         )
         super().__init__(**kwargs)
 
+    def to_internal_value(self, data):
+        # Note: we will validate in `LocalBaserowIntegrationType` that
+        # the user in question belongs in the application's workspace.
+        return self.queryset.get(pk=data)
+
 
 class IntegrationSerializer(serializers.ModelSerializer):
     """

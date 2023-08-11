@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.contrib.auth.models import User
 from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
@@ -28,6 +29,7 @@ from baserow.api.integrations.serializers import (
     UpdateIntegrationSerializer,
 )
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
+from baserow.api.user.errors import ERROR_USER_NOT_FOUND
 from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
     DiscriminatorCustomFieldsMappingSerializer,
@@ -137,6 +139,7 @@ class IntegrationsView(APIView):
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             ApplicationOperationNotSupported: ERROR_APPLICATION_OPERATION_NOT_SUPPORTED,
             InvalidIntegrationAuthorizedUser: ERROR_INTEGRATION_AUTHORIZED_USER_INVALID,
+            User.DoesNotExist: ERROR_USER_NOT_FOUND,
         }
     )
     @validate_body_custom_fields(
@@ -204,6 +207,7 @@ class IntegrationView(APIView):
         {
             IntegrationDoesNotExist: ERROR_INTEGRATION_DOES_NOT_EXIST,
             InvalidIntegrationAuthorizedUser: ERROR_INTEGRATION_AUTHORIZED_USER_INVALID,
+            User.DoesNotExist: ERROR_USER_NOT_FOUND,
         }
     )
     def patch(self, request, integration_id: int):

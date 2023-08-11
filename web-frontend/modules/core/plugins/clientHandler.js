@@ -139,6 +139,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.lastAdminTitle'),
         app.i18n.t('clientHandler.lastAdminMessage')
       ),
+      ERROR_USER_NOT_FOUND: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.userNotFoundTitle'),
+        app.i18n.t('clientHandler.userNotFoundMessage')
+      ),
     }
   }
 

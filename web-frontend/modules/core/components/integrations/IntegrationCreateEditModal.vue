@@ -47,7 +47,6 @@ import error from '@baserow/modules/core/mixins/error'
 import modal from '@baserow/modules/core/mixins/modal'
 import IntegrationEditForm from '@baserow/modules/core/components/integrations/IntegrationEditForm'
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
-import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 
 export default {
   components: { IntegrationEditForm },

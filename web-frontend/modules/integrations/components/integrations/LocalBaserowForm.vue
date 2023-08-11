@@ -67,7 +67,7 @@ export default {
   },
   computed: {
     roles() {
-      return this.workspace ? this.workspace._.roles : []
+      return this.workspace?._?.roles || []
     },
     getAuthorizedUserDisplayName() {
       const authorizedUser = this.workspace_users.find(

@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.contrib.builder.exceptions import InvalidIntegrationAuthorizedUser
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
 from baserow.core.integrations.exceptions import IntegrationNotInSameApplication
@@ -25,9 +24,6 @@ from baserow.core.integrations.signals import (
 )
 from baserow.core.integrations.types import IntegrationForUpdate
 from baserow.core.models import Application
-
-if TYPE_CHECKING:
-    from baserow.core.models import Workspace
 
 
 class IntegrationService:
@@ -111,9 +107,9 @@ class IntegrationService:
             context=application,
         )
 
-        self.validate_authorized_user(application.workspace, kwargs["authorized_user"])
-
         prepared_values = integration_type.prepare_values(kwargs, user)
+
+        integration_type.validate(application, prepared_values)
 
         try:
             new_integration = self.handler.create_integration(
@@ -161,15 +157,14 @@ class IntegrationService:
             context=integration,
         )
 
-        prev_authorized_user_id = integration.authorized_user_id  # type: ignore
-        new_authorized_user = kwargs.get("authorized_user", None)
-        if new_authorized_user and new_authorized_user.id != prev_authorized_user_id:
-            self.validate_authorized_user(workspace, new_authorized_user)
+        integration_type: IntegrationType = integration.get_type()  # type: ignore
 
-        prepared_values = integration.get_type().prepare_values(kwargs, user)
+        prepared_values = integration_type.prepare_values(kwargs, user)
+
+        integration_type.validate(integration.application, prepared_values)
 
         integration = self.handler.update_integration(
-            integration.get_type(), integration, **prepared_values
+            integration_type, integration, **prepared_values
         )
 
         integration_updated.send(self, integration=integration, user=user)
@@ -250,19 +245,3 @@ class IntegrationService:
         self.handler.recalculate_full_orders(application)
 
         integration_orders_recalculated.send(self, application=application)
-
-    def validate_authorized_user(
-        self, workspace: "Workspace", authorized_user: AbstractUser
-    ) -> None:
-        try:
-            workspace.users.select_related("profile").get(id=authorized_user.id)
-        except workspace.users.model.DoesNotExist:
-            raise InvalidIntegrationAuthorizedUser(
-                f"The user {authorized_user.pk} does not belong "
-                "to the integration's workspace."
-            )
-
-        if authorized_user.profile.to_be_deleted:  # type: ignore
-            raise InvalidIntegrationAuthorizedUser(
-                f"The user {authorized_user.pk} is flagged for deletion."
-            )

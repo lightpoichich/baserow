@@ -31,6 +31,22 @@ class IntegrationType(
     An integration type define a specific integration with a given external service.
     """
 
+    def validate(
+        self, application: "Application", prepared_values: Dict[str, Any]
+    ) -> None:
+        """
+        Responsible for taking prepared values from `prepare_values` and performing
+        a validation step before creating or updating an integration.
+
+        :param application: The application with which we're validating this
+            integration type.
+        :param prepared_values: The values returned from this integration type's
+            `prepare_values` method.
+        :return: None
+        """
+
+        pass
+
     def enhance_queryset(self, queryset):
         """
         Allow to enhance the queryset when querying the integration mainly to improve

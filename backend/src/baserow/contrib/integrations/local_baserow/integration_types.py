@@ -1,11 +1,11 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
+from baserow.contrib.builder.exceptions import InvalidIntegrationAuthorizedUser
 from baserow.contrib.integrations.local_baserow.models import LocalBaserowIntegration
-from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import IntegrationType
 from baserow.core.integrations.types import IntegrationDict
 from baserow.core.models import Application
@@ -32,7 +32,32 @@ class LocalBaserowIntegrationType(IntegrationType):
     request_serializer_field_names = []
     request_serializer_field_overrides = {}
 
-    def get_property_for_serialization(self, integration: Integration, prop_name: str):
+    def validate(self, application: "Application", prepared_values: Dict[str, Any]):
+        """
+        Performs some extra validation on the `LocalBaserowIntegration` authorized
+        user to ensure they're part of the workspace, and not flagged for deletion.
+        """
+
+        workspace = application.workspace
+        authorized_user: Optional[User] = prepared_values.get("authorized_user", None)
+
+        if authorized_user:
+            try:
+                workspace.users.select_related("profile").get(id=authorized_user.id)
+            except workspace.users.model.DoesNotExist:
+                raise InvalidIntegrationAuthorizedUser(
+                    f"The user {authorized_user.pk} does not belong "
+                    "to the integration's workspace."
+                )
+
+            if authorized_user.profile.to_be_deleted:  # type: ignore
+                raise InvalidIntegrationAuthorizedUser(
+                    f"The user {authorized_user.pk} is flagged for deletion."
+                )
+
+    def get_property_for_serialization(
+        self, integration: LocalBaserowIntegration, prop_name: str
+    ):
         """
         Replace the authorized user property with its username. Better when loading the
         data later.

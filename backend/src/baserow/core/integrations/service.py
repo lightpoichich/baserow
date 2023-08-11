@@ -17,7 +17,6 @@ from baserow.core.integrations.operations import (
 )
 from baserow.core.integrations.registries import IntegrationType
 from baserow.core.integrations.signals import (
-    integration_authorized_user_updated,
     integration_created,
     integration_deleted,
     integration_moved,
@@ -174,14 +173,6 @@ class IntegrationService:
         )
 
         integration_updated.send(self, integration=integration, user=user)
-
-        if prev_authorized_user_id != integration.authorized_user_id:
-            integration_authorized_user_updated.send(
-                self,
-                integration=integration,
-                prev_authorized_user_id=prev_authorized_user_id,
-                new_authorized_user_id=integration.authorized_user_id,
-            )
 
         return integration
 

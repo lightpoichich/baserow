@@ -259,9 +259,8 @@ def test_update_integration(integration_updated_mock, data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.core.integrations.service.integration_updated")
-@patch("baserow.core.integrations.service.integration_authorized_user_updated")
 def test_update_integration_changing_authorized_user(
-    authorized_user_updated_mock, integration_updated_mock, data_fixture
+    integration_updated_mock, data_fixture
 ):
     user = data_fixture.create_user()
     integration = data_fixture.create_local_baserow_integration(user=user)
@@ -275,11 +274,6 @@ def test_update_integration_changing_authorized_user(
     )
     assert integration_updated.authorized_user == new_user
 
-    assert authorized_user_updated_mock.called_with(
-        integration=integration,
-        prev_authorized_user_id=user.pk,
-        new_authorized_user_id=new_user.pk,
-    )
     assert integration_updated_mock.called_with(
         integration=integration_updated, user=user
     )

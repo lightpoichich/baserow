@@ -165,3 +165,19 @@ export const isSubstringOfStrings = (strings, searchTerm) => {
 
   return stringsSanitised.some((s) => s.includes(searchTermSanitised))
 }
+
+/**
+ * Given a string containing spaces, will convert the
+ * spaces into a camelCased version.
+
+ * @param inputStr
+ * @returns string
+ */
+export const camelize = (inputStr) => {
+  return inputStr
+    .split(' ')
+    .map((e, i) =>
+      i ? e.charAt(0).toUpperCase() + e.slice(1).toLowerCase() : e.toLowerCase()
+    )
+    .join('')
+}

@@ -21,11 +21,7 @@
             warning
             class="margin-left-1"
             >{{
-              $t(
-                `roles.${permissionSanitized(
-                  user.permissions
-                ).toLowerCase()}.name`
-              )
+              $t(`roles.${permissionSanitized(user.permissions)}.name`)
             }}</Badge
           >
         </DropdownItem>
@@ -46,6 +42,7 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
+import { camelize } from '@baserow/modules/core/utils/string'
 
 export default {
   mixins: [form],
@@ -87,7 +84,8 @@ export default {
   methods: {
     permissionSanitized(uid) {
       const permission = this.roles.find((role) => role.uid === uid)
-      return permission ? permission.uid : 'MEMBER'
+      const sanitized = permission ? permission.uid : 'MEMBER'
+      return camelize(sanitized.toLowerCase().replaceAll('_', ' '))
     },
   },
 }

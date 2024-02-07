@@ -105,6 +105,7 @@ x-backend-variables: &backend-variables
   POSTHOG_HOST:
 
   PRIVATE_BACKEND_URL: http://backend:8000
+  PRIVATE_BACKEND_WSGI_URL: http://backend:8001
   BASEROW_PUBLIC_URL:
   MEDIA_URL:
   MEDIA_ROOT:

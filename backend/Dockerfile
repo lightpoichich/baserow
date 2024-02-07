@@ -47,7 +47,7 @@ RUN apt-get update &&  \
     xmlsec1 \
     && apt-get autoclean \
     && apt-get clean \
-    && apt-get autoremove \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 USER $UID:$GID

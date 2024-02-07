@@ -20,5 +20,3 @@ RUN . /baserow/venv/bin/activate && pip3 install -r /tmp/plugin-dev-requirements
 
 COPY --chown=$PLUGIN_BUILD_UID:$PLUGIN_BUILD_GID ./plugins/{{ cookiecutter.project_module }}/ $BASEROW_PLUGIN_DIR/{{ cookiecutter.project_module }}/
 RUN /baserow/plugins/install_plugin.sh --folder $BASEROW_PLUGIN_DIR/{{ cookiecutter.project_module }} --dev
-
-ENV BASEROW_ALL_IN_ONE_DEV_MODE='true'

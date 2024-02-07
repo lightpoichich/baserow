@@ -11,6 +11,7 @@ export BASEROW_VERSION="1.22.3"
 # Used by docker-entrypoint.sh to start the dev server
 # If not configured you'll receive this: CommandError: "0.0.0.0:" is not a valid port number or address:port pair.
 BASEROW_BACKEND_PORT="${BASEROW_BACKEND_PORT:-8000}"
+BASEROW_BACKEND_WSGI_PORT="${BASEROW_BACKEND_WSGI_PORT:-8001}"
 
 # Database environment variables used to check the Postgresql connection.
 DATABASE_USER="${DATABASE_USER:-baserow}"
@@ -201,6 +202,7 @@ run_setup_commands_if_configured(){
 
 start_celery_worker(){
   startup_plugin_setup
+
   if [[ -n "$BASEROW_RUN_MINIMAL" ]]; then
     EXTRA_CELERY_ARGS=(--without-heartbeat --without-gossip --without-mingle)
   else
@@ -208,6 +210,8 @@ start_celery_worker(){
   fi
   if [[ -n "$BASEROW_AMOUNT_OF_WORKERS" ]]; then
     EXTRA_CELERY_ARGS+=(--concurrency "$BASEROW_AMOUNT_OF_WORKERS")
+  else
+    EXTRA_CELERY_ARGS+=(--concurrency "1")
   fi
   exec celery -A baserow worker "${EXTRA_CELERY_ARGS[@]}" -l INFO "$@"
 }
@@ -232,25 +236,30 @@ run_backend_server(){
 
   if [[ "$1" = "wsgi" ]]; then
     STARTUP_ARGS=(baserow.config.wsgi:application)
+    AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-2}
+    BACKEND_PORT=${BASEROW_BACKEND_WSGI_PORT:-"8001"}
   elif [[ "$1" = "asgi" ]]; then
     STARTUP_ARGS=(-k uvicorn.workers.UvicornWorker baserow.config.asgi:application)
+    AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_ASGI_WORKERS:-1}
+    BACKEND_PORT=${BASEROW_BACKEND_PORT:-"8000"}
   else
     echo -e "\e[31mUnknown run_backend_server argument $1 \e[0m" >&2
     exit 1
   fi
+
   # Gunicorn args explained in order:
   #
   # 1. See https://docs.gunicorn.org/en/stable/faq.html#blocking-os-fchmod for
   #    why we set worker-tmp-dir to /dev/shm by default.
   # 2. Log to stdout
   # 3. Log requests to stdout
-  exec gunicorn --workers="$BASEROW_AMOUNT_OF_GUNICORN_WORKERS" \
+  exec gunicorn --workers="$AMOUNT_OF_GUNICORN_WORKERS" \
     --worker-tmp-dir "${TMPDIR:-/dev/shm}" \
     --log-file=- \
     --access-logfile=- \
     --capture-output \
     "${EXTRA_GUNICORN_ARGS[@]}" \
-    -b "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}":"${BASEROW_BACKEND_PORT}" \
+    -b "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}":"${BACKEND_PORT}" \
     --log-level="${BASEROW_BACKEND_LOG_LEVEL}" \
     "${STARTUP_ARGS[@]}" \
     "${@:2}"

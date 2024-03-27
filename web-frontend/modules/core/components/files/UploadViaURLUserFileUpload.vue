@@ -1,33 +1,36 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('uploadViaURLUserFileUpload.title') }}</h2>
-    <Error :error="error"></Error>
-    <form @submit.prevent="upload(values.url)">
-      <FormGroup
-        :label="$t('uploadViaURLUserFileUpload.urlLabel')"
-        small-label
-        required
-        :error="$v.values.url.$error"
-      >
-        <FormInput
-          v-model="values.url"
-          size="large"
+    <h2 class="modal__title">{{ $t('uploadViaURLUserFileUpload.title') }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <form @submit.prevent="upload(values.url)">
+        <FormGroup
+          :label="$t('uploadViaURLUserFileUpload.urlLabel')"
+          small-label
+          required
           :error="$v.values.url.$error"
-          @blur="$v.values.url.$touch()"
         >
-        </FormInput>
+          <FormInput
+            v-model="values.url"
+            size="large"
+            :error="$v.values.url.$error"
+            @blur="$v.values.url.$touch()"
+          >
+          </FormInput>
 
-        <template #error>
-          {{ $t('uploadViaURLUserFileUpload.urlError') }}
-        </template>
-      </FormGroup>
+          <template #error>
+            {{ $t('uploadViaURLUserFileUpload.urlError') }}
+          </template>
+        </FormGroup>
+      </form>
+    </div>
 
-      <div class="actions actions--right">
-        <Button type="primary" size="large" :loading="loading">
-          {{ $t('action.upload') }}
-        </Button>
-      </div>
-    </form>
+    <div class="modal__footer">
+      <Button type="primary" size="large" :loading="loading">
+        {{ $t('action.upload') }}
+      </Button>
+    </div>
   </div>
 </template>
 

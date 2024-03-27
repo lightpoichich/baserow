@@ -17,14 +17,20 @@
       />
     </div>
     <div class="snapshots-modal__actions">
-      <a
-        :class="{ 'snapshots-modal__restore--loading': restoreLoading }"
+      <ButtonIcon
+        v-tooltip="$t('snapshotListItem.restore')"
+        icon="baserow-icon-history"
+        :loading="restoreLoading"
         @click="restore"
-        >{{ $t('snapshotListItem.restore') }}</a
+      />
+
+      <ButtonIcon
+        v-tooltip="$t('snapshotListItem.delete')"
+        icon="iconoir-bin"
+        @click="showDelete"
+        >{{}}</ButtonIcon
       >
-      <a class="snapshots-modal__delete" @click="showDelete">{{
-        $t('snapshotListItem.delete')
-      }}</a>
+
       <DeleteSnapshotModal
         ref="deleteSnapshotModal"
         :snapshot="snapshot"

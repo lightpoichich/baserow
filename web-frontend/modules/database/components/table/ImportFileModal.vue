@@ -6,24 +6,21 @@
     @show=";[(importer = ''), reset()]"
     @hide="stopPollIfRunning()"
   >
-    <template #content>
-      <div class="import-modal__header">
-        <h2 class="import-modal__title">
-          {{
-            isTableCreation
-              ? $t('importFileModal.title')
-              : $t('importFileModal.additionalImportTitle', {
-                  table: table.name,
-                })
-          }}
-        </h2>
-        <div class="modal__actions">
-          <a v-if="isTableCreation" class="modal__close" @click="hide()">
-            <i class="iconoir-cancel"></i>
-          </a>
-        </div>
-      </div>
-
+    <h2 class="modal__title">
+      {{
+        isTableCreation
+          ? $t('importFileModal.title')
+          : $t('importFileModal.additionalImportTitle', {
+              table: table.name,
+            })
+      }}
+    </h2>
+    <div class="modal__actions">
+      <a v-if="isTableCreation" class="modal__close" @click="hide()">
+        <i class="iconoir-cancel"></i>
+      </a>
+    </div>
+    <div class="modal__content">
       <div class="control margin-bottom-2">
         <FormGroup
           :label="$t('importFileModal.importLabel')"
@@ -130,23 +127,27 @@
           :status="humanReadableState"
         />
         <div class="align-right">
-          <Button
-            type="primary"
-            size="large"
-            :loading="importInProgress || (jobHasSucceeded && !isTableCreated)"
-            :disabled="
-              importInProgress ||
-              !canBeSubmitted ||
-              (jobHasSucceeded && !isTableCreated)
-            "
-            @click="$refs.tableForm.submit()"
-          >
-            {{
-              isTableCreation
-                ? $t('importFileModal.addButton')
-                : $t('importFileModal.importButton')
-            }}
-          </Button>
+          <div class="align-right">
+            <Button
+              type="primary"
+              size="large"
+              :loading="
+                importInProgress || (jobHasSucceeded && !isTableCreated)
+              "
+              :disabled="
+                importInProgress ||
+                !canBeSubmitted ||
+                (jobHasSucceeded && !isTableCreated)
+              "
+              @click="$refs.tableForm.submit()"
+            >
+              {{
+                isTableCreation
+                  ? $t('importFileModal.addButton')
+                  : $t('importFileModal.importButton')
+              }}</Button
+            >
+          </div>
         </div>
       </div>
       <div v-else class="align-right">
@@ -163,7 +164,7 @@
           }}
         </Button>
       </div>
-    </template>
+    </div>
     <template v-if="!isTableCreation" #sidebar>
       <div class="import-modal__field-mapping">
         <div v-if="header.length > 0" class="import-modal__field-mapping-body">

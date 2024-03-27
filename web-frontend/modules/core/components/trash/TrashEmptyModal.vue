@@ -1,28 +1,28 @@
 <template>
-  <Modal :tiny="true" :close-button="false">
-    <h3>
-      <template v-if="selectedIsTrashed">{{
-        $t('trashEmptyModal.titleIsTrashed', { name })
-      }}</template>
-      <template v-else>{{
-        $t('trashEmptyModal.titleIsNotTrashed', { name })
-      }}</template>
-    </h3>
-    <p>
-      <template v-if="selectedIsTrashed">{{
-        $t('trashEmptyModal.messageIsTrashed')
-      }}</template>
-      <template v-else>{{
-        $t('trashEmptyModal.messageIsNotTrashed')
-      }}</template>
-    </p>
-    <div class="actions">
-      <ul class="action__links">
-        <li>
-          <a @click.prevent="hide()">{{ $t('action.cancel') }}</a>
-        </li>
-      </ul>
+  <Modal tiny :close-button="false">
+    <div class="modal__content">
+      <h3>
+        <template v-if="selectedIsTrashed">{{
+          $t('trashEmptyModal.titleIsTrashed', { name })
+        }}</template>
+        <template v-else>{{
+          $t('trashEmptyModal.titleIsNotTrashed', { name })
+        }}</template>
+      </h3>
+      <p>
+        <template v-if="selectedIsTrashed">{{
+          $t('trashEmptyModal.messageIsTrashed')
+        }}</template>
+        <template v-else>{{
+          $t('trashEmptyModal.messageIsNotTrashed')
+        }}</template>
+      </p>
+    </div>
 
+    <div class="modal__footer">
+      <Button type="secondary" @click.prevent="hide()">{{
+        $t('action.cancel')
+      }}</Button>
       <Button type="danger" @click.prevent="emitEmptyAndClose">
         <template v-if="selectedIsTrashed">{{
           $t('trashEmptyModal.buttonIsTrashed')

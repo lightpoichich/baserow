@@ -1,76 +1,79 @@
 <template>
   <Modal @show="onShow()">
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('publishActionModal.title') }}
     </h2>
-    <Error :error="error"></Error>
 
-    <template v-if="!hasVisibleError">
-      <template v-if="domains.length">
-        <p>{{ $t('publishActionModal.description') }}</p>
+    <div class="modal__content">
+      <Error :error="error"></Error>
 
-        <div
-          v-for="(domain, index) in domains"
-          :key="domain.id"
-          class="publish-action-modal__container"
-        >
-          <Radio v-model="selectedDomain" :value="domain.id">
-            <span class="publish-action-modal__domain-name">{{
-              domain.domain_name
-            }}</span>
-            <a
-              v-tooltip="$t('action.copyToClipboard')"
-              class="publish-action-modal__copy-domain"
-              tooltip-position="top"
-              @click.stop="
-                ;[copyDomainUrl(domain), $refs.domainCopied[index].show()]
-              "
-            >
-              <i class="iconoir-copy" />
-              <Copied ref="domainCopied" />
-            </a>
-            <a
-              v-tooltip="$t('publishActionModal.openInNewTab')"
-              tooltip-position="top"
-              class="publish-action-modal__domain-link"
-              :href="getDomainUrl(domain)"
-              target="_blank"
-              @click.stop=""
-            >
-              <i class="iconoir-open-new-window" />
-            </a>
-          </Radio>
-          <LastPublishedDomainDate
-            :domain="domain"
-            class="publish-action-modal__last-update"
-          />
-        </div>
+      <template v-if="!hasVisibleError">
+        <template v-if="domains.length">
+          <p>{{ $t('publishActionModal.description') }}</p>
+
+          <div
+            v-for="(domain, index) in domains"
+            :key="domain.id"
+            class="publish-action-modal__container"
+          >
+            <Radio v-model="selectedDomain" :value="domain.id">
+              <span class="publish-action-modal__domain-name">{{
+                domain.domain_name
+              }}</span>
+              <a
+                v-tooltip="$t('action.copyToClipboard')"
+                class="publish-action-modal__copy-domain"
+                tooltip-position="top"
+                @click.stop="
+                  ;[copyDomainUrl(domain), $refs.domainCopied[index].show()]
+                "
+              >
+                <i class="iconoir-copy" />
+                <Copied ref="domainCopied" />
+              </a>
+              <a
+                v-tooltip="$t('publishActionModal.openInNewTab')"
+                tooltip-position="top"
+                class="publish-action-modal__domain-link"
+                :href="getDomainUrl(domain)"
+                target="_blank"
+                @click.stop=""
+              >
+                <i class="iconoir-open-new-window" />
+              </a>
+            </Radio>
+            <LastPublishedDomainDate
+              :domain="domain"
+              class="publish-action-modal__last-update"
+            />
+          </div>
+        </template>
+        <p v-else>{{ $t('publishActionModal.noDomain') }}</p>
       </template>
-      <p v-else>{{ $t('publishActionModal.noDomain') }}</p>
-    </template>
 
-    <Alert v-if="jobHasSucceeded" type="success">
-      <template #title>{{
-        $t('publishActionModal.publishSucceedTitle')
-      }}</template>
-      <p>{{ $t('publishActionModal.publishSucceedDescription') }}</p>
-    </Alert>
+      <Alert v-if="jobHasSucceeded" type="success">
+        <template #title>{{
+          $t('publishActionModal.publishSucceedTitle')
+        }}</template>
+        <p>{{ $t('publishActionModal.publishSucceedDescription') }}</p>
+      </Alert>
 
-    <div class="modal-progress__actions">
-      <ProgressBar
-        v-if="jobIsRunning"
-        :value="job.progress_percentage"
-        :status="jobHumanReadableState"
-      />
-      <div class="align-right">
-        <Button
-          size="large"
-          :loading="jobIsRunning || loading"
-          :disabled="loading || jobIsRunning || !selectedDomain"
-          @click="publishSite()"
-        >
-          {{ $t('publishActionModal.publish') }}
-        </Button>
+      <div class="modal-progress__actions">
+        <ProgressBar
+          v-if="jobIsRunning"
+          :value="job.progress_percentage"
+          :status="jobHumanReadableState"
+        />
+        <div class="align-right">
+          <Button
+            size="large"
+            :loading="jobIsRunning || loading"
+            :disabled="loading || jobIsRunning || !selectedDomain"
+            @click="publishSite()"
+          >
+            {{ $t('publishActionModal.publish') }}
+          </Button>
+        </div>
       </div>
     </div>
   </Modal>

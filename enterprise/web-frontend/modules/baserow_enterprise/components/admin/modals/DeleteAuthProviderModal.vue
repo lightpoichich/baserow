@@ -1,30 +1,29 @@
 <template>
   <Modal small>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('deleteAuthProviderModal.title', { name: getProviderName() }) }}
     </h2>
-    <p>
-      {{
-        $t('deleteAuthProviderModal.comment', { type: getProviderTypeName() })
-      }}
-    </p>
-    <div>
-      <div class="actions">
-        <ul class="action__links">
-          <li>
-            <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
-          </li>
-        </ul>
 
-        <Button
-          type="danger"
-          :disabled="loading"
-          :loading="loading"
-          @click="deleteProvider"
-        >
-          {{ $t('action.delete') }}</Button
-        >
-      </div>
+    <div class="modal__content">
+      <p>
+        {{
+          $t('deleteAuthProviderModal.comment', { type: getProviderTypeName() })
+        }}
+      </p>
+    </div>
+
+    <div class="modal__footer">
+      <Button type="secondary" @click="$emit('cancel')">{{
+        $t('action.cancel')
+      }}</Button>
+      <Button
+        type="danger"
+        :disabled="loading"
+        :loading="loading"
+        @click="deleteProvider"
+      >
+        {{ $t('action.delete') }}</Button
+      >
     </div>
   </Modal>
 </template>

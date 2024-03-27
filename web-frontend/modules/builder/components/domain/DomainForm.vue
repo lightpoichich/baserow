@@ -1,30 +1,33 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('domainSettings.titleAddDomain') }}</h2>
-    <Error :error="error"></Error>
-    <FormGroup class="margin-bottom-3">
-      <Dropdown
-        v-model="selectedDomain"
-        :show-search="false"
-        class="domain-settings__domain-type"
-      >
-        <DropdownItem
-          v-for="option in options"
-          :key="option.value.domain"
-          :name="option.name"
-          :value="option.value"
-        />
-      </Dropdown>
-    </FormGroup>
-    <component
-      :is="currentDomainType.formComponent"
-      ref="domainForm"
-      :builder="builder"
-      :domain="selectedDomain.domain"
-      @submitted="createDomain($event)"
-      @error="formHasError = $event"
-    />
-    <div class="actions">
+    <h2 class="modal__title">{{ $t('domainSettings.titleAddDomain') }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <FormGroup class="margin-bottom-3">
+        <Dropdown
+          v-model="selectedDomain"
+          :show-search="false"
+          class="domain-settings__domain-type"
+        >
+          <DropdownItem
+            v-for="option in options"
+            :key="option.value.domain"
+            :name="option.name"
+            :value="option.value"
+          />
+        </Dropdown>
+      </FormGroup>
+      <component
+        :is="currentDomainType.formComponent"
+        ref="domainForm"
+        :builder="builder"
+        :domain="selectedDomain.domain"
+        @submitted="createDomain($event)"
+        @error="formHasError = $event"
+      />
+    </div>
+    <div class="modal__footer">
       <ButtonText
         type="secondary"
         icon="iconoir-nav-arrow-left"
@@ -34,7 +37,6 @@
       </ButtonText>
 
       <Button
-        size="large"
         :loading="createLoading"
         :disabled="createLoading || formHasError"
         @click="onSubmit"

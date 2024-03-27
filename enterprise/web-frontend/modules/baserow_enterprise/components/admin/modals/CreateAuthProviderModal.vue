@@ -1,30 +1,35 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{
         $t('createSettingsAuthProviderModal.title', {
           type: getProviderTypeName(),
         })
       }}
     </h2>
-    <div v-if="authProviderType">
+
+    <div class="modal__content" v-if="authProviderType">
       <component
         :is="getProviderAdminSettingsFormComponent()"
         ref="providerSettingsForm"
         :auth-provider-type="authProviderType"
         @submit="create($event)"
+      />
+    </div>
+
+    <div class="modal__footer">
+      <Button type="secondary" @click="$emit('cancel')">
+        {{ $t('action.cancel') }}</Button
       >
-        <div class="actions">
-          <ul class="action__links">
-            <li>
-              <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
-            </li>
-          </ul>
-          <Button type="primary" :disabled="loading" :loading="loading">
-            {{ $t('action.create') }}</Button
-          >
-        </div>
-      </component>
+
+      <Button
+        type="primary"
+        @click="$refs.providerSettingsForm.submit()"
+        :disabled="loading"
+        :loading="loading"
+      >
+        {{ $t('action.create') }}</Button
+      >
     </div>
   </Modal>
 </template>

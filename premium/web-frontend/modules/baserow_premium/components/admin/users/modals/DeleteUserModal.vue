@@ -1,33 +1,34 @@
 <template>
   <Modal>
-    <h2 class="box__title">{{ $t('deleteUserModal.title', user) }}</h2>
-    <Error :error="error"></Error>
-    <div>
-      <i18n path="deleteUserModal.confirmation" tag="p">
-        <template #name>
-          <strong class="user-admin-delete__strong">{{ user.username }}</strong>
-        </template>
-      </i18n>
-      <p>
-        {{ $t('deleteUserModal.comment1') }}
-      </p>
-      <p>
-        {{ $t('deleteUserModal.comment2') }}
-      </p>
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="danger"
-            size="large"
-            full-width
-            :disabled="loading"
-            :loading="loading"
-            @click.prevent="deleteUser()"
-          >
-            {{ $t('deleteUserModal.delete', user) }}</Button
-          >
-        </div>
+    <h2 class="modal__title">{{ $t('deleteUserModal.title', user) }}</h2>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <div>
+        <i18n path="deleteUserModal.confirmation" tag="p">
+          <template #name>
+            <strong class="user-admin-delete__strong">{{
+              user.username
+            }}</strong>
+          </template>
+        </i18n>
+        <p>
+          {{ $t('deleteUserModal.comment1') }}
+        </p>
+        <p>
+          {{ $t('deleteUserModal.comment2') }}
+        </p>
       </div>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="danger"
+        :disabled="loading"
+        :loading="loading"
+        @click.prevent="deleteUser()"
+      >
+        {{ $t('deleteUserModal.delete', user) }}</Button
+      >
     </div>
   </Modal>
 </template>

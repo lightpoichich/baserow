@@ -86,11 +86,11 @@
         </form>
       </div>
     </div>
-    <div v-if="success" class="box__message">
-      <div class="box__message-icon">
+    <div v-if="success" class="align-center">
+      <div class="margin-bottom-3 font-size-50 color-primary">
         <i class="iconoir-check"></i>
       </div>
-      <h1 class="box__message-title">{{ $t('resetPassword.changed') }}</h1>
+      <h1>{{ $t('resetPassword.changed') }}</h1>
       <Button
         tag="nuxt-link"
         :to="{ name: 'login' }"

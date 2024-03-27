@@ -1,26 +1,34 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('pageSettings.title') }}</h2>
-    <Error :error="error"></Error>
-    <Alert v-if="success" type="success">
-      <template #title>{{ $t('pageSettings.pageUpdatedTitle') }}</template>
-      <p>{{ $t('pageSettings.pageUpdatedDescription') }}</p>
-    </Alert>
-    <PageSettingsForm
-      :builder="builder"
-      :page="page"
-      :default-values="page"
-      @submitted="updatePage"
-    >
-      <div
-        v-if="$hasPermission('builder.page.update', page, workspace.id)"
-        class="actions actions--right"
+    <h2 class="modal__title">{{ $t('pageSettings.title') }}</h2>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <Alert v-if="success" type="success">
+        <template #title>{{ $t('pageSettings.pageUpdatedTitle') }}</template>
+        <p>{{ $t('pageSettings.pageUpdatedDescription') }}</p>
+      </Alert>
+      <PageSettingsForm
+        ref="form"
+        :builder="builder"
+        :page="page"
+        :default-values="page"
+        @submitted="updatePage"
       >
-        <Button size="large" :loading="loading" :disabled="loading">
-          {{ $t('action.save') }}
-        </Button>
-      </div>
-    </PageSettingsForm>
+      </PageSettingsForm>
+    </div>
+
+    <div
+      v-if="$hasPermission('builder.page.update', page, workspace.id)"
+      class="modal__footer"
+    >
+      <Button
+        :loading="loading"
+        :disabled="loading"
+        @click="$refs.form.submit()"
+      >
+        {{ $t('action.save') }}
+      </Button>
+    </div>
   </div>
 </template>
 

@@ -1,56 +1,59 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('uploadFileUserFileUpload.title') }}</h2>
-    <UploadFileDropzone
-      v-if="showDropZone"
-      :multiple-files="multipleFiles"
-      :file-types-acceptable="fileTypesAcceptable"
-      @input="addFile($event)"
-    />
-    <ul v-show="files.length > 0" class="upload-files__list">
-      <li v-for="file in files" :key="file.id" class="upload-files__item">
-        <div class="upload-files__preview">
-          <div class="upload-files__icon">
-            <i v-if="!file.isImage" :class="file.iconClass"></i>
-            <img v-if="file.isImage" :ref="'file-image-' + file.id" />
+    <h2 class="modal__title">{{ $t('uploadFileUserFileUpload.title') }}</h2>
+
+    <div class="modal__content">
+      <UploadFileDropzone
+        v-if="showDropZone"
+        :multiple-files="multipleFiles"
+        :file-types-acceptable="fileTypesAcceptable"
+        @input="addFile($event)"
+      />
+      <ul v-show="files.length > 0" class="upload-files__list">
+        <li v-for="file in files" :key="file.id" class="upload-files__item">
+          <div class="upload-files__preview">
+            <div class="upload-files__icon">
+              <i v-if="!file.isImage" :class="file.iconClass"></i>
+              <img v-if="file.isImage" :ref="'file-image-' + file.id" />
+            </div>
           </div>
-        </div>
-        <div class="upload-files__description">
-          <div class="upload-files__name">
-            {{ file.file.name }}
-            <div class="upload-files__percentage">{{ file.percentage }}%</div>
+          <div class="upload-files__description">
+            <div class="upload-files__name">
+              {{ file.file.name }}
+              <div class="upload-files__percentage">{{ file.percentage }}%</div>
+            </div>
+            <div v-if="file.state === 'failed'" class="upload-files__error">
+              {{ file.error }}
+            </div>
+            <div v-else class="upload-files__progress">
+              <ProgressBar :value="file.percentage" :show-value="false" />
+            </div>
           </div>
-          <div v-if="file.state === 'failed'" class="upload-files__error">
-            {{ file.error }}
+          <div class="upload-files__state">
+            <i
+              v-show="file.state === 'finished'"
+              class="upload-files__state-waiting iconoir-check"
+            ></i>
+            <i
+              v-show="file.state === 'failed'"
+              class="upload-files__state-failed iconoir-cancel"
+            ></i>
+            <div
+              v-show="file.state === 'uploading'"
+              class="upload-files__state-loading loading"
+            ></div>
+
+            <ButtonIcon
+              v-show="file.state === 'waiting'"
+              id="upload-files__state-link"
+              icon="iconoir-bin"
+              @click.stop.prevent="removeFile(file.id)"
+            ></ButtonIcon>
           </div>
-          <div v-else class="upload-files__progress">
-            <ProgressBar :value="file.percentage" :show-value="false" />
-          </div>
-        </div>
-        <div class="upload-files__state">
-          <i
-            v-show="file.state === 'finished'"
-            class="upload-files__state-waiting iconoir-check"
-          ></i>
-          <i
-            v-show="file.state === 'failed'"
-            class="upload-files__state-failed iconoir-cancel"
-          ></i>
-          <div
-            v-show="file.state === 'uploading'"
-            class="upload-files__state-loading loading"
-          ></div>
-          <a
-            v-show="file.state === 'waiting'"
-            class="upload-files__state-link"
-            @click.stop.prevent="removeFile(file.id)"
-          >
-            <i class="iconoir-bin"></i>
-          </a>
-        </div>
-      </li>
-    </ul>
-    <div v-show="files.length > 0" class="align-right">
+        </li>
+      </ul>
+    </div>
+    <div v-show="files.length > 0" class="modal__footer">
       <Button
         type="primary"
         size="large"

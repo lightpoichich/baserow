@@ -1,38 +1,41 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('webhookModal.title', { name: table.name }) }}
     </h2>
-    <Error :error="error"></Error>
-    <div v-if="loading" class="loading"></div>
-    <template v-else-if="!error.visible">
-      <div class="align-right">
-        <a v-if="state === 'list'" class="button" @click="state = 'create'">
-          {{ $t('webhookModal.createWebhook') }}
-          <i class="iconoir-plus"></i>
-        </a>
-        <a v-if="state === 'create'" class="button" @click="state = 'list'">
-          <i class="iconoir-arrow-left"></i>
-          {{ $t('webhookModal.backToList') }}
-        </a>
-      </div>
-      <WebhookList
-        v-if="state === 'list'"
-        :database="database"
-        :table="table"
-        :fields="tableFields"
-        :webhooks="webhooks"
-        @updated="updated"
-        @deleted="deleted"
-      />
-      <CreateWebhook
-        v-else-if="state === 'create'"
-        :database="database"
-        :table="table"
-        :fields="tableFields"
-        @created="created"
-      />
-    </template>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <div v-if="loading" class="loading"></div>
+      <template v-else-if="!error.visible">
+        <div class="align-right">
+          <Button v-if="state === 'list'" @click="state = 'create'">
+            {{ $t('webhookModal.createWebhook') }}
+            <i class="iconoir-plus"></i>
+          </Button>
+          <a v-if="state === 'create'" class="button" @click="state = 'list'">
+            <i class="iconoir-arrow-left"></i>
+            {{ $t('webhookModal.backToList') }}
+          </a>
+        </div>
+        <WebhookList
+          v-if="state === 'list'"
+          :database="database"
+          :table="table"
+          :fields="tableFields"
+          :webhooks="webhooks"
+          @updated="updated"
+          @deleted="deleted"
+        />
+        <CreateWebhook
+          v-else-if="state === 'create'"
+          :database="database"
+          :table="table"
+          :fields="tableFields"
+          @created="created"
+        />
+      </template>
+    </div>
   </Modal>
 </template>
 

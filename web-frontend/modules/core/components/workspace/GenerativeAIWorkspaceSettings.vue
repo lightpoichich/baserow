@@ -1,53 +1,62 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('generativeAIWorkspaceSettings.title') }}</h2>
-    <p>{{ $t('generativeAIWorkspaceSettings.description') }}</p>
-    <Error :error="error"></Error>
-    <Alert v-if="success" ref="success" type="success">
-      <template #title>{{
-        $t('generativeAIWorkspaceSettings.changedTitle')
-      }}</template>
-      <p>{{ $t('generativeAIWorkspaceSettings.changedDescription') }}</p>
-    </Alert>
-    <div v-if="fetchLoading">
-      <div class="loading"></div>
-    </div>
-    <form v-else @submit.prevent="updateSettings">
-      <div
-        v-for="[type, modelType] in modelTypes"
-        :key="type"
-        class="margin-top-3"
-      >
-        <h3 class="margin-bottom-2">{{ modelType.getName() }}</h3>
-        <FormGroup
-          v-for="setting in modelType.getSettings()"
-          :key="setting.key"
-          small-label
-          :label="setting.label"
-          :error="$v.settings[type][setting.key].$error"
-          required
-          class="margin-bottom-2"
-        >
-          <FormInput
-            v-model.trim="$v.settings[type][setting.key].$model"
-            :error="$v.settings[type][setting.key].$error"
-          />
+    <h2 class="modal__title">
+      {{ $t('generativeAIWorkspaceSettings.title') }}
+    </h2>
 
-          <template v-if="setting.description" #helper>
-            <MarkdownIt :content="setting.description" />
-          </template>
-        </FormGroup>
+    <div class="modal__content">
+      <p>{{ $t('generativeAIWorkspaceSettings.description') }}</p>
+
+      <Error :error="error"></Error>
+
+      <Alert v-if="success" ref="success" type="success">
+        <template #title>{{
+          $t('generativeAIWorkspaceSettings.changedTitle')
+        }}</template>
+        <p>{{ $t('generativeAIWorkspaceSettings.changedDescription') }}</p>
+      </Alert>
+
+      <div v-if="fetchLoading">
+        <div class="loading"></div>
       </div>
-      <div class="actions actions--right">
-        <Button
-          :disabled="updateLoading || $v.$invalid || !$v.$anyDirty"
-          :loading="updateLoading"
-          icon="iconoir-edit-pencil"
+      <form v-else @submit.prevent="updateSettings">
+        <div
+          v-for="[type, modelType] in modelTypes"
+          :key="type"
+          class="margin-top-3"
         >
-          {{ $t('generativeAIWorkspaceSettings.submitButton') }}
-        </Button>
-      </div>
-    </form>
+          <h3 class="margin-bottom-2">{{ modelType.getName() }}</h3>
+          <FormGroup
+            v-for="setting in modelType.getSettings()"
+            :key="setting.key"
+            small-label
+            :label="setting.label"
+            :error="$v.settings[type][setting.key].$error"
+            required
+            class="margin-bottom-2"
+          >
+            <FormInput
+              v-model.trim="$v.settings[type][setting.key].$model"
+              :error="$v.settings[type][setting.key].$error"
+            />
+
+            <template v-if="setting.description" #helper>
+              <MarkdownIt :content="setting.description" />
+            </template>
+          </FormGroup>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        :disabled="updateLoading || $v.$invalid || !$v.$anyDirty"
+        :loading="updateLoading"
+        icon="iconoir-edit-pencil"
+      >
+        {{ $t('generativeAIWorkspaceSettings.submitButton') }}
+      </Button>
+    </div>
   </div>
 </template>
 

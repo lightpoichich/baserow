@@ -1,31 +1,31 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('removeFromWorkspaceModal.title') }}
     </h2>
-    <Error :error="error"></Error>
-    <div>
-      <p>
-        {{
-          $t('removeFromWorkspaceModal.confirmation', {
-            name: member.name,
-            workspaceName: workspace.name,
-          })
-        }}
-      </p>
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="danger"
-            size="large"
-            :loading="loading"
-            :disabled="loading"
-            @click.prevent="remove()"
-          >
-            {{ $t('removeFromWorkspaceModal.remove') }}
-          </Button>
-        </div>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <div>
+        <p>
+          {{
+            $t('removeFromWorkspaceModal.confirmation', {
+              name: member.name,
+              workspaceName: workspace.name,
+            })
+          }}
+        </p>
       </div>
+    </div>
+    <div class="modal__footer">
+      <Button
+        type="danger"
+        :loading="loading"
+        :disabled="loading"
+        @click.prevent="remove()"
+      >
+        {{ $t('removeFromWorkspaceModal.remove') }}
+      </Button>
     </div>
   </Modal>
 </template>

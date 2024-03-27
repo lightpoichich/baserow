@@ -1,32 +1,38 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('membersSettings.membersInviteModal.title') }}
     </h2>
-    <Error :error="error"></Error>
-    <WorkspaceInviteForm
-      ref="inviteForm"
-      :workspace="workspace"
-      @submitted="inviteSubmitted"
-    >
-      <template #default>
-        <div class="col col-12 align-right">
-          <Button
-            type="primary"
-            :loading="inviteLoading"
-            :disabled="inviteLoading"
-          >
-            {{ $t('membersSettings.membersInviteModal.submit') }}
-          </Button>
-        </div>
-      </template>
-      <template #roleSelectorLabel>
-        <HelpIcon
-          class="margin-right-1"
-          :tooltip="$t('membersSettings.membersInviteModal.helpIconText')"
-        />
-      </template>
-    </WorkspaceInviteForm>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <WorkspaceInviteForm
+        ref="inviteForm"
+        :workspace="workspace"
+        @submitted="inviteSubmitted"
+      >
+        <template #default>
+          <div class="col col-12 align-right"></div>
+        </template>
+        <template #roleSelectorLabel>
+          <HelpIcon
+            class="margin-right-1"
+            :tooltip="$t('membersSettings.membersInviteModal.helpIconText')"
+          />
+        </template>
+      </WorkspaceInviteForm>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :loading="inviteLoading"
+        :disabled="inviteLoading"
+        @click="$refs.inviteForm.submit()"
+      >
+        {{ $t('membersSettings.membersInviteModal.submit') }}
+      </Button>
+    </div>
   </Modal>
 </template>
 

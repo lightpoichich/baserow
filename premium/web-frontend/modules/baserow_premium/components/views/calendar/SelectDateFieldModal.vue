@@ -1,29 +1,30 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('selectDateFieldModal.chooseDateField') }}
     </h2>
-    <Error :error="error"></Error>
-    <DateFieldSelectForm
-      ref="dateFieldSelectForm"
-      :date-fields="dateFields"
-      :date-field-id="dateFieldId"
-      :table="table"
-      @submitted="submitted"
-    >
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="primary"
-            :loading="loading"
-            :disabled="loading"
-            size="large"
-          >
-            {{ $t('selectDateFieldModal.save') }}</Button
-          >
-        </div>
-      </div>
-    </DateFieldSelectForm>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <DateFieldSelectForm
+        ref="dateFieldSelectForm"
+        :date-fields="dateFields"
+        :date-field-id="dateFieldId"
+        :table="table"
+        @submitted="submitted"
+      >
+      </DateFieldSelectForm>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="$refs.dateFieldSelectForm.submit()"
+      >
+        {{ $t('selectDateFieldModal.save') }}</Button
+      >
+    </div>
   </Modal>
 </template>
 

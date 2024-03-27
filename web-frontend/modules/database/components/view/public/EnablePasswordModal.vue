@@ -1,34 +1,35 @@
 <template>
-  <Modal :small="true">
-    <h2 class="box__title">{{ $t(titleText) }}</h2>
-    <Error :error="error"></Error>
-    <form @submit.prevent="setPassword">
-      <p class="box__description">{{ $t(descriptionText) }}</p>
-      <FormGroup :error="fieldHasErrors('password')">
-        <PasswordInput
-          v-model="values.password"
-          :validation-state="$v.values.password"
-          :show-password-icon="true"
-          :disabled="loading"
-        />
-      </FormGroup>
-      <div class="actions">
-        <ul class="action__links">
-          <li>
-            <a :disabled="loading" @click.prevent="hide()">{{
-              $t('action.cancel')
-            }}</a>
-          </li>
-        </ul>
-        <Button
-          type="primary"
-          :loading="loading"
-          :disabled="loading || $v.$invalid"
-        >
-          {{ $t(saveText) }}
-        </Button>
-      </div>
-    </form>
+  <Modal small>
+    <h2 class="modal__title">{{ $t(titleText) }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <form ref="form" @submit.prevent="setPassword">
+        <p>{{ $t(descriptionText) }}</p>
+        <FormGroup :error="fieldHasErrors('password')">
+          <PasswordInput
+            v-model="values.password"
+            :validation-state="$v.values.password"
+            :show-password-icon="true"
+            :disabled="loading"
+          />
+        </FormGroup>
+      </form>
+    </div>
+
+    <div class="modal__footer">
+      <Button type="secondary" :disabled="loading" @click.prevent="hide()">
+        {{ $t('action.cancel') }}
+      </Button>
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading || $v.$invalid"
+        @click="setPassword()"
+      >
+        {{ $t(saveText) }}
+      </Button>
+    </div>
   </Modal>
 </template>
 

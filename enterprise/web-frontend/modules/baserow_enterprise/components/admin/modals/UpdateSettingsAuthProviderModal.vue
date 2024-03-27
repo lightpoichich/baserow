@@ -1,31 +1,33 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{
         $t('updateSettingsAuthProviderModal.title', {
           name: getProviderName(),
         })
       }}
     </h2>
-    <div>
+    <div class="modal__content">
       <component
         :is="getProviderAdminSettingsFormComponent()"
         ref="providerSettingsForm"
         :auth-provider="authProvider"
         @submit="onSettingsUpdated"
-      >
-        <div class="actions">
-          <ul class="action__links">
-            <li>
-              <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
-            </li>
-          </ul>
+      />
+    </div>
 
-          <Button type="primary" :disabled="loading" :loading="loading">
-            {{ $t('action.save') }}</Button
-          >
-        </div>
-      </component>
+    <div class="modal__footer">
+      <Button type="secondary" @click="$emit('cancel')">{{
+        $t('action.cancel')
+      }}</Button>
+      <Button
+        type="primary"
+        :disabled="loading"
+        :loading="loading"
+        @click="$refs.providerSettingsForm.submit()"
+      >
+        {{ $t('action.save') }}</Button
+      >
     </div>
   </Modal>
 </template>

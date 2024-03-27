@@ -32,19 +32,6 @@
         </span>
       </template>
     </FormGroup>
-
-    <div class="actions">
-      <div class="align-right">
-        <Button
-          type="primary"
-          size="large"
-          :disabled="loading"
-          :loading="loading"
-        >
-          {{ $t('changePasswordForm.changePassword') }}</Button
-        >
-      </div>
-    </div>
   </form>
 </template>
 

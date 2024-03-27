@@ -118,10 +118,7 @@
             ></ButtonIcon>
           </template>
         </List>
-      </div>
-    </div>
-    <div class="row margin-top-2">
-      <div class="col col-6">
+
         <Button
           type="secondary"
           :loading="loading"
@@ -130,11 +127,6 @@
           @click="$emit('invite')"
           >{{ $t('manageTeamForm.inviteMembers') }}
         </Button>
-      </div>
-      <div class="col col-6 align-right">
-        <Button type="primary" :disabled="loading" :loading="loading">
-          {{ $t('manageTeamForm.submit') }}</Button
-        >
       </div>
     </div>
   </form>

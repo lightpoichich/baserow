@@ -19,7 +19,8 @@
       >
       </component>
     </template>
-    <template #content>
+
+    <h2 class="modal__title">
       <div v-if="enableNavigation" class="row-edit-modal__navigation">
         <div v-if="navigationLoading" class="loading"></div>
         <template v-else>
@@ -37,11 +38,11 @@
           </a>
         </template>
       </div>
-      <div class="box__title">
-        <h2 class="row-modal__title">
-          {{ heading }}
-        </h2>
-      </div>
+
+      {{ heading }}
+    </h2>
+
+    <div class="modal__content">
       <RowEditModalFieldsList
         :primary-is-sortable="primaryIsSortable"
         :fields="visibleFields"
@@ -109,7 +110,6 @@
             {{ $t('rowEditModal.addField') }}
           </ButtonText></span
         >
-
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"
@@ -122,7 +122,8 @@
           "
         ></CreateFieldContext>
       </div>
-    </template>
+    </div>
+
     <template #sidebar>
       <RowEditModalSidebar
         :row="row"

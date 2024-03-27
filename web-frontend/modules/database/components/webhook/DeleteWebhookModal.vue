@@ -1,26 +1,25 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('deleteWebhookModal.title', { webhookName: webhook.name }) }}
     </h2>
-    <Error :error="error"></Error>
-    <div>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+
       <p>
         {{ $t('deleteWebhookModal.body') }}
       </p>
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="danger"
-            size="large"
-            :loading="loading"
-            :disabled="loading"
-            @click="deleteWebhook()"
-          >
-            {{ $t('deleteWebhookModal.deleteButton') }}
-          </Button>
-        </div>
-      </div>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="danger"
+        :loading="loading"
+        :disabled="loading"
+        @click="deleteWebhook()"
+      >
+        {{ $t('deleteWebhookModal.deleteButton') }}
+      </Button>
     </div>
   </Modal>
 </template>

@@ -19,7 +19,7 @@
         </li>
       </ul>
     </template>
-    <template v-if="settingSelected" #content>
+    <template v-if="settingSelected">
       <component :is="settingSelected.component"></component>
     </template>
   </Modal>

@@ -61,7 +61,7 @@ describe('GridViewFieldFile component', () => {
     document.body.addEventListener('click', documentClick)
 
     // After clicking remove file, the modal should still be visible
-    await wrapper.find('.upload-files__state-link').trigger('click')
+    await wrapper.find('#upload-files__state-link').trigger('click')
     expect(documentClick).not.toHaveBeenCalled()
   })
 })

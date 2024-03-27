@@ -1,55 +1,59 @@
 <template>
   <Modal @hidden="hidden">
-    <h2 class="box__title">{{ $t('auditLogExportModal.title') }}</h2>
-    <Error :error="error"></Error>
-    <AuditLogExportForm ref="form" :loading="loading" @submitted="submitted">
-      <ExportLoadingBar
-        :job="job"
-        :loading="loading"
-        :filename="getExportedFilename(job)"
-        :disabled="false"
-      >
-      </ExportLoadingBar>
-    </AuditLogExportForm>
-    <div
-      v-if="lastFinishedJobs.length > 0 || job"
-      class="audit-log__exported-list"
-    >
-      <div v-if="job" class="audit-log__exported-list-item">
-        <div class="audit-log__exported-list-item-info">
-          <div class="audit-log__exported-list-item-name">
-            {{ getExportedFilenameTitle(job) }}
-          </div>
-          <div class="audit-log__exported-list-item-details">
-            {{ humanExportedAt(job.created_on) }}
-          </div>
-        </div>
-        <div>{{ job.progress_percentage }} %</div>
-      </div>
-      <div
-        v-for="finishedJob in lastFinishedJobs"
-        :key="finishedJob.id"
-        class="audit-log__exported-list-item"
-      >
-        <div class="audit-log__exported-list-item-info">
-          <div class="audit-log__exported-list-item-name">
-            {{ getExportedFilenameTitle(finishedJob) }}
-          </div>
-          <div class="audit-log__exported-list-item-details">
-            {{ humanExportedAt(finishedJob.created_on) }}
-          </div>
-        </div>
-        <DownloadLink
-          :url="finishedJob.url"
-          :filename="getExportedFilename(finishedJob)"
+    <h2 class="modal__title">{{ $t('auditLogExportModal.title') }}</h2>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <AuditLogExportForm ref="form" :loading="loading" @submitted="submitted">
+        <ExportLoadingBar
+          :job="job"
+          :loading="loading"
+          :filename="getExportedFilename(job)"
+          :disabled="false"
         >
-          <template #default="{ loading: downloadLoading }">
-            <div v-if="downloadLoading" class="loading"></div>
-            <template v-else>{{
-              $t('action.download').toLowerCase()
-            }}</template>
-          </template>
-        </DownloadLink>
+        </ExportLoadingBar>
+      </AuditLogExportForm>
+      <div
+        v-if="lastFinishedJobs.length > 0 || job"
+        class="audit-log__exported-list"
+      >
+        <div v-if="job" class="audit-log__exported-list-item">
+          <div class="audit-log__exported-list-item-info">
+            <div class="audit-log__exported-list-item-name">
+              {{ getExportedFilenameTitle(job) }}
+            </div>
+            <div class="audit-log__exported-list-item-details">
+              {{ humanExportedAt(job.created_on) }}
+            </div>
+          </div>
+          <div>{{ job.progress_percentage }} %</div>
+        </div>
+        <div
+          v-for="finishedJob in lastFinishedJobs"
+          :key="finishedJob.id"
+          class="audit-log__exported-list-item"
+        >
+          <div class="audit-log__exported-list-item-info">
+            <div class="audit-log__exported-list-item-name">
+              {{ getExportedFilenameTitle(finishedJob) }}
+            </div>
+            <div class="audit-log__exported-list-item-details">
+              {{ humanExportedAt(finishedJob.created_on) }}
+            </div>
+          </div>
+
+          <DownloadLink
+            :url="finishedJob.url"
+            :filename="getExportedFilename(finishedJob)"
+            loading-class="loading"
+          >
+            <template #default="{ loading: downloadLoading }">
+              <div v-if="downloadLoading" class="loading"></div>
+              <template v-else>{{
+                $t('action.download').toLowerCase()
+              }}</template>
+            </template>
+          </DownloadLink>
+        </div>
       </div>
     </div>
   </Modal>

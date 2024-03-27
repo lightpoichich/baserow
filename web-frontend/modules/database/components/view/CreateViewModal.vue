@@ -1,38 +1,40 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{
         $t('createViewModal.createNew', {
           view: viewType.getName().toLowerCase(),
         })
       }}
     </h2>
-    <Error :error="error"></Error>
-    <component
-      :is="viewType.getViewFormComponent()"
-      ref="viewForm"
-      :default-name="getDefaultName()"
-      :database="database"
-      :table="table"
-      @submitted="submitted"
-    >
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="primary"
-            size="large"
-            :loading="loading"
-            :disabled="loading"
-          >
-            {{
-              $t('createViewModal.add', {
-                view: viewType.getName().toLowerCase(),
-              })
-            }}
-          </Button>
-        </div>
-      </div>
-    </component>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <component
+        :is="viewType.getViewFormComponent()"
+        ref="viewForm"
+        :default-name="getDefaultName()"
+        :database="database"
+        :table="table"
+        @submitted="submitted"
+      >
+      </component>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="$refs.viewForm.submit()"
+      >
+        {{
+          $t('createViewModal.add', {
+            view: viewType.getName().toLowerCase(),
+          })
+        }}
+      </Button>
+    </div>
   </Modal>
 </template>
 

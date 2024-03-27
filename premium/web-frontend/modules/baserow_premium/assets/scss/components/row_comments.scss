@@ -165,7 +165,7 @@
   position: relative;
   flex-shrink: 0;
   padding: 20px;
-  border-top: solid 1px $color-neutral-200;
+  border-top: solid 1px $palette-neutral-200;
 
   .rich-text-editor__content {
     @extend %form-input;

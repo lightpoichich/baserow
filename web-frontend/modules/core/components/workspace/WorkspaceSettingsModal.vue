@@ -23,9 +23,8 @@
         </li>
       </ul>
     </template>
-    <template #content>
-      <component :is="settingPageComponent" :workspace="workspace"></component>
-    </template>
+
+    <component :is="settingPageComponent" :workspace="workspace"></component>
   </Modal>
 </template>
 

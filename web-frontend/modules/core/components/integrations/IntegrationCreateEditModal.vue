@@ -1,18 +1,18 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{
         create
           ? $t('integrationCreateEditModal.createTitle')
           : $t('integrationCreateEditModal.editTitle')
       }}
     </h2>
-    <div>
+    <div class="modal__content">
       <Alert v-if="actualIntegrationType.warning" type="warning">
         <template #title>{{
           $t('integrationCreateEditModal.warningTitle')
         }}</template>
-        <p>{{ actualIntegrationType.warning }}</p>
+        <span>{{ actualIntegrationType.warning }}</span>
       </Alert>
 
       <IntegrationEditForm
@@ -24,17 +24,16 @@
       />
 
       <Error :error="error"></Error>
+    </div>
 
-      <div class="actions actions--right">
-        <Button
-          size="large"
-          :loading="loading"
-          :disabled="loading"
-          @click.prevent="$refs.form.submit()"
-        >
-          {{ create ? $t('action.create') : $t('action.save') }}
-        </Button>
-      </div>
+    <div class="modal__footer">
+      <Button
+        :loading="loading"
+        :disabled="loading"
+        @click.prevent="$refs.form.submit()"
+      >
+        {{ create ? $t('action.create') : $t('action.save') }}
+      </Button>
     </div>
   </Modal>
 </template>

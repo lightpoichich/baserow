@@ -24,9 +24,8 @@
         </li>
       </ul>
     </template>
-    <template #content>
-      <component :is="settingPageComponent"></component>
-    </template>
+
+    <component :is="settingPageComponent"></component>
   </Modal>
 </template>
 

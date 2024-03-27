@@ -1,8 +1,6 @@
 <template>
   <div>
-    <div class="box__head">
-      <h2 class="box__head-title">{{ $t('publicViewAuthLogin.title') }}</h2>
-    </div>
+    <h2 class="margin-bottom-3">{{ $t('publicViewAuthLogin.title') }}</h2>
     <div>
       <Error :error="error"></Error>
       <form @submit.prevent="authorizeView">

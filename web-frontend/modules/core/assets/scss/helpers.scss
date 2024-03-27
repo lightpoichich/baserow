@@ -19,6 +19,10 @@
   transform: translateX(-10000px) translateY(-10000px);
 }
 
+.align-center {
+  text-align: center;
+}
+
 .align-right {
   text-align: right;
 }
@@ -28,15 +32,15 @@
 }
 
 .color-primary {
-  color: $color-primary-500 !important;
+  color: $palette-blue-500 !important;
 }
 
 .color-success {
-  color: $color-success-500 !important;
+  color: $palette-green-500 !important;
 }
 
 .color-warning {
-  color: $color-warning-500 !important;
+  color: $palette-red-500 !important;
 }
 
 .color-error {
@@ -196,6 +200,10 @@
 
 .inline-block {
   display: inline-block;
+}
+
+.font-size-50 {
+  font-size: 50px;
 }
 
 @keyframes spin {

@@ -1,66 +1,69 @@
 <template>
   <Modal ref="modal">
     <form @submit.prevent="create">
-      <div class="box__title">
+      <div class="modal__title">
         <h2 class="row-modal__title">
           {{ heading }}
         </h2>
       </div>
-      <Error :error="error"></Error>
-      <RowEditModalFieldsList
-        :primary-is-sortable="primaryIsSortable"
-        :fields="visibleFields"
-        :sortable="sortable"
-        :hidden="false"
-        :read-only="false"
-        :row="row"
-        :view="view"
-        :table="table"
-        :database="database"
-        :can-modify-fields="canModifyFields"
-        :all-fields-in-table="allFieldsInTable"
-        @field-updated="$emit('field-updated', $event)"
-        @field-deleted="$emit('field-deleted')"
-        @order-fields="$emit('order-fields', $event)"
-        @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
-        @update="update"
-      ></RowEditModalFieldsList>
-      <RowEditModalHiddenFieldsSection
-        v-if="hiddenFields.length"
-        :show-hidden-fields="showHiddenFields"
-        @toggle-hidden-fields-visibility="
-          $emit('toggle-hidden-fields-visibility')
-        "
-      >
+
+      <div class="modal__content">
+        <Error :error="error"></Error>
         <RowEditModalFieldsList
           :primary-is-sortable="primaryIsSortable"
-          :fields="hiddenFields"
-          :sortable="false"
-          :hidden="true"
+          :fields="visibleFields"
+          :sortable="sortable"
+          :hidden="false"
           :read-only="false"
           :row="row"
-          :table="table"
           :view="view"
+          :table="table"
           :database="database"
           :can-modify-fields="canModifyFields"
           :all-fields-in-table="allFieldsInTable"
           @field-updated="$emit('field-updated', $event)"
           @field-deleted="$emit('field-deleted')"
+          @order-fields="$emit('order-fields', $event)"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
           @update="update"
+        ></RowEditModalFieldsList>
+        <RowEditModalHiddenFieldsSection
+          v-if="hiddenFields.length"
+          :show-hidden-fields="showHiddenFields"
+          @toggle-hidden-fields-visibility="
+            $emit('toggle-hidden-fields-visibility')
+          "
         >
-        </RowEditModalFieldsList>
-      </RowEditModalHiddenFieldsSection>
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="primary"
-            size="large"
-            :loading="loading"
-            :disabled="loading"
+          <RowEditModalFieldsList
+            :primary-is-sortable="primaryIsSortable"
+            :fields="hiddenFields"
+            :sortable="false"
+            :hidden="true"
+            :read-only="false"
+            :row="row"
+            :table="table"
+            :view="view"
+            :database="database"
+            :can-modify-fields="canModifyFields"
+            :all-fields-in-table="allFieldsInTable"
+            @field-updated="$emit('field-updated', $event)"
+            @field-deleted="$emit('field-deleted')"
+            @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
+            @update="update"
           >
-            {{ $t('action.create') }}
-          </Button>
+          </RowEditModalFieldsList>
+        </RowEditModalHiddenFieldsSection>
+        <div class="actions">
+          <div class="align-right">
+            <Button
+              type="primary"
+              size="large"
+              :loading="loading"
+              :disabled="loading"
+            >
+              {{ $t('action.create') }}
+            </Button>
+          </div>
         </div>
       </div>
     </form>

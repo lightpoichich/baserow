@@ -39,12 +39,14 @@
     </FormGroup>
     <BlankDatabaseForm
       v-if="importType === 'none'"
+      ref="blankDatabaseForm"
       :default-name="defaultName"
       :loading="loading"
       @submitted="$emit('submitted', $event)"
     />
     <ImportFromAirtable
       v-else-if="importType === 'airtable'"
+      ref="importFromAirtable"
       @hidden="$emit('hidden', $event)"
     ></ImportFromAirtable>
   </div>
@@ -72,6 +74,18 @@ export default {
     return {
       importType: 'none',
     }
+  },
+  watch: {
+    importType() {
+      this.$emit('import-type-changed', this.importType)
+    },
+  },
+  methods: {
+    submit() {
+      if (this.importType === 'none') this.$refs.blankDatabaseForm.submit()
+      else if (this.importType === 'airtable')
+        this.$refs.importFromAirtable.submit()
+    },
   },
 }
 </script>

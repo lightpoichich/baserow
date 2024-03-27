@@ -67,31 +67,32 @@
       </li>
     </ul>
     <Modal v-if="option !== null" ref="deleteModal">
-      <h2 class="box__title">
+      <h2 class="modal__title">
         {{ $t('kanbanViewStackContext.delete', { name: option.value }) }}
       </h2>
-      <Error :error="error"></Error>
-      <div>
-        <p>
-          {{
-            $t('kanbanViewStackContext.deleteDescription', {
-              name: option.value,
-            })
-          }}
-        </p>
-        <div class="actions">
-          <div class="align-right">
-            <Button
-              type="danger"
-              size="large"
-              :disabled="loading"
-              :loading="loading"
-              @click="deleteStack()"
-            >
-              {{ $t('kanbanViewStackContext.delete', { name: option.value }) }}
-            </Button>
-          </div>
+
+      <div class="modal__content">
+        <Error :error="error"></Error>
+        <div>
+          <p>
+            {{
+              $t('kanbanViewStackContext.deleteDescription', {
+                name: option.value,
+              })
+            }}
+          </p>
         </div>
+      </div>
+
+      <div class="modal__footer">
+        <Button
+          type="danger"
+          :disabled="loading"
+          :loading="loading"
+          @click="deleteStack()"
+        >
+          {{ $t('kanbanViewStackContext.delete', { name: option.value }) }}
+        </Button>
       </div>
     </Modal>
   </Context>

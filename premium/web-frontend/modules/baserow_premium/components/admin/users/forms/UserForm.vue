@@ -71,20 +71,6 @@
         </span>
       </template>
     </FormGroup>
-
-    <div class="actions">
-      <slot></slot>
-      <div class="align-right">
-        <Button
-          type="primary"
-          size="large"
-          :disabled="loading"
-          :loading="loading"
-        >
-          {{ $t('action.save') }}</Button
-        >
-      </div>
-    </div>
   </form>
 </template>
 

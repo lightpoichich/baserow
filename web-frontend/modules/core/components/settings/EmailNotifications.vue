@@ -1,33 +1,35 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('emailNotifications.title') }}</h2>
-    <form @submit.prevent="updateEmailNotificationFrequency">
-      <FormGroup
-        :label="$t('emailNotifications.label')"
-        :help-text="$t('emailNotifications.description')"
-        :error="fieldHasErrors('email_notification_frequency')"
-        required
-      >
-        <RadioGroup
-          v-model="values.email_notification_frequency"
-          :options="emailNotificationOptions"
-          vertical-layout
-        >
-        </RadioGroup>
-      </FormGroup>
+    <h2 class="modal__title">{{ $t('emailNotifications.title') }}</h2>
 
-      <div class="actions actions--right">
-        <Button
-          type="primary"
-          size="large"
-          :loading="loading"
-          :disabled="submitDisabled || loading"
-          icon="iconoir-bin"
+    <div class="modal__content">
+      <form @submit.prevent="updateEmailNotificationFrequency">
+        <FormGroup
+          :label="$t('emailNotifications.label')"
+          :help-text="$t('emailNotifications.description')"
+          :error="fieldHasErrors('email_notification_frequency')"
+          required
         >
-          {{ $t('emailNotifications.submitButton') }}
-        </Button>
-      </div>
-    </form>
+          <RadioGroup
+            v-model="values.email_notification_frequency"
+            :options="emailNotificationOptions"
+            vertical-layout
+          >
+          </RadioGroup>
+        </FormGroup>
+      </form>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="submitDisabled || loading"
+        @click="updateEmailNotificationFrequency"
+      >
+        {{ $t('emailNotifications.submitButton') }}
+      </Button>
+    </div>
   </div>
 </template>
 

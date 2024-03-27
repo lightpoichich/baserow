@@ -1,74 +1,66 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('deleteAccountSettings.title') }}</h2>
+    <h2 class="modal__title">{{ $t('deleteAccountSettings.title') }}</h2>
 
-    <p>
-      {{
-        $t('deleteAccountSettings.description', {
-          days: settings.account_deletion_grace_delay,
-        })
-      }}
-    </p>
-
-    <div v-if="$fetchState.pending" class="loading__wrapper">
-      <div class="loading loading-absolute-center" />
-    </div>
-
-    <Alert v-else-if="$fetchState.error" type="error">
-      <template #title>{{
-        $t('deleteAccountSettings.workspaceLoadingError')
-      }}</template>
-      <p>{{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}</p>
-    </Alert>
-
-    <div v-else-if="orphanWorkspaces.length" class="delete-section">
-      <div class="delete-section__label">
-        <div class="delete-section__label-icon">
-          <i class="iconoir-warning-triangle"></i>
-        </div>
-        {{ $t('deleteAccountSettings.orphanWorkspaces') }}
-      </div>
-      <p class="delete-section__description">
-        {{ $t('deleteAccountSettings.workspaceNoticeDescription') }}
+    <div class="modal__content">
+      <p>
+        {{
+          $t('deleteAccountSettings.description', {
+            days: settings.account_deletion_grace_delay,
+          })
+        }}
       </p>
-      <ul class="delete-section__list">
-        <li v-for="workspace in orphanWorkspaces" :key="workspace.id">
-          <i class="delete-section__list-icon iconoir-community"></i>
-          {{ workspace.name }}
-          <small>
-            {{
-              $tc(
-                'deleteAccountSettings.orphanWorkspaceMemberCount',
-                workspaceMembers[workspace.id].length,
-                {
-                  count: workspaceMembers[workspace.id].length,
-                }
-              )
-            }}</small
-          >
-        </li>
-      </ul>
+
+      <div v-if="$fetchState.pending" class="loading__wrapper">
+        <div class="loading loading-absolute-center" />
+      </div>
+
+      <Alert v-else-if="$fetchState.error" type="error">
+        <template #title>{{
+          $t('deleteAccountSettings.workspaceLoadingError')
+        }}</template>
+        <p>
+          {{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}
+        </p>
+      </Alert>
+
+      <div v-else-if="orphanWorkspaces.length" class="delete-section">
+        <div class="delete-section__label">
+          <div class="delete-section__label-icon">
+            <i class="iconoir-warning-triangle"></i>
+          </div>
+          {{ $t('deleteAccountSettings.orphanWorkspaces') }}
+        </div>
+        <p class="delete-section__description">
+          {{ $t('deleteAccountSettings.workspaceNoticeDescription') }}
+        </p>
+        <ul class="delete-section__list">
+          <li v-for="workspace in orphanWorkspaces" :key="workspace.id">
+            <i class="delete-section__list-icon iconoir-community"></i>
+            {{ workspace.name }}
+            <small>
+              {{
+                $tc(
+                  'deleteAccountSettings.orphanWorkspaceMemberCount',
+                  workspaceMembers[workspace.id].length,
+                  {
+                    count: workspaceMembers[workspace.id].length,
+                  }
+                )
+              }}</small
+            >
+          </li>
+        </ul>
+      </div>
+
+      <Error :error="error"></Error>
     </div>
 
-    <Error :error="error"></Error>
-
-    <form
-      v-if="!success"
-      class="delete-account-settings__form"
-      @submit.prevent="deleteAccount"
-    >
-      <div class="actions actions--right">
-        <Button
-          type="danger"
-          size="large"
-          :loading="loading"
-          :disabled="loading"
-          icon="iconoir-bin"
-        >
-          {{ $t('deleteAccountSettings.submitButton') }}
-        </Button>
-      </div>
-    </form>
+    <div v-if="!success" class="modal__footer">
+      <Button type="danger" :loading="loading" @click="deleteAccount">
+        {{ $t('deleteAccountSettings.submitButton') }}</Button
+      >
+    </div>
   </div>
 </template>
 

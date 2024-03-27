@@ -1,16 +1,17 @@
 <template>
-  <Modal :tiny="true" :close-button="false">
-    <h3>{{ $t('deleteSnapshotModal.title') }}</h3>
-    <p>
-      {{ $t('deleteSnapshotModal.content', { name: snapshot.name }) }}
-    </p>
-    <div class="actions margin-bottom-0">
-      <ul class="action__links">
-        <li>
-          <a @click.prevent="hide">{{ $t('action.cancel') }}</a>
-        </li>
-      </ul>
+  <Modal tiny :close-button="false">
+    <h3 class="modal__title">{{ $t('deleteSnapshotModal.title') }}</h3>
 
+    <div class="modal__content">
+      <p>
+        {{ $t('deleteSnapshotModal.content', { name: snapshot.name }) }}
+      </p>
+    </div>
+
+    <div class="modal__footer">
+      <Button type="secondary" @click.prevent="hide">
+        {{ $t('action.cancel') }}</Button
+      >
       <Button
         type="danger"
         :loading="loading"

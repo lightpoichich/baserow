@@ -1,6 +1,6 @@
 <template>
   <Modal :small="true" @show="hideError()">
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('changePrimaryFieldModal.title') }}
     </h2>
     <Error :error="error"></Error>

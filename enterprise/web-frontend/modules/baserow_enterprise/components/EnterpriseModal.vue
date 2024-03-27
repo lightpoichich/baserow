@@ -1,6 +1,6 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('enterpriseModal.title', { name }) }}
     </h2>
     <div>

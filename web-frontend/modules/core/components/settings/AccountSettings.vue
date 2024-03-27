@@ -1,23 +1,27 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('accountSettings.title') }}</h2>
-    <Error :error="error"></Error>
-    <Alert v-if="success" type="success">
-      <template #title>{{ $t('accountSettings.changedTitle') }}</template>
-      <p>{{ $t('accountSettings.changedDescription') }}</p>
-    </Alert>
-    <AccountForm :default-values="user" @submitted="submitted">
-      <div class="actions actions--right">
-        <Button
-          type="primary"
-          size="large"
-          :loading="loading"
-          :disabled="loading"
-        >
-          {{ $t('accountSettings.submitButton') }}
-        </Button>
-      </div>
-    </AccountForm>
+    <h2 class="modal__title">{{ $t('accountSettings.title') }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <Alert v-if="success" type="success">
+        <template #title>{{ $t('accountSettings.changedTitle') }}</template>
+        <p>{{ $t('accountSettings.changedDescription') }}</p>
+      </Alert>
+      <AccountForm ref="form" :default-values="user" @submitted="submitted">
+      </AccountForm>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="$refs.form.submit()"
+      >
+        {{ $t('accountSettings.submitButton') }}
+      </Button>
+    </div>
   </div>
 </template>
 

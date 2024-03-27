@@ -1,25 +1,34 @@
 <template>
   <Modal @hidden="$refs.form && $refs.form.reset()">
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('editUserModal.edit', { username: user.username }) }}
     </h2>
-    <Error :error="error"></Error>
-    <UserForm
-      ref="form"
-      :user="user"
-      :loading="loading"
-      :default-values="user"
-      @submitted="editUser"
-    >
-      <div class="align-left">
-        <a
-          class="user-admin-edit__delete"
-          @click="$refs.deleteUserModal.show()"
-        >
-          {{ $t('editUserModal.delete') }}
-        </a>
-      </div>
-    </UserForm>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <UserForm
+        ref="form"
+        :user="user"
+        :loading="loading"
+        :default-values="user"
+        @submitted="editUser"
+      >
+      </UserForm>
+    </div>
+
+    <div class="modal__footer">
+      <Button type="danger" @click="$refs.deleteUserModal.show()">
+        {{ $t('editUserModal.delete') }}
+      </Button>
+
+      <Button
+        type="primary"
+        :disabled="loading"
+        :loading="loading"
+        @click="$refs.form.submit()"
+      >
+        {{ $t('action.save') }}</Button
+      >
+    </div>
     <DeleteUserModal
       ref="deleteUserModal"
       :user="user"

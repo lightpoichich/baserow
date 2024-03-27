@@ -1,23 +1,43 @@
 <template>
   <Modal>
-    <h2 class="margin-bottom-1">{{ $t('createTeamModal.title') }}</h2>
-    <p>{{ $t('manageTeamModals.subheading') }}</p>
-    <Error :error="error"></Error>
-    <ManageTeamForm
-      ref="manageForm"
-      :workspace="workspace"
-      :loading="loading"
-      :invited-user-subjects="invitedUserSubjects"
-      @submitted="createTeam"
-      @remove-subject="removeSubject"
-      @invite="$refs.memberAssignmentModal.show()"
-    >
-    </ManageTeamForm>
-    <MemberAssignmentModal
-      ref="memberAssignmentModal"
-      :members="uninvitedUserSubjects"
-      @invite="storeSelectedUsers"
-    />
+    <div class="modal__title">
+      <div>
+        <h2 class="margin-bottom-0">{{ $t('createTeamModal.title') }}</h2>
+        <p class="margin-top-0 margin-bottom-0">
+          {{ $t('manageTeamModals.subheading') }}
+        </p>
+      </div>
+    </div>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <ManageTeamForm
+        ref="manageForm"
+        :workspace="workspace"
+        :loading="loading"
+        :invited-user-subjects="invitedUserSubjects"
+        @submitted="createTeam"
+        @remove-subject="removeSubject"
+        @invite="$refs.memberAssignmentModal.show()"
+      >
+      </ManageTeamForm>
+      <MemberAssignmentModal
+        ref="memberAssignmentModal"
+        :members="uninvitedUserSubjects"
+        @invite="storeSelectedUsers"
+      />
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        @click="$refs.manageForm.submit()"
+        :disabled="loading"
+        :loading="loading"
+      >
+        {{ $t('manageTeamForm.submit') }}</Button
+      >
+    </div>
   </Modal>
 </template>
 

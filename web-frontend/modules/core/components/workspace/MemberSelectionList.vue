@@ -1,40 +1,43 @@
 <template>
   <div class="select-members-list">
-    <div>
-      <FormInput
-        ref="searchInput"
-        v-model="activeSearchTerm"
-        :placeholder="$t('memberSelectionList.searchPlaceholder')"
-      ></FormInput>
-      <div class="margin-top-2">
-        {{
-          $t('memberSelectionList.selectedAmountLabel', {
-            count: membersSelected.length,
-          })
-        }}
+    <div class="modal__content">
+      <div>
+        <FormInput
+          ref="searchInput"
+          v-model="activeSearchTerm"
+          :placeholder="$t('memberSelectionList.searchPlaceholder')"
+        ></FormInput>
+        <div class="margin-top-2">
+          {{
+            $t('memberSelectionList.selectedAmountLabel', {
+              count: membersSelected.length,
+            })
+          }}
+        </div>
       </div>
-    </div>
-    <List
-      class="margin-top-2 select-members-list__items"
-      :items="membersFiltered"
-      :selected-items="membersSelected"
-      :attributes="['email']"
-      selectable
-      @selected="memberSelected"
-    >
-      <template #left-side="{ item }">
-        <Avatar
-          class="margin-left-1"
-          rounded
-          size="medium"
-          :initials="item.name | nameAbbreviation"
-        ></Avatar>
+      <List
+        class="margin-top-2 select-members-list__items"
+        :items="membersFiltered"
+        :selected-items="membersSelected"
+        :attributes="['email']"
+        selectable
+        @selected="memberSelected"
+      >
+        <template #left-side="{ item }">
+          <Avatar
+            class="margin-left-1"
+            rounded
+            size="medium"
+            :initials="item.name | nameAbbreviation"
+          ></Avatar>
 
-        <span class="margin-left-1">
-          {{ item.name }}
-        </span>
-      </template>
-    </List>
+          <span class="margin-left-1">
+            {{ item.name }}
+          </span>
+        </template>
+      </List>
+    </div>
+
     <MemberAssignmentModalFooter
       :all-filtered-members-selected="allFilteredMembersSelected"
       :selected-members-count="membersSelected.length"

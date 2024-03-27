@@ -1,34 +1,42 @@
 <template>
-  <Modal :tiny="true" @show="hideError()">
-    <h2 class="box__title">
+  <Modal tiny @show="hideError()">
+    <h2 class="modal__title">
       {{ $t('duplicateFieldContext.duplicate') }}
     </h2>
-    <Error :error="error"></Error>
-    <form @submit.prevent="duplicateField()">
-      <div class="control margin-bottom-1">
-        <div class="control__elements">
-          <Checkbox v-model="duplicateData" :disabled="formFieldTypeIsReadOnly">
-            {{
-              $t(
-                formFieldTypeIsReadOnly
-                  ? 'duplicateFieldContext.readOnlyField'
-                  : 'duplicateFieldContext.cloneData'
-              )
-            }}
-          </Checkbox>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <form @submit.prevent="duplicateField()">
+        <div class="control margin-bottom-1">
+          <div class="control__elements">
+            <Checkbox
+              v-model="duplicateData"
+              :disabled="formFieldTypeIsReadOnly"
+            >
+              {{
+                $t(
+                  formFieldTypeIsReadOnly
+                    ? 'duplicateFieldContext.readOnlyField'
+                    : 'duplicateFieldContext.cloneData'
+                )
+              }}
+            </Checkbox>
+          </div>
         </div>
-      </div>
-      <div class="actions actions--right">
-        <Button
-          ref="submitButton"
-          type="primary"
-          :loading="loading"
-          :disabled="loading"
-        >
-          {{ $t('action.duplicate') }}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        ref="submitButton"
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="duplicateField()"
+      >
+        {{ $t('action.duplicate') }}
+      </Button>
+    </div>
   </Modal>
 </template>
 

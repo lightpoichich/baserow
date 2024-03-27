@@ -1,12 +1,15 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('generalSettings.titleOverview') }}</h2>
-    <Error :error="error"></Error>
-    <BuilderGeneralSettingsForm
-      ref="settingsForm"
-      :default-values="builder"
-      @values-changed="updateApplication($event)"
-    />
+    <h2 class="modal__title">{{ $t('generalSettings.titleOverview') }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <BuilderGeneralSettingsForm
+        ref="settingsForm"
+        :default-values="builder"
+        @values-changed="updateApplication($event)"
+      />
+    </div>
   </div>
 </template>
 

@@ -1,92 +1,95 @@
 <template>
   <Modal :wide="true">
-    <h2 class="box__title">{{ $t('apiDocsFiltersBuilderModal.title') }}</h2>
-    <div class="control margin-bottom-2">
-      <div class="control__elements">
-        <Checkbox v-model="mutableUserFieldNames">{{
-          $t('apiDocsFiltersBuilderModal.userFieldNames')
-        }}</Checkbox>
+    <h2 class="modal__title">{{ $t('apiDocsFiltersBuilderModal.title') }}</h2>
+
+    <div class="modal__content">
+      <div class="control margin-bottom-2">
+        <div class="control__elements">
+          <Checkbox v-model="mutableUserFieldNames">{{
+            $t('apiDocsFiltersBuilderModal.userFieldNames')
+          }}</Checkbox>
+        </div>
       </div>
-    </div>
-    <div class="control margin-bottom-2">
-      <label class="control__label control__label--small">{{
-        $t('apiDocsFiltersBuilderModal.json')
-      }}</label>
-      <div class="control__description">
-        <span class="position-relative">
-          <a
-            @click.prevent="
-              ;[copyToClipboard(JSONFilters), $refs.copiedJSON.show()]
-            "
-            >{{ $t('action.copyToClipboard') }}</a
-          >
-          <Copied ref="copiedJSON"></Copied>
-        </span>
+      <div class="control margin-bottom-2">
+        <label class="control__label control__label--small">{{
+          $t('apiDocsFiltersBuilderModal.json')
+        }}</label>
+        <div class="control__description">
+          <span class="position-relative">
+            <a
+              @click.prevent="
+                ;[copyToClipboard(JSONFilters), $refs.copiedJSON.show()]
+              "
+              >{{ $t('action.copyToClipboard') }}</a
+            >
+            <Copied ref="copiedJSON"></Copied>
+          </span>
+        </div>
+        <div class="control__elements">
+          <pre
+            class="api-docs__example-content"
+          ><code>{{ JSONFilters }}</code></pre>
+        </div>
       </div>
-      <div class="control__elements">
-        <pre
-          class="api-docs__example-content"
-        ><code>{{ JSONFilters }}</code></pre>
+      <div class="control margin-bottom-2">
+        <label class="control__label control__label--small">{{
+          $t('apiDocsFiltersBuilderModal.queryParameter')
+        }}</label>
+        <div class="control__description">
+          <span class="position-relative">
+            <a
+              @click.prevent="
+                ;[
+                  copyToClipboard(encodedJSONFilters),
+                  $refs.copiedEncodedJSON.show(),
+                ]
+              "
+              >{{ $t('action.copyToClipboard') }}</a
+            >
+            <Copied ref="copiedEncodedJSON"></Copied>
+          </span>
+        </div>
+        <div class="control__elements">
+          <pre
+            class="api-docs__example-content"
+          ><code>{{ encodedJSONFilters }}</code></pre>
+        </div>
       </div>
-    </div>
-    <div class="control margin-bottom-2">
-      <label class="control__label control__label--small">{{
-        $t('apiDocsFiltersBuilderModal.queryParameter')
-      }}</label>
-      <div class="control__description">
-        <span class="position-relative">
-          <a
-            @click.prevent="
-              ;[
-                copyToClipboard(encodedJSONFilters),
-                $refs.copiedEncodedJSON.show(),
-              ]
-            "
-            >{{ $t('action.copyToClipboard') }}</a
-          >
-          <Copied ref="copiedEncodedJSON"></Copied>
-        </span>
+      <div class="margin-bottom-2">
+        <ViewFieldConditionsForm
+          v-if="view.filters.length > 0"
+          :filters="view.filters"
+          :filter-groups="view.filter_groups"
+          :filter-type="view.filter_type"
+          :fields="fields"
+          :view="view"
+          :disable-filter="false"
+          :read-only="false"
+          :full-width="true"
+          :sorted="true"
+          :add-condition-string="$t('viewFilterContext.addFilter')"
+          :add-condition-group-string="$t('viewFilterContext.addFilterGroup')"
+          @addFilter="addFilter"
+          @addFilterGroup="addFilter"
+          @deleteFilter="deleteFilter"
+          @updateFilter="updateFilter"
+          @updateFilterType="updateFilterType"
+          @deleteFilterGroup="deleteFilterGroup"
+        />
       </div>
-      <div class="control__elements">
-        <pre
-          class="api-docs__example-content"
-        ><code>{{ encodedJSONFilters }}</code></pre>
+      <div class="flex">
+        <a class="filters__add" @click.prevent="addFilter()">
+          <i class="filters__add-icon iconoir-plus"></i>
+          {{ $t('viewFilterContext.addFilter') }}</a
+        >
+        <a
+          class="filters__add"
+          @click.prevent="addFilter({ filterGroupId: uuid() })"
+        >
+          <i class="filters__add-icon iconoir-plus"></i>
+          {{ $t('viewFilterContext.addFilterGroup') }}</a
+        >
       </div>
-    </div>
-    <div class="margin-bottom-2">
-      <ViewFieldConditionsForm
-        v-if="view.filters.length > 0"
-        :filters="view.filters"
-        :filter-groups="view.filter_groups"
-        :filter-type="view.filter_type"
-        :fields="fields"
-        :view="view"
-        :disable-filter="false"
-        :read-only="false"
-        :full-width="true"
-        :sorted="true"
-        :add-condition-string="$t('viewFilterContext.addFilter')"
-        :add-condition-group-string="$t('viewFilterContext.addFilterGroup')"
-        @addFilter="addFilter"
-        @addFilterGroup="addFilter"
-        @deleteFilter="deleteFilter"
-        @updateFilter="updateFilter"
-        @updateFilterType="updateFilterType"
-        @deleteFilterGroup="deleteFilterGroup"
-      />
-    </div>
-    <div class="flex">
-      <a class="filters__add" @click.prevent="addFilter()">
-        <i class="filters__add-icon iconoir-plus"></i>
-        {{ $t('viewFilterContext.addFilter') }}</a
-      >
-      <a
-        class="filters__add"
-        @click.prevent="addFilter({ filterGroupId: uuid() })"
-      >
-        <i class="filters__add-icon iconoir-plus"></i>
-        {{ $t('viewFilterContext.addFilterGroup') }}</a
-      >
     </div>
   </Modal>
 </template>

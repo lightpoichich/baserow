@@ -1,24 +1,26 @@
 <template>
   <Modal>
-    <h2 class="box__title">{{ $t('addElementModal.title') }}</h2>
-    <FormInput
-      v-model="search"
-      size="large"
-      class="margin-bottom-2"
-      :placeholder="$t('addElementModal.searchPlaceholder')"
-      icon-right="iconoir-search"
-    />
-    <div class="add-element-modal__element-cards">
-      <AddElementCard
-        v-for="elementType in elementTypes"
-        :key="elementType.getType()"
-        :element-type="elementType"
-        :parent-type="parentElementType"
-        :disallowed-type-for-ancestry="isDisallowedByParent(elementType)"
-        :loading="addingElementType === elementType.getType()"
-        :disabled="isCardDisabled(elementType)"
-        @click="addElement(elementType)"
+    <h2 class="modal__title">{{ $t('addElementModal.title') }}</h2>
+    <div class="modal__content">
+      <FormInput
+        v-model="search"
+        size="large"
+        class="margin-bottom-2"
+        :placeholder="$t('addElementModal.searchPlaceholder')"
+        icon-right="iconoir-search"
       />
+      <div class="add-element-modal__element-cards">
+        <AddElementCard
+          v-for="elementType in elementTypes"
+          :key="elementType.getType()"
+          :element-type="elementType"
+          :parent-type="parentElementType"
+          :disallowed-type-for-ancestry="isDisallowedByParent(elementType)"
+          :loading="addingElementType === elementType.getType()"
+          :disabled="isCardDisabled(elementType)"
+          @click="addElement(elementType)"
+        />
+      </div>
     </div>
   </Modal>
 </template>

@@ -75,11 +75,11 @@
         </form>
       </div>
     </div>
-    <div v-if="success" class="box__message">
-      <div class="box__message-icon">
+    <div v-if="success" class="align-center">
+      <div class="margin-bottom-3 font-size-50 color-primary">
         <i class="iconoir-send"></i>
       </div>
-      <p class="box__message-text">
+      <p>
         {{ $t('forgotPassword.confirmation') }}
       </p>
 

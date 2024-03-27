@@ -1,25 +1,26 @@
 <template>
   <Modal>
-    <h2 class="box__title">{{ $t('createWorkspaceModal.createNew') }}</h2>
-    <Error :error="error"></Error>
-    <WorkspaceForm
-      ref="workspaceForm"
-      :default-name="getDefaultName()"
-      @submitted="submitted"
-    >
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="primary"
-            size="large"
-            :loading="loading"
-            :disabled="loading"
-          >
-            {{ $t('createWorkspaceModal.add') }}
-          </Button>
-        </div>
-      </div>
-    </WorkspaceForm>
+    <h2 class="modal__title">{{ $t('createWorkspaceModal.createNew') }}</h2>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <WorkspaceForm
+        ref="workspaceForm"
+        :default-name="getDefaultName()"
+        @submitted="submitted"
+      >
+      </WorkspaceForm>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="$refs.workspaceForm.submit()"
+      >
+        {{ $t('createWorkspaceModal.add') }}
+      </Button>
+    </div>
   </Modal>
 </template>
 

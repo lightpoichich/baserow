@@ -1,27 +1,29 @@
 <template>
   <Modal>
-    <h2 class="margin-bottom-1">
+    <h2 class="modal__title">
       {{ $t('updateTeamModal.title', { teamName: team.name }) }}
     </h2>
-    <p>{{ $t('manageTeamModals.subheading') }}</p>
-    <Error :error="error"></Error>
-    <ManageTeamForm
-      ref="manageForm"
-      :workspace="workspace"
-      :loading="loading"
-      :default-values="team"
-      :subjects-loading="subjectsLoading"
-      :invited-user-subjects="invitedUserSubjects"
-      @submitted="updateTeam"
-      @remove-subject="removeSubject"
-      @invite="$refs.memberAssignmentModal.show()"
-    >
-    </ManageTeamForm>
-    <MemberAssignmentModal
-      ref="memberAssignmentModal"
-      :members="uninvitedUserSubjects"
-      @invite="storeSelectedUsers"
-    />
+    <div class="modal__content">
+      <p>{{ $t('manageTeamModals.subheading') }}</p>
+      <Error :error="error"></Error>
+      <ManageTeamForm
+        ref="manageForm"
+        :workspace="workspace"
+        :loading="loading"
+        :default-values="team"
+        :subjects-loading="subjectsLoading"
+        :invited-user-subjects="invitedUserSubjects"
+        @submitted="updateTeam"
+        @remove-subject="removeSubject"
+        @invite="$refs.memberAssignmentModal.show()"
+      >
+      </ManageTeamForm>
+      <MemberAssignmentModal
+        ref="memberAssignmentModal"
+        :members="uninvitedUserSubjects"
+        @invite="storeSelectedUsers"
+      />
+    </div>
   </Modal>
 </template>
 

@@ -19,15 +19,14 @@
         </li>
       </ul>
     </template>
-    <template #content>
-      <component
-        :is="userFileUploadComponent"
-        :upload-file="uploadFile"
-        :multiple-files="multipleFiles"
-        :file-types-acceptable="fileTypesAcceptable"
-        @uploaded="$emit('uploaded', $event)"
-      ></component>
-    </template>
+
+    <component
+      :is="userFileUploadComponent"
+      :upload-file="uploadFile"
+      :multiple-files="multipleFiles"
+      :file-types-acceptable="fileTypesAcceptable"
+      @uploaded="$emit('uploaded', $event)"
+    ></component>
   </Modal>
 </template>
 

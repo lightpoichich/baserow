@@ -1,71 +1,73 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('passwordSettings.title') }}</h2>
-    <Error :error="error"></Error>
-    <Alert v-if="success" type="success">
-      <template #title>{{ $t('passwordSettings.changedTitle') }}</template>
-      <p>{{ $t('passwordSettings.changedDescription') }}</p>
-    </Alert>
-    <form v-if="!success" @submit.prevent="changePassword">
-      <FormGroup
-        :label="$t('passwordSettings.oldPasswordLabel')"
-        small-label
-        required
-        :error="$v.account.oldPassword.$error"
-        class="margin-bottom-2"
-      >
-        <FormInput
-          v-model="account.oldPassword"
+    <h2 class="modal__title">{{ $t('passwordSettings.title') }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <Alert v-if="success" type="success">
+        <template #title>{{ $t('passwordSettings.changedTitle') }}</template>
+        <p>{{ $t('passwordSettings.changedDescription') }}</p>
+      </Alert>
+      <form v-if="!success" ref="form" @submit.prevent="changePassword">
+        <FormGroup
+          :label="$t('passwordSettings.oldPasswordLabel')"
+          small-label
+          required
           :error="$v.account.oldPassword.$error"
-          type="password"
-          size="large"
-          @blur="$v.account.oldPassword.$touch()"
-        ></FormInput>
-        <template #error>
-          {{ $t('passwordSettings.oldPasswordRequiredError') }}</template
+          class="margin-bottom-2"
         >
-      </FormGroup>
+          <FormInput
+            v-model="account.oldPassword"
+            :error="$v.account.oldPassword.$error"
+            type="password"
+            size="large"
+            @blur="$v.account.oldPassword.$touch()"
+          ></FormInput>
+          <template #error>
+            {{ $t('passwordSettings.oldPasswordRequiredError') }}</template
+          >
+        </FormGroup>
 
-      <PasswordInput
-        v-model="account.newPassword"
-        :validation-state="$v.account.newPassword"
-        :label="$t('passwordSettings.newPasswordLabel')"
-        class="margin-bottom-2"
-      ></PasswordInput>
+        <PasswordInput
+          v-model="account.newPassword"
+          :validation-state="$v.account.newPassword"
+          :label="$t('passwordSettings.newPasswordLabel')"
+          class="margin-bottom-2"
+        ></PasswordInput>
 
-      <FormGroup
-        :error="$v.account.passwordConfirm.$error"
-        :label="$t('passwordSettings.repeatNewPasswordLabel')"
-        required
-        small-label
-        class="margin-bottom-2"
-      >
-        <FormInput
-          v-model="account.passwordConfirm"
+        <FormGroup
           :error="$v.account.passwordConfirm.$error"
-          type="password"
-          size="large"
-          @blur="$v.account.passwordConfirm.$touch()"
+          :label="$t('passwordSettings.repeatNewPasswordLabel')"
+          required
+          small-label
+          class="margin-bottom-2"
         >
-        </FormInput>
+          <FormInput
+            v-model="account.passwordConfirm"
+            :error="$v.account.passwordConfirm.$error"
+            type="password"
+            size="large"
+            @blur="$v.account.passwordConfirm.$touch()"
+          >
+          </FormInput>
 
-        <template #error>
-          {{ $t('passwordSettings.repeatNewPasswordMatchError') }}</template
-        >
-      </FormGroup>
+          <template #error>
+            {{ $t('passwordSettings.repeatNewPasswordMatchError') }}</template
+          >
+        </FormGroup>
+      </form>
+    </div>
 
-      <div class="actions actions--right">
-        <Button
-          type="primary"
-          size="large"
-          :loading="loading"
-          :disabled="loading"
-          icon="iconoir-edit-pencil"
-        >
-          {{ $t('passwordSettings.submitButton') }}
-        </Button>
-      </div>
-    </form>
+    <div v-if="!success" class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="changePassword"
+      >
+        {{ $t('passwordSettings.submitButton') }}
+      </Button>
+    </div>
   </div>
 </template>
 

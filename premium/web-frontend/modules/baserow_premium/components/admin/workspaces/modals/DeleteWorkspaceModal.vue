@@ -1,10 +1,11 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('deleteWorkspaceModal.title', workspace) }}
     </h2>
-    <Error :error="error"></Error>
-    <div>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
       <i18n path="deleteWorkspaceModal.confirmation" tag="p">
         <template #name>
           <strong>{{ workspace.name }}</strong>
@@ -13,20 +14,17 @@
       <p>
         {{ $t('deleteWorkspaceModal.comment') }}
       </p>
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="danger"
-            size="large"
-            full-width
-            :disabled="loading"
-            :loading="loading"
-            @click.prevent="deleteWorkspace()"
-          >
-            {{ $t('deleteWorkspaceModal.delete', workspace) }}</Button
-          >
-        </div>
-      </div>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="danger"
+        :disabled="loading"
+        :loading="loading"
+        @click.prevent="deleteWorkspace()"
+      >
+        {{ $t('deleteWorkspaceModal.delete', workspace) }}</Button
+      >
     </div>
   </Modal>
 </template>

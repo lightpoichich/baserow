@@ -1,29 +1,30 @@
 <template>
   <Modal>
-    <h2 class="box__title">{{ $t('viewRotateSlugModal.title') }}</h2>
-    <Error :error="error"></Error>
-    <div>
-      <p>
-        {{
-          $t('viewRotateSlugModal.refreshWarning', {
-            viewName: view.name,
-            viewTypeSharingLinkName,
-          })
-        }}
-      </p>
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="primary"
-            size="large"
-            :loading="loading"
-            :disabled="loading"
-            @click="rotateSlug()"
-          >
-            {{ $t('viewRotateSlugModal.generateNewURL') }}
-          </Button>
-        </div>
+    <h2 class="modal__title">{{ $t('viewRotateSlugModal.title') }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <div>
+        <p>
+          {{
+            $t('viewRotateSlugModal.refreshWarning', {
+              viewName: view.name,
+              viewTypeSharingLinkName,
+            })
+          }}
+        </p>
       </div>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="rotateSlug()"
+      >
+        {{ $t('viewRotateSlugModal.generateNewURL') }}
+      </Button>
     </div>
   </Modal>
 </template>

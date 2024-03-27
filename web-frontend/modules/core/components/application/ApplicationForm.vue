@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="submit">
+  <form ref="form" @submit.prevent="submit">
     <FormGroup
       :error="fieldHasErrors('name')"
       small-label

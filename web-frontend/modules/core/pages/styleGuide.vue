@@ -1305,44 +1305,47 @@
                       </a>
                     </li>
                     <Modal ref="modal1">
-                      <h2 class="box__title">Modal inside a context</h2>
-                      <Button
-                        icon="iconoir-edit-pencil"
-                        @click="$refs.context3.toggle($event.target)"
-                        >Toggle context</Button
-                      >
-                      <Context ref="context3">
-                        <div class="context__menu-title">Vehicles</div>
-                        <ul class="context__menu">
-                          <li class="context__menu-item">
-                            <a class="context__menu-item-link" href="#">
-                              <i
-                                class="context__menu-item-icon iconoir-edit-pencil"
-                              ></i>
-                              This does nothing
-                            </a>
-                          </li>
-                          <li class="context__menu-item">
-                            <a
-                              class="context__menu-item-link"
-                              @click="$refs.context4.toggle($event.target)"
-                            >
-                              Open another context
-                            </a>
-                            <Context ref="context4">
-                              <div class="context__menu-title">End!</div>
-                            </Context>
-                          </li>
-                          <li class="context__menu-item">
-                            <a class="context__menu-item-link" href="#">
-                              <i
-                                class="context__menu-item-icon iconoir-bin"
-                              ></i>
-                              This does nothing
-                            </a>
-                          </li>
-                        </ul>
-                      </Context>
+                      <h2 class="modal__title">Modal inside a context</h2>
+
+                      <div class="modal__content">
+                        <Button
+                          icon="iconoir-edit-pencil"
+                          @click="$refs.context3.toggle($event.target)"
+                          >Toggle context</Button
+                        >
+                        <Context ref="context3">
+                          <div class="context__menu-title">Vehicles</div>
+                          <ul class="context__menu">
+                            <li class="context__menu-item">
+                              <a class="context__menu-item-link" href="#">
+                                <i
+                                  class="context__menu-item-icon iconoir-edit-pencil"
+                                ></i>
+                                This does nothing
+                              </a>
+                            </li>
+                            <li class="context__menu-item">
+                              <a
+                                class="context__menu-item-link"
+                                @click="$refs.context4.toggle($event.target)"
+                              >
+                                Open another context
+                              </a>
+                              <Context ref="context4">
+                                <div class="context__menu-title">End!</div>
+                              </Context>
+                            </li>
+                            <li class="context__menu-item">
+                              <a class="context__menu-item-link" href="#">
+                                <i
+                                  class="context__menu-item-icon iconoir-bin"
+                                ></i>
+                                This does nothing
+                              </a>
+                            </li>
+                          </ul>
+                        </Context>
+                      </div>
                     </Modal>
                   </ul>
                 </Context>
@@ -1357,20 +1360,22 @@
           </Context>
           <Button @click="$refs.modal2.show()">show modal</Button>
           <Modal ref="modal2">
-            <h2 class="box__title">An example modal</h2>
-            <p>
-              Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
-              dolor sit amet, consectetur adipiscing elit. Mauris vel tellus
-              suscipit, gravida libero a, egestas urna. Quisque tellus nisi,
-              consequat et interdum non, posuere sed lacus. Morbi fermentum
-              lorem sed vestibulum tristique. Vivamus scelerisque molestie
-              ligula vel elementum. Etiam metus lacus, commodo sit amet
-              tristique luctus, pulvinar eget justo. Fusce sed vehicula dolor.
-              Aliquam sollicitudin fringilla augue, posuere maximus orci
-              sollicitudin a. Vestibulum egestas tristique nunc, tristique
-              dignissim mauris dictum imperdiet. Mauris ultrices ac eros at
-              fringilla. Praesent ut tincidunt dui.
-            </p>
+            <h2 class="modal__title">An example modal</h2>
+            <div class="modal__content">
+              <p>
+                Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
+                dolor sit amet, consectetur adipiscing elit. Mauris vel tellus
+                suscipit, gravida libero a, egestas urna. Quisque tellus nisi,
+                consequat et interdum non, posuere sed lacus. Morbi fermentum
+                lorem sed vestibulum tristique. Vivamus scelerisque molestie
+                ligula vel elementum. Etiam metus lacus, commodo sit amet
+                tristique luctus, pulvinar eget justo. Fusce sed vehicula dolor.
+                Aliquam sollicitudin fringilla augue, posuere maximus orci
+                sollicitudin a. Vestibulum egestas tristique nunc, tristique
+                dignissim mauris dictum imperdiet. Mauris ultrices ac eros at
+                fringilla. Praesent ut tincidunt dui.
+              </p>
+            </div>
           </Modal>
           <Button
             type="success"
@@ -1423,7 +1428,7 @@
                 <i class="iconoir-cancel"></i>
               </a>
             </div>
-            <h2 class="box__title">An example modal</h2>
+            <h2 class="modal__title">An example modal</h2>
             <p>
               Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
               dolor sit amet, consectetur adipiscing elit. Mauris vel tellus
@@ -1507,8 +1512,8 @@
                 </li>
               </ul>
             </div>
-            <div class="modal__box-content">
-              <h2 class="box__title">An example modal</h2>
+            <h2 class="modal__title">An example modal</h2>
+            <div class="modal-content">
               <p>
                 Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
                 dolor sit amet, consectetur adipiscing elit. Mauris vel tellus

@@ -1,30 +1,31 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('premiumModal.title', { name }) }}
     </h2>
-    <div>
+    <div class="modal__content">
       <p>
         {{ $t('premiumModal.description', { name }) }}
       </p>
       <PremiumFeatures class="margin-bottom-3"></PremiumFeatures>
-      <div>
-        <Button
-          type="primary"
-          size="large"
-          href="https://baserow.io/pricing"
-          target="_blank"
-          tag="a"
-          >{{ $t('premiumModal.viewPricing') }}</Button
-        >
-        <component
-          :is="buttonsComponent"
-          v-if="workspace && buttonsComponent"
-          :name="name"
-          :workspace="workspace"
-          @hide="hide()"
-        ></component>
-      </div>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        size="large"
+        href="https://baserow.io/pricing"
+        target="_blank"
+        tag="a"
+        >{{ $t('premiumModal.viewPricing') }}</Button
+      >
+      <component
+        :is="buttonsComponent"
+        v-if="workspace && buttonsComponent"
+        :name="name"
+        :workspace="workspace"
+        @hide="hide()"
+      ></component>
     </div>
   </Modal>
 </template>

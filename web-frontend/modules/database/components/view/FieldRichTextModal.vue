@@ -7,12 +7,11 @@
     @show="show"
     @hidden="$emit('hidden', $event)"
   >
-    <template #content>
-      <div class="box__title">
-        <h2 class="row-modal__title">
-          {{ field.name }}
-        </h2>
-      </div>
+    <h2 class="modal__title">
+      {{ field.name }}
+    </h2>
+
+    <div class="modal__content">
       <RichTextEditor
         ref="editor"
         class="rich-text-modal__editor"
@@ -21,7 +20,7 @@
         :value="value"
         @input="$emit('input', $event)"
       ></RichTextEditor>
-    </template>
+    </div>
   </Modal>
 </template>
 

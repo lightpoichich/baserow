@@ -6,71 +6,70 @@
     @click="outside($event)"
   >
     <div
-      class="modal__box"
+      class="modal"
       :class="{
-        'modal__box--full-height': fullHeight,
-        'modal__box--full-max-height': !fullHeight && contentScrollable,
-        'modal__box--with-sidebar': sidebar,
-        'modal__box--full-screen': fullScreen,
-        'modal__box--wide': wide,
-        'modal__box--small': small,
-        'modal__box--tiny': tiny,
-        'modal__box--right': right,
+        'modal--full-height': fullHeight,
+        'modal--full-max-height': !fullHeight && contentScrollable,
+        'modal--with-sidebar': sidebar,
+        'modal--full-screen': fullScreen,
+        'modal--wide': wide,
+        'modal--small': small,
+        'modal--tiny': tiny,
+        'modal--right': right,
       }"
     >
-      <template v-if="sidebar">
-        <div
-          v-if="leftSidebar"
-          class="modal__box-sidebar modal__box-sidebar--left"
-          :class="{ 'modal__box-sidebar--scrollable': leftSidebarScrollable }"
-        >
-          <slot name="sidebar"></slot>
-        </div>
-        <div
-          class="modal__box-content"
-          :class="{
-            'modal__box-content--scrollable': contentScrollable,
-            'modal__box-content-no-padding': !contentPadding,
-          }"
-        >
-          <slot name="content"></slot>
-          <div class="modal__actions">
-            <a
-              v-if="closeButton && canClose"
-              class="modal__close"
-              @click="hide()"
-            >
-              <i class="iconoir-cancel"></i>
-            </a>
+      <div
+        v-if="leftSidebar"
+        class="modal__box-sidebar modal__box-sidebar--left"
+        :class="{ 'modal__box-sidebar--scrollable': leftSidebarScrollable }"
+      >
+        <slot name="sidebar"></slot>
+      </div>
+      <div
+        class="modal__content-wrapper"
+        :class="{
+          'modal__content-wrapper--scrollable': contentScrollable,
+          // 'modal__box-content-no-padding': !contentPadding,
+        }"
+      >
+        <slot></slot>
+        <div class="modal__actions">
+          <a
+            v-if="closeButton && canClose"
+            class="modal__close"
+            @click="hide()"
+          >
+            <i class="iconoir-cancel"></i>
+          </a>
 
-            <a
-              v-if="collapsibleRightSidebar"
-              class="modal__collapse"
-              @click="collapseSidebar"
-            >
-              <i
-                :class="{
-                  'iconoir-fast-arrow-right': !sidebarCollapsed,
-                  'iconoir-fast-arrow-left': sidebarCollapsed,
-                }"
-              ></i>
-            </a>
-            <slot name="actions"></slot>
-          </div>
+          <a
+            v-if="collapsibleRightSidebar"
+            class="modal__collapse"
+            @click="collapseSidebar"
+          >
+            <i
+              :class="{
+                'iconoir-fast-arrow-right': !sidebarCollapsed,
+                'iconoir-fast-arrow-left': sidebarCollapsed,
+              }"
+            ></i>
+          </a>
+          <slot name="actions"></slot>
         </div>
+      </div>
 
-        <div
-          v-if="rightSidebar"
-          class="modal__box-sidebar modal__box-sidebar--right"
-          :class="{
-            'modal__box-sidebar--scrollable': rightSidebarScrollable,
-            'modal__box-sidebar--collapsed': sidebarCollapsed,
-          }"
-        >
-          <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
-        </div>
-      </template>
-      <template v-if="!sidebar">
+      <div
+        v-if="rightSidebar"
+        class="modal__box-sidebar modal__box-sidebar--right"
+        :class="{
+          'modal__box-sidebar--scrollable': rightSidebarScrollable,
+          'modal__box-sidebar--collapsed': sidebarCollapsed,
+        }"
+      >
+        <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
+      </div>
+
+      <!-- <template v-if="!sidebar">
         <slot></slot>
         <slot name="content"></slot>
         <div class="modal__actions">
@@ -83,7 +82,7 @@
           </a>
           <slot name="actions"></slot>
         </div>
-      </template>
+      </template> -->
     </div>
   </div>
 </template>
@@ -145,11 +144,11 @@ export default {
       default: false,
       required: false,
     },
-    contentPadding: {
-      type: Boolean,
-      default: true,
-      required: false,
-    },
+    // contentPadding: {
+    //   type: Boolean,
+    //   default: true,
+    //   required: false,
+    // },
     rightSidebarScrollable: {
       type: Boolean,
       default: false,

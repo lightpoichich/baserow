@@ -1,20 +1,24 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('createPageModal.header') }}
     </h2>
-    <PageSettingsForm
-      ref="pageForm"
-      :builder="builder"
-      is-creation
-      @submitted="addPage"
-    >
-      <div class="actions actions--right">
-        <Button size="large" :loading="loading">
-          {{ $t('createPageModal.submit') }}
-        </Button>
-      </div>
-    </PageSettingsForm>
+
+    <div class="modal__content">
+      <PageSettingsForm
+        ref="pageForm"
+        :builder="builder"
+        is-creation
+        @submitted="addPage"
+      >
+      </PageSettingsForm>
+    </div>
+
+    <div class="modal__footer">
+      <Button size="large" :loading="loading" @click="$refs.pageForm.submit()">
+        {{ $t('createPageModal.submit') }}
+      </Button>
+    </div>
   </Modal>
 </template>
 

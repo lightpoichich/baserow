@@ -1,18 +1,34 @@
 <template>
   <Modal @show="loading = false">
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('action.createNew') }} {{ applicationType.getName() | lowercase }}
     </h2>
-    <Error :error="error"></Error>
-    <component
-      :is="applicationType.getApplicationFormComponent()"
-      ref="applicationForm"
-      :default-name="getDefaultName()"
-      :loading="loading"
-      @submitted="submitted"
-      @hidden="hide()"
-    >
-    </component>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+
+      <component
+        :is="applicationType.getApplicationFormComponent()"
+        ref="applicationForm"
+        :default-name="getDefaultName()"
+        :loading="loading"
+        @submitted="submitted"
+        @import-type-changed="importType = $event"
+        @hidden="hide()"
+      >
+      </component>
+    </div>
+
+    <div v-if="displayFooter" class="modal__footer">
+      <Button
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="$refs.applicationForm.submit()"
+      >
+        {{ $t('action.add') }}
+        {{ applicationType.getName() | lowercase }}
+      </Button>
+    </div>
   </Modal>
 </template>
 
@@ -37,7 +53,17 @@ export default {
   data() {
     return {
       loading: false,
+      importType: null,
     }
+  },
+  computed: {
+    displayFooter() {
+      return (
+        this.applicationType.getName() === 'Application' ||
+        (this.applicationType.getName() === 'Database' &&
+          this.importType !== 'airtable')
+      )
+    },
   },
   methods: {
     getDefaultName() {

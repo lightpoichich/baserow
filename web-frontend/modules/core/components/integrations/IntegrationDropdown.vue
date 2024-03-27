@@ -2,7 +2,6 @@
   <Dropdown
     :value="value"
     fixed-items
-    small
     class="integration-dropdown"
     :disabled="disabled || !integrationType"
     :placeholder="

@@ -1,13 +1,27 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('changeUserPasswordModal.changePassword', user) }}
     </h2>
-    <Error :error="error"></Error>
-    <ChangePasswordForm
-      :loading="loading"
-      @submitted="changePassword"
-    ></ChangePasswordForm>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <ChangePasswordForm
+        ref="form"
+        :loading="loading"
+        @submitted="changePassword"
+      />
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        :disabled="loading"
+        :loading="loading"
+        @click="$refs.form.submit()"
+      >
+        {{ $t('changePasswordForm.changePassword') }}</Button
+      >
+    </div>
   </Modal>
 </template>
 

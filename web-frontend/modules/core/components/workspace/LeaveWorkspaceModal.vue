@@ -1,26 +1,27 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('leaveWorkspaceModal.title', { workspace: workspace.name }) }}
     </h2>
-    <Error :error="error"></Error>
-    <div>
-      <p>
-        {{ $t('leaveWorkspaceModal.message', { workspace: workspace.name }) }}
-      </p>
-      <div class="actions">
-        <div class="align-right">
-          <Button
-            type="danger"
-            size="large"
-            :loading="loading"
-            :disabled="loading"
-            @click="leaveWorkspace()"
-          >
-            {{ $t('leaveWorkspaceModal.leave') }}
-          </Button>
-        </div>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <div>
+        <p>
+          {{ $t('leaveWorkspaceModal.message', { workspace: workspace.name }) }}
+        </p>
       </div>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="danger"
+        :loading="loading"
+        :disabled="loading"
+        @click="leaveWorkspace()"
+      >
+        {{ $t('leaveWorkspaceModal.leave') }}
+      </Button>
     </div>
   </Modal>
 </template>

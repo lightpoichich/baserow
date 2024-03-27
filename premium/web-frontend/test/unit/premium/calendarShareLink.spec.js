@@ -179,6 +179,7 @@ describe('Premium Share View Calendar ical feed Tests', () => {
     // sanity checks
     expect(shareViewLinkContext.props('view').type).toEqual('calendar')
     expect(shareViewLinkContext.props('view').id).toEqual(viewId)
+    // initial state: no shared links yet, two buttons to enable sharing
 
     expect(
       shareViewLinkContext.findAllComponents({ name: 'Button' })
@@ -231,13 +232,15 @@ describe('Premium Share View Calendar ical feed Tests', () => {
     expect(
       shareViewLinkContext
         .findComponent(ViewRotateSlugModal)
-        .findAll('.actions button')
-    ).toHaveLength(1)
-    // which has a button to click
+        .findComponent({ name: 'Button' })
+        .find('button')
+        .exists()
+    ).toBe(true)
+
     shareViewLinkContext
       .findComponent(ViewRotateSlugModal)
-      .findAll('.actions button')
-      .at(0)
+      .findComponent({ name: 'Button' })
+      .find('button')
       .trigger('click')
 
     await flushPromises()

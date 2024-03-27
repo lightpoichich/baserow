@@ -1,27 +1,30 @@
 <template>
   <Modal @hidden="hidden">
     <div v-if="loadingViews" class="loading-overlay"></div>
-    <h2 class="box__title">Export {{ table.name }}</h2>
-    <Error :error="error"></Error>
-    <ExportTableForm
-      ref="form"
-      v-slot="{ filename }"
-      :database="database"
-      :table="table"
-      :view="view"
-      :views="views"
-      :loading="loading"
-      @submitted="submitted"
-      @values-changed="valuesChanged"
-    >
-      <ExportLoadingBar
-        :job="job"
+    <h2 class="modal__title">Export {{ table.name }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <ExportTableForm
+        ref="form"
+        v-slot="{ filename }"
+        :database="database"
+        :table="table"
+        :view="view"
+        :views="views"
         :loading="loading"
-        :disabled="!isValid"
-        :filename="filename"
+        @submitted="submitted"
+        @values-changed="valuesChanged"
       >
-      </ExportLoadingBar>
-    </ExportTableForm>
+        <ExportLoadingBar
+          :job="job"
+          :loading="loading"
+          :disabled="!isValid"
+          :filename="filename"
+        >
+        </ExportLoadingBar>
+      </ExportTableForm>
+    </div>
   </Modal>
 </template>
 

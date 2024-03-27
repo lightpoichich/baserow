@@ -122,7 +122,7 @@ export default class UserAdminUserHelpers {
     passwordInputs.at(1).element.value = repeatPassword
     await passwordInputs.at(1).trigger('input')
 
-    await changePasswordModal.find('button').trigger('click')
+    await changePasswordModal.findComponent({ name: 'Button' }).trigger('click')
 
     return changePasswordModal
   }
@@ -161,7 +161,10 @@ export default class UserAdminUserHelpers {
     userEditInputs.at(inputIndex).element.value = newValue
     await userEditInputs.at(inputIndex).trigger('input')
 
-    await editUserModal.find('button').trigger('click')
+    await editUserModal
+      .findAllComponents({ name: 'Button' })
+      .at(1)
+      .vm.$emit('click', 1)
 
     if (exit) {
       await editUserModal.find('.modal__close').trigger('click')
@@ -180,7 +183,10 @@ export default class UserAdminUserHelpers {
 
     checkboxes.at(checkboxIndex).trigger('click')
 
-    await editUserModal.find('button').trigger('click')
+    await editUserModal
+      .findAllComponents({ name: 'Button' })
+      .at(1)
+      .vm.$emit('click', 1)
 
     return editUserModal
   }

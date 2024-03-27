@@ -1,49 +1,56 @@
 <template>
   <div>
-    <h2 class="box__title">{{ $t('integrationSettings.title') }}</h2>
-    <div v-if="state === 'pending'" class="integration-settings__loader" />
-    <template v-if="state === 'loaded'">
-      <template v-if="integrations.length > 0">
-        <p class="margin-top-3">
-          {{ $t('integrationSettings.integrationMessage') }}
-        </p>
-        <div
-          v-for="integration in integrations"
-          :key="integration.id"
-          class="integration-settings__integration"
-        >
-          <Presentation
-            :image="getIntegrationType(integration).image"
-            :title="integration.name"
-            :subtitle="getIntegrationType(integration).getSummary(integration)"
-            :rounded-icon="false"
-            avatar-color="transparent"
-            style="flex: 1"
-          />
-          <div class="integration-settings__integration-actions">
-            <ButtonIcon
-              icon="iconoir-edit"
-              @click="
-                $refs[`IntegrationCreateEditModal_${integration.id}`][0].show()
+    <h2 class="modal__title">{{ $t('integrationSettings.title') }}</h2>
+
+    <div class="modal__content">
+      <div v-if="state === 'pending'" class="integration-settings__loader" />
+      <template v-if="state === 'loaded'">
+        <template v-if="integrations.length > 0">
+          <p class="margin-top-3">
+            {{ $t('integrationSettings.integrationMessage') }}
+          </p>
+          <div
+            v-for="integration in integrations"
+            :key="integration.id"
+            class="integration-settings__integration"
+          >
+            <Presentation
+              :image="getIntegrationType(integration).image"
+              :title="integration.name"
+              :subtitle="
+                getIntegrationType(integration).getSummary(integration)
               "
+              :rounded-icon="false"
+              avatar-color="transparent"
+              style="flex: 1"
             />
-            <ButtonIcon
-              icon="iconoir-bin"
-              @click="deleteIntegration(integration)"
+            <div class="integration-settings__integration-actions">
+              <ButtonIcon
+                icon="iconoir-edit"
+                @click="
+                  $refs[
+                    `IntegrationCreateEditModal_${integration.id}`
+                  ][0].show()
+                "
+              />
+              <ButtonIcon
+                icon="iconoir-bin"
+                @click="deleteIntegration(integration)"
+              />
+            </div>
+            <IntegrationCreateEditModal
+              :ref="`IntegrationCreateEditModal_${integration.id}`"
+              :data-integration-id="integration.id"
+              :application="builder"
+              :integration="integration"
             />
           </div>
-          <IntegrationCreateEditModal
-            :ref="`IntegrationCreateEditModal_${integration.id}`"
-            :data-integration-id="integration.id"
-            :application="builder"
-            :integration="integration"
-          />
-        </div>
+        </template>
+        <p v-else class="margin-top-3">
+          {{ $t('integrationSettings.noIntegrationMessage') }}
+        </p>
       </template>
-      <p v-else class="margin-top-3">
-        {{ $t('integrationSettings.noIntegrationMessage') }}
-      </p>
-    </template>
+    </div>
   </div>
 </template>
 

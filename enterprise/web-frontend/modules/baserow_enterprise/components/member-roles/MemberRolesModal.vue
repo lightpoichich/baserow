@@ -1,40 +1,42 @@
 <template>
   <Modal @show="onShow" @hidden="hideError">
-    <Error v-if="error.visible" :error="error"></Error>
-    <Tabs v-else :selected-index.sync="selectedTabIndex" no-padding>
-      <Tab
-        v-if="canManageDatabase"
-        :title="$t('memberRolesModal.memberRolesDatabaseTabTitle')"
-      >
-        <MemberRolesTab
-          :loading="loading"
-          :workspace="workspace"
-          :scope="database"
-          :role-assignments="databaseRoleAssignments"
-          :teams="teams"
-          scope-type="application"
-          @invite-members="inviteDatabaseMembers"
-          @invite-teams="inviteDatabaseTeams"
-          @role-updated="updateRole(databaseRoleAssignments, ...arguments)"
-        />
-      </Tab>
-      <Tab
-        v-if="table && canManageTable"
-        :title="$t('memberRolesModal.memberRolesTableTabTitle')"
-      >
-        <MemberRolesTab
-          :loading="loading"
-          :workspace="workspace"
-          :scope="table"
-          :role-assignments="tableRoleAssignments"
-          :teams="teams"
-          scope-type="database_table"
-          @invite-members="inviteTableMembers"
-          @invite-teams="inviteTableTeams"
-          @role-updated="updateRole(tableRoleAssignments, ...arguments)"
-        />
-      </Tab>
-    </Tabs>
+    <div class="modal__content">
+      <Error v-if="error.visible" :error="error"></Error>
+      <Tabs v-else :selected-index.sync="selectedTabIndex" no-padding>
+        <Tab
+          v-if="canManageDatabase"
+          :title="$t('memberRolesModal.memberRolesDatabaseTabTitle')"
+        >
+          <MemberRolesTab
+            :loading="loading"
+            :workspace="workspace"
+            :scope="database"
+            :role-assignments="databaseRoleAssignments"
+            :teams="teams"
+            scope-type="application"
+            @invite-members="inviteDatabaseMembers"
+            @invite-teams="inviteDatabaseTeams"
+            @role-updated="updateRole(databaseRoleAssignments, ...arguments)"
+          />
+        </Tab>
+        <Tab
+          v-if="table && canManageTable"
+          :title="$t('memberRolesModal.memberRolesTableTabTitle')"
+        >
+          <MemberRolesTab
+            :loading="loading"
+            :workspace="workspace"
+            :scope="table"
+            :role-assignments="tableRoleAssignments"
+            :teams="teams"
+            scope-type="database_table"
+            @invite-members="inviteTableMembers"
+            @invite-teams="inviteTableTeams"
+            @role-updated="updateRole(tableRoleAssignments, ...arguments)"
+          />
+        </Tab>
+      </Tabs>
+    </div>
   </Modal>
 </template>
 

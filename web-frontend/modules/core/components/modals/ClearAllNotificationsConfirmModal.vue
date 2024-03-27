@@ -1,35 +1,34 @@
 <template>
   <Modal small>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('clearAllNotificationsConfirmModal.title') }}
     </h2>
-    <p>
-      {{ $t('clearAllNotificationsConfirmModal.message') }}
-    </p>
-    <div>
-      <div class="actions">
-        <ul class="action__links">
-          <li>
-            <a
-              @click.prevent="
-                $emit('cancel', $event)
-                hide()
-              "
-              >{{ $t('action.cancel') }}</a
-            >
-          </li>
-        </ul>
 
-        <Button
-          type="danger"
-          @click.prevent="
-            $emit('confirm', $event)
-            hide()
-          "
-        >
-          {{ $t('action.delete') }}
-        </Button>
-      </div>
+    <div class="modal__content">
+      <p>
+        {{ $t('clearAllNotificationsConfirmModal.message') }}
+      </p>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="secondary"
+        @click.prevent="
+          $emit('cancel', $event)
+          hide()
+        "
+        >{{ $t('action.cancel') }}</Button
+      >
+
+      <Button
+        type="danger"
+        @click.prevent="
+          $emit('confirm', $event)
+          hide()
+        "
+      >
+        {{ $t('action.delete') }}
+      </Button>
     </div>
   </Modal>
 </template>

@@ -7,23 +7,22 @@
   scrollbar-gutter: stable;
 }
 
-.modal__box {
-  @extend %box;
-
+.modal {
+  background-color: $white;
   position: relative;
   margin: 40px auto;
   max-width: 660px;
-  background-color: $white;
 
+  @include elevation($elevation-medium);
   @include rounded($rounded-md);
 
-  &.modal__box--with-sidebar {
+  &.modal--with-sidebar {
     display: flex;
     padding: 0;
     max-width: 960px;
   }
 
-  &.modal__box--full-screen {
+  &.modal--full-screen {
     @include absolute(20px);
 
     max-width: none;
@@ -31,37 +30,46 @@
     overflow: auto;
   }
 
-  &.modal__box--full-height {
+  &.modal--full-height {
     height: calc(100% - 80px);
   }
 
-  &.modal__box--full-max-height {
+  &.modal--full-max-height {
     max-height: calc(100% - 80px);
   }
 
-  &.modal__box--wide {
+  &.modal--wide {
     max-width: 720px;
   }
 
-  &.modal__box--small {
+  &.modal--small {
     max-width: 520px;
   }
 
-  &.modal__box--tiny {
+  &.modal--tiny {
     max-width: 320px;
-    padding: 15px;
   }
 
-  &.modal__box--right {
+  &.modal--right {
     margin-right: 20px;
 
     @media (max-width: 720px) {
       max-width: calc(100% - 50px);
     }
   }
+}
 
-  .box__title {
-    margin-top: 0;
+.modal__title {
+  margin: 0;
+  border-bottom: 1px solid $palette-neutral-200;
+  word-break: break-word;
+  box-sizing: border-box;
+  padding: 18px 24px;
+
+  @include flex-align-items;
+
+  &.modal__title--no-padding-left {
+    padding-left: 0;
   }
 }
 
@@ -93,22 +101,6 @@
   }
 }
 
-.modal__box-content {
-  position: relative;
-  width: 100%;
-  min-width: 0;
-  flex: 1;
-  scrollbar-gutter: stable;
-
-  &.modal__box-content--scrollable {
-    overflow-y: auto;
-  }
-
-  &:not(.modal__box-content-no-padding) {
-    padding: 32px 40px;
-  }
-}
-
 .modal__actions {
   @include absolute(10px, 20px, auto, auto);
 
@@ -120,10 +112,10 @@
 .modal__close,
 %modal-close {
   font-size: 20px;
-  color: $color-neutral-400;
+  color: $palette-neutral-700;
 
   &:hover {
-    color: $color-neutral-800;
+    color: $palette-neutral-900;
   }
 }
 
@@ -137,4 +129,30 @@
   padding-bottom: 24px;
   margin-bottom: 24px;
   border-bottom: solid 1px $color-neutral-200;
+}
+
+.modal__content {
+  padding: 24px;
+}
+
+.modal__footer {
+  border-top: 1px solid $palette-neutral-200;
+  height: 75px;
+  justify-content: flex-end;
+  padding: 0 24px;
+
+  @include flex-align-items(12px);
+}
+
+.modal__content-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  flex: 1;
+  scrollbar-gutter: stable;
+
+  &.modal__content-wrapper--scrollable {
+    overflow-y: auto;
+  }
 }

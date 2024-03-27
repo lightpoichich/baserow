@@ -1,29 +1,29 @@
 <template>
   <Modal :small="true">
-    <h2 class="box__title">{{ $t('shareViewDisablePasswordModal.title') }}</h2>
-    <Error :error="error"></Error>
-    <div>
-      <p class="box__description">
-        {{ $t('shareViewDisablePasswordModal.description') }}
-      </p>
-      <div class="actions">
-        <ul class="action__links">
-          <li>
-            <a :disabled="loading" @click.prevent="hide()">{{
-              $t('action.cancel')
-            }}</a>
-          </li>
-        </ul>
-
-        <Button
-          type="danger"
-          :loading="loading"
-          :disabled="loading"
-          @click.prevent="disableAndClose"
-        >
-          {{ $t('shareViewDisablePasswordModal.disable') }}
-        </Button>
+    <h2 class="modal__title">
+      {{ $t('shareViewDisablePasswordModal.title') }}
+    </h2>
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <div>
+        <p>
+          {{ $t('shareViewDisablePasswordModal.description') }}
+        </p>
       </div>
+    </div>
+
+    <div class="modal__footer">
+      <Button type="secondary" @click.prevent="hide()">
+        {{ $t('action.cancel') }}
+      </Button>
+      <Button
+        type="danger"
+        :loading="loading"
+        :disabled="loading"
+        @click.prevent="disableAndClose"
+      >
+        {{ $t('shareViewDisablePasswordModal.disable') }}
+      </Button>
     </div>
   </Modal>
 </template>

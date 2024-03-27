@@ -1,24 +1,32 @@
 <template>
   <Modal ref="modal" small>
-    <template #content>
-      <div class="box__title">
-        <h2 class="row_modal__title">{{ $t('aiFormulaModal.title') }}</h2>
-      </div>
+    <div class="modal__title">
+      <h2 class="row_modal__title">{{ $t('aiFormulaModal.title') }}</h2>
+    </div>
+
+    <div class="modal__content">
       <Error :error="error"></Error>
       <template v-if="hasModels">
         <p>
           {{ $t('aiFormulaModal.description') }}
         </p>
-        <AIFormulaForm :database="database" @submitted="submit">
-          <Button type="primary" :loading="loading" :disabled="loading">{{
-            $t('aiFormulaModal.generate')
-          }}</Button>
+        <AIFormulaForm ref="form" :database="database" @submitted="submit">
         </AIFormulaForm>
       </template>
       <p v-else>
         {{ $t('aiFormulaModal.noModels') }}
       </p>
-    </template>
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        @click="$refs.form.submit()"
+        :loading="loading"
+        :disabled="loading"
+        >{{ $t('aiFormulaModal.generate') }}</Button
+      >
+    </div>
   </Modal>
 </template>
 

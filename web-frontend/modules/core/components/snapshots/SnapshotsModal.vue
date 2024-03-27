@@ -1,62 +1,70 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ application.name }} {{ $t('snapshotsModal.title') }}
     </h2>
-    <p>
-      {{
-        $t('snapshotsModal.description', {
-          applicationTypeName: applicationTypeName,
-        })
-      }}
-      <span v-if="maxSnapshots >= 0">{{
-        $tc('snapshotsModal.descriptionLimits', maxSnapshots)
-      }}</span>
-    </p>
-    <component
-      :is="component"
-      v-for="(component, index) in snapshotModalAlertComponents"
-      :key="index"
-    ></component>
-    <Error :error="error"></Error>
-    <div class="snapshots-modal">
-      <CreateSnapshotForm
-        v-if="!limitReached"
-        ref="form"
-        :snapshots="snapshots"
-        @submitted="submitted"
-      >
-        <template v-if="jobIsRunning || jobHasSucceeded" #input>
-          <ProgressBar
-            :value="job.progress_percentage"
-            :status="jobHumanReadableState"
-          />
-        </template>
-        <template #default>
-          <Button
-            v-if="!createFinished"
-            size="large"
-            :loading="createLoading"
-            :disabled="createLoading"
-          >
-            {{ $t('snapshotsModal.create') }}
-          </Button>
-          <Button v-else type="secondary" tag="a" size="large" @click="reset()">
-            {{ $t('snapshotsModal.reset') }}</Button
-          >
-        </template>
-      </CreateSnapshotForm>
-      <div v-else>
-        {{ $t('snapshotsModal.limitReached') }}
-      </div>
-      <div v-if="snapshotsLoading" class="loading"></div>
-      <div v-if="snapshots.length > 0" class="snapshots-modal__list">
-        <SnapshotListItem
-          v-for="snapshot in snapshots"
-          :key="snapshot.id"
-          :snapshot="snapshot"
-          @snapshot-deleted="snapshotDeleted"
-        ></SnapshotListItem>
+    <div class="modal__content">
+      <p>
+        {{
+          $t('snapshotsModal.description', {
+            applicationTypeName: applicationTypeName,
+          })
+        }}
+        <span v-if="maxSnapshots >= 0">{{
+          $tc('snapshotsModal.descriptionLimits', maxSnapshots)
+        }}</span>
+      </p>
+      <component
+        :is="component"
+        v-for="(component, index) in snapshotModalAlertComponents"
+        :key="index"
+      ></component>
+      <Error :error="error"></Error>
+      <div class="snapshots-modal">
+        <CreateSnapshotForm
+          v-if="!limitReached"
+          ref="form"
+          :snapshots="snapshots"
+          @submitted="submitted"
+        >
+          <template v-if="jobIsRunning || jobHasSucceeded" #input>
+            <ProgressBar
+              :value="job.progress_percentage"
+              :status="jobHumanReadableState"
+            />
+          </template>
+          <template #default>
+            <Button
+              v-if="!createFinished"
+              size="large"
+              :loading="createLoading"
+              :disabled="createLoading"
+            >
+              {{ $t('snapshotsModal.create') }}
+            </Button>
+            <Button
+              v-else
+              type="secondary"
+              tag="a"
+              size="large"
+              @click="reset()"
+            >
+              {{ $t('snapshotsModal.reset') }}</Button
+            >
+          </template>
+        </CreateSnapshotForm>
+        <div v-else>
+          {{ $t('snapshotsModal.limitReached') }}
+        </div>
+        <div v-if="snapshotsLoading" class="loading"></div>
+        <div v-if="snapshots.length > 0" class="snapshots-modal__list">
+          <SnapshotListItem
+            v-for="snapshot in snapshots"
+            :key="snapshot.id"
+            :snapshot="snapshot"
+            @snapshot-deleted="snapshotDeleted"
+          ></SnapshotListItem>
+        </div>
       </div>
     </div>
   </Modal>

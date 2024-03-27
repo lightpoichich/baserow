@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="box__title">{{ $t('apiDocsComponent.title') }}</h1>
+    <h1 class="modal__title">{{ $t('apiDocsComponent.title') }}</h1>
     <template v-if="isAuthenticated">
       <i18n path="apiDocsComponent.intro" tag="p">
         <template #settingsLink>

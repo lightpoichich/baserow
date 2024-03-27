@@ -14,38 +14,34 @@
         @selected="selectWorkspaceOrApp"
       ></TrashSidebar>
     </template>
-    <template #content>
-      <div v-if="loading" class="loading-absolute-center"></div>
-      <div v-else-if="workspaces.length === 0" class="placeholder">
-        <div class="placeholder__icon">
-          <i class="iconoir-book-stack"></i>
-        </div>
-        <h1 class="placeholder__title">{{ $t('trashModal.emptyTitle') }}</h1>
-        <p
-          v-if="$hasPermission('create_workspace')"
-          class="placeholder__content"
-        >
-          {{ $t('trashModal.emptyMessage') }}
-        </p>
-        <p v-else class="placeholder__content">
-          {{ $t('trashModal.emptyMessageWithoutCreatePermission') }}
-        </p>
+
+    <div v-if="loading" class="loading-absolute-center"></div>
+    <div v-else-if="workspaces.length === 0" class="placeholder">
+      <div class="placeholder__icon">
+        <i class="iconoir-book-stack"></i>
       </div>
-      <TrashContent
-        v-else
-        :selected-trash-workspace="selectedTrashWorkspace"
-        :selected-trash-application="selectedTrashApplication"
-        :trash-contents="trashContents"
-        :loading-contents="loadingContents"
-        :loading-next-page="loadingNextPage"
-        :total-server-side-trash-contents-count="
-          totalServerSideTrashContentsCount
-        "
-        @empty="onEmpty"
-        @restore="onRestore"
-        @load-next-page="loadNextPage"
-      ></TrashContent>
-    </template>
+      <h1 class="placeholder__title">{{ $t('trashModal.emptyTitle') }}</h1>
+      <p v-if="$hasPermission('create_workspace')" class="placeholder__content">
+        {{ $t('trashModal.emptyMessage') }}
+      </p>
+      <p v-else class="placeholder__content">
+        {{ $t('trashModal.emptyMessageWithoutCreatePermission') }}
+      </p>
+    </div>
+    <TrashContent
+      v-else
+      :selected-trash-workspace="selectedTrashWorkspace"
+      :selected-trash-application="selectedTrashApplication"
+      :trash-contents="trashContents"
+      :loading-contents="loadingContents"
+      :loading-next-page="loadingNextPage"
+      :total-server-side-trash-contents-count="
+        totalServerSideTrashContentsCount
+      "
+      @empty="onEmpty"
+      @restore="onRestore"
+      @load-next-page="loadNextPage"
+    ></TrashContent>
   </Modal>
 </template>
 

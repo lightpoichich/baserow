@@ -1,5 +1,5 @@
 <template>
-  <Modal :full-height="true" :small="true">
+  <Modal :small="true">
     <MemberSelectionList
       ref="memberSelectionList"
       class="padding-top-2"

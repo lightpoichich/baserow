@@ -1,61 +1,60 @@
 <template>
   <div>
     <template v-if="page === 'list'">
-      <h2 class="box__title">{{ $t('apiTokenSettings.title') }}</h2>
-      <div class="align-right">
-        <a class="button button--primary" @click.prevent="page = 'create'">
+      <h2 class="modal__title">{{ $t('apiTokenSettings.title') }}</h2>
+
+      <div class="modal__content">
+        <Button icon="iconoir-plus" @click.prevent="page = 'create'">
           {{ $t('apiTokenSettings.createToken') }}
-          <i class="iconoir-plus"></i>
-        </a>
-      </div>
-      <Error :error="error"></Error>
-      <div v-if="listLoading" class="loading"></div>
-      <div v-else>
-        <p v-if="tokens.length === 0" class="margin-top-3">
-          {{ $t('apiTokenSettings.noTokensMessage') }}
-        </p>
-        <APIToken
-          v-for="token in tokens"
-          :key="token.id"
-          :token="token"
-          @deleted="deleteToken(token.id)"
-        ></APIToken>
-        <div v-if="tokens.length > 0" class="margin-top-3">
-          <SwitchInput :value="true" small class="margin-bottom-1">
-            {{ $t('apiTokenSettings.hasFullPermissions') }}
-          </SwitchInput>
-          <SwitchInput :value="2" small class="margin-bottom-1">
-            {{ $t('apiTokenSettings.hasOnlySelectedPermissions') }}
-          </SwitchInput>
-          <SwitchInput :value="false" small>
-            {{ $t('apiTokenSettings.noPermissions') }}
-          </SwitchInput>
+        </Button>
+
+        <Error :error="error"></Error>
+        <div v-if="listLoading" class="loading"></div>
+        <div v-else>
+          <p v-if="tokens.length === 0" class="margin-top-3">
+            {{ $t('apiTokenSettings.noTokensMessage') }}
+          </p>
+          <APIToken
+            v-for="token in tokens"
+            :key="token.id"
+            :token="token"
+            @deleted="deleteToken(token.id)"
+          ></APIToken>
+          <div v-if="tokens.length > 0" class="margin-top-3">
+            <SwitchInput :value="true" small class="margin-bottom-1">
+              {{ $t('apiTokenSettings.hasFullPermissions') }}
+            </SwitchInput>
+            <SwitchInput :value="2" small class="margin-bottom-1">
+              {{ $t('apiTokenSettings.hasOnlySelectedPermissions') }}
+            </SwitchInput>
+            <SwitchInput :value="false" small>
+              {{ $t('apiTokenSettings.noPermissions') }}
+            </SwitchInput>
+          </div>
         </div>
       </div>
     </template>
     <template v-else-if="page === 'create'">
-      <h2 class="box__title">{{ $t('apiTokenSettings.createNewTitle') }}</h2>
-      <Error :error="error"></Error>
-      <APITokenForm @submitted="create">
-        <div class="actions">
-          <ul class="action__links">
-            <li>
-              <a @click.prevent="page = 'list'">
-                <i class="iconoir-arrow-left"></i>
-                {{ $t('apiTokenSettings.backToOverview') }}
-              </a>
-            </li>
-          </ul>
-          <Button
-            type="primary"
-            size="large"
-            :loading="createLoading"
-            :disabled="createLoading"
-          >
-            {{ $t('apiTokenSettings.createToken') }}
-          </Button>
-        </div>
-      </APITokenForm>
+      <h2 class="modal__title">{{ $t('apiTokenSettings.createNewTitle') }}</h2>
+
+      <div class="modal__content">
+        <Error :error="error"></Error>
+        <APITokenForm ref="form" @submitted="create" />
+      </div>
+
+      <div class="modal__footer">
+        <Button type="secondary" @click.prevent="page = 'list'">
+          {{ $t('action.cancel') }}
+        </Button>
+        <Button
+          type="primary"
+          :loading="createLoading"
+          :disabled="createLoading"
+          @click="$refs.form.submit()"
+        >
+          {{ $t('apiTokenSettings.createToken') }}
+        </Button>
+      </div>
     </template>
   </div>
 </template>

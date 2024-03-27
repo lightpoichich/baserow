@@ -1,9 +1,9 @@
 <template>
   <Modal>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('registerLicenseModal.titleRegisterLicense') }}
     </h2>
-    <div>
+    <div class="modal__content">
       <i18n path="registerLicenseModal.licenseDescription" tag="p">
         <template #pricingLink>
           <a target="_blank" href="https://baserow.io/pricing">{{
@@ -13,20 +13,19 @@
       </i18n>
       <p></p>
       <Error :error="error"></Error>
-      <RegisterLicenseForm @submitted="submit">
-        <div class="actions">
-          <div class="align-right">
-            <Button
-              type="primary"
-              size="large"
-              :disabled="loading"
-              :loading="loading"
-            >
-              {{ $t('registerLicenseModal.registerLicense') }}</Button
-            >
-          </div>
-        </div>
-      </RegisterLicenseForm>
+      <RegisterLicenseForm ref="form" @submitted="submit" />
+    </div>
+
+    <div class="modal__footer">
+      <Button
+        type="primary"
+        size="large"
+        @click="$refs.form.submit()"
+        :disabled="loading"
+        :loading="loading"
+      >
+        {{ $t('registerLicenseModal.registerLicense') }}</Button
+      >
     </div>
   </Modal>
 </template>

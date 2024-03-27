@@ -4,73 +4,78 @@
     v-if="!showCreateForm && editedUserSource === null"
     class="user-sources-settings"
   >
-    <h2 class="box__title">{{ $t('userSourceSettings.titleOverview') }}</h2>
-    <Error :error="error"></Error>
-    <div v-if="!error.visible" class="actions actions--right">
-      <Button icon="iconoir-plus" @click="showForm()">
-        {{ $t('userSourceSettings.addUserSource') }}
-      </Button>
-    </div>
-    <div
-      v-for="userSource in userSources"
-      :key="userSource.id"
-      class="user-source-settings__user-source"
-      @delete="deleteUserSource(userSource)"
-    >
-      <Presentation
-        :image="getUserSourceType(userSource).image"
-        :title="userSource.name"
-        :subtitle="getUserSourceType(userSource).getSummary(userSource)"
-        :rounded-icon="false"
-        avatar-color="transparent"
-        style="flex: 1"
-      />
-      <div class="user-source-settings__user-source-actions">
-        <ButtonIcon icon="iconoir-edit" @click="showForm(userSource)" />
-        <ButtonIcon icon="iconoir-bin" @click="deleteUserSource(userSource)" />
+    <h2 class="modal__title">{{ $t('userSourceSettings.titleOverview') }}</h2>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <div v-if="!error.visible" class="actions actions--right">
+        <Button icon="iconoir-plus" @click="showForm()">
+          {{ $t('userSourceSettings.addUserSource') }}
+        </Button>
       </div>
+      <div
+        v-for="userSource in userSources"
+        :key="userSource.id"
+        class="user-source-settings__user-source"
+        @delete="deleteUserSource(userSource)"
+      >
+        <Presentation
+          :image="getUserSourceType(userSource).image"
+          :title="userSource.name"
+          :subtitle="getUserSourceType(userSource).getSummary(userSource)"
+          :rounded-icon="false"
+          avatar-color="transparent"
+          style="flex: 1"
+        />
+        <div class="user-source-settings__user-source-actions">
+          <ButtonIcon icon="iconoir-edit" @click="showForm(userSource)" />
+          <ButtonIcon
+            icon="iconoir-bin"
+            @click="deleteUserSource(userSource)"
+          />
+        </div>
+      </div>
+      <p v-if="!error.visible && userSources.length === 0" class="margin-top-3">
+        {{ $t('userSourceSettings.noUserSourceMessage') }}
+      </p>
     </div>
-    <p v-if="!error.visible && userSources.length === 0" class="margin-top-3">
-      {{ $t('userSourceSettings.noUserSourceMessage') }}
-    </p>
   </div>
   <!-- Edit user source -->
   <div v-else-if="editedUserSource">
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('userSourceSettings.titleUpdateUserSource') }}
     </h2>
-    <Error :error="error"></Error>
 
-    <Presentation
-      :image="getUserSourceType(editedUserSource).image"
-      :title="getUserSourceType(editedUserSource).name"
-      :rounded-icon="false"
-      avatar-color="transparent"
-      style="flex: 1; margin-bottom: 18px"
-      icon-size="medium"
-    />
+    <div class="modal__content">
+      <Error :error="error"></Error>
 
-    <UpdateUserSourceForm
-      ref="userSourceForm"
-      :builder="builder"
-      :integrations="integrations"
-      :user-source-type="getUserSourceType(editedUserSource)"
-      :default-values="editedUserSource"
-      @submitted="updateUserSource"
-      @values-changed="onValueChange"
-    />
-    <div class="actions">
-      <ButtonText
-        type="secondary"
-        icon="iconoir-nav-arrow-left"
-        @click="editedUserSource = null"
-      >
+      <Presentation
+        :image="getUserSourceType(editedUserSource).image"
+        :title="getUserSourceType(editedUserSource).name"
+        :rounded-icon="false"
+        avatar-color="transparent"
+        style="flex: 1; margin-bottom: 18px"
+        icon-size="medium"
+      />
+
+      <UpdateUserSourceForm
+        ref="userSourceForm"
+        :builder="builder"
+        :integrations="integrations"
+        :user-source-type="getUserSourceType(editedUserSource)"
+        :default-values="editedUserSource"
+        @submitted="updateUserSource"
+        @values-changed="onValueChange"
+      />
+    </div>
+
+    <div class="modal__footer">
+      <Button type="secondary" @click="editedUserSource = null">
         {{ $t('action.back') }}
-      </ButtonText>
+      </Button>
       <Button
         :disabled="actionInProgress || invalidForm"
         :loading="actionInProgress"
-        size="large"
         @click="$refs.userSourceForm.submit()"
       >
         {{ $t('action.save') }}
@@ -79,29 +84,27 @@
   </div>
   <!-- Create user source -->
   <div v-else>
-    <h2 class="box__title">
+    <h2 class="modal__title">
       {{ $t('userSourceSettings.titleAddUserSource') }}
     </h2>
-    <Error :error="error"></Error>
-    <CreateUserSourceForm
-      ref="userSourceForm"
-      :builder="builder"
-      :integrations="integrations"
-      @submitted="createUserSource"
-      @values-changed="onValueChange"
-    />
-    <div class="actions">
-      <ButtonText
-        type="secondary"
-        icon="iconoir-nav-arrow-left"
-        @click="hideForm"
-      >
-        {{ $t('action.back') }}
-      </ButtonText>
+
+    <div class="modal__content">
+      <Error :error="error"></Error>
+      <CreateUserSourceForm
+        ref="userSourceForm"
+        :builder="builder"
+        :integrations="integrations"
+        @submitted="createUserSource"
+        @values-changed="onValueChange"
+      />
+    </div>
+    <div class="modal__footer">
+      <Button type="secondary" @click="hideForm">
+        {{ $t('action.cancel') }}
+      </Button>
       <Button
         :disabled="actionInProgress || invalidForm"
         :loading="actionInProgress"
-        size="large"
         @click="$refs.userSourceForm.submit()"
       >
         {{ $t('action.create') }}

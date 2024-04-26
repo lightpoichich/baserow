@@ -4,6 +4,7 @@
     "icon": "iconoir-agile",
     "keywords": [
         "agile",
+        "product",
         "product roadmap",
         "roadmap",
         "epics",
@@ -19,8 +20,7 @@
         "releases"
     ],
     "categories": [
-        "Professional",
-        "Project Management"
+        "Product Management"
     ],
     "export": [
         {
@@ -1970,7 +1970,7 @@
                             "error": null,
                             "date_time_format": null,
                             "date_format": null,
-                            "formula": "if(and(field('Estimated work') > 0,abs(lookup('Feature','Effort difference')) > 2),'\u23f1\ufe0f','')",
+                            "formula": "if(and(field('Estimated work') > 0,abs(lookup('Feature','Effort difference')) > 2),'⏱️','')",
                             "formula_type": "array"
                         },
                         {
@@ -1989,7 +1989,7 @@
                             "error": null,
                             "date_time_format": null,
                             "date_format": null,
-                            "formula": "if(field('Feature effort') > count(lookup('Feature','User stories')) * 10,'\u2702\ufe0f','')",
+                            "formula": "if(field('Feature effort') > count(lookup('Feature','User stories')) * 10,'✂️','')",
                             "formula_type": "array"
                         },
                         {

@@ -20,46 +20,74 @@ export default {
     }
   },
   props: {
+    /**
+     * The value of the dropdown. This can be a single value or an array of values if
+     * the multiple property is set to true.
+     */
     value: {
       type: [String, Number, Boolean, Object, Array],
       required: false,
       default: null,
     },
+    /**
+     * A string that is used to filter the dropdown items.
+     */
     searchText: {
       type: [String, null],
       required: false,
       default: null,
     },
+    /**
+     * The dropdown placeholder that is shown when no value is selected.
+     */
     placeholder: {
       type: [String, null],
       required: false,
       default: null,
     },
+    /**
+     * Wether or not to show the search input field.
+     */
     showSearch: {
       type: Boolean,
       required: false,
       default: true,
     },
+    /**
+     * Wether or not to show the input field. This is different from the search input.
+     */
     showInput: {
       type: Boolean,
       required: false,
       default: true,
     },
+    /**
+     * Wether or not to show the footer in the dropdown.
+     */
     showFooter: {
       type: Boolean,
       required: false,
       default: false,
     },
+    /**
+     * Wether or not the dropdown is disabled.
+     */
     disabled: {
       type: Boolean,
       required: false,
       default: false,
     },
+    /**
+     * Display the dropdown in a small version.
+     */
     small: {
       type: Boolean,
       required: false,
       default: false,
     },
+    /**
+     * The tabindex of the dropdown.
+     */
     tabindex: {
       type: Number,
       required: false,
@@ -84,6 +112,9 @@ export default {
       required: false,
       default: false,
     },
+    /**
+     * If true, the dropdown will allow multiple values to be selected.
+     */
     multiple: {
       type: Boolean,
       required: false,

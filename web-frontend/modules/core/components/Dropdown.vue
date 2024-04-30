@@ -12,7 +12,7 @@
   >
     <a v-if="showInput" class="dropdown__selected" @click="show()">
       <template v-if="hasValue()">
-        <slot name="value">
+        <slot name="selectedValue">
           <template v-if="multiple">
             <span
               class="dropdown__selected-text"

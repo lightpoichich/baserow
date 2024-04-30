@@ -18,7 +18,82 @@ import DropdownItem from '@baserow/modules/core/components/DropdownItem'
         },
     }}
     decorators={[withDesign]}
-    argTypes={{}}
+    argTypes={{
+        searchText: {
+            control: {
+                type: 'string',
+            },
+            defaultValue: null,
+        },
+        placeholder: {
+            control: {
+                type: 'string',
+            },
+            defaultValue: null,
+        },
+        showSearch: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        showInput: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        showFooter: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        disabled: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        small: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        tabindex: {
+            control: {
+                type: 'number',
+            },
+            defaultValue: 0,
+        },
+        fixedItems: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        maxWidth: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        multiple: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+    }}
 />
 
 # Chips

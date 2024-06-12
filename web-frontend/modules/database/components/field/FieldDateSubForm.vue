@@ -9,7 +9,7 @@
     >
       <Dropdown
         v-model="values.date_format"
-        :class="{ 'dropdown--error': $v.values.date_format.$error }"
+        :error="$v.values.date_format.$error"
         :fixed-items="true"
         small
         @hide="$v.values.date_format.$touch()"

@@ -5,6 +5,7 @@
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
       'dropdown--small': small,
+      'dropdown--error': error,
     }"
     :tabindex="realTabindex"
     @focusin="show()"

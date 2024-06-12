@@ -4,6 +4,7 @@
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
+      'dropdown--error': error,
     }"
     :tabindex="realTabindex"
     @focusin="show()"

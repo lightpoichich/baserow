@@ -19,7 +19,7 @@
       <Dropdown
         v-model="values.style"
         class="dropdown--floating rating-field-form__dropdown-style"
-        :class="{ 'dropdown--error': $v.values.style.$error }"
+        :error="$v.values.style.$error"
         :fixed-items="true"
         :show-search="false"
         small
@@ -44,7 +44,7 @@
       <Dropdown
         v-model="values.max_value"
         class="dropdown--floating"
-        :class="{ 'dropdown--error': $v.values.max_value.$error }"
+        :error="$v.values.max_value.$error"
         :show-search="false"
         :fixed-items="true"
         small

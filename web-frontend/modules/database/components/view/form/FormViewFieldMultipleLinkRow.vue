@@ -11,10 +11,7 @@
           :value="value[index].id"
           :initial-display-name="value[index].value"
           small
-          :class="{
-            'dropdown--error':
-              touched && !valid && isInvalidValue(value[index]),
-          }"
+          :error="touched && !valid && isInvalidValue(value[index])"
           :fetch-on-open="lazyLoad"
           :disabled="readOnly"
           :include-display-name-in-selected-event="true"

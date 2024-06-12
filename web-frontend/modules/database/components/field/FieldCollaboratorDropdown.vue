@@ -7,6 +7,7 @@
       'dropdown--small': small,
     }"
     :tabindex="realTabindex"
+    :error="error"
     @contextmenu.stop
     @focusin="show()"
     @focusout="focusout($event)"
@@ -90,6 +91,11 @@ export default {
       type: Boolean,
       required: false,
       default: true,
+    },
+    error: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   computed: {

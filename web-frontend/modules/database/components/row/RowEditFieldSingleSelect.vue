@@ -5,7 +5,7 @@
       :options="singleSelectOptions"
       :allow-create-option="allowCreateOptions"
       :disabled="readOnly"
-      :class="{ 'dropdown--error': touched && !valid }"
+      :error="touched && !valid"
       @input="updateValue($event, value)"
       @create-option="createOption($event)"
       @hide="touch()"

@@ -131,6 +131,13 @@ export default {
       required: false,
       default: null,
     },
+    /* Error prop is used to show the dropdown in error state.
+     */
+    error: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {

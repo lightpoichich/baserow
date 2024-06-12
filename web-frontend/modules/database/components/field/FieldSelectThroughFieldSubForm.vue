@@ -13,7 +13,7 @@
     >
       <Dropdown
         v-model="values.through_field_id"
-        :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
+        :error="$v.values.through_field_id.$error"
         :fixed-items="true"
         small
         @hide="$v.values.through_field_id.$touch()"

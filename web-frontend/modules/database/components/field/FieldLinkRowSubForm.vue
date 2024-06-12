@@ -9,7 +9,7 @@
     >
       <Dropdown
         v-model="values.link_row_table_id"
-        :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
+        :error="$v.values.link_row_table_id.$error"
         :fixed-items="true"
         :disabled="!isSelectedFieldAccessible"
         small

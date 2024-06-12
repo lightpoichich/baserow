@@ -6,7 +6,7 @@
   >
     <Dropdown
       v-model="values.duration_format"
-      :class="{ 'dropdown--error': $v.values.duration_format.$error }"
+      :error="$v.values.duration_format.$error"
       :fixed-items="true"
       small
       @hide="$v.values.duration_format.$touch()"

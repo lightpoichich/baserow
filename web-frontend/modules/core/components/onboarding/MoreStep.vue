@@ -55,7 +55,7 @@
     >
       <Dropdown
         v-model="country"
-        :class="{ 'dropdown--error': $v.country.$error }"
+        :error="$v.country.$error"
         @hide="$v.country.$touch()"
       >
         <DropdownItem

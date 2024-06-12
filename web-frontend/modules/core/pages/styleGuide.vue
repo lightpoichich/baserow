@@ -1373,7 +1373,6 @@
             </p>
           </Modal>
           <Button
-            type="success"
             @click="
               $store.dispatch('toast/success', {
                 title: 'Custom success toast',
@@ -1384,7 +1383,7 @@
             toggle success toast
           </Button>
           <Button
-            type="error"
+            type="danger"
             @click="
               $store.dispatch('toast/error', {
                 title: 'Custom error toast',

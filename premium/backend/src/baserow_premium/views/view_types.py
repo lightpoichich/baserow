@@ -16,6 +16,9 @@ from baserow_premium.api.views.kanban.serializers import (
     KanbanViewFieldOptionsSerializer,
 )
 from rest_framework.fields import BooleanField, CharField
+from baserow_premium.api.views.timeline.serializers import (
+    TimelineViewFieldOptionsSerializer,
+)
 from rest_framework.serializers import PrimaryKeyRelatedField
 
 from baserow.contrib.database.api.fields.errors import (
@@ -38,6 +41,8 @@ from .models import (
     CalendarViewFieldOptions,
     KanbanView,
     KanbanViewFieldOptions,
+    TimelineView,
+    TimelineViewFieldOptions,
 )
 
 
@@ -512,3 +517,206 @@ class CalendarViewType(ViewType):
 
     def after_field_delete(self, field: Field) -> None:
         CalendarView.objects.filter(date_field_id=field.id).update(date_field_id=None)
+
+
+class TimelineViewType(ViewType):
+    type = "timeline"
+    model_class = TimelineView
+    field_options_model_class = TimelineViewFieldOptions
+    field_options_serializer_class = TimelineViewFieldOptionsSerializer
+    allowed_fields = ["start_date_field", "end_date_field"]
+    field_options_allowed_fields = ["hidden", "order"]
+    serializer_field_names = ["start_date_field", "end_date_field"]
+    serializer_field_overrides = {
+        "start_date_field": PrimaryKeyRelatedField(
+            queryset=Field.objects.all(),
+            required=False,
+            default=None,
+            allow_null=True,
+        ),
+        "end_date_field": PrimaryKeyRelatedField(
+            queryset=Field.objects.all(),
+            required=False,
+            default=None,
+            allow_null=True,
+        ),
+    }
+    api_exceptions_map = {
+        IncompatibleField: ERROR_INCOMPATIBLE_FIELD,
+        FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
+    }
+    can_decorate = True
+    can_share = True
+    has_public_info = True
+
+    def get_api_urls(self):
+        from baserow_premium.api.views.timeline import urls as api_urls
+
+        return [
+            path("timeline/", include(api_urls, namespace=self.type)),
+        ]
+
+    def prepare_values(self, values, table, user):
+        """
+        Check if the provided date field belongs to the same table.
+        """
+
+        date_field_value = values.get("date_field", None)
+        if date_field_value is not None:
+            if isinstance(date_field_value, int):
+                values["date_field"] = date_field_value = Field.objects.get(
+                    pk=date_field_value
+                )
+
+            date_field_value = date_field_value.specific
+            field_type = field_type_registry.get_by_model(date_field_value)
+            if not field_type.can_represent_date(date_field_value):
+                raise IncompatibleField()
+
+            if (
+                isinstance(date_field_value, Field)
+                and date_field_value.table_id != table.id
+            ):
+                raise FieldNotInTable(
+                    "The provided date field id does not belong to the timeline "
+                    "view's table."
+                )
+
+        return super().prepare_values(values, table, user)
+
+    def export_serialized(
+        self,
+        timeline: View,
+        cache: Optional[Dict] = None,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Adds the serialized timeline view options to the exported dict.
+        """
+
+        serialized = super().export_serialized(timeline, cache, files_zip, storage)
+        if timeline.date_field_id:
+            serialized["date_field_id"] = timeline.date_field_id
+
+        serialized_field_options = []
+        for field_option in timeline.get_field_options():
+            serialized_field_options.append(
+                {
+                    "id": field_option.id,
+                    "field_id": field_option.field_id,
+                    "hidden": field_option.hidden,
+                    "order": field_option.order,
+                }
+            )
+
+        serialized["field_options"] = serialized_field_options
+        return serialized
+
+    def import_serialized(
+        self,
+        table: Table,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> View:
+        """
+        Imports the serialized timeline view field options.
+        """
+
+        serialized_copy = serialized_values.copy()
+        if "date_field_id" in serialized_copy:
+            serialized_copy["date_field_id"] = id_mapping["database_fields"][
+                serialized_copy.pop("date_field_id")
+            ]
+
+        field_options = serialized_copy.pop("field_options")
+        timeline_view = super().import_serialized(
+            table, serialized_copy, id_mapping, files_zip, storage
+        )
+
+        if "database_timeline_view_field_options" not in id_mapping:
+            id_mapping["database_timeline_view_field_options"] = {}
+
+        for field_option in field_options:
+            field_option_copy = field_option.copy()
+            field_option_id = field_option_copy.pop("id")
+            field_option_copy["field_id"] = id_mapping["database_fields"][
+                field_option["field_id"]
+            ]
+            field_option_object = TimelineViewFieldOptions.objects.create(
+                timeline_view=timeline_view, **field_option_copy
+            )
+            id_mapping["database_timeline_view_field_options"][
+                field_option_id
+            ] = field_option_object.id
+
+        return timeline_view
+
+    def view_created(self, view: View):
+        """
+        When a timeline view is created, we want to set the first field as visible.
+        """
+
+        field_options = view.get_field_options(create_if_missing=True).order_by(
+            "field__id"
+        )
+        ids_to_update = [f.id for f in field_options[0:1]]
+
+        if len(ids_to_update) > 0:
+            TimelineViewFieldOptions.objects.filter(id__in=ids_to_update).update(
+                hidden=False
+            )
+
+    def export_prepared_values(self, view: TimelineView) -> Dict[str, Any]:
+        values = super().export_prepared_values(view)
+        values["date_field"] = view.date_field_id
+        return values
+
+    def get_visible_field_options_in_order(self, timeline_view: TimelineView):
+        return (
+            timeline_view.get_field_options(create_if_missing=True)
+            .filter(
+                Q(hidden=False)
+                # If the `date_field_id` is set, we must always expose the field
+                # because the values are needed.
+                | Q(field_id=timeline_view.date_field_id)
+            )
+            .order_by("order", "field__id")
+        )
+
+    def get_hidden_fields(
+        self,
+        view: TimelineView,
+        field_ids_to_check: Optional[List[int]] = None,
+    ) -> Set[int]:
+        hidden_field_ids = set()
+        fields = view.table.field_set.all()
+        field_options = view.timelineviewfieldoptions_set.all()
+
+        if field_ids_to_check is not None:
+            fields = [f for f in fields if f.id in field_ids_to_check]
+
+        for field in fields:
+            # If the `date_field_id` is set, we must always expose the field
+            # because the values are needed.
+            if field.id in [
+                view.date_field_id,
+            ]:
+                continue
+
+            field_option_matching = None
+            for field_option in field_options:
+                if field_option.field_id == field.id:
+                    field_option_matching = field_option
+
+            # A field is considered hidden, if it is explicitly hidden
+            # or if the field options don't exist
+            if field_option_matching is None or field_option_matching.hidden:
+                hidden_field_ids.add(field.id)
+
+        return hidden_field_ids
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("timelineviewfieldoptions_set")

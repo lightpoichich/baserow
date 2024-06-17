@@ -6,6 +6,8 @@ from baserow_premium.views.models import (
     CalendarViewFieldOptions,
     KanbanView,
     KanbanViewFieldOptions,
+    TimelineView,
+    TimelineViewFieldOptions,
 )
 
 from baserow.contrib.database.fields.models import Field
@@ -139,6 +141,42 @@ class PremiumFixtures:
         )
         return field_options
 
+    def create_timeline_view(self, user=None, create_options=True, **kwargs):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        if "start_date_field" not in kwargs:
+            kwargs["start_date_field"] = self.create_date_field(
+                table=kwargs["table"],
+            )
+        if "end_date_field" not in kwargs:
+            kwargs["end_date_field"] = self.create_date_field(
+                table=kwargs["table"],
+            )
+
+        timeline_view = TimelineView.objects.create(**kwargs)
+        if create_options:
+            self.create_timeline_view_field_options(timeline_view)
+        return timeline_view
+
+    def create_timeline_view_field_options(self, timeline_view, **kwargs):
+        return [
+            self.create_timeline_view_field_option(timeline_view, field, **kwargs)
+            for field in Field.objects.filter(table=timeline_view.table)
+        ]
+
+    def create_timeline_view_field_option(self, timeline_view, field, **kwargs):
+        field_options, _ = TimelineViewFieldOptions.objects.update_or_create(
+            timeline_view=timeline_view, field=field, defaults=kwargs
+        )
+        return field_options
+
     def create_row_comment(self, user, row, comment):
         return RowComment.objects.create(
             user=user,
@@ -182,9 +220,9 @@ class PremiumFixtures:
             kwargs["ai_generative_ai_model"] = "test_1"
 
         if "ai_prompt" not in kwargs:
-            kwargs[
-                "ai_prompt"
-            ] = "'What is your purpose? Answer with a maximum of 10 words.'"
+            kwargs["ai_prompt"] = (
+                "'What is your purpose? Answer with a maximum of 10 words.'"
+            )
 
         field = AIField.objects.create(**kwargs)
 

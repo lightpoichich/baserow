@@ -339,8 +339,8 @@ class IsEvenAndWholeViewFilterType(ViewFilterType):
 class NumericComparisonViewFilterType(ViewFilterType):
     """
     Base filter type for basic numeric comparisons. It defines common logic for
-    'lower than', 'lower than or equal', 'higher than' and 'higher than or equal'
-    view filter types.
+    'lower than', 'lower than or equal', 'higher than', 'higher than or equal',
+    and 'is in range' view filter types.
     """
 
     operator = None
@@ -420,6 +420,46 @@ class HigherThanOrEqualViewFilterType(NumericComparisonViewFilterType):
     type = "higher_than_or_equal"
     operator = "gte"
     rounding_func = ceil
+
+
+class IsInRangeFilterType(NumericComparisonViewFilterType):
+    """
+    The is in range filter checks if the field value is within the range specified
+    by the filter value. It only works if the filter value is in number range format.
+    Number range format is two decimals separated by a question mark.
+    Examples: 1?10, .1?.9, -100?-50
+    """
+
+    type = "is_in_range"
+    compatible_field_types = [
+        NumberFieldType.type,
+    ]
+
+    def get_filter(self, field_name, value, model_field, field):
+        value = value.strip()
+        parts = value.split("?")
+
+        # If an invalid value has been provided we do not want to filter at all.
+        if len(parts) != 2:
+            return Q()
+
+        lowValue = parts[0].strip()
+        highValue = parts[1].strip()
+
+        if self.should_round_value_to_compare(lowValue, model_field):
+            # Round up with ceil, to match HigherThanViewFilterType behavior 
+            lowValue = ceil(Decimal(lowValue))
+
+        if self.should_round_value_to_compare(highValue, model_field):
+            # Round down with floor, to match LowerThanViewFilterType behavior
+            highValue = floor(Decimal(highValue))
+        
+        try:
+            lowValue = model_field.get_prep_value(lowValue)
+            highValue = model_field.get_prep_value(highValue)
+            return Q(**{f"{field_name}__range": (lowValue, highValue)})
+        except Exception:
+            return self.default_filter_on_exception()
 
 
 class TimezoneAwareDateViewFilterType(ViewFilterType):

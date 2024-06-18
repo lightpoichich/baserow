@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
+import ViewFilterTypeNumberRange from '@baserow/modules/database/components/view/ViewFilterTypeNumberRange'
 import ViewFilterTypeDuration from '@baserow/modules/database/components/view/ViewFilterTypeDuration'
 import ViewFilterTypeRating from '@baserow/modules/database/components/view/ViewFilterTypeRating'
 import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
@@ -2119,6 +2120,43 @@ export class LowerThanOrEqualViewFilterType extends NumericComparisonViewFilterT
     const fltVal = fieldType.parseInputValue(field, filterValue)
     return (
       Number.isFinite(rowVal) && Number.isFinite(fltVal) && rowVal <= fltVal
+    )
+  }
+}
+
+export class IsInRangeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'is_in_range'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isInRange')
+  }
+
+  getExample() {
+    return '1?100'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumberRange
+  }
+
+  getCompatibleFieldTypes() {
+    return ['number']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (filterValue === '') {
+      return true
+    }
+
+    const rowVal = fieldType.parseInputValue(field, rowValue)
+    const parts = filterValue.split('?')
+    const fltValLow = fieldType.parseInputValue(field, parts[0])
+    const fltValHigh = fieldType.parseInputValue(field, parts[1])
+    return (
+      Number.isFinite(rowVal) && Number.isFinite(fltValLow) && Number.isFinite(fltValLow) && rowVal >= fltValLow && rowVal <= fltValHigh
     )
   }
 }

@@ -37,7 +37,7 @@ $ ./dev.sh run backend manage migrate
 $ ./dev.sh restart {EXTRA_COMMANDS_PASSED_TO_UP}  
 $ ./dev.sh down # downs the env
 $ ./dev.sh kill # kills (the old stop_dev.sh)
-# WARNING: restart_wipe will detail ALL volumes associated with that environment 
+# WARNING: restart_wipe will delete ALL volumes associated with that environment 
 # permanently. 
 $ ./dev.sh restart_wipe --build
 # Dev.sh also supports running different Baserow setups:

@@ -1410,7 +1410,7 @@ const numberValueIsInRangeCases = [
     rowValue: null,
     filterValue: '1?2',
     expected: false,
-  }
+  },
 ]
 
 describe('All Tests', () => {

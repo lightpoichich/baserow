@@ -2156,7 +2156,11 @@ export class IsInRangeViewFilterType extends ViewFilterType {
     const fltValLow = fieldType.parseInputValue(field, parts[0])
     const fltValHigh = fieldType.parseInputValue(field, parts[1])
     return (
-      Number.isFinite(rowVal) && Number.isFinite(fltValLow) && Number.isFinite(fltValLow) && rowVal >= fltValLow && rowVal <= fltValHigh
+      Number.isFinite(rowVal) &&
+      Number.isFinite(fltValLow) &&
+      Number.isFinite(fltValLow) &&
+      rowVal >= fltValLow &&
+      rowVal <= fltValHigh
     )
   }
 }

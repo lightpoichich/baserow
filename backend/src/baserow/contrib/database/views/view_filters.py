@@ -2,7 +2,6 @@ import datetime as datetime_module
 import zoneinfo
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from enum import Enum
 from math import ceil, floor
 from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
@@ -359,6 +358,7 @@ class NumericComparisonViewFilterType(ViewFilterType):
         """
         Returns a valid value to be used in a filter using the cls.operator field lookup
         """
+
         should_round = isinstance(model_field, IntegerField) and raw_value.find(".") != -1
         # Check if the model_field accepts the value.
         value = model_field.get_prep_value(raw_value)
@@ -451,7 +451,7 @@ class IsInRangeFilterType(NumericComparisonViewFilterType):
 
         min_value = parts[0].strip()
         max_value = parts[1].strip()
-        
+
         return (
             HigherThanOrEqualViewFilterType.prepare_filter_value(min_value, model_field),
             LowerThanOrEqualViewFilterType.prepare_filter_value(max_value, model_field)

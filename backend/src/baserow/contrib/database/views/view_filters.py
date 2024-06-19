@@ -354,8 +354,17 @@ class NumericComparisonViewFilterType(ViewFilterType):
         ),
     ]
 
-    def should_round_value_to_compare(self, value, model_field):
-        return isinstance(model_field, IntegerField) and value.find(".") != -1
+    @classmethod
+    def prepare_filter_value(cls, raw_value, model_field):
+        """
+        Returns a valid value to be used in a filter using the cls.operator field lookup
+        """
+        should_round = isinstance(model_field, IntegerField) and raw_value.find(".") != -1
+        # Check if the model_field accepts the value.
+        value = model_field.get_prep_value(raw_value)
+        if should_round:
+            value = cls.rounding_func(value)
+        return value
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
@@ -364,13 +373,8 @@ class NumericComparisonViewFilterType(ViewFilterType):
         if value == "":
             return Q()
 
-        if self.should_round_value_to_compare(value, model_field):
-            decimal_value = Decimal(value)
-            value = self.rounding_func(decimal_value)
-
-        # Check if the model_field accepts the value.
         try:
-            value = model_field.get_prep_value(value)
+            value = self.prepare_filter_value(value, model_field)
             return Q(**{f"{field_name}__{self.operator}": value})
         except Exception:
             return self.default_filter_on_exception()
@@ -431,35 +435,27 @@ class IsInRangeFilterType(NumericComparisonViewFilterType):
     """
 
     type = "is_in_range"
+    operator = "range"
     compatible_field_types = [
         NumberFieldType.type,
     ]
 
-    def get_filter(self, field_name, value, model_field, field):
-        value = value.strip()
-        parts = value.split("?")
+    @classmethod
+    def prepare_filter_value(cls, raw_value, model_field):
+        parts = raw_value.split("?")
 
-        # If an invalid value has been provided we do not want to filter at all.
         if len(parts) != 2:
-            return Q()
+            # If we can't split the raw string into two values, we cannot return
+            # a valid filter value for the __range lookup that will occur later
+            raise ValueError("Invalid number range provided")
 
-        lowValue = parts[0].strip()
-        highValue = parts[1].strip()
-
-        if self.should_round_value_to_compare(lowValue, model_field):
-            # Round up with ceil, to match HigherThanViewFilterType behavior 
-            lowValue = ceil(Decimal(lowValue))
-
-        if self.should_round_value_to_compare(highValue, model_field):
-            # Round down with floor, to match LowerThanViewFilterType behavior
-            highValue = floor(Decimal(highValue))
+        min_value = parts[0].strip()
+        max_value = parts[1].strip()
         
-        try:
-            lowValue = model_field.get_prep_value(lowValue)
-            highValue = model_field.get_prep_value(highValue)
-            return Q(**{f"{field_name}__range": (lowValue, highValue)})
-        except Exception:
-            return self.default_filter_on_exception()
+        return (
+            HigherThanOrEqualViewFilterType.prepare_filter_value(min_value, model_field),
+            LowerThanOrEqualViewFilterType.prepare_filter_value(max_value, model_field)
+        )
 
 
 class TimezoneAwareDateViewFilterType(ViewFilterType):

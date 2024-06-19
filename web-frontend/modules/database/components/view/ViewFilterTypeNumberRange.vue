@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import { numberRangeValidation } from '@baserow/modules/core/validators'
+import { numberRangeValidation } from '@baserow/modules/database/validators'
 
 import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
 

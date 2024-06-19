@@ -1,4 +1,5 @@
 import moment from '@baserow/modules/core/moment'
+import { COMBINED_FILTER_VALUE_SEPARATOR } from '@baserow/modules/database/constants'
 
 const dateMapping = {
   EU: {
@@ -118,8 +119,6 @@ export const localizeMoment = (field, value, { format = undefined } = {}) => {
     : date
 }
 
-export const DATE_FILTER_VALUE_SEPARATOR = '?'
-
 /**
  * Splits the timezone and the filter value from a filter value.
  *
@@ -129,7 +128,7 @@ export const DATE_FILTER_VALUE_SEPARATOR = '?'
  */
 export const splitTimezoneAndFilterValue = (
   value,
-  separator = DATE_FILTER_VALUE_SEPARATOR
+  separator = COMBINED_FILTER_VALUE_SEPARATOR
 ) => {
   let timezone = null
   let filterValue
@@ -153,7 +152,7 @@ export const splitTimezoneAndFilterValue = (
  */
 export const splitMultiStepDateValue = (
   value,
-  separator = DATE_FILTER_VALUE_SEPARATOR
+  separator = COMBINED_FILTER_VALUE_SEPARATOR
 ) => {
   const splittedValue = value.split(separator)
   if (splittedValue.length === 3) {
@@ -214,6 +213,6 @@ export const formatDateSeparator = (timestamp) => {
  * @returns {String} The combined value to send to the backend
  */
 export const prepareMultiStepDateValue = (filterValue, timezone, operator) => {
-  const sep = DATE_FILTER_VALUE_SEPARATOR
+  const sep = COMBINED_FILTER_VALUE_SEPARATOR
   return `${timezone}${sep}${filterValue}${sep}${operator}`
 }

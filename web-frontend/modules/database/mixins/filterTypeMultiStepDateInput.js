@@ -1,8 +1,6 @@
 import moment from '@baserow/modules/core/moment'
-import {
-  splitMultiStepDateValue,
-  DATE_FILTER_VALUE_SEPARATOR,
-} from '@baserow/modules/database/utils/date'
+import { COMBINED_FILTER_VALUE_SEPARATOR } from '@baserow/modules/database/constants'
+import { splitMultiStepDateValue } from '@baserow/modules/database/utils/date'
 import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
 
 export default {
@@ -27,7 +25,7 @@ export default {
   },
   methods: {
     getSeparator() {
-      return DATE_FILTER_VALUE_SEPARATOR
+      return COMBINED_FILTER_VALUE_SEPARATOR
     },
     getDefaultTimezone() {
       return this.field.date_force_timezone || moment.tz.guess()

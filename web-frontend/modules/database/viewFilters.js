@@ -14,10 +14,10 @@ import ViewFilterTypeMultiStepDate from '@baserow/modules/database/components/vi
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import ViewFilterTypeMultipleSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeMultipleSelectOptions'
 import { trueValues } from '@baserow/modules/core/utils/constants'
+import { COMBINED_FILTER_VALUE_SEPARATOR } from '@baserow/modules/database/constants'
 import {
   splitTimezoneAndFilterValue,
   prepareMultiStepDateValue,
-  DATE_FILTER_VALUE_SEPARATOR,
   splitMultiStepDateValue,
 } from '@baserow/modules/database/utils/date'
 import { isNumeric } from '@baserow/modules/core/utils/string'
@@ -789,7 +789,7 @@ export class DateMultiStepViewFilterType extends ViewFilterType {
   }
 
   prepareValue(value, field, filterChanged = false) {
-    const sep = DATE_FILTER_VALUE_SEPARATOR
+    const sep = COMBINED_FILTER_VALUE_SEPARATOR
     const [, filterValue, operator] = splitMultiStepDateValue(value, sep)
     const timezone = this.getDefaultTimezone(field)
     return value && !filterChanged
@@ -808,7 +808,7 @@ export class DateMultiStepViewFilterType extends ViewFilterType {
       return false
     }
 
-    const sep = DATE_FILTER_VALUE_SEPARATOR
+    const sep = COMBINED_FILTER_VALUE_SEPARATOR
     const [timezone, value, operatorValue] = splitMultiStepDateValue(
       filterValue,
       sep
@@ -975,7 +975,7 @@ class LocalizedDateViewFilterType extends ViewFilterType {
   }
 
   getSeparator() {
-    return DATE_FILTER_VALUE_SEPARATOR
+    return COMBINED_FILTER_VALUE_SEPARATOR
   }
 
   getDateFormat() {
@@ -2152,7 +2152,7 @@ export class IsInRangeViewFilterType extends ViewFilterType {
     }
 
     const rowVal = fieldType.parseInputValue(field, rowValue)
-    const parts = filterValue.split('?')
+    const parts = filterValue.split(COMBINED_FILTER_VALUE_SEPARATOR)
     const fltValLow = fieldType.parseInputValue(field, parts[0])
     const fltValHigh = fieldType.parseInputValue(field, parts[1])
     return (

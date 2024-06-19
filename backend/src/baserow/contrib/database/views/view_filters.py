@@ -66,7 +66,7 @@ from baserow.core.models import WorkspaceUser
 from .registries import ViewFilterType
 
 DATE_FILTER_EMPTY_VALUE = ""
-DATE_FILTER_TIMEZONE_SEPARATOR = "?"
+COMBINED_FILTER_VALUE_SEPARATOR = "?"
 
 
 class NotViewFilterTypeMixin:
@@ -528,7 +528,7 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
             return field.date_force_timezone, filter_value
 
     def split_timezone_and_filter_value(
-        self, field, filter_value, separator=DATE_FILTER_TIMEZONE_SEPARATOR
+        self, field, filter_value, separator=COMBINED_FILTER_VALUE_SEPARATOR
     ) -> Tuple[zoneinfo.ZoneInfo, str]:
         """
         Splits the timezone and the value from the provided value. If the value
@@ -1729,7 +1729,7 @@ class DateMultiStepViewFilterType(ViewFilterType):
         ]
 
     def split_combined_value(
-        self, field, filter_value, separator=DATE_FILTER_TIMEZONE_SEPARATOR
+        self, field, filter_value, separator=COMBINED_FILTER_VALUE_SEPARATOR
     ) -> Tuple[zoneinfo.ZoneInfo, str]:
         """
         Splits the timezone and the value from the provided value. If the value

@@ -7,7 +7,7 @@ import { decimal, required } from 'vuelidate/lib/validators'
  * @param {String} value The string to check
  * @returns true if the string is in number range format
  */
-export const numberRangeValidation = (value) => {
+export const numberRangeValidator = (value) => {
     const parts = value.split("?")
     if (parts.length !== 2) return false
 

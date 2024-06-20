@@ -1837,6 +1837,111 @@ def test_lower_than_or_equal_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_is_in_range_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    integer_field = data_fixture.create_number_field(table=table, number_negative=True)
+    decimal_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=2,
+        number_negative=True,
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{integer_field.id}": 10,
+            f"field_{decimal_field.id}": 20.20,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{integer_field.id}": None,
+            f"field_{decimal_field.id}": None,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{integer_field.id}": 99,
+            f"field_{decimal_field.id}": 99.99,
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{integer_field.id}": -10,
+            f"field_{decimal_field.id}": -30.33,
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=integer_field, type="is_in_range", value="5?20"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = "5?100"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "-20?20"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_4.id in ids
+
+    # all rows are below minimum value
+    view_filter.value = "150?350"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    # all rows are above maximum value
+    view_filter.value = "-350?-150"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    # with an invalid filter value no results are returned
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = decimal_field
+    view_filter.value = "20.15?20.25"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = "20.20?99.99"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "20.20001?99.99"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    view_filter.value = "20.20001?99.98999"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+
+@pytest.mark.django_db
 def test_is_even_and_whole_number_filter_type(data_fixture):
     """
     Tests 'is_even_and_whole' number filter type.

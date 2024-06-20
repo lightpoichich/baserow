@@ -444,7 +444,7 @@ class IsInRangeFilterType(NumericComparisonViewFilterType):
 
     @classmethod
     def prepare_filter_value(cls, raw_value, model_field):
-        parts = raw_value.split("?")
+        parts = raw_value.split(COMBINED_FILTER_VALUE_SEPARATOR)
 
         if len(parts) != 2:
             # If we can't split the raw string into two values, we cannot return

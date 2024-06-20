@@ -2,6 +2,7 @@ import datetime as datetime_module
 import zoneinfo
 from collections import defaultdict
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from enum import Enum
 from math import ceil, floor
 from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
@@ -362,10 +363,11 @@ class NumericComparisonViewFilterType(ViewFilterType):
         should_round = (
             isinstance(model_field, IntegerField) and raw_value.find(".") != -1
         )
-        # Check if the model_field accepts the value.
-        value = model_field.get_prep_value(raw_value)
+        value = Decimal(raw_value)
         if should_round:
             value = cls.rounding_func(value)
+        # Check if the model_field accepts the value.
+        model_field.get_prep_value(value)
         return value
 
     def get_filter(self, field_name, value, model_field, field):

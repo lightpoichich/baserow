@@ -355,17 +355,18 @@ class NumericComparisonViewFilterType(ViewFilterType):
     ]
 
     @classmethod
-    def prepare_filter_value(cls, raw_value, model_field):
+    def prepare_filter_value(cls, value, model_field):
         """
         Returns a valid value to be used in a filter using the cls.operator field lookup
         """
 
         should_round = (
-            isinstance(model_field, IntegerField) and raw_value.find(".") != -1
+            isinstance(model_field, IntegerField) and value.find(".") != -1
         )
-        value = Decimal(raw_value)
+
         if should_round:
-            value = cls.rounding_func(value)
+            value = cls.rounding_func(Decimal(value))
+
         # Check if the model_field accepts the value.
         model_field.get_prep_value(value)
         return value

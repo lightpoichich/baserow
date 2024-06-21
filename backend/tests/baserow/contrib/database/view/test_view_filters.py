@@ -1,4 +1,5 @@
 import random
+from unittest.mock import patch
 from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
@@ -1914,6 +1915,35 @@ def test_is_in_range_filter_type(data_fixture):
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
+
+    view_filter.value = "5?"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+        
+    view_filter.value = "?5"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.value = "?"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.value = "1?2?3"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    # respects the COMBINED_FILTER_VALUE_SEPARATOR constant
+    with patch("baserow.contrib.database.views.view_filters.COMBINED_FILTER_VALUE_SEPARATOR", new=":"):
+        view_filter.value = "5:100"
+        view_filter.save()
+        ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+        assert len(ids) == 2
+        assert row_1.id in ids
+        assert row_3.id in ids
 
     view_filter.field = decimal_field
     view_filter.value = "20.15?20.25"

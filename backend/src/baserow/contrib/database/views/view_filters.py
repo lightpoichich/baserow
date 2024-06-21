@@ -367,9 +367,7 @@ class NumericComparisonViewFilterType(ViewFilterType):
         Returns a valid value to be used in a filter using the cls.operator field lookup
         """
 
-        should_round = (
-            isinstance(model_field, IntegerField) and value.find(".") != -1
-        )
+        should_round = isinstance(model_field, IntegerField) and value.find(".") != -1
 
         if should_round:
             value = cls.rounding_func(Decimal(value))

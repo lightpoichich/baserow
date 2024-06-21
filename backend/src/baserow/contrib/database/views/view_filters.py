@@ -434,8 +434,8 @@ class IsInRangeFilterType(NumericComparisonViewFilterType):
     """
     The is in range filter checks if the field value is within the range specified
     by the filter value. It only works if the filter value is in number range format.
-    Number range format is two decimals separated by a question mark.
-    Examples: 1?10, .1?.9, -100?-50
+    Number range format is two decimals separated by COMBINED_FILTER_VALUE_SEPARATOR.
+    Examples assuming '?' separator: 1?10, .1?.9, -100?-50
     """
 
     type = "is_in_range"

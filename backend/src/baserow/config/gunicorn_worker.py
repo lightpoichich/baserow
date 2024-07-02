@@ -21,12 +21,12 @@ class BaserowUvicronWorker(UvicornWorker):
     UvicornWorker.CONFIG_KWARGS.
 
     Supported parameters:
-    `GUVICORN_LIMIT_CONCURRENCY`
+    `UVICORN_LIMIT_CONCURRENCY`
     """
 
     CONFIG_KWARGS = {
         "loop": "asyncio",
         "http": "h11",
         "lifespan": "off",
-        "limit_concurrency": to_int(os.getenv("GUVICORN_LIMIT_CONCURRENCY"), None),
+        "limit_concurrency": to_int(os.getenv("UVICORN_LIMIT_CONCURRENCY"), None),
     }

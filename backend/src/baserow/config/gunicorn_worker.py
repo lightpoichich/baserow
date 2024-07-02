@@ -10,7 +10,7 @@ def to_int(val, default):
         return default
 
 
-class BaserowUvicronWorker(UvicornWorker):
+class BaserowUvicornWorker(UvicornWorker):
     """
     Enhanced uvicorn worker class to handle additional uvicorn-specific options
     passed as env variables.
@@ -25,8 +25,11 @@ class BaserowUvicronWorker(UvicornWorker):
     """
 
     CONFIG_KWARGS = {
-        "loop": "asyncio",
-        "http": "h11",
-        "lifespan": "off",
-        "limit_concurrency": to_int(os.getenv("UVICORN_LIMIT_CONCURRENCY"), None),
+        **UvicornWorker.CONFIG_KWARGS,
+        **{
+            # "loop": "asyncio",
+            # "http": "h11",
+            # "lifespan": "off",
+            "limit_concurrency": to_int(os.getenv("UVICORN_LIMIT_CONCURRENCY"), None),
+        },
     }

@@ -57,7 +57,7 @@ if [[ "${BASEROW_ALL_IN_ONE_DEV_MODE:-}" == "true"  ]]; then
   DEFAULT_CELERY_WORKER_STARTUP_COMMAND='watch-py celery-worker'
   DEFAULT_CELERY_EXPORT_WORKER_STARTUP_COMMAND='watch-py celery-exportworker'
   DEFAULT_CELERY_BEAT_STARTUP_COMMAND='celery-beat'
-  DEFAULT_GUNICORN_WORKER_CLASS='baserow.config.gunicorn_worker.BaserowUvicronWorker'
+  DEFAULT_GUNICORN_WORKER_CLASS='baserow.config.gunicorn_worker.BaserowUvicornWorker'
 else
   DEFAULT_DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
   DEFAULT_WEB_FRONTEND_STARTUP_COMMAND='nuxt-local'
@@ -65,7 +65,7 @@ else
   DEFAULT_CELERY_WORKER_STARTUP_COMMAND='celery-worker'
   DEFAULT_CELERY_EXPORT_WORKER_STARTUP_COMMAND='celery-exportworker'
   DEFAULT_CELERY_BEAT_STARTUP_COMMAND='celery-beat'
-  DEFAULT_GUNICORN_WORKER_CLASS='baserow.config.gunicorn_worker.BaserowUvicronWorker'
+  DEFAULT_GUNICORN_WORKER_CLASS='baserow.config.gunicorn_worker.BaserowUvicornWorker'
 
 fi
 

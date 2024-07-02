@@ -16,8 +16,8 @@ services:
       EMAIL_SMTP_HOST: 'mailhog'
       EMAIL_SMTP_PORT: '1025'
       BASEROW_PUBLIC_URL:
-      UVICORN_LIMIT_CONCURRENCY: '1'
-      GUNICORN_WORKER_CLASS: 'baserow.config.gunicorn_worker.BaserowUvicronWorker'
+      UVICORN_LIMIT_CONCURRENCY: ${UVICORN_LIMIT_CONCURRENCY:-}
+      GUNICORN_WORKER_CLASS: ${GUNICORN_WORKER_CLASS:-baserow.config.gunicorn_worker.BaserowUvicornWorker}
     ports:
       - "80:80"
       - "443:443"

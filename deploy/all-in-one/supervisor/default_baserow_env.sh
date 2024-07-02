@@ -57,6 +57,7 @@ if [[ "${BASEROW_ALL_IN_ONE_DEV_MODE:-}" == "true"  ]]; then
   DEFAULT_CELERY_WORKER_STARTUP_COMMAND='watch-py celery-worker'
   DEFAULT_CELERY_EXPORT_WORKER_STARTUP_COMMAND='watch-py celery-exportworker'
   DEFAULT_CELERY_BEAT_STARTUP_COMMAND='celery-beat'
+  DEFAULT_GUNICORN_WORKER_CLASS='baserow.config.gunicorn_worker.BaserowUvicronWorker'
 else
   DEFAULT_DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
   DEFAULT_WEB_FRONTEND_STARTUP_COMMAND='nuxt-local'
@@ -64,6 +65,8 @@ else
   DEFAULT_CELERY_WORKER_STARTUP_COMMAND='celery-worker'
   DEFAULT_CELERY_EXPORT_WORKER_STARTUP_COMMAND='celery-exportworker'
   DEFAULT_CELERY_BEAT_STARTUP_COMMAND='celery-beat'
+  DEFAULT_GUNICORN_WORKER_CLASS='baserow.config.gunicorn_worker.BaserowUvicronWorker'
+
 fi
 
 export DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-$DEFAULT_DJANGO_SETTINGS_MODULE}
@@ -74,6 +77,8 @@ export BASEROW_CELERY_EXPORT_WORKER_STARTUP_COMMAND="${BASEROW_CELERY_EXPORT_WOR
 export BASEROW_CELERY_BEAT_STARTUP_COMMAND="${BASEROW_CELERY_BEAT_STARTUP_COMMAND:-$DEFAULT_CELERY_BEAT_STARTUP_COMMAND}"
 export XDG_CONFIG_HOME=/home/$DOCKER_USER/
 export HOME=/home/$DOCKER_USER/
+export GUVICORN_LIMIT_CONCURRENCY=${GUVICORN_LIMIT_CONCURRENCY:-}
+export GUNICORN_WORKER_CLASS=${GUNICORN_WORKER_CLASS:-$DEFAULT_GUNICORN_WORKER_CLASS}
 
 # By default we run all other sub-supervisor processes as a non root user. However for
 # now we want to default just Caddy to a root user so it can bind to the privileged

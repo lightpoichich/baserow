@@ -16,11 +16,14 @@ services:
       EMAIL_SMTP_HOST: 'mailhog'
       EMAIL_SMTP_PORT: '1025'
       BASEROW_PUBLIC_URL:
+      GUVICORN_LIMIT_CONCURRENCY: '1'
+      GUNICORN_WORKER_CLASS: 'baserow.config.gunicorn_worker.BaserowUvicronWorker'
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - baserow_all_in_one_data:/baserow/data
+      - $PWD/backend/:/baserow/backend
     healthcheck:
       test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh backend-healthcheck" ]
       interval: 10s

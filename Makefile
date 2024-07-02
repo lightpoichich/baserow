@@ -12,6 +12,8 @@ DOCKERCLI:=docker
 DOCKERC:=$(DOCKERCLI) compose
 
 DOCKER_SPLIT_CONF:=-f docker-compose.yml -f docker-compose.dev.yml
+DOCKER_ALL_IN_ONE_CONF_DEV:=-f deploy/all-in-one/docker-compose.yml -f deploy/all-in-one/docker-compose.dev.yml
+DOCKER_ALL_IN_ONE_CONF:=-f deploy/all-in-one/docker-compose.yml
 
 .PHONY: install build .callsubcmd $(SUBDIRS) help package-build test tests\
 		lint lint-fix docker-lint\
@@ -116,6 +118,21 @@ docker-lint:
         heroku.Dockerfile \
         e2e-tests/Dockerfile \
         deploy/*/Dockerfile
+
+
+docker-allinone-build: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF)
+docker-allinone-build: .docker-build
+
+docker-allinone-start: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF)
+docker-allinone-start: docker-allinone-build .docker-start
+
+
+docker-allinone-build-dev: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF_DEV)
+docker-allinone-build-dev: .docker-build
+
+docker-allinone-start-dev: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF_DEV)
+docker-allinone-start-dev: docker-allinone-build .docker-start
+
 
 clean: SUBCMD=clean
 clean: .subcmd docker-clean

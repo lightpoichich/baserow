@@ -19,10 +19,10 @@
         :label="$t('databaseStep.databaseNameLabel')"
         large
         :error="
-          $v.name.$dirty && !$v.name.required ? $t('error.requiredField') : null
+          v$.name.$dirty && !v$.name.required ? $t('error.requiredField') : null
         "
         @input="updateValue"
-        @blur="$v.name.$touch()"
+        @blur="v$.name.$touch()"
       />
     </template>
     <AirtableImportForm
@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { requiredIf } from 'vuelidate/lib/validators'
+import { requiredIf } from '@vuelidate/validators'
 import SegmentControl from '@baserow/modules/core/components/SegmentControl'
 import AirtableImportForm from '@baserow/modules/database/components/airtable/AirtableImportForm.vue'
 
@@ -75,7 +75,7 @@ export default {
   },
   methods: {
     isValid() {
-      return !this.$v.$invalid
+      return !this.v$.$invalid
     },
     updateValue() {
       this.$emit('update-data', {

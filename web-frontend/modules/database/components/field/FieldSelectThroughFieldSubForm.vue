@@ -10,10 +10,10 @@
       <div class="control__elements">
         <Dropdown
           v-model="values.through_field_id"
-          :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
+          :class="{ 'dropdown--error': v$.values.through_field_id.$error }"
           :fixed-items="true"
           small
-          @hide="$v.values.through_field_id.$touch()"
+          @hide="v$.values.through_field_id.$touch()"
           @input="throughFieldChanged($event)"
         >
           <DropdownItem
@@ -25,7 +25,7 @@
             :icon="field.icon"
           ></DropdownItem>
         </Dropdown>
-        <div v-if="$v.values.through_field_id.$error" class="error">
+        <div v-if="v$.values.through_field_id.$error" class="error">
           {{ $t('error.requiredField') }}
         </div>
       </div>
@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import { LinkRowFieldType } from '@baserow/modules/database/fieldTypes'

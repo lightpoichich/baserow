@@ -80,16 +80,16 @@
                   :max="fontSizeMax"
                   :class="{
                     'input--error':
-                      $v.builder.theme[`heading_${i}_font_size`].$error,
+                      v$.builder.theme[`heading_${i}_font_size`].$error,
                   }"
                   :value="builder.theme[`heading_${i}_font_size`]"
                   @input="
                     ;[
-                      $v.builder.theme[`heading_${i}_font_size`].$touch(),
+                      v$.builder.theme[`heading_${i}_font_size`].$touch(),
                       setPropertyInStore(
                         `heading_${i}_font_size`,
                         $event.target.value,
-                        !$v.builder.theme[`heading_${i}_font_size`].$error
+                        !v$.builder.theme[`heading_${i}_font_size`].$error
                       ),
                     ]
                   "
@@ -98,7 +98,7 @@
               </div>
             </div>
             <div
-              v-if="$v.builder.theme[`heading_${i}_font_size`].$error"
+              v-if="v$.builder.theme[`heading_${i}_font_size`].$error"
               class="error"
             >
               {{ $t('error.minMaxLength', { min: 1, max: 100 }) }}
@@ -126,7 +126,7 @@
 
 <script>
 import { mapActions } from 'vuex'
-import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
+import { required, integer, minValue, maxValue } from '@vuelidate/validators'
 import ColorPickerContext from '@baserow/modules/core/components/ColorPickerContext'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 

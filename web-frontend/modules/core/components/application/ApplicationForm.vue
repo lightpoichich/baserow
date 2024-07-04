@@ -13,7 +13,7 @@
           type="text"
           class="input"
           @focus.once="$event.target.select()"
-          @blur="$v.values.name.$touch()"
+          @blur="v$?.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">
           {{ $t('error.requiredField') }}
@@ -25,13 +25,15 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { useVuelidate } from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 
 export default {
   name: 'ApplicationForm',
   mixins: [form],
+  setup: () => ({ v$: useVuelidate() }),
   data() {
     return {
       values: {
@@ -40,12 +42,16 @@ export default {
     }
   },
   mounted() {
+    console.log(this.$refs)
     this.$refs.name.focus()
   },
   validations: {
     values: {
       name: { required },
     },
+  },
+  validationConfig: {
+    $lazy: true,
   },
 }
 </script>

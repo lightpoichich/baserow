@@ -5,7 +5,7 @@
     :placeholder="field.duration_format"
     type="text"
     class="input filters__value-input input--small"
-    :class="{ 'input--error': $v.formattedValue.$error }"
+    :class="{ 'input--error': v$.formattedValue.$error }"
     :disabled="disabled"
     @blur="updateFormattedValue(field, copy)"
     @keypress="onKeyPress(field, $event)"
@@ -27,7 +27,7 @@ export default {
   },
   methods: {
     isInputValid() {
-      return !this.$v.formattedValue.$error
+      return !this.v$.formattedValue.$error
     },
     focus() {
       this.$refs.input.focus()

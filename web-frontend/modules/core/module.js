@@ -181,7 +181,6 @@ export default function CoreModule(options) {
   this.addLayout(path.resolve(__dirname, 'layouts/login.vue'), 'login')
 
   this.addPlugin({ src: path.resolve(__dirname, 'plugins/global.js') })
-  this.addPlugin({ src: path.resolve(__dirname, 'plugins/vuelidate.js') })
   this.addPlugin({
     src: path.resolve(__dirname, 'plugins/vue2-smooth-scroll.js'),
   })

@@ -17,7 +17,7 @@ function fail(message = '') {
 
   expect(message).toEqual(failMessage)
 }
-global.fail = fail
+// global.fail = fail
 
 process.on('unhandledRejection', (err) => {
   fail(err)

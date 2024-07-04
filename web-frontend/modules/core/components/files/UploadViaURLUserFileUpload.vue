@@ -10,12 +10,12 @@
         <div class="control__elements">
           <input
             v-model="values.url"
-            :class="{ 'input--error': $v.values.url.$error }"
+            :class="{ 'input--error': v$.values.url.$error }"
             type="text"
             class="input"
-            @blur="$v.values.url.$touch()"
+            @blur="v$.values.url.$touch()"
           />
-          <div v-if="$v.values.url.$error" class="error">
+          <div v-if="v$.values.url.$error" class="error">
             {{ $t('uploadViaURLUserFileUpload.urlError') }}
           </div>
         </div>
@@ -30,7 +30,8 @@
 </template>
 
 <script>
-import { required, url } from 'vuelidate/lib/validators'
+import { useVuelidate } from '@vuelidate/core'
+import { required, url } from '@vuelidate/validators'
 
 import error from '@baserow/modules/core/mixins/error'
 import UserFileService from '@baserow/modules/core/services/userFile'
@@ -38,6 +39,7 @@ import UserFileService from '@baserow/modules/core/services/userFile'
 export default {
   name: 'UploadViaURLUserFileUpload',
   mixins: [error],
+  setup: () => ({ v$: useVuelidate() }),
   data() {
     return {
       loading: false,
@@ -48,8 +50,8 @@ export default {
   },
   methods: {
     async upload(url) {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+      this.v$.$touch()
+      if (this.v$.$invalid) {
         return
       }
 

@@ -162,18 +162,18 @@
             <input
               v-model="account_deletion_grace_delay"
               :class="{
-                'input--error': $v.account_deletion_grace_delay.$error,
+                'input--error': v$.account_deletion_grace_delay.$error,
               }"
               type="number"
               class="input"
               @input="
                 ;[
-                  $v.account_deletion_grace_delay.$touch(),
+                  v$.account_deletion_grace_delay.$touch(),
                   updateAccountDeletionGraceDelay($event),
                 ]
               "
             />
-            <div v-if="$v.account_deletion_grace_delay.$error" class="error">
+            <div v-if="v$.account_deletion_grace_delay.$error" class="error">
               {{ $t('settings.invalidAccountDeletionGraceDelay') }}
             </div>
           </div>
@@ -212,7 +212,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { required, integer, between } from 'vuelidate/lib/validators'
+import { required, integer, between } from '@vuelidate/validators'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SettingsService from '@baserow/modules/core/services/settings'
@@ -279,8 +279,8 @@ export default {
   },
   methods: {
     async updateSettings(values) {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+      this.v$.$touch()
+      if (this.v$.$invalid) {
         return
       }
       try {
@@ -296,7 +296,7 @@ export default {
       const existingValue = this.settings.account_deletion_grace_delay
 
       if (
-        !this.$v.account_deletion_grace_delay.$error &&
+        !this.v$.account_deletion_grace_delay.$error &&
         existingValue !== parseInt(this.account_deletion_grace_delay)
       ) {
         this.updateSettings({

@@ -117,6 +117,7 @@ export class TestApp {
         tc: (key) => key,
       },
       $i18n: {
+        locales: [{ code: 'en', name: 'English' }],
         getBrowserLocale: () => 'en',
       },
       $router: {

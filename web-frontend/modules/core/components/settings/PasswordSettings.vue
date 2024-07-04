@@ -14,12 +14,12 @@
         <div class="control__elements">
           <input
             v-model="account.oldPassword"
-            :class="{ 'input--error': $v.account.oldPassword.$error }"
+            :class="{ 'input--error': v$.account.oldPassword.$error }"
             type="password"
             class="input"
-            @blur="$v.account.oldPassword.$touch()"
+            @blur="v$.account.oldPassword.$touch()"
           />
-          <div v-if="$v.account.oldPassword.$error" class="error">
+          <div v-if="v$.account.oldPassword.$error" class="error">
             {{ $t('passwordSettings.oldPasswordRequiredError') }}
           </div>
         </div>
@@ -31,7 +31,7 @@
         <div class="control__elements">
           <PasswordInput
             v-model="account.newPassword"
-            :validation-state="$v.account.newPassword"
+            :validation-state="v$.account.newPassword"
           />
         </div>
       </div>
@@ -42,12 +42,12 @@
         <div class="control__elements">
           <input
             v-model="account.passwordConfirm"
-            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
+            :class="{ 'input--error': v$.account.passwordConfirm.$error }"
             type="password"
             class="input"
-            @blur="$v.account.passwordConfirm.$touch()"
+            @blur="v$.account.passwordConfirm.$touch()"
           />
-          <div v-if="$v.account.passwordConfirm.$error" class="error">
+          <div v-if="v$.account.passwordConfirm.$error" class="error">
             {{ $t('passwordSettings.repeatNewPasswordMatchError') }}
           </div>
         </div>
@@ -68,7 +68,7 @@
 </template>
 
 <script>
-import { sameAs, required } from 'vuelidate/lib/validators'
+import { sameAs, required } from '@vuelidate/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
@@ -92,9 +92,9 @@ export default {
   },
   methods: {
     async changePassword() {
-      this.$v.$touch()
+      this.v$.$touch()
 
-      if (this.$v.$invalid) {
+      if (this.v$.$invalid) {
         return
       }
 

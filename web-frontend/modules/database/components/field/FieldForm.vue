@@ -9,19 +9,19 @@
           type="text"
           class="input input--small"
           :placeholder="$t('fieldForm.name')"
-          @blur="$v.values.name.$touch()"
+          @blur="v$.values.name.$touch()"
           @input="isPrefilledWithSuggestedFieldName = false"
           @keydown.enter="handleKeydownEnter($event)"
         />
         <div
-          v-if="$v.values.name.$dirty && !$v.values.name.required"
+          v-if="v$.values.name.$dirty && !v$.values.name.required"
           class="error"
         >
           {{ $t('error.requiredField') }}
         </div>
         <div
           v-else-if="
-            $v.values.name.$dirty && !$v.values.name.mustHaveUniqueFieldName
+            v$.values.name.$dirty && !v$.values.name.mustHaveUniqueFieldName
           "
           class="error"
         >
@@ -29,15 +29,15 @@
         </div>
         <div
           v-else-if="
-            $v.values.name.$dirty &&
-            !$v.values.name.mustNotClashWithReservedName
+            v$.values.name.$dirty &&
+            !v$.values.name.mustNotClashWithReservedName
           "
           class="error"
         >
           {{ $t('fieldForm.nameNotAllowed') }}
         </div>
         <div
-          v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength"
+          v-else-if="v$.values.name.$dirty && !v$.values.name.maxLength"
           class="error"
         >
           {{ $t('fieldForm.nameTooLong') }}
@@ -49,10 +49,10 @@
         <Dropdown
           ref="fieldTypesDropdown"
           v-model="values.type"
-          :class="{ 'dropdown--error': $v.values.type.$error }"
+          :class="{ 'dropdown--error': v$.values.type.$error }"
           :fixed-items="true"
           small
-          @hide="$v.values.type.$touch()"
+          @hide="v$.values.type.$touch()"
         >
           <DropdownItem
             v-for="(fieldType, type) in fieldTypes"
@@ -87,7 +87,7 @@
             ></component>
           </DropdownItem>
         </Dropdown>
-        <div v-if="$v.values.type.$error" class="error">
+        <div v-if="v$.values.type.$error" class="error">
           {{ $t('error.requiredField') }}
         </div>
       </div>
@@ -104,7 +104,7 @@
         :name="values.name"
         :default-values="defaultValues"
         :database="database"
-        @validate="$v.$touch"
+        @validate="v$.$touch"
         @suggested-field-name="handleSuggestedFieldName($event)"
       />
     </template>
@@ -137,7 +137,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { required, maxLength } from 'vuelidate/lib/validators'
+import { required, maxLength } from '@vuelidate/validators'
 
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'

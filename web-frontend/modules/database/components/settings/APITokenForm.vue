@@ -9,7 +9,7 @@
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input"
-          @blur="$v.values.name.$touch()"
+          @blur="v$.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">
           {{ $t('error.requiredField') }}
@@ -23,7 +23,7 @@
       <Dropdown
         v-model="values.workspace"
         class="col-4"
-        @hide="$v.values.workspace.$touch()"
+        @hide="v$.values.workspace.$touch()"
       >
         <DropdownItem
           v-for="workspace in workspaces"
@@ -44,7 +44,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 

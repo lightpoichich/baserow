@@ -32,13 +32,13 @@
       :placeholder="$t('iframeElementForm.heightPlaceholder')"
       :to-value="(value) => parseInt(value)"
       :error="
-        $v.values.height.$dirty && !$v.values.height.required
+        v$.values.height.$dirty && !v$.values.height.required
           ? $t('error.requiredField')
-          : !$v.values.height.integer
+          : !v$.values.height.integer
           ? $t('error.integerField')
-          : !$v.values.height.minValue
+          : !v$.values.height.minValue
           ? $t('error.minValueField', { min: 1 })
-          : !$v.values.height.maxValue
+          : !v$.values.height.maxValue
           ? $t('error.maxValueField', { max: 2000 })
           : ''
       "
@@ -50,7 +50,7 @@
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { IFRAME_SOURCE_TYPES } from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
+import { required, integer, minValue, maxValue } from '@vuelidate/validators'
 
 export default {
   name: 'IFrameElementForm',

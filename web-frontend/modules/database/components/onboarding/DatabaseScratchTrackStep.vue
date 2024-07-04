@@ -24,12 +24,12 @@
       :label="$t('databaseScratchTrackStep.tableName')"
       large
       :error="
-        $v.tableName.$dirty && !$v.tableName.required
+        v$.tableName.$dirty && !v$.tableName.required
           ? $t('error.requiredField')
           : null
       "
       @input="updateValue"
-      @blur="$v.tableName.$touch()"
+      @blur="v$.tableName.$touch()"
     />
     <template v-if="what !== ''">
       <FormInput
@@ -42,19 +42,19 @@
         "
         large
         :error="
-          $v['row' + index].$dirty && $v['row' + index].$invalid
+          v$['row' + index].$dirty && v$['row' + index].$invalid
             ? $t('error.requiredField')
             : null
         "
         @input="updateValue"
-        @blur="$v['row' + index].$touch()"
+        @blur="v$['row' + index].$touch()"
       />
     </template>
   </div>
 </template>
 
 <script>
-import { required, requiredIf } from 'vuelidate/lib/validators'
+import { required, requiredIf } from '@vuelidate/validators'
 
 export default {
   name: 'DatabaseScratchTrackStep',
@@ -100,7 +100,7 @@ export default {
   },
   methods: {
     isValid() {
-      return !this.$v.$invalid
+      return !this.v$.$invalid
     },
     select(value) {
       if (

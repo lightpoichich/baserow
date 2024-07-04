@@ -7,16 +7,16 @@
       :label="$t('workspaceStep.workspaceLabel')"
       large
       :error="
-        $v.name.$dirty && !$v.name.required ? $t('error.requiredField') : null
+        v$.name.$dirty && !v$.name.required ? $t('error.requiredField') : null
       "
       @input="updateValue"
-      @blur="$v.name.$touch()"
+      @blur="v$.name.$touch()"
     />
   </div>
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 export default {
   name: 'WorkspaceStep',
@@ -30,10 +30,10 @@ export default {
   },
   methods: {
     isValid() {
-      return !this.$v.$invalid
+      return !this.v$.$invalid
     },
     updateValue() {
-      this.$v.name.$touch()
+      this.v$.name.$touch()
       this.$emit('update-data', { name: this.name })
     },
   },

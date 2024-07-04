@@ -7,10 +7,10 @@
       <div class="control__elements">
         <Dropdown
           v-model="values.duration_format"
-          :class="{ 'dropdown--error': $v.values.duration_format.$error }"
+          :class="{ 'dropdown--error': v$.values.duration_format.$error }"
           :fixed-items="true"
           small
-          @hide="$v.values.duration_format.$touch()"
+          @hide="v$.values.duration_format.$touch()"
         >
           <DropdownItem
             v-for="option in durationFormatOptions"
@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 import { DURATION_FORMATS } from '@baserow/modules/database/utils/duration'
 
 import form from '@baserow/modules/core/mixins/form'

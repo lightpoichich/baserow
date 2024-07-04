@@ -25,7 +25,7 @@
                 v-model="values.name"
                 class="input input--small"
                 :class="{ 'input--error': fieldHasErrors('name') }"
-                @blur="$v.values.name.$touch()"
+                @blur="v$.values.name.$touch()"
               />
               <div v-if="fieldHasErrors('name')" class="error">
                 {{ $t('error.requiredField') }}
@@ -72,25 +72,25 @@
                 :placeholder="$t('webhookForm.inputLabels.url')"
                 class="input input--small"
                 :class="{ 'input--error': fieldHasErrors('url') }"
-                @blur="$v.values.url.$touch()"
+                @blur="v$.values.url.$touch()"
               />
               <div
                 v-if="
                   fieldHasErrors('url') &&
-                  (!$v.values.url.required ||
-                    !$v.values.url.isValidURLWithHttpScheme)
+                  (!v$.values.url.required ||
+                    !v$.values.url.isValidURLWithHttpScheme)
                 "
                 class="error"
               >
                 {{ $t('webhookForm.errors.urlField') }}
               </div>
               <div
-                v-else-if="$v.values.url.$error && !$v.values.url.maxLength"
+                v-else-if="v$.values.url.$error && !v$.values.url.maxLength"
                 class="error"
               >
                 {{
                   $t('error.maxLength', {
-                    max: $v.values.url.$params.maxLength.max,
+                    max: v$.values.url.$params.maxLength.max,
                   })
                 }}
               </div>
@@ -147,14 +147,14 @@
                 class="input input--small webhook__header-key"
                 :class="{
                   'input--error':
-                    !lastHeader(index) && $v.headers.$each[index].name.$error,
+                    !lastHeader(index) && v$.headers.$each[index].name.$error,
                 }"
                 :placeholder="$t('webhookForm.inputLabels.name')"
                 @input="
                   lastHeader(index) && addHeader(header.name, header.value)
                 "
                 @blur="
-                  !lastHeader(index) && $v.headers.$each[index].name.$touch()
+                  !lastHeader(index) && v$.headers.$each[index].name.$touch()
                 "
               />
               <input
@@ -162,14 +162,14 @@
                 class="input input--small webhook__header-value"
                 :class="{
                   'input--error':
-                    !lastHeader(index) && $v.headers.$each[index].value.$error,
+                    !lastHeader(index) && v$.headers.$each[index].value.$error,
                 }"
                 :placeholder="$t('webhookForm.inputLabels.value')"
                 @input="
                   lastHeader(index) && addHeader(header.name, header.value)
                 "
                 @blur="
-                  !lastHeader(index) && $v.headers.$each[index].value.$touch()
+                  !lastHeader(index) && v$.headers.$each[index].value.$touch()
                 "
               />
               <ButtonIcon
@@ -182,7 +182,7 @@
               </ButtonIcon>
             </div>
           </div>
-          <div v-if="$v.headers.$anyError" class="error">
+          <div v-if="v$.headers.$anyError" class="error">
             {{ $t('webhookForm.errors.invalidHeaders') }}
           </div>
         </div>
@@ -241,7 +241,7 @@
 </template>
 
 <script>
-import { required, maxLength } from 'vuelidate/lib/validators'
+import { required, maxLength } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
@@ -393,7 +393,7 @@ export default {
     openTestModal() {
       // The form must be valid we can show the test modal.
       if (!this.isFormValid()) {
-        this.$v.$touch()
+        this.v$.$touch()
         return
       }
 

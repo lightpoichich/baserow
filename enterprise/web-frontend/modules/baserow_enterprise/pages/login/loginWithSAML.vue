@@ -27,7 +27,7 @@
               :placeholder="$t('login.emailPlaceholder')"
               class="input"
               @input="loginRequestError = null"
-              @blur="$v.values.email.$touch()"
+              @blur="v$.values.email.$touch()"
             />
             <div class="auth__control-error">
               <div v-if="fieldHasErrors('email')" class="error">
@@ -75,7 +75,8 @@
 <script>
 import { mapGetters } from 'vuex'
 import decamelize from 'decamelize'
-import { required, email } from 'vuelidate/lib/validators'
+import { useVuelidate } from '@vuelidate/core'
+import { required, email } from '@vuelidate/validators'
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
 import workspaceInvitationToken from '@baserow/modules/core/mixins/workspaceInvitationToken'
@@ -151,9 +152,9 @@ export default {
   },
   methods: {
     async login() {
-      this.$v.$touch()
+      this.v$.$touch()
       this.loginRequestError = false
-      if (this.$v.$invalid) {
+      if (this.v$.$invalid) {
         this.focusOnFirstError()
         return
       }

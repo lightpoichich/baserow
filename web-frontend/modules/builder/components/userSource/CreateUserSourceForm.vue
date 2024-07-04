@@ -5,7 +5,7 @@
       :error="getError('type')"
     >
       <Dropdown
-        v-model="$v.values.type.$model"
+        v-model="v$.values.type.$model"
         :show-search="false"
         class="user-source-settings__user-source-type"
       >
@@ -23,14 +23,14 @@
       :error="getError('integration_id')"
     >
       <IntegrationDropdown
-        v-model="$v.values.integration_id.$model"
+        v-model="v$.values.integration_id.$model"
         :application="builder"
         :integrations="integrations"
         :integration-type="currentUserSourceType?.integrationType"
       />
     </FormGroup>
     <FormInput
-      v-model="$v.values.name.$model"
+      v-model="v$.values.name.$model"
       :error="getError('name')"
       :label="$t('createUserSourceForm.userSourceName')"
     />
@@ -41,7 +41,7 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
-import { required, maxLength } from 'vuelidate/lib/validators'
+import { required, maxLength } from '@vuelidate/validators'
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 
 export default {
@@ -91,10 +91,10 @@ export default {
   },
   methods: {
     getError(fieldName) {
-      if (!this.$v.values[fieldName].$dirty) {
+      if (!this.v$.values[fieldName].$dirty) {
         return ''
       }
-      const fieldState = this.$v.values[fieldName]
+      const fieldState = this.v$.values[fieldName]
       if (!fieldState.required) {
         return this.$t('error.requiredField')
       }

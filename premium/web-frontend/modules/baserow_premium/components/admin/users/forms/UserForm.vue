@@ -10,7 +10,7 @@
           type="text"
           class="input"
           :disabled="loading"
-          @blur="$v.values.name.$touch()"
+          @blur="v$.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">
           {{ $t('userForm.error.invalidName') }}
@@ -27,7 +27,7 @@
           type="text"
           class="input"
           :disabled="loading"
-          @blur="$v.values.username.$touch()"
+          @blur="v$.values.username.$touch()"
         />
         <div v-show="fieldHasErrors('username')" class="error">
           {{ $t('userForm.error.invalidEmail') }}
@@ -72,7 +72,8 @@
 </template>
 
 <script>
-import { email, maxLength, minLength, required } from 'vuelidate/lib/validators'
+import { useVuelidate } from '@vuelidate/core'
+import { email, maxLength, minLength, required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 

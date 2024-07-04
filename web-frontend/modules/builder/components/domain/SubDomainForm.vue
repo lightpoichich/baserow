@@ -5,9 +5,9 @@
         v-model="domainPrefix"
         :label="$t('subDomainForm.domainNameLabel')"
         :error="
-          $v.values.domain_name.$dirty && !$v.values.domain_name.required
+          v$.values.domain_name.$dirty && !v$.values.domain_name.required
             ? $t('error.requiredField')
-            : $v.values.domain_name.$dirty && !$v.values.domain_name.maxLength
+            : v$.values.domain_name.$dirty && !v$.values.domain_name.maxLength
             ? $t('error.maxLength', { max: 255 })
             : serverErrors.domain_name &&
               serverErrors.domain_name.code === 'invalid'
@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import { maxLength, required } from 'vuelidate/lib/validators'
+import { maxLength, required } from '@vuelidate/validators'
 import domainForm from '@baserow/modules/builder/mixins/domainForm'
 
 export default {

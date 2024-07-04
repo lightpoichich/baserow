@@ -8,11 +8,11 @@
         <div class="control__elements">
           <Dropdown
             v-model="values.link_row_table_id"
-            :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
+            :class="{ 'dropdown--error': v$.values.link_row_table_id.$error }"
             :fixed-items="true"
             :disabled="!isSelectedFieldAccessible"
             small
-            @hide="$v.values.link_row_table_id.$touch()"
+            @hide="v$.values.link_row_table_id.$touch()"
           >
             <DropdownItem
               v-for="table in tablesWhereFieldsCanBeCreated"
@@ -21,7 +21,7 @@
               :value="table.id"
             ></DropdownItem>
           </Dropdown>
-          <div v-if="$v.values.link_row_table_id.$error" class="error">
+          <div v-if="v$.values.link_row_table_id.$error" class="error">
             {{ $t('error.requiredField') }}
           </div>
         </div>
@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'

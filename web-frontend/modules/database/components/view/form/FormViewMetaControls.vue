@@ -94,15 +94,15 @@
           :disabled="readOnly"
           @blur="
             ;[
-              $v.submit_action_redirect_url.$touch(),
-              !$v.submit_action_redirect_url.$error &&
+              v$.submit_action_redirect_url.$touch(),
+              !v$.submit_action_redirect_url.$error &&
                 $emit('updated-form', {
                   submit_action_redirect_url,
                 }),
             ]
           "
         />
-        <div v-if="$v.submit_action_redirect_url.$error" class="error">
+        <div v-if="v$.submit_action_redirect_url.$error" class="error">
           Please enter a valid URL
         </div>
       </div>
@@ -114,7 +114,7 @@
 </template>
 
 <script>
-import { required, url } from 'vuelidate/lib/validators'
+import { required, url } from '@vuelidate/validators'
 
 export default {
   name: 'FormViewMetaControls',

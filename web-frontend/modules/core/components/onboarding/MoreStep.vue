@@ -7,14 +7,14 @@
       :label="$t('moreStep.roleOrJob')"
       large
       :error="
-        $v.role.$dirty && !$v.role.required ? $t('error.requiredField') : ''
+        v$.role.$dirty && !v$.role.required ? $t('error.requiredField') : ''
       "
-      @blur="$v.role.$touch()"
+      @blur="v$.role.$touch()"
     />
     <FormGroup
       :label="$t('moreStep.people')"
       :error="
-        $v.companySize.$dirty && !$v.companySize.required
+        v$.companySize.$dirty && !v$.companySize.required
           ? $t('error.requiredField')
           : ''
       "
@@ -32,15 +32,15 @@
     <FormGroup
       :label="$t('moreStep.country')"
       :error="
-        $v.country.$dirty && !$v.country.required
+        v$.country.$dirty && !v$.country.required
           ? $t('error.requiredField')
           : ''
       "
     >
       <Dropdown
         v-model="country"
-        :class="{ 'dropdown--error': $v.country.$error }"
-        @hide="$v.country.$touch()"
+        :class="{ 'dropdown--error': v$.country.$error }"
+        @hide="v$.country.$touch()"
       >
         <DropdownItem
           v-for="countryName in countries"
@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 import { countryList } from '@baserow/modules/core/utils/countries'
 
 export default {
@@ -94,10 +94,10 @@ export default {
   },
   methods: {
     isValid() {
-      return !this.$v.$invalid
+      return !this.v$.$invalid
     },
     selectSize(size) {
-      this.$v.companySize.$touch()
+      this.v$.companySize.$touch()
       this.companySize = size
       this.updateValue()
     },

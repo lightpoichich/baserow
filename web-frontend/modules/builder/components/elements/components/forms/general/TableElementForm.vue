@@ -20,18 +20,18 @@
       :placeholder="$t('tableElementForm.itemsPerPagePlaceholder')"
       :to-value="(value) => parseInt(value)"
       :error="
-        $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
+        v$.values.items_per_page.$dirty && !v$.values.items_per_page.required
           ? $t('error.requiredField')
-          : !$v.values.items_per_page.integer
+          : !v$.values.items_per_page.integer
           ? $t('error.integerField')
-          : !$v.values.items_per_page.minValue
+          : !v$.values.items_per_page.minValue
           ? $t('error.minValueField', { min: 1 })
-          : !$v.values.items_per_page.maxValue
+          : !v$.values.items_per_page.maxValue
           ? $t('error.maxValueField', { max: maxItemPerPage })
           : ''
       "
       type="number"
-      @blur="$v.values.items_per_page.$touch()"
+      @blur="v$.values.items_per_page.$touch()"
     ></FormInput>
     <FormGroup :label="$t('tableElementForm.fields')">
       <template v-if="values.data_source_id">
@@ -94,9 +94,9 @@
                 small
                 horizontal
                 :error="
-                  !$v.values.fields.$each[index].name.required
+                  !v$.values.fields.$each[index].name.required
                     ? $t('error.requiredField')
-                    : !$v.values.fields.$each[index].name.maxLength
+                    : !v$.values.fields.$each[index].name.maxLength
                     ? $t('error.maxLength', { max: 255 })
                     : ''
                 "
@@ -189,7 +189,7 @@ import {
   integer,
   minValue,
   maxValue,
-} from 'vuelidate/lib/validators'
+} from '@vuelidate/validators'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 import { TABLE_ORIENTATION } from '@baserow/modules/builder/enums'

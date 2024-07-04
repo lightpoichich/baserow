@@ -11,7 +11,7 @@
           :class="{ 'input--error': fieldHasErrors('license') }"
           type="text"
           class="input textarea--modal"
-          @blur="$v.values.license.$touch()"
+          @blur="v$.values.license.$touch()"
         />
         <div v-if="fieldHasErrors('license')" class="error">
           {{ $t('error.requiredField') }}
@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 

@@ -11,16 +11,16 @@
           :class="{ 'input--error': fieldHasErrors('first_name') }"
           type="text"
           class="input"
-          @blur="$v.values.first_name.$touch()"
+          @blur="v$.values.first_name.$touch()"
         />
-        <div v-if="!$v.values.first_name.required" class="error">
+        <div v-if="!v$.values.first_name.required" class="error">
           {{ $t('error.requiredField') }}
         </div>
         <div v-if="hasMinMaxError" class="error">
           {{
             $t('error.minMaxLength', {
-              max: $v.values.first_name.$params.maxLength.max,
-              min: $v.values.first_name.$params.minLength.min,
+              max: v$.values.first_name.$params.maxLength.max,
+              min: v$.values.first_name.$params.minLength.min,
             })
           }}
         </div>
@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import { required, maxLength, minLength } from 'vuelidate/lib/validators'
+import { required, maxLength, minLength } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 
@@ -65,8 +65,8 @@ export default {
   computed: {
     hasMinMaxError() {
       return (
-        !this.$v.values.first_name.maxLength ||
-        !this.$v.values.first_name.minLength
+        !this.v$.values.first_name.maxLength ||
+        !this.v$.values.first_name.minLength
       )
     },
   },

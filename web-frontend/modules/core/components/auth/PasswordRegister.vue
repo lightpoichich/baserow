@@ -12,7 +12,7 @@
       </i18n>
     </Alert>
     <Error :error="error"></Error>
-    <form @submit.prevent="register">
+    <form v-if="v$.account" @submit.prevent="register">
       <div class="auth__control">
         <label class="auth__control-label">{{
           $t('field.emailAddress')
@@ -30,15 +30,15 @@
             v-else
             ref="email"
             v-model="account.email"
-            :class="{ 'input--error': $v.account.email.$error }"
+            :class="{ 'input--error': v$.account.email.$error }"
             type="text"
             autocomplete="username"
             class="input"
             :placeholder="$t('signup.emailPlaceholder')"
-            @blur="$v.account.email.$touch()"
+            @blur="v$.account.email.$touch()"
           />
           <div class="auth__control-error">
-            <div v-if="$v.account.email.$error" class="error">
+            <div v-if="v$.account.email.$error" class="error">
               <i class="iconoir-warning-triangle"></i>
               {{ $t('error.invalidEmail') }}
             </div>
@@ -50,14 +50,13 @@
         <div class="control__elements">
           <input
             v-model="account.name"
-            :class="{ 'input--error': $v.account.name.$error }"
+            :class="{ 'input--error': v$.account.name.$error }"
             type="text"
             class="input"
             :placeholder="$t('signup.namePlaceholder')"
-            @blur="$v.account.name.$touch()"
           />
           <div class="auth__control-error">
-            <div v-if="$v.account.name.$error" class="error">
+            <div v-if="v$.account.$errors.name" class="error">
               <i class="iconoir-warning-triangle"></i>
               {{ $t('error.minMaxLength', { min: 2, max: 150 }) }}
             </div>
@@ -69,7 +68,7 @@
         <div class="control__elements">
           <PasswordInput
             v-model="account.password"
-            :validation-state="$v.account.password"
+            :validation-state="v$.account.password"
             :placeholder="$t('signup.passwordPlaceholder')"
             :error-placeholder-class="'auth__control-error'"
             :show-error-icon="true"
@@ -83,14 +82,14 @@
         <div class="control__elements">
           <input
             v-model="account.passwordConfirm"
-            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
+            :class="{ 'input--error': v$.account.passwordConfirm.$error }"
             type="password"
             class="input"
             :placeholder="$t('signup.passwordRepeatPlaceholder')"
-            @blur="$v.account.passwordConfirm.$touch()"
+            @blur="v$.account.passwordConfirm.$touch()"
           />
           <div class="auth__control-error">
-            <div v-if="$v.account.passwordConfirm.$error" class="error">
+            <div v-if="v$.account.passwordConfirm.$error" class="error">
               <i class="iconoir-warning-triangle"></i>
               {{ $t('error.notMatchingPassword') }}
             </div>
@@ -123,13 +122,14 @@
 </template>
 
 <script>
+import { useVuelidate } from '@vuelidate/core'
 import {
   email,
   maxLength,
   minLength,
   required,
   sameAs,
-} from 'vuelidate/lib/validators'
+} from '@vuelidate/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
@@ -151,6 +151,7 @@ export default {
       default: null,
     },
   },
+  setup: () => ({ v$: useVuelidate({ $lazy: true }) }),
   data() {
     return {
       loading: false,
@@ -176,7 +177,7 @@ export default {
   },
   methods: {
     async register() {
-      this.$v.$touch()
+      this.v$.$touch()
       let registerComponentsValid = true
 
       for (let i = 0; i < this.registerComponents.length; i++) {
@@ -189,7 +190,7 @@ export default {
         }
       }
 
-      if (this.$v.$invalid || !registerComponentsValid) {
+      if (this.v$.$invalid || !registerComponentsValid) {
         return
       }
 
@@ -245,19 +246,21 @@ export default {
       this.$set(this.account, key, value)
     },
   },
-  validations: {
-    account: {
-      email: { required, email },
-      name: {
-        required,
-        minLength: minLength(2),
-        maxLength: maxLength(150),
+  validations() {
+    return {
+      account: {
+        email: { required, email },
+        name: {
+          required,
+          minLength: minLength(2),
+          maxLength: maxLength(150),
+        },
+        password: passwordValidation,
+        passwordConfirm: {
+          sameAsPassword: sameAs('password'),
+        },
       },
-      password: passwordValidation,
-      passwordConfirm: {
-        sameAsPassword: sameAs('password'),
-      },
-    },
+    }
   },
 }
 </script>

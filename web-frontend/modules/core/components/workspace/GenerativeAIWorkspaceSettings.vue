@@ -32,12 +32,12 @@
           />
           <div class="control__elements">
             <input
-              v-model.trim="$v.settings[type][setting.key].$model"
-              :class="{ 'input--error': $v.settings[type][setting.key].$error }"
+              v-model.trim="v$.settings[type][setting.key].$model"
+              :class="{ 'input--error': v$.settings[type][setting.key].$error }"
               class="input"
             />
             <div
-              v-if="$v.settings[type][setting.key].$error"
+              v-if="v$.settings[type][setting.key].$error"
               class="error"
             ></div>
           </div>
@@ -45,7 +45,7 @@
       </div>
       <div class="actions actions--right">
         <Button
-          :disabled="updateLoading || $v.$invalid || !$v.$anyDirty"
+          :disabled="updateLoading || v$.$invalid || !v$.$anyDirty"
           :loading="updateLoading"
           icon="iconoir-edit-pencil"
         >
@@ -116,9 +116,9 @@ export default {
       }
     },
     async updateSettings() {
-      this.$v.$touch()
+      this.v$.$touch()
 
-      if (this.$v.$invalid) {
+      if (this.v$.$invalid) {
         return
       }
 

@@ -9,12 +9,12 @@
           v-model="values.ai_generative_ai_type"
           class="dropdown--floating"
           :class="{
-            'dropdown--error': $v.values.ai_generative_ai_type.$error,
+            'dropdown--error': v$.values.ai_generative_ai_type.$error,
           }"
           :fixed-items="true"
           :show-search="false"
           small
-          @hide="$v.values.ai_generative_ai_type.$touch()"
+          @hide="v$.values.ai_generative_ai_type.$touch()"
           @change="$refs.aiModel.select(aIModelsPerType[0])"
         >
           <DropdownItem
@@ -36,12 +36,12 @@
           v-model="values.ai_generative_ai_model"
           class="dropdown--floating"
           :class="{
-            'dropdown--error': $v.values.ai_generative_ai_model.$error,
+            'dropdown--error': v$.values.ai_generative_ai_model.$error,
           }"
           :fixed-items="true"
           :show-search="false"
           small
-          @hide="$v.values.ai_generative_ai_model.$touch()"
+          @hide="v$.values.ai_generative_ai_model.$touch()"
         >
           <DropdownItem
             v-for="aIType in aIModelsPerType"
@@ -57,7 +57,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 import modal from '@baserow/modules/core/mixins/modal'
 import form from '@baserow/modules/core/mixins/form'
 

@@ -8,10 +8,10 @@
     <ABFormGroup
       :label="$t('authFormElement.email')"
       :error-message="
-        $v.values.email.$dirty
-          ? !$v.values.email.required
+        v$.email.$dirty
+          ? v$.email.required.$invalid
             ? $t('error.requiredField')
-            : !$v.values.email.email
+            : v$.email.email.$invalid
             ? $t('error.invalidEmail')
             : ''
           : ''
@@ -20,16 +20,15 @@
       required
     >
       <ABInput
-        v-model="values.email"
+        v-model="v$.email.$model"
         :placeholder="$t('authFormElement.emailPlaceholder')"
-        @blur="$v.values.email.$touch()"
       />
     </ABFormGroup>
     <ABFormGroup
       :label="$t('authFormElement.password')"
       :error-message="
-        $v.values.password.$dirty
-          ? !$v.values.password.required
+        v$.password.$dirty
+          ? v$.password.required.$invalid
             ? $t('error.requiredField')
             : ''
           : ''
@@ -38,13 +37,12 @@
     >
       <ABInput
         ref="passwordRef"
-        v-model="values.password"
+        v-model="v$.password.$model"
         type="password"
         :placeholder="$t('authFormElement.passwordPlaceholder')"
-        @blur="$v.values.password.$touch()"
       />
     </ABFormGroup>
-    <ABButton :disabled="$v.$error" full-width :loading="loading" size="large">
+    <ABButton :disabled="v$.$error" full-width :loading="loading" size="large">
       {{ $t('action.login') }}
     </ABButton>
   </form>
@@ -55,7 +53,9 @@
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
 import element from '@baserow/modules/builder/mixins/element'
-import { required, email } from 'vuelidate/lib/validators'
+import { reactive, computed } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required, email } from '@vuelidate/validators'
 import { mapActions } from 'vuex'
 
 export default {
@@ -71,6 +71,18 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  setup: () => {
+    const state = reactive({
+      email: '',
+      password: '',
+    })
+    const rules = computed(() => ({
+      email: { required, email },
+      password: { required },
+    }))
+    const v$ = useVuelidate(rules, state)
+    return { v$ }
   },
   data() {
     return {
@@ -136,8 +148,8 @@ export default {
         })
       }
 
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+      this.v$.$validate()
+      if (this.v$.$invalid) {
         this.focusOnFirstError()
         return
       }
@@ -155,7 +167,7 @@ export default {
         })
         this.values.password = ''
         this.values.email = ''
-        this.$v.$reset()
+        this.v$.$reset()
         this.fireEvent(
           this.elementType.getEventByName(this.element, 'after_login')
         )
@@ -164,8 +176,8 @@ export default {
           const response = error.handler.response
           if (response && response.status === 401) {
             this.values.password = ''
-            this.$v.$reset()
-            this.$v.$touch()
+            this.v$.$reset()
+            this.v$.$touch()
             this.$refs.passwordRef.focus()
 
             if (response.data?.error === 'ERROR_INVALID_CREDENTIALS') {
@@ -185,12 +197,6 @@ export default {
         }
       }
       this.loading = false
-    },
-  },
-  validations: {
-    values: {
-      email: { required, email },
-      password: { required },
     },
   },
 }

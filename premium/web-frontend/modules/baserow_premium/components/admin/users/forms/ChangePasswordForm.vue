@@ -7,7 +7,7 @@
       <div class="control__elements">
         <PasswordInput
           v-model="values.password"
-          :validation-state="$v.values.password"
+          :validation-state="v$.values.password"
         />
       </div>
     </FormElement>
@@ -21,7 +21,7 @@
           :class="{ 'input--error': fieldHasErrors('passwordConfirm') }"
           type="password"
           class="input"
-          @blur="$v.values.passwordConfirm.$touch()"
+          @blur="v$.values.passwordConfirm.$touch()"
         />
         <div v-if="fieldHasErrors('passwordConfirm')" class="error">
           {{ $t('changePasswordForm.error.doesntMatch') }}
@@ -44,7 +44,8 @@
 </template>
 
 <script>
-import { sameAs } from 'vuelidate/lib/validators'
+import { useVuelidate } from '@vuelidate/core'
+import { sameAs } from '@vuelidate/validators'
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
 import { passwordValidation } from '@baserow/modules/core/validators'
 

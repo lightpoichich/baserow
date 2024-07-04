@@ -35,7 +35,7 @@
             autocomplete="username"
             :placeholder="$t('login.emailPlaceholder')"
             class="input"
-            @blur="$v.values.email.$touch()"
+            @blur="v$.values.email.$touch()"
           />
           <div class="auth__control-error">
             <div v-if="fieldHasErrors('email')" class="error">
@@ -58,7 +58,7 @@
             autocomplete="current-password"
             class="input"
             :placeholder="$t('login.passwordPlaceholder')"
-            @blur="$v.values.password.$touch()"
+            @blur="v$.values.password.$touch()"
           />
           <div class="auth__control-error">
             <div v-if="fieldHasErrors('password')" class="error">
@@ -84,7 +84,8 @@
 </template>
 
 <script>
-import { required, email } from 'vuelidate/lib/validators'
+import { useVuelidate } from '@vuelidate/core'
+import { required, email } from '@vuelidate/validators'
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
 import WorkspaceService from '@baserow/modules/core/services/workspace'
@@ -99,6 +100,7 @@ export default {
       default: null,
     },
   },
+  setup: () => ({ v$: useVuelidate({ $lazy: true }) }),
   data() {
     return {
       loading: false,
@@ -142,8 +144,8 @@ export default {
   },
   methods: {
     async login() {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+      this.v$.$touch()
+      if (this.v$.$invalid) {
         this.focusOnFirstError()
         return
       }
@@ -196,7 +198,7 @@ export default {
             }
 
             this.values.password = ''
-            this.$v.$reset()
+            this.v$.$reset()
             this.$refs.password.focus()
           } else {
             const message = error.handler.getMessage('login')

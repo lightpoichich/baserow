@@ -17,7 +17,7 @@
           type="text"
           class="input"
           @focus.once="$event.target.select()"
-          @blur="$v.values.name.$touch()"
+          @blur="v$.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">
           {{ $t('error.requiredField') }}
@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 

@@ -7,10 +7,10 @@
       <div class="control__elements">
         <Dropdown
           v-model="values.date_format"
-          :class="{ 'dropdown--error': $v.values.date_format.$error }"
+          :class="{ 'dropdown--error': v$.values.date_format.$error }"
           :fixed-items="true"
           small
-          @hide="$v.values.date_format.$touch()"
+          @hide="v$.values.date_format.$touch()"
         >
           <DropdownItem
             :name="$t('fieldDateSubForm.dateFormatEuropean') + ' (20/02/2020)'"
@@ -45,7 +45,7 @@
                 v-model="values.date_time_format"
                 :fixed-items="true"
                 small
-                @hide="$v.values.date_time_format.$touch()"
+                @hide="v$.values.date_time_format.$touch()"
               >
                 <DropdownItem
                   :name="$t('fieldDateSubForm.24Hour') + ' (23:00)'"
@@ -115,7 +115,7 @@
 
 <script>
 import moment from '@baserow/modules/core/moment'
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'

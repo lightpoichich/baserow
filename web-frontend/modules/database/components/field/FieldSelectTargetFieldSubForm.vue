@@ -13,10 +13,10 @@
       <div class="control__elements">
         <Dropdown
           v-model="values.target_field_id"
-          :class="{ 'dropdown--error': $v.values.target_field_id.$error }"
+          :class="{ 'dropdown--error': v$.values.target_field_id.$error }"
           :fixed-items="true"
           small
-          @hide="$v.values.target_field_id.$touch()"
+          @hide="v$.values.target_field_id.$touch()"
           @input="targetFieldChanged($event)"
         >
           <DropdownItem
@@ -28,7 +28,7 @@
           ></DropdownItem>
         </Dropdown>
       </div>
-      <div v-if="$v.values.target_field_id.$error" class="error">
+      <div v-if="v$.values.target_field_id.$error" class="error">
         {{ $t('error.requiredField') }}
       </div>
     </div>
@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import FieldService from '@baserow/modules/database/services/field'

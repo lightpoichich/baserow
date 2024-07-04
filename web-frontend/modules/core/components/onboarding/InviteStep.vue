@@ -9,19 +9,19 @@
       :label="i === 0 ? $t('inviteStep.collaboratorsLabel') : null"
       :placeholder="'example@gmail.com'"
       :error="
-        $v.emails.$each[i].$dirty && !$v.emails.$each[i].email
+        v$.emails.$each[i].$dirty && !v$.emails.$each[i].email
           ? $t('error.email')
           : null
       "
       icon-right="iconoir-mail"
       @input="updateValue(i, $event)"
-      @blur="$v.emails.$each[i].$touch()"
+      @blur="v$.emails.$each[i].$touch()"
     />
   </div>
 </template>
 
 <script>
-import { email } from 'vuelidate/lib/validators'
+import { email } from '@vuelidate/validators'
 
 export default {
   name: 'InviteStep',
@@ -35,7 +35,7 @@ export default {
   },
   methods: {
     isValid() {
-      return !this.$v.$invalid
+      return !this.v$.$invalid
     },
     updateValue() {
       const emails = this.emails.filter((email) => !!email)

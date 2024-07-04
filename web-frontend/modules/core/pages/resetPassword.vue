@@ -33,7 +33,7 @@
             <div class="control__elements">
               <PasswordInput
                 v-model="account.password"
-                :validation-state="$v.account.password"
+                :validation-state="v$.account.password"
                 :placeholder="$t('signup.passwordPlaceholder')"
                 :error-placeholder-class="'auth__control-error'"
                 :show-error-icon="true"
@@ -47,13 +47,13 @@
             <div class="control__elements">
               <input
                 v-model="account.passwordConfirm"
-                :class="{ 'input--error': $v.account.passwordConfirm.$error }"
+                :class="{ 'input--error': v$.account.passwordConfirm.$error }"
                 type="password"
                 class="input"
-                @blur="$v.account.passwordConfirm.$touch()"
+                @blur="v$.account.passwordConfirm.$touch()"
               />
               <div class="auth__control-error">
-                <div v-if="$v.account.passwordConfirm.$error" class="error">
+                <div v-if="v$.account.passwordConfirm.$error" class="error">
                   {{ $t('error.notMatchingPassword') }}
                 </div>
               </div>
@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import { sameAs } from 'vuelidate/lib/validators'
+import { sameAs } from '@vuelidate/validators'
 
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
 import LangPicker from '@baserow/modules/core/components/LangPicker'
@@ -138,8 +138,8 @@ export default {
   },
   methods: {
     async resetPassword() {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+      this.v$.$touch()
+      if (this.v$.$invalid) {
         return
       }
 

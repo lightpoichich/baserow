@@ -23,18 +23,18 @@
         :label="$t('columnElementForm.columnGapTitle')"
         :placeholder="$t('columnElementForm.columnGapPlaceholder')"
         :error="
-          $v.values.column_gap.$dirty && !$v.values.column_gap.required
+          v$.values.column_gap.$dirty && !v$.values.column_gap.required
             ? $t('error.requiredField')
-            : !$v.values.column_gap.integer
+            : !v$.values.column_gap.integer
             ? $t('error.integerField')
-            : !$v.values.column_gap.minValue
+            : !v$.values.column_gap.minValue
             ? $t('error.minValueField', { min: 0 })
-            : !$v.values.column_gap.maxValue
+            : !v$.values.column_gap.maxValue
             ? $t('error.maxValueField', { max: 2000 })
             : ''
         "
         type="number"
-        @blur="$v.values.column_gap.$touch()"
+        @blur="v$.values.column_gap.$touch()"
       ></FormInput>
     </FormElement>
     <FormElement class="control">
@@ -46,7 +46,7 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import { VERTICAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
-import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
+import { required, integer, minValue, maxValue } from '@vuelidate/validators'
 import VerticalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/VerticalAlignmentSelector'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 

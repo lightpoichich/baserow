@@ -35,7 +35,7 @@
             type="text"
             class="input"
             :disabled="loading"
-            @blur="$v.values.targetEmail.$touch()"
+            @blur="v$.values.targetEmail.$touch()"
           />
           <div v-if="fieldHasErrors('targetEmail')" class="error">
             {{ $t('emailTester.invalidTargetEmail') }}
@@ -45,7 +45,7 @@
       <Button
         type="primary"
         :loading="loading"
-        :disabled="loading || $v.$invalid"
+        :disabled="loading || v$.$invalid"
       >
         {{ $t('emailTester.submit') }}
       </Button>
@@ -58,7 +58,7 @@ import error from '@baserow/modules/core/mixins/error'
 import HealthService from '@baserow/modules/core/services/health'
 import form from '@baserow/modules/core/mixins/form'
 
-import { required, email } from 'vuelidate/lib/validators'
+import { required, email } from '@vuelidate/validators'
 import { mapGetters } from 'vuex'
 export default {
   name: 'EmailerTester',

@@ -13,16 +13,16 @@
             fieldHasErrors('domain_name') || serverErrors.domain_name,
         }"
         @input="serverErrors.domain_name = null"
-        @blur="$v.values.domain_name.$touch()"
+        @blur="v$.values.domain_name.$touch()"
       />
       <div
-        v-if="$v.values.domain_name.$dirty && !$v.values.domain_name.required"
+        v-if="v$.values.domain_name.$dirty && !v$.values.domain_name.required"
         class="error"
       >
         {{ $t('error.requiredField') }}
       </div>
       <div
-        v-if="$v.values.domain_name.$dirty && !$v.values.domain_name.maxLength"
+        v-if="v$.values.domain_name.$dirty && !v$.values.domain_name.maxLength"
         class="error"
       >
         {{ $t('error.maxLength', { max: 255 }) }}
@@ -40,7 +40,7 @@
 </template>
 
 <script>
-import { required, maxLength } from 'vuelidate/lib/validators'
+import { required, maxLength } from '@vuelidate/validators'
 import domainForm from '@baserow/modules/builder/mixins/domainForm'
 
 export default {

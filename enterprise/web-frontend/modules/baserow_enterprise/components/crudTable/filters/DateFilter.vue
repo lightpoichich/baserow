@@ -6,7 +6,7 @@
       type="text"
       class="input input--small crud-table-filters__filter-value-input"
       :disabled="disabled"
-      :class="{ 'input--error': $v.copy.$error }"
+      :class="{ 'input--error': v$.copy?.$error }"
       :placeholder="placeholder"
       @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"
       @click="$refs.dateContext.show($refs.date, 'bottom', 'left', 0)"
@@ -50,6 +50,7 @@ import {
   getDateHumanReadableFormat,
 } from '@baserow/modules/database/utils/date'
 import { en, fr } from 'vuejs-datepicker/dist/locale'
+import { useVuelidate } from '@vuelidate/core'
 
 export default {
   name: 'DateFilter',
@@ -71,6 +72,7 @@ export default {
       default: () => {},
     },
   },
+  setup: () => ({ v$: useVuelidate({ $lazy: true }) }),
   data() {
     return {
       copy: '',
@@ -87,7 +89,7 @@ export default {
     this.setCopy(this.value)
   },
   mounted() {
-    this.$v.$touch()
+    this.v$.$touch()
   },
   methods: {
     clear() {

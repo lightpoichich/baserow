@@ -14,7 +14,7 @@
       <div class="control__elements">
         <input
           ref="domain"
-          v-model="values.domain"
+          v-model="v$.domain.$model"
           :class="{
             'input--error': fieldHasErrors('domain') || serverErrors.domain,
           }"
@@ -22,20 +22,12 @@
           class="input"
           :placeholder="$t('samlSettingsForm.domainPlaceholder')"
           @input="serverErrors.domain = null"
-          @blur="$v.values.domain.$touch()"
+          @blur="v$.domain.$touch()"
         />
-        <div
-          v-if="$v.values.domain.$dirty && !$v.values.domain.required"
-          class="error"
-        >
+        <div v-if="v$.domain.required.$invalid" class="error">
           {{ $t('error.requiredField') }}
         </div>
-        <div
-          v-else-if="
-            $v.values.domain.$dirty && !$v.values.domain.mustHaveUniqueDomain
-          "
-          class="error"
-        >
+        <div v-else-if="v$.domain.mustHaveUniqueDomain.$invalid" class="error">
           {{ $t('samlSettingsForm.domainAlreadyExists') }}
         </div>
         <div v-else-if="serverErrors.domain" class="error">
@@ -50,7 +42,7 @@
       <div class="control__elements">
         <textarea
           ref="metadata"
-          v-model="values.metadata"
+          v-model="v$.metadata.$model"
           rows="12"
           :class="{
             'input--error': fieldHasErrors('metadata') || serverErrors.metadata,
@@ -59,12 +51,9 @@
           class="input saml-settings__metadata"
           :placeholder="$t('samlSettingsForm.metadataPlaceholder')"
           @input="serverErrors.metadata = null"
-          @blur="$v.values.metadata.$touch()"
+          @blur="v$.metadata.$touch()"
         ></textarea>
-        <div
-          v-if="$v.values.metadata.$dirty && !$v.values.metadata.required"
-          class="error"
-        >
+        <div v-if="v$.metadata.required.$invalid" class="error">
           {{ $t('error.requiredField') }}
         </div>
         <div v-else-if="serverErrors.metadata" class="error">
@@ -91,8 +80,24 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { computed, reactive } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
 import form from '@baserow/modules/core/mixins/form'
+
+const mustHaveUniqueDomain = (samlDomains) => {
+  return (domain) => !samlDomains.includes(domain.trim())
+}
+
+const getAllConfiguredSamlDomains = (store, currentAuthProvider) => {
+  const samlAuthProviders =
+    store.getters['authProviderAdmin/getAll'].saml?.authProviders || []
+  return samlAuthProviders
+    .filter(
+      (authProvider) => authProvider.domain !== currentAuthProvider.domain
+    )
+    .map((authProvider) => authProvider.domain)
+}
 
 export default {
   name: 'SamlSettingsForm',
@@ -113,23 +118,27 @@ export default {
     return {
       allowedValues: ['domain', 'metadata'],
       serverErrors: {},
-      values: {
-        domain: '',
-        metadata: '',
-      },
+      values: null,
+      v$: null,
     }
   },
+  created() {
+    const values = reactive({
+      domain: '',
+      metadata: '',
+    })
+    const samlDomains = getAllConfiguredSamlDomains(this.$store, this.authProvider)
+    const rules = computed(() => ({
+      domain: {
+        required,
+        mustHaveUniqueDomain: mustHaveUniqueDomain(samlDomains),
+      },
+      metadata: { required },
+    }))
+    this.v$ = useVuelidate(rules, values, { $lazy: true })
+    this.values = values
+  },
   computed: {
-    samlDomains() {
-      const samlAuthProviders =
-        this.$store.getters['authProviderAdmin/getAll'].saml?.authProviders ||
-        []
-      return samlAuthProviders
-        .filter(
-          (authProvider) => authProvider.domain !== this.authProvider.domain
-        )
-        .map((authProvider) => authProvider.domain)
-    },
     type() {
       return this.authProviderType || this.authProvider.type
     },
@@ -151,15 +160,12 @@ export default {
     getVerifiedIcon() {
       return this.$registry.get('authProvider', this.type).getVerifiedIcon()
     },
-    submit() {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+    async submit() {
+      const formValid = await this.v$.$validate()
+      if (!formValid) {
         return
       }
       this.$emit('submit', this.values)
-    },
-    mustHaveUniqueDomain(domain) {
-      return !this.samlDomains.includes(domain.trim())
     },
     handleServerError(error) {
       if (error.handler.code !== 'ERROR_REQUEST_BODY_VALIDATION') return false
@@ -169,14 +175,6 @@ export default {
       }
       return true
     },
-  },
-  validations() {
-    return {
-      values: {
-        domain: { required, mustHaveUniqueDomain: this.mustHaveUniqueDomain },
-        metadata: { required },
-      },
-    }
   },
 }
 </script>

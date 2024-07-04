@@ -80,11 +80,11 @@
         :placeholder="$t('imageElementForm.maxWidthPlaceholder')"
         :to-value="(value) => (value ? parseInt(value) : null)"
         :error="
-          $v.values.style_max_width.$dirty && !$v.values.style_max_width.integer
+          v$.values.style_max_width.$dirty && !v$.values.style_max_width.integer
             ? $t('error.integerField')
-            : !$v.values.style_max_width.minValue
+            : !v$.values.style_max_width.minValue
             ? $t('error.minValueField', { min: 0 })
-            : !$v.values.style_max_width.maxValue
+            : !v$.values.style_max_width.maxValue
             ? $t('error.maxValueField', { max: 100 })
             : ''
         "
@@ -103,12 +103,12 @@
           :placeholder="$t('imageElementForm.maxHeightPlaceholder')"
           :to-value="(value) => (value ? parseInt(value) : null)"
           :error="
-            $v.values.style_max_height.$dirty &&
-            !$v.values.style_max_height.integer
+            v$.values.style_max_height.$dirty &&
+            !v$.values.style_max_height.integer
               ? $t('error.integerField')
-              : !$v.values.style_max_height.minValue
+              : !v$.values.style_max_height.minValue
               ? $t('error.minValueField', { min: 5 })
-              : !$v.values.style_max_height.maxValue
+              : !v$.values.style_max_height.maxValue
               ? $t('error.maxValueField', { max: 3000 })
               : ''
           "
@@ -149,7 +149,7 @@ import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUplo
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import { integer, maxValue, minValue } from 'vuelidate/lib/validators'
+import { integer, maxValue, minValue } from '@vuelidate/validators'
 
 export default {
   name: 'ImageElementForm',

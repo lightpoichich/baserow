@@ -12,19 +12,19 @@
       <div class="control__elements">
         <input
           v-model="values.airtableUrl"
-          :class="{ 'input--error': $v.values.airtableUrl.$error }"
+          :class="{ 'input--error': v$.values.airtableUrl.$error }"
           type="text"
           class="input"
           :placeholder="$t('importFromAirtable.airtableShareLinkPaste')"
-          @blur="$v.values.airtableUrl.$touch()"
+          @blur="v$.values.airtableUrl.$touch()"
           @input="
             $emit(
               'input',
-              $v.values.airtableUrl.$invalid ? '' : values.airtableUrl
+              v$.values.airtableUrl.$invalid ? '' : values.airtableUrl
             )
           "
         />
-        <div v-if="$v.values.airtableUrl.$error" class="error">
+        <div v-if="v$.values.airtableUrl.$error" class="error">
           {{ $t('importFromAirtable.linkError') }}
         </div>
       </div>
@@ -35,10 +35,12 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
+import { useVuelidate } from '@vuelidate/core'
 
 export default {
   name: 'AirtableImportForm',
   mixins: [form],
+  setup: () => ({ v$: useVuelidate() }),
   data() {
     return {
       values: {
@@ -55,6 +57,9 @@ export default {
         },
       },
     },
+  },
+  validationConfig: {
+    $lazy: true,
   },
 }
 </script>

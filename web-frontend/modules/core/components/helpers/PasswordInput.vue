@@ -39,17 +39,11 @@ modules/core/validators.js
       @input="$emit('input', $event.target.value)"
     />
     <div :class="errorPlaceholderClass">
-      <div
-        v-if="validationState.$error && !validationState.required"
-        class="error"
-      >
+      <div v-if="validationState.required?.$invalid" class="error">
         <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{ $t('error.inputRequired') }}
       </div>
-      <div
-        v-if="validationState.$error && !validationState.maxLength"
-        class="error"
-      >
+      <div v-if="validationState.maxLength?.$invalid" class="error">
         <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{
           $t('error.maxLength', {
@@ -57,10 +51,7 @@ modules/core/validators.js
           })
         }}
       </div>
-      <div
-        v-if="validationState.$error && !validationState.minLength"
-        class="error"
-      >
+      <div v-if="validationState.minLength?.$invalid" class="error">
         <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{
           $t('error.minLength', {

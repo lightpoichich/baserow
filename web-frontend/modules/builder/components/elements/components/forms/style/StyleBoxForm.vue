@@ -17,7 +17,7 @@
             :class="{
               'input--error': error,
             }"
-            @blur="$v.values.border_size.$touch()"
+            @blur="v$.values.border_size.$touch()"
           />
         </div>
         <div v-if="paddingIsAllowed" class="col col-4">
@@ -31,7 +31,7 @@
             :class="{
               'input--error': error,
             }"
-            @blur="$v.values.padding.$touch()"
+            @blur="v$.values.padding.$touch()"
           />
         </div>
       </div>
@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import { required, integer, between } from 'vuelidate/lib/validators'
+import { required, integer, between } from '@vuelidate/validators'
 import form from '@baserow/modules/core/mixins/form'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
@@ -95,7 +95,7 @@ export default {
      * field as the style fields are on the same line.
      */
     error() {
-      if (this.$v.values.padding.$error || this.$v.values.border_size.$error) {
+      if (this.v$.values.padding.$error || this.v$.values.border_size.$error) {
         return this.$t('error.minMaxValueField', { min: 0, max: 200 })
       } else {
         return ''

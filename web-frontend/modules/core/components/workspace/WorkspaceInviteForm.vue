@@ -11,7 +11,7 @@
               :class="{ 'input--error': fieldHasErrors('email') }"
               type="text"
               class="input input--small"
-              @blur="$v.values.email.$touch()"
+              @blur="v$.values.email.$touch()"
             />
             <div v-if="fieldHasErrors('email')" class="error">
               {{ $t('workspaceInviteForm.errorInvalidEmail') }}
@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import { required, email, maxLength } from 'vuelidate/lib/validators'
+import { required, email, maxLength } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 

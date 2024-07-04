@@ -13,7 +13,7 @@
           class="input textarea--modal"
           @input="changed($event.target.value)"
         ></textarea>
-        <div v-if="$v.content.$error" class="error">
+        <div v-if="v$.content.$error" class="error">
           {{ $t('error.fieldRequired') }}
         </div>
       </div>
@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required } from '@vuelidate/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import importer from '@baserow/modules/database/mixins/importer'

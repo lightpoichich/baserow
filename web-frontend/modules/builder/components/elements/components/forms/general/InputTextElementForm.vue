@@ -48,13 +48,13 @@
         :placeholder="$t('inputTextElementForm.rowsPlaceholder')"
         :to-value="(value) => parseInt(value)"
         :error="
-          $v.values.rows.$dirty && !$v.values.rows.required
+          v$.values.rows.$dirty && !v$.values.rows.required
             ? $t('error.requiredField')
-            : !$v.values.rows.integer
+            : !v$.values.rows.integer
             ? $t('error.integerField')
-            : !$v.values.rows.minValue
+            : !v$.values.rows.minValue
             ? $t('error.minValueField', { min: 1 })
-            : !$v.values.rows.maxValue
+            : !v$.values.rows.maxValue
             ? $t('error.maxValueField', { max: 100 })
             : ''
         "
@@ -88,7 +88,7 @@
 import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
+import { required, integer, minValue, maxValue } from '@vuelidate/validators'
 
 export default {
   name: 'InputTextElementForm',

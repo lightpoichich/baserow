@@ -60,7 +60,8 @@
 <script>
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import form from '@baserow/modules/core/mixins/form'
-import { required, maxLength } from 'vuelidate/lib/validators'
+
+import { required, maxLength } from '@vuelidate/validators'
 
 export default {
   name: 'DataSourceContext',
@@ -124,11 +125,11 @@ export default {
         ])
     },
     headerError() {
-      return !this.$v.values.name.required
+      return !this.v$.values.name.required
         ? this.$t('error.requiredField')
-        : !this.$v.values.name.maxLength
+        : !this.v$.values.name.maxLength
         ? this.$t('error.maxLength', { max: 255 })
-        : !this.$v.values.name.unique
+        : !this.v$.values.name.unique
         ? this.$t('dataSourceForm.errorUniqueName')
         : ''
     },

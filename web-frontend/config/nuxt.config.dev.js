@@ -25,6 +25,12 @@ export default Object.assign(base(), {
         syntax: 'scss',
       }),
     ],
-    transpile: ['axios'],
+    transpile: [
+      'axios',
+      'tiptap-markdown',
+      'markdown-it',
+      '@vuelidate/core',
+      '@vuelidate/validators',
+    ],
   },
 })

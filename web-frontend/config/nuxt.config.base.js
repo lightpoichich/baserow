@@ -56,7 +56,13 @@ export default function (
         })
       },
       babel: { compact: true },
-      transpile: ['axios', 'tiptap-markdown', 'markdown-it'],
+      transpile: [
+        'axios',
+        'tiptap-markdown',
+        'markdown-it',
+        '@vuelidate/core',
+        '@vuelidate/validators',
+      ],
     },
   }
 }

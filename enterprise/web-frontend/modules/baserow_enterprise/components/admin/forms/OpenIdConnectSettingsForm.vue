@@ -7,15 +7,15 @@
       <div class="control__elements">
         <input
           ref="name"
-          v-model="values.name"
+          v-model="v$.name.$model"
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input"
           :placeholder="$t('oauthSettingsForm.providerNamePlaceholder')"
-          @blur="$v.values.name.$touch()"
+          @blur="v$.name.$touch()"
         />
         <div
-          v-if="$v.values.name.$dirty && !$v.values.name.required"
+          v-if="v$.name.required.$invalid"
           class="error"
         >
           {{ $t('error.requiredField') }}
@@ -29,20 +29,20 @@
       <div class="control__elements">
         <input
           ref="base_url"
-          v-model="values.base_url"
+          v-model="v$.base_url.$model"
           :class="{ 'input--error': fieldHasErrors('base_url') }"
           type="text"
           class="input"
           :placeholder="$t('oauthSettingsForm.baseUrlPlaceholder')"
-          @blur="$v.values.base_url.$touch()"
+          @blur="v$.base_url.$touch()"
         />
         <div
-          v-if="$v.values.base_url.$dirty && !$v.values.base_url.required"
+          v-if="v$.base_url.required.$invalid"
           class="error"
         >
           {{ $t('error.requiredField') }}
         </div>
-        <div v-else-if="serverErrors.baseUrl" class="error">
+        <div v-else-if="serverErrors.baseUrl || v$.base_url.url.$invalid" class="error">
           {{ $t('oauthSettingsForm.invalidBaseUrl') }}
         </div>
       </div>
@@ -54,15 +54,15 @@
       <div class="control__elements">
         <input
           ref="client_id"
-          v-model="values.client_id"
+          v-model="v$.client_id.$model"
           :class="{ 'input--error': fieldHasErrors('client_id') }"
           type="text"
           class="input"
           :placeholder="$t('oauthSettingsForm.clientIdPlaceholder')"
-          @blur="$v.values.client_id.$touch()"
+          @blur="v$.client_id.$touch()"
         />
         <div
-          v-if="$v.values.client_id.$dirty && !$v.values.client_id.required"
+          v-if="v$.client_id.required.$invalid"
           class="error"
         >
           {{ $t('error.requiredField') }}
@@ -74,15 +74,15 @@
       <div class="control__elements">
         <input
           ref="secret"
-          v-model="values.secret"
+          v-model="v$.secret.$model"
           :class="{ 'input--error': fieldHasErrors('secret') }"
           type="text"
           class="input"
           :placeholder="$t('oauthSettingsForm.secretPlaceholder')"
-          @blur="$v.values.secret.$touch()"
+          @blur="v$.secret.$touch()"
         />
         <div
-          v-if="$v.values.secret.$dirty && !$v.values.secret.required"
+          v-if="v$.secret.required.$invalid"
           class="error"
         >
           {{ $t('error.requiredField') }}
@@ -102,7 +102,9 @@
 </template>
 
 <script>
-import { required, url } from 'vuelidate/lib/validators'
+import { computed, reactive } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required, url } from '@vuelidate/validators'
 import form from '@baserow/modules/core/mixins/form'
 
 export default {
@@ -120,15 +122,25 @@ export default {
       default: () => ({}),
     },
   },
+  setup() {
+    const values = reactive({
+      name: '',
+      base_url: '',
+      client_id: '',
+      secret: '',
+    })
+    const rules = computed(() => ({
+      name: { required },
+      base_url: { url, required },
+      client_id: { required },
+      secret: { required },
+    }))
+    const v$ = useVuelidate(rules, values, { $lazy: true })
+    return { v$, values }
+  },
   data() {
     return {
       allowedValues: ['name', 'base_url', 'client_id', 'secret'],
-      values: {
-        name: '',
-        base_url: '',
-        client_id: '',
-        secret: '',
-      },
     }
   },
   computed: {
@@ -150,9 +162,9 @@ export default {
         secret: this.authProvider.secret || '',
       }
     },
-    submit() {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+    async submit() {
+      const formValid = await this.v$.$validate()
+      if (!formValid) {
         return
       }
       this.$emit('submit', this.values)
@@ -170,16 +182,6 @@ export default {
       }
       return true
     },
-  },
-  validations() {
-    return {
-      values: {
-        name: { required },
-        base_url: { required, url },
-        client_id: { required },
-        secret: { required },
-      },
-    }
   },
 }
 </script>

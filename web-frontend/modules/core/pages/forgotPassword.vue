@@ -37,15 +37,15 @@
             <div class="control__elements">
               <input
                 ref="email"
-                v-model="account.email"
-                :class="{ 'input--error': $v.account.email.$error }"
+                v-model="v$.email.$model"
+                :class="{ 'input--error': v$.email.$error }"
                 type="text"
                 class="input"
                 :disabled="success"
-                @blur="$v.account.email.$touch()"
+                @blur="v$.account.email.$touch()"
               />
               <div class="auth__control-error">
-                <div v-if="$v.account.email.$error" class="error">
+                <div v-if="v$.email.$error" class="error">
                   <i class="iconoir-warning-triangle"></i>
                   {{ $t('error.invalidEmail') }}
                 </div>
@@ -98,7 +98,9 @@
 </template>
 
 <script>
-import { required, email } from 'vuelidate/lib/validators'
+import { reactive, computed } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required, email } from '@vuelidate/validators'
 
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
@@ -109,13 +111,18 @@ export default {
   components: { LangPicker },
   mixins: [error],
   layout: 'login',
+  setup() {
+    const state = reactive({
+      email: '',
+    })
+    const rules = computed(() => ({ email: { required, email } }))
+    const v$ = useVuelidate(rules, state)
+    return { v$ }
+  },
   data() {
     return {
       loading: false,
       success: false,
-      account: {
-        email: '',
-      },
     }
   },
   head() {
@@ -130,8 +137,7 @@ export default {
   },
   methods: {
     async sendLink() {
-      this.$v.$touch()
-      if (this.$v.$invalid) {
+      if (!(await this.v$.$validate())) {
         return
       }
 
@@ -141,7 +147,7 @@ export default {
       try {
         const resetUrl = `${this.$config.BASEROW_EMBEDDED_SHARE_URL}/reset-password`
         await AuthService(this.$client).sendResetPasswordEmail(
-          this.account.email,
+          this.v$.email.$model,
           resetUrl
         )
         this.success = true
@@ -150,11 +156,6 @@ export default {
         this.loading = false
         this.handleError(error, 'passwordReset')
       }
-    },
-  },
-  validations: {
-    account: {
-      email: { required, email },
     },
   },
 }

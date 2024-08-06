@@ -290,6 +290,7 @@ import {
   DatabaseOnboardingType,
   DatabaseScratchTrackOnboardingType,
   DatabaseImportOnboardingType,
+  DatabaseScratchTrackFieldsOnboardingType,
 } from '@baserow/modules/database/onboardingTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -858,6 +859,10 @@ export default (context) => {
   app.$registry.register(
     'onboarding',
     new DatabaseScratchTrackOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboarding',
+    new DatabaseScratchTrackFieldsOnboardingType(context)
   )
   app.$registry.register(
     'onboarding',

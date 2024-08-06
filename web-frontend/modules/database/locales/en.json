@@ -869,6 +869,46 @@
     "description": "Move your data to Baserow, in just a few clicks.",
     "tableNameLabel": "Table name"
   },
+  "databaseScratchTrackFieldsStep": {
+    "title": "Chose fields for every row",
+    "description": "Pick up to {selectedFieldsLimitCount} fields. You can add more later.",
+    "ownFields": {
+      "description": "Description",
+      "number": "Number",
+      "date": "Date",
+      "boolean": "Finished",
+      "duration": "Duration",
+      "url": "URL",
+      "email": "Email",
+      "rating": "Rating"
+    },
+    "projects": {
+      "fields": {
+        "category": "Category",
+        "kickoffDate": "Kickoff date",
+        "dueDate": "Due date",
+        "budget": "Budget",
+        "completed": "Completed",
+        "notes": "Notes"
+      },
+      "categories": {
+        "design": "Design",
+        "development": "Development",
+        "marketing": "Marketing"
+      },
+      "rows": {
+        "row1": {
+          "notes": "Acme is looking for a complete rebranding of their website with the following guidelines."
+        },
+        "row2": {
+          "notes": "Research if the current users of Soylent are interested into a new user portal. "
+        },
+        "row3": {
+          "notes": "Collab with the UX team."
+        }
+      }
+    }
+  },
   "databaseScratchTrackStep": {
     "title": "What would you like to track?",
     "description": "Choose from popular use cases, or create your own.",

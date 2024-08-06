@@ -11,6 +11,7 @@ import { DatabaseApplicationType } from '@baserow/modules/database/applicationTy
 import ApplicationService from '@baserow/modules/core/services/application'
 import TableService from '@baserow/modules/database/services/table'
 import AirtableService from '@baserow/modules/database/services/airtable'
+import DatabaseScratchTrackFieldsStep from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStep.vue'
 
 const databaseTypeCondition = (data, type) => {
   const dependingType = DatabaseOnboardingType.getType()
@@ -107,6 +108,56 @@ export class DatabaseScratchTrackOnboardingType extends OnboardingType {
 
   getFormComponent() {
     return DatabaseScratchTrackStep
+  }
+
+  getPreviewComponent() {
+    return DatabaseAppLayoutPreview
+  }
+
+  condition(data) {
+    return databaseTypeCondition(data, 'scratch')
+  }
+
+  async complete(data, responses) {
+    const database = await createDatabase(data, responses, this.app.$client)
+    const tableName = data[this.getType()].tableName
+    const rows = data[this.getType()].rows
+
+    const initialData = [['Name'], ...rows.map((name) => [name])]
+    const { data: table } = await TableService(this.app.$client).createSync(
+      database.id,
+      {
+        name: tableName,
+      },
+      initialData,
+      true
+    )
+
+    return table
+  }
+
+  getCompletedRoute(data, responses) {
+    return {
+      name: 'database-table',
+      params: {
+        databaseId: responses[this.getType()].database_id,
+        tableId: responses[this.getType()].id,
+      },
+    }
+  }
+}
+
+export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
+  static getType() {
+    return 'database_scratch_track_fields'
+  }
+
+  getOrder() {
+    return 2200
+  }
+
+  getFormComponent() {
+    return DatabaseScratchTrackFieldsStep
   }
 
   getPreviewComponent() {

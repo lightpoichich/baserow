@@ -186,7 +186,7 @@ export default {
           })
           commit('UPDATE_ALL_FIELD_OPTIONS', {
             [fieldIndex + 1]: {
-              width: 100,
+              width: 200,
               order: 32767,
               aggregation_type: '',
               aggregation_raw_type: '',

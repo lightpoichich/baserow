@@ -10,7 +10,7 @@
     </p>
     <div class="flex flex-wrap margin-bottom-3" style="--gap: 8px">
       <Chips
-        v-for="(whatItem, whatKey) in whatItems.fields"
+        v-for="(whatItem, whatKey) in whatItems"
         :key="whatKey"
         :active="Object.keys(selectedFields).includes(whatKey)"
         :disabled="isChipDisabled(whatKey)"
@@ -39,7 +39,7 @@
         <DropdownItem
           v-for="field in ownFieldsDefinitions"
           :key="field.props.type"
-          :name="field.props.name"
+          :name="field.name"
           :value="field"
           :icon="field.icon"
         >
@@ -56,10 +56,11 @@
 </template>
 
 <script>
-import moment from '@baserow/modules/core/moment'
+import DatabaseScratchTrackFieldsStepDataMixin from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStepDataMixin'
 
 export default {
   name: 'DatabaseScratchTrackFieldsStep',
+  mixins: [DatabaseScratchTrackFieldsStepDataMixin],
   props: {
     data: {
       type: Object,
@@ -92,199 +93,17 @@ export default {
         case 'projects':
           fields = this.projectsFields
           break
+        case 'teams':
+          fields = this.teamsFields
+          break
+        case 'tasks':
+          fields = this.tasksFields
+          break
+        case 'campaigns':
+          fields = this.campaignsFields
+          break
       }
       return fields
-    },
-
-    ownFieldsDefinitions() {
-      // TODO: Move this to a separate file and import as mixin
-      // TODO: Consider using components for field type to get i.e. icon
-      return [
-        {
-          props: {
-            name: this.$t(
-              'databaseScratchTrackFieldsStep.ownFields.description'
-            ),
-            type: 'long_text',
-          },
-          icon: 'iconoir-align-left',
-          rows: ['row #1', 'row #2', 'row #3'],
-        },
-        {
-          props: {
-            name: this.$t('databaseScratchTrackFieldsStep.ownFields.number'),
-            type: 'number',
-          },
-          icon: 'baserow-icon-hashtag',
-          rows: [0, -500, 131.35],
-        },
-        {
-          props: {
-            name: this.$t('databaseScratchTrackFieldsStep.ownFields.date'),
-            type: 'date',
-            date_format: 'ISO',
-          },
-          icon: 'iconoir-calendar',
-          rows: [
-            moment().subtract(3, 'months').format('YYYY-MM-DD'),
-            moment().add(1, 'days').format('YYYY-MM-DD'),
-            moment().add(1, 'months').format('YYYY-MM-DD'),
-          ],
-        },
-        {
-          props: {
-            name: this.$t('databaseScratchTrackFieldsStep.ownFields.boolean'),
-            type: 'boolean',
-          },
-          icon: 'baserow-icon-circle-checked',
-          rows: [true, false, true],
-        },
-        {
-          props: {
-            name: this.$t('databaseScratchTrackFieldsStep.ownFields.duration'),
-            type: 'duration',
-          },
-          icon: 'iconoir-clock-rotate-right',
-          rows: ['row #1', 'row #2', 'row #3'],
-        },
-        {
-          props: {
-            name: this.$t('databaseScratchTrackFieldsStep.ownFields.url'),
-            type: 'url',
-          },
-          icon: 'iconoir-link',
-          rows: [
-            'https://baserow.io',
-            'https://example.com',
-            'https://gitlab.com/baserow',
-          ],
-        },
-        {
-          props: {
-            name: this.$t('databaseScratchTrackFieldsStep.ownFields.email'),
-            type: 'email',
-          },
-          icon: 'iconoir-mail',
-          rows: ['user1@baserow.io', 'user2@baserow.io', 'user3.baserow.io'],
-        },
-        {
-          props: {
-            name: this.$t('databaseScratchTrackFieldsStep.ownFields.rating'),
-            type: 'rating',
-          },
-          icon: 'iconoir-star',
-          rows: [3, 1, 5],
-        },
-      ]
-    },
-
-    projectsFields() {
-      return {
-        name: this.$t('databaseScratchTrackFieldsStep.projects.fields.name'),
-        fields: {
-          category: {
-            props: {
-              name: this.$t(
-                'databaseScratchTrackFieldsStep.projects.fields.category'
-              ),
-              type: 'single_select',
-            },
-            icon: 'baserow-icon-single-select',
-            rows: [
-              this.$t(
-                'databaseScratchTrackFieldsStep.projects.categories.design'
-              ),
-              this.$t(
-                'databaseScratchTrackFieldsStep.projects.categories.development'
-              ),
-              this.$t(
-                'databaseScratchTrackFieldsStep.projects.categories.marketing'
-              ),
-            ],
-          },
-          kickoffDate: {
-            props: {
-              name: this.$t(
-                'databaseScratchTrackFieldsStep.projects.fields.kickoffDate'
-              ),
-              type: 'date',
-              date_format: 'ISO',
-            },
-            icon: 'iconoir-calendar',
-            rows: [
-              moment().subtract(1, 'months').format('YYYY-MM-DD'),
-              moment().add(1, 'weeks').format('YYYY-MM-DD'),
-              moment().add(1, 'months').format('YYYY-MM-DD'),
-            ],
-          },
-          dueDate: {
-            props: {
-              name: this.$t(
-                'databaseScratchTrackFieldsStep.projects.fields.dueDate'
-              ),
-              type: 'date',
-              date_format: 'ISO',
-            },
-            icon: 'iconoir-calendar',
-            rows: [
-              moment().subtract(1, 'months').format('YYYY-MM-DD'),
-              moment().add(1, 'days').format('YYYY-MM-DD'),
-              moment().add(3, 'weeks').format('YYYY-MM-DD'),
-            ],
-          },
-          budget: {
-            props: {
-              name: this.$t(
-                'databaseScratchTrackFieldsStep.projects.fields.budget'
-              ),
-              type: 'number',
-            },
-            icon: 'baserow-icon-hashtag',
-            rows: [500, 1000, 3000],
-          },
-          completed: {
-            props: {
-              name: this.$t(
-                'databaseScratchTrackFieldsStep.projects.fields.completed'
-              ),
-              type: 'boolean',
-            },
-            icon: 'baserow-icon-circle-checked',
-            rows: [true, false, false],
-          },
-          notes: {
-            props: {
-              name: this.$t(
-                'databaseScratchTrackFieldsStep.projects.fields.notes'
-              ),
-              type: 'long_text',
-            },
-            icon: 'iconoir-align-left',
-            rows: [
-              this.$t(
-                'databaseScratchTrackFieldsStep.projects.rows.row1.notes'
-              ),
-              this.$t(
-                'databaseScratchTrackFieldsStep.projects.rows.row2.notes'
-              ),
-              this.$t(
-                'databaseScratchTrackFieldsStep.projects.rows.row3.notes'
-              ),
-            ],
-          },
-        },
-      }
-    },
-
-    // TOD: Update rest of fields when structure is finalized
-    teamsFields() {
-      return {}
-    },
-    tasksFields() {
-      return {}
-    },
-    campaignsFields() {
-      return {}
     },
   },
   watch: {
@@ -297,7 +116,8 @@ export default {
     },
   },
   mounted() {
-    this.updateValue()
+    ;(this.what = this.data.database_scratch_track.tableName.toLowerCase()),
+      this.updateValue()
   },
   methods: {
     isChipDisabled(name) {
@@ -332,19 +152,8 @@ export default {
         delete this.selectedFields[value]
       } else {
         this.selectedFieldsCount++
-        if (value === 'own') {
-          this.selectedFields[value] = {
-            props: {
-              name: this.$t(
-                'databaseScratchTrackFieldsStep.ownFields.description'
-              ),
-              type: 'long_text',
-            },
-            icon: 'iconoir-plus',
-            rows: ['row #1', 'row #2', 'row #3'],
-          }
-        } else {
-          this.selectedFields[value] = this.whatItems.fields[value]
+        if (value !== 'own') {
+          this.selectedFields[value] = this.whatItems[value]
         }
       }
       this.updateValue()

@@ -58,15 +58,21 @@
             v-model="ownField.props.name"
             :placeholder="$t('databaseScratchTrackFieldsStep.fieldName')"
             size="large"
+            :error="
+              $v.ownField.props.name.$dirty && $v.ownField.props.name.$invalid
+            "
+            @blur="$v.ownField.props.name.$touch()"
           />
         </div>
       </div>
+      <template #error>{{ $t('error.requiredField') }}</template>
     </FormGroup>
   </div>
 </template>
 
 <script>
 import DatabaseScratchTrackFieldsStepDataMixin from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStepDataMixin'
+import { required } from 'vuelidate/lib/validators'
 
 export default {
   name: 'DatabaseScratchTrackFieldsStep',
@@ -174,8 +180,12 @@ export default {
       this.$emit('update-data', { fields })
     },
   },
-  validations() {
-    return {}
+  validations: {
+    ownField: {
+      props: {
+        name: { required },
+      },
+    },
   },
 }
 </script>

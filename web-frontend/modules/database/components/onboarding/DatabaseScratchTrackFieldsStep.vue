@@ -99,6 +99,7 @@ export default {
   computed: {
     canSkip() {
       // TODO: This doesn't work in this step
+      console.log('CALLED SKIP ON FIELDS')
       return true
     },
     whatItems() {

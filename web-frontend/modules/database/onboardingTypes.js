@@ -168,6 +168,10 @@ export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
     return databaseTypeCondition(data, 'scratch')
   }
 
+  canSkip() {
+    return true
+  }
+
   async complete(data, responses) {
     const database = await createDatabase(data, responses, this.app.$client)
     const tableName = data[this.getType()].tableName

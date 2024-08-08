@@ -872,7 +872,8 @@
   "databaseScratchTrackFieldsStep": {
     "title": "Chose fields for every row",
     "description": "Pick up to {selectedFieldsLimitCount} fields. You can add more later.",
-    "fieldName": "Field name",
+    "fieldName": "Name",
+    "fieldType": "Field type",
     "fields": {
       "description": "Description",
       "number": "Number",

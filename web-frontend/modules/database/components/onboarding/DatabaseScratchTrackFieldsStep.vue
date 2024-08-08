@@ -30,27 +30,37 @@
 
     <FormGroup
       v-if="isChipActive('own')"
-      :label="$t('databaseScratchTrackStep.tableName')"
       required
       small-label
-      class="margin-bottom-2"
+      class="margin-bottom-2 onboarding__form-group"
     >
-      <Dropdown v-model="ownField" :show-search="false">
-        <DropdownItem
-          v-for="field in ownFieldsDefinitions"
-          :key="field.props.type"
-          :name="field.name"
-          :value="field"
-          :icon="field.icon"
-        >
-        </DropdownItem>
-      </Dropdown>
-      <FormInput
-        v-model="ownField.props.name"
-        :placeholder="$t('databaseScratchTrackFieldsStep.fieldName')"
-        size="large"
-      />
-      <template #error>{{ $t('error.requiredField') }}</template>
+      <div class="onboarding__form-group-row">
+        <div class="onboarding__form-group-column">
+          <div class="onboarding__form-group-label">
+            {{ $t('databaseScratchTrackFieldsStep.fieldType') }}
+          </div>
+          <Dropdown v-model="ownField" :show-search="false">
+            <DropdownItem
+              v-for="field in ownFieldsDefinitions"
+              :key="field.props.type"
+              :name="field.name"
+              :value="field"
+              :icon="field.icon"
+            >
+            </DropdownItem>
+          </Dropdown>
+        </div>
+        <div class="onboarding__form-group-column">
+          <div class="onboarding__form-group-label">
+            {{ $t('databaseScratchTrackFieldsStep.fieldName') }}
+          </div>
+          <FormInput
+            v-model="ownField.props.name"
+            :placeholder="$t('databaseScratchTrackFieldsStep.fieldName')"
+            size="large"
+          />
+        </div>
+      </div>
     </FormGroup>
   </div>
 </template>

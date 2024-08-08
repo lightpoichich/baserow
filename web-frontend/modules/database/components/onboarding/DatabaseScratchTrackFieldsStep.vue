@@ -12,7 +12,7 @@
       <Chips
         v-for="(whatItem, whatKey) in whatItems"
         :key="whatKey"
-        :active="Object.keys(selectedFields).includes(whatKey)"
+        :active="isChipActive(whatKey)"
         :disabled="isChipDisabled(whatKey)"
         :icon="whatItem.icon"
         @click="toggleSelection(whatKey)"
@@ -21,15 +21,15 @@
       <Chips
         icon="iconoir-plus"
         :disabled="isChipDisabled('own')"
-        :active="addOwnField === true"
-        @click="handleAddOwnField"
+        :active="isChipActive('own')"
+        @click="toggleSelection('own')"
       >
         {{ $t('databaseScratchTrackStep.addYourOwn') }}
       </Chips>
     </div>
 
     <FormGroup
-      v-if="addOwnField"
+      v-if="isChipActive('own')"
       :label="$t('databaseScratchTrackStep.tableName')"
       required
       small-label
@@ -69,9 +69,7 @@ export default {
   },
   data() {
     return {
-      addOwnField: false,
-      // Move this to mounted and fill with previous step choice
-      what: 'projects',
+      what: '',
       selectedFieldsLimitCount: 4,
       selectedFieldsCount: 0,
       selectedFields: {},
@@ -119,8 +117,8 @@ export default {
     },
   },
   mounted() {
-    ;(this.what = this.data.database_scratch_track.tableName.toLowerCase()),
-      this.updateValue()
+    this.what = this.data.database_scratch_track.tableName.toLowerCase()
+    this.updateValue()
   },
   methods: {
     isChipDisabled(name) {
@@ -129,20 +127,14 @@ export default {
         !Object.keys(this.selectedFields).includes(name)
       )
     },
+    isChipActive(name) {
+      return Object.keys(this.selectedFields).includes(name)
+    },
     isValid() {
       return !this.$v.$invalid
     },
-    handleAddOwnField() {
-      if (!this.addOwnField) {
-        this.ownField = this.ownFieldsDefinitions[0]
-      }
-
-      this.addOwnField = !this.addOwnField
-      this.toggleSelection('own')
-      this.updateValue()
-    },
     toggleSelection(value) {
-      const isAlreadySelected = Object.keys(this.selectedFields).includes(value)
+      const isAlreadySelected = this.isChipActive(value)
       if (
         this.selectedFieldsCount >= this.selectedFieldsLimitCount &&
         !isAlreadySelected
@@ -155,7 +147,13 @@ export default {
         delete this.selectedFields[value]
       } else {
         this.selectedFieldsCount++
-        if (value !== 'own') {
+        if (value === 'own') {
+          // preselect first field if nothing was selected
+          if (!this.ownField.props.name) {
+            this.ownField = this.ownFieldsDefinitions[0]
+          }
+          this.selectedFields.own = this.ownField
+        } else {
           this.selectedFields[value] = this.whatItems[value]
         }
       }

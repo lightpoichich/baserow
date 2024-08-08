@@ -872,6 +872,7 @@
   "databaseScratchTrackFieldsStep": {
     "title": "Chose fields for every row",
     "description": "Pick up to {selectedFieldsLimitCount} fields. You can add more later.",
+    "fieldName": "Field name",
     "fields": {
       "description": "Description",
       "number": "Number",
@@ -929,6 +930,17 @@
       }
     },
     "campaigns": {
+      "row1": {
+        "description": "The header needs to be improved to make the CTA clearer."
+      },
+      "row2": {
+        "description": "The structure is a little off, so we may need to adjust the sitemap here as well."
+      },
+      "row3": {
+        "description": "The new footer should include our contact information and also a small (but clear) CTA."
+      }
+    },
+    "customFields": {
       "row1": {
         "description": "The header needs to be improved to make the CTA clearer."
       },

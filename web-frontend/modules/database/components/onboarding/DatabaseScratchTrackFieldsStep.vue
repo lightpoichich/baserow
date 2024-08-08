@@ -47,7 +47,7 @@
       </Dropdown>
       <FormInput
         v-model="ownField.props.name"
-        :placeholder="$t('databaseScratchTrackStepFields.fieldName')"
+        :placeholder="$t('databaseScratchTrackFieldsStep.fieldName')"
         size="large"
       />
       <template #error>{{ $t('error.requiredField') }}</template>
@@ -101,6 +101,9 @@ export default {
           break
         case 'campaigns':
           fields = this.campaignsFields
+          break
+        default:
+          fields = this.customFields
           break
       }
       return fields

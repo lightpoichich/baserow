@@ -362,5 +362,57 @@ export default {
         },
       }
     },
+
+    customFields() {
+      return {
+        date: {
+          props: {
+            name: this.$t('databaseScratchTrackFieldsStep.fields.date'),
+            type: DateFieldType.getType(),
+            date_format: 'ISO',
+          },
+          icon: this.icons[DateFieldType.getType()],
+          rows: [
+            moment().subtract(1, 'months').format('YYYY-MM-DD'),
+            moment().add(1, 'weeks').format('YYYY-MM-DD'),
+            moment().add(1, 'months').format('YYYY-MM-DD'),
+          ],
+        },
+        number: {
+          props: {
+            name: this.$t('databaseScratchTrackFieldsStep.fields.number'),
+            type: NumberFieldType.getType(),
+          },
+          icon: this.icons[NumberFieldType.getType()],
+          rows: [500, -1000, 3000],
+        },
+        completed: {
+          props: {
+            name: this.$t('databaseScratchTrackFieldsStep.fields.completed'),
+            type: BooleanFieldType.getType(),
+          },
+          icon: this.icons[BooleanFieldType.getType()],
+          rows: [true, false, false],
+        },
+        description: {
+          props: {
+            name: this.$t('databaseScratchTrackFieldsStep.fields.description'),
+            type: LongTextFieldType.getType(),
+          },
+          icon: this.icons[LongTextFieldType.getType()],
+          rows: [
+            this.$t(
+              'databaseScratchTrackFieldsStep.customFields.row1.description'
+            ),
+            this.$t(
+              'databaseScratchTrackFieldsStep.customFields.row2.description'
+            ),
+            this.$t(
+              'databaseScratchTrackFieldsStep.customFields.row3.description'
+            ),
+          ],
+        },
+      }
+    },
   },
 }

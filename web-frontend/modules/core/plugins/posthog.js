@@ -32,9 +32,9 @@ export default function ({ app: { router, $config, store } }, inject) {
       // authenticated system.
       if (
         isAuthenticated &&
-        userId && 
+        userId &&
         userId.toString() !== posthog.get_distinct_id()
-        ) {
+      ) {
         posthog.identify(userId, { user_email: userEmail })
       }
 

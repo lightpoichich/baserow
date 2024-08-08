@@ -41,7 +41,17 @@ export default {
             type: LongTextFieldType.getType(),
           },
           icon: this.icons[LongTextFieldType.getType()],
-          rows: ['row #1', 'row #2', 'row #3'],
+          rows: [
+            this.$t(
+              'databaseScratchTrackFieldsStep.customFields.row1.description'
+            ),
+            this.$t(
+              'databaseScratchTrackFieldsStep.customFields.row2.description'
+            ),
+            this.$t(
+              'databaseScratchTrackFieldsStep.customFields.row3.description'
+            ),
+          ],
         },
         {
           name: this.$t('databaseScratchTrackFieldsStep.fields.number'),
@@ -105,7 +115,11 @@ export default {
             type: EmailFieldType.getType(),
           },
           icon: this.icons[EmailFieldType.getType()],
-          rows: ['user1@baserow.io', 'user2@baserow.io', 'user3.baserow.io'],
+          rows: [
+            'donnmoore@company.com',
+            'gordonb@company.com',
+            'janetcook@company.com',
+          ],
         },
         {
           name: this.$t('databaseScratchTrackFieldsStep.fields.rating'),

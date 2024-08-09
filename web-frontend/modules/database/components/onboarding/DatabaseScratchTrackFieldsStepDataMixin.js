@@ -58,6 +58,8 @@ export default {
           props: {
             name: this.$t('databaseScratchTrackFieldsStep.fields.number'),
             type: NumberFieldType.getType(),
+            number_decimal_places: 0,
+            number_negative: true,
           },
           icon: this.icons[NumberFieldType.getType()],
           rows: [0, -500, 131.35],
@@ -198,6 +200,8 @@ export default {
           props: {
             name: this.$t('databaseScratchTrackFieldsStep.fields.budget'),
             type: NumberFieldType.getType(),
+            number_decimal_places: 0,
+            number_negative: false,
           },
           icon: this.icons[NumberFieldType.getType()],
           rows: [500, 1000, 3000],
@@ -294,6 +298,8 @@ export default {
               'databaseScratchTrackFieldsStep.fields.estimatedDays'
             ),
             type: NumberFieldType.getType(),
+            number_decimal_places: 0,
+            number_negative: false,
           },
           icon: this.icons[NumberFieldType.getType()],
           rows: [2, 7, 13],
@@ -371,6 +377,8 @@ export default {
           props: {
             name: this.$t('databaseScratchTrackFieldsStep.fields.budget'),
             type: NumberFieldType.getType(),
+            number_decimal_places: 0,
+            number_negative: false,
           },
           icon: this.icons[NumberFieldType.getType()],
           rows: [12000, 30000, 2000],
@@ -397,6 +405,8 @@ export default {
           props: {
             name: this.$t('databaseScratchTrackFieldsStep.fields.number'),
             type: NumberFieldType.getType(),
+            number_decimal_places: 0,
+            number_negative: true,
           },
           icon: this.icons[NumberFieldType.getType()],
           rows: [500, -1000, 3000],

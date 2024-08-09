@@ -132,6 +132,7 @@ export default {
           })
         })
 
+        commit('CLEAR_ROWS')
         commit('ADD_ROWS', {
           rows,
           prependToRows: 0,

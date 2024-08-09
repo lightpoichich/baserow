@@ -63,16 +63,23 @@
             "
             @blur="$v.ownField.props.name.$touch()"
           />
+          <p
+            v-if="
+              $v.ownField.props.name.$dirty && $v.ownField.props.name.$invalid
+            "
+            class="control__messages--error"
+          >
+            {{ $t('error.requiredField') }}
+          </p>
         </div>
       </div>
-      <template #error>{{ $t('error.requiredField') }}</template>
     </FormGroup>
   </div>
 </template>
 
 <script>
 import DatabaseScratchTrackFieldsStepDataMixin from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStepDataMixin'
-import { required } from 'vuelidate/lib/validators'
+import { requiredIf } from 'vuelidate/lib/validators'
 
 export default {
   name: 'DatabaseScratchTrackFieldsStep',
@@ -94,14 +101,10 @@ export default {
           name: '',
         },
       },
+      isOwnFieldValidationEnabled: false,
     }
   },
   computed: {
-    canSkip() {
-      // TODO: This doesn't work in this step
-      console.log('CALLED SKIP ON FIELDS')
-      return true
-    },
     whatItems() {
       let fields
       switch (this.what) {
@@ -145,7 +148,11 @@ export default {
       )
     },
     isChipActive(name) {
-      return Object.keys(this.selectedFields).includes(name)
+      const isActive = Object.keys(this.selectedFields).includes(name)
+      if (name === 'own') {
+        this.isOwnFieldValidationEnabled = isActive
+      }
+      return isActive
     },
     isValid() {
       return !this.$v.$invalid
@@ -181,12 +188,16 @@ export default {
       this.$emit('update-data', { fields })
     },
   },
-  validations: {
-    ownField: {
-      props: {
-        name: { required },
+  validations() {
+    return {
+      ownField: {
+        props: {
+          name: {
+            required: requiredIf(() => this.isOwnFieldValidationEnabled),
+          },
+        },
       },
-    },
+    }
   },
 }
 </script>

@@ -14,6 +14,7 @@ import FieldService from '@baserow/modules/database/services/field'
 import RowService from '@baserow/modules/database/services/row'
 import AirtableService from '@baserow/modules/database/services/airtable'
 import DatabaseScratchTrackFieldsStep from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStep.vue'
+import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
 
 const databaseTypeCondition = (data, type) => {
   const dependingType = DatabaseOnboardingType.getType()
@@ -186,12 +187,19 @@ export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
         field.props
       )
 
+      if (response.data.type === SingleSelectFieldType.getType()) {
+        field.rows = response.data.select_options.map((option) => option.id)
+      }
+
       field.rows.forEach((row, index) => {
         items[index][`field_${response.data.id}`] = row
       })
     }
 
-    await RowService(this.app.$client).batchUpdate(tableData.id, items)
+    if (fieldParams.length > 0) {
+      await RowService(this.app.$client).batchUpdate(tableData.id, items)
+    }
+
     return tableData
   }
 

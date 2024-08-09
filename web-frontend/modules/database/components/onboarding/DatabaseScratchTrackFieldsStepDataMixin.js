@@ -134,36 +134,39 @@ export default {
     },
 
     projectsFields() {
+      const selectOptions = [
+        {
+          id: -1,
+          value: this.$t(
+            'databaseScratchTrackFieldsStep.projects.categories.design'
+          ),
+          color: 'gray',
+        },
+        {
+          id: -2,
+          value: this.$t(
+            'databaseScratchTrackFieldsStep.projects.categories.development'
+          ),
+          color: 'yellow',
+        },
+        {
+          id: -3,
+          value: this.$t(
+            'databaseScratchTrackFieldsStep.projects.categories.marketing'
+          ),
+          color: 'blue',
+        },
+      ]
+
       return {
         category: {
           props: {
             name: this.$t('databaseScratchTrackFieldsStep.fields.category'),
             type: SingleSelectFieldType.getType(),
+            select_options: selectOptions,
           },
           icon: this.icons[SingleSelectFieldType.getType()],
-          rows: [
-            {
-              id: 1,
-              value: this.$t(
-                'databaseScratchTrackFieldsStep.projects.categories.design'
-              ),
-              color: 'gray',
-            },
-            {
-              id: 2,
-              value: this.$t(
-                'databaseScratchTrackFieldsStep.projects.categories.development'
-              ),
-              color: 'yellow',
-            },
-            {
-              id: 3,
-              value: this.$t(
-                'databaseScratchTrackFieldsStep.projects.categories.marketing'
-              ),
-              color: 'blue',
-            },
-          ],
+          rows: selectOptions,
         },
         kickoffDate: {
           props: {

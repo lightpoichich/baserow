@@ -16,7 +16,7 @@
   },
   "sidebarComponentBuilder": {
     "settings": "Settings",
-    "createPage": "Create page"
+    "createPage": "New page"
   },
   "builderSettingsModal": {
     "title": "Application"
@@ -379,9 +379,11 @@
     "button": "Button",
     "link": "Link",
     "image": "Image",
-    "input": "Input"
+    "input": "Input",
+    "table": "Table"
   },
   "colorThemeConfigBlock": {
+    "transparent": "Transparent",
     "primaryColor": "Primary",
     "secondaryColor": "Secondary",
     "borderColor": "Border",
@@ -395,6 +397,7 @@
     "backgroundMode": "Background mode"
   },
   "colorThemeConfigBlockType": {
+    "transparent": "Transparent",
     "primary": "Primary",
     "secondary": "Secondary",
     "border": "Border",
@@ -460,6 +463,27 @@
     "imageConstraintContain": "Contain",
     "imageConstraintContainDisabled": "Unavailable with a max height."
   },
+  "tableThemeConfigBlock": {
+    "borderColor": "Border color",
+    "backgroundAlternateColor": "Even rows color",
+    "backgroundColor": "Background color",
+    "textColor": "Text color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Size",
+    "fontSize": "Font size",
+    "table": "Table",
+    "header": "Header",
+    "alignment": "Alignment",
+    "cells": "Cells",
+    "separators": "Separators",
+    "verticalSeparatorColor": "Vertical color",
+    "verticalSeparatorSize": "Vertical size",
+    "horizontalSeparatorColor": "Horizontal color",
+    "horizontalSeparatorSize": "Horizontal size"
+  },
   "buttonElementForm": {
     "valueLabel": "Button text",
     "valuePlaceholder": "Enter text..."
@@ -485,6 +509,9 @@
     "checkbox": "Checkbox",
     "radio": "Radio"
   },
+  "dropdown": {
+    "empty": "No options available"
+  },
   "tableElementForm": {
     "dataSource": "Data source",
     "fields": "Fields",
@@ -505,8 +532,10 @@
     "buttonLoadMoreLabel": "Show more label"
   },
   "tableElement": {
-    "empty": "No items have been found.",
     "showMore": "Show more"
+  },
+  "abTable": {
+    "empty": "No items have been found."
   },
   "repeatElement": {
     "empty": "No items have been found.",
@@ -598,9 +627,10 @@
     "label": "Options",
     "value": "Option values",
     "valuePlaceholder": "Enter value",
-    "name": "Option display names",
+    "name": "Option names",
     "namePlaceholder": "Enter name",
     "addOption": "add option",
+    "addOptionDescription": "Click 'add option' to add options to your dropdown",
     "optionType": "Options type",
     "manual": "Manual",
     "dataSource": "Data source",

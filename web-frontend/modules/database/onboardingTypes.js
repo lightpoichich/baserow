@@ -10,6 +10,8 @@ import DatabaseAppLayoutPreview from '@baserow/modules/database/components/onboa
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import ApplicationService from '@baserow/modules/core/services/application'
 import TableService from '@baserow/modules/database/services/table'
+import FieldService from '@baserow/modules/database/services/field'
+import RowService from '@baserow/modules/database/services/row'
 import AirtableService from '@baserow/modules/database/services/airtable'
 import DatabaseScratchTrackFieldsStep from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStep.vue'
 
@@ -173,21 +175,24 @@ export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
   }
 
   async complete(data, responses) {
-    const database = await createDatabase(data, responses, this.app.$client)
-    const tableName = data[this.getType()].tableName
-    const rows = data[this.getType()].rows
+    const tableData = responses[DatabaseScratchTrackOnboardingType.getType()]
 
-    const initialData = [['Name'], ...rows.map((name) => [name])]
-    const { data: table } = await TableService(this.app.$client).createSync(
-      database.id,
-      {
-        name: tableName,
-      },
-      initialData,
-      true
-    )
+    const fieldParams = Object.values(data[this.getType()].fields)
+    const items = [{ id: 1 }, { id: 2 }, { id: 3 }]
 
-    return table
+    for (const field of fieldParams) {
+      const response = await FieldService(this.app.$client).create(
+        tableData.id,
+        field.props
+      )
+
+      field.rows.forEach((row, index) => {
+        items[index][`field_${response.data.id}`] = row
+      })
+    }
+
+    await RowService(this.app.$client).batchUpdate(tableData.id, items)
+    return tableData
   }
 
   getCompletedRoute(data, responses) {

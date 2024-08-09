@@ -226,36 +226,34 @@ export default {
     },
 
     teamsFields() {
+      const selectOptions = [
+        {
+          id: 1,
+          value: this.$t('databaseScratchTrackFieldsStep.teams.roles.designer'),
+          color: 'gray',
+        },
+        {
+          id: 2,
+          value: this.$t(
+            'databaseScratchTrackFieldsStep.teams.roles.developer'
+          ),
+          color: 'yellow',
+        },
+        {
+          id: 3,
+          value: this.$t('databaseScratchTrackFieldsStep.teams.roles.marketer'),
+          color: 'blue',
+        },
+      ]
       return {
         role: {
           props: {
             name: this.$t('databaseScratchTrackFieldsStep.fields.role'),
             type: SingleSelectFieldType.getType(),
+            select_options: selectOptions,
           },
           icon: this.icons[SingleSelectFieldType.getType()],
-          rows: [
-            {
-              id: 1,
-              value: this.$t(
-                'databaseScratchTrackFieldsStep.teams.roles.designer'
-              ),
-              color: 'gray',
-            },
-            {
-              id: 2,
-              value: this.$t(
-                'databaseScratchTrackFieldsStep.teams.roles.developer'
-              ),
-              color: 'yellow',
-            },
-            {
-              id: 3,
-              value: this.$t(
-                'databaseScratchTrackFieldsStep.teams.roles.marketer'
-              ),
-              color: 'blue',
-            },
-          ],
+          rows: selectOptions,
         },
         phone: {
           props: {

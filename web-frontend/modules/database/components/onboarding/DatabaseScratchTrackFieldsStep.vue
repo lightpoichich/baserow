@@ -41,7 +41,7 @@
           </div>
           <Dropdown v-model="ownField" :show-search="false">
             <DropdownItem
-              v-for="field in ownFieldsDefinitions"
+              v-for="field in ownFields"
               :key="field.props.type"
               :name="field.name"
               :value="field"
@@ -78,12 +78,10 @@
 </template>
 
 <script>
-import DatabaseScratchTrackFieldsStepDataMixin from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStepDataMixin'
 import { requiredIf } from 'vuelidate/lib/validators'
 
 export default {
   name: 'DatabaseScratchTrackFieldsStep',
-  mixins: [DatabaseScratchTrackFieldsStepDataMixin],
   props: {
     data: {
       type: Object,
@@ -102,30 +100,9 @@ export default {
         },
       },
       isOwnFieldValidationEnabled: false,
+      whatItems: [],
+      ownFields: [],
     }
-  },
-  computed: {
-    whatItems() {
-      let fields
-      switch (this.what) {
-        case 'projects':
-          fields = this.projectsFields
-          break
-        case 'teams':
-          fields = this.teamsFields
-          break
-        case 'tasks':
-          fields = this.tasksFields
-          break
-        case 'campaigns':
-          fields = this.campaignsFields
-          break
-        default:
-          fields = this.customFields
-          break
-      }
-      return fields
-    },
   },
   watch: {
     ownField: {
@@ -138,6 +115,12 @@ export default {
   },
   mounted() {
     this.what = this.data.database_scratch_track.tableName.toLowerCase()
+    const component = this.$registry.get(
+      'onboardingTrackFields',
+      `database_scratch_track_fields_${this.what}`
+    )
+    this.whatItems = component.getFields()
+    this.ownFields = component.getOwnFields()
     this.updateValue()
   },
   methods: {
@@ -174,7 +157,7 @@ export default {
         if (value === 'own') {
           // preselect first field if nothing was selected
           if (!this.ownField.props.name) {
-            this.ownField = this.ownFieldsDefinitions[0]
+            this.ownField = this.ownFields[0]
           }
           this.selectedFields.own = this.ownField
         } else {

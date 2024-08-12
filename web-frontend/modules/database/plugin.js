@@ -301,6 +301,13 @@ import de from '@baserow/modules/database/locales/de.json'
 import es from '@baserow/modules/database/locales/es.json'
 import it from '@baserow/modules/database/locales/it.json'
 import pl from '@baserow/modules/database/locales/pl.json'
+import {
+  DatabaseScratchTrackCampaignFieldsOnboardingType,
+  DatabaseScratchTrackCustomFieldsOnboardingType,
+  DatabaseScratchTrackProjectFieldsOnboardingType,
+  DatabaseScratchTrackTaskFieldsOnboardingType,
+  DatabaseScratchTrackTeamFieldsOnboardingType,
+} from '@baserow/modules/database/databaseScratchTrackFieldsStepType'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -869,6 +876,27 @@ export default (context) => {
   app.$registry.register(
     'onboarding',
     new DatabaseImportOnboardingType(context)
+  )
+
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackProjectFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackTeamFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackTaskFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackCampaignFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackCustomFieldsOnboardingType(context)
   )
 
   registerRealtimeEvents(app.$realtime)

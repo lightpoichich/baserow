@@ -79,6 +79,7 @@
 
 <script>
 import { requiredIf } from 'vuelidate/lib/validators'
+import { DatabaseScratchTrackOnboardingType } from '@baserow/modules/database/onboardingTypes'
 
 export default {
   name: 'DatabaseScratchTrackFieldsStep',
@@ -114,13 +115,25 @@ export default {
     },
   },
   mounted() {
-    this.what = this.data.database_scratch_track.tableName.toLowerCase()
-    const component = this.$registry.get(
-      'onboardingTrackFields',
-      `database_scratch_track_fields_${this.what}`
-    )
-    this.whatItems = component.getFields()
-    this.ownFields = component.getOwnFields()
+    this.what =
+      this.data[
+        DatabaseScratchTrackOnboardingType.getType()
+      ].tableName.toLowerCase()
+    let onboardingTrackFieldsType
+
+    try {
+      onboardingTrackFieldsType = this.$registry.get(
+        'onboardingTrackFields',
+        `database_scratch_track_fields_${this.what}`
+      )
+    } catch {
+      onboardingTrackFieldsType = this.$registry.get(
+        'onboardingTrackFields',
+        `database_scratch_track_fields_custom`
+      )
+    }
+    this.whatItems = onboardingTrackFieldsType.getFields()
+    this.ownFields = onboardingTrackFieldsType.getOwnFields()
     this.updateValue()
   },
   methods: {

@@ -14,7 +14,6 @@ import FieldService from '@baserow/modules/database/services/field'
 import RowService from '@baserow/modules/database/services/row'
 import AirtableService from '@baserow/modules/database/services/airtable'
 import DatabaseScratchTrackFieldsStep from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStep.vue'
-import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
 
 const databaseTypeCondition = (data, type) => {
   const dependingType = DatabaseOnboardingType.getType()
@@ -177,6 +176,18 @@ export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
 
   async complete(data, responses) {
     const tableData = responses[DatabaseScratchTrackOnboardingType.getType()]
+    let onboardingTrackFieldsType
+    try {
+      onboardingTrackFieldsType = this.app.$registry.get(
+        'onboardingTrackFields',
+        `${this.getType()}_${tableData.name.toLowerCase()}`
+      )
+    } catch {
+      onboardingTrackFieldsType = this.app.$registry.get(
+        'onboardingTrackFields',
+        `${this.getType()}_custom`
+      )
+    }
 
     const fieldParams = Object.values(data[this.getType()].fields)
     const items = [{ id: 1 }, { id: 2 }, { id: 3 }]
@@ -187,9 +198,7 @@ export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
         field.props
       )
 
-      if (response.data.type === SingleSelectFieldType.getType()) {
-        field.rows = response.data.select_options.map((option) => option.id)
-      }
+      onboardingTrackFieldsType.afterFieldCreated(field, response)
 
       field.rows.forEach((row, index) => {
         items[index][`field_${response.data.id}`] = row

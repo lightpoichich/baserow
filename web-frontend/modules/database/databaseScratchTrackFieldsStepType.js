@@ -13,6 +13,12 @@ import {
 } from '@baserow/modules/database/fieldTypes'
 import { Registerable } from '@baserow/modules/core/registry'
 
+export const fieldHandlerRegistry = {
+  [SingleSelectFieldType.getType()]: function (field, response) {
+    return response.data.select_options.map((option) => option.id)
+  },
+}
+
 export class DatabaseScratchTrackFieldsOnboardingType extends Registerable {
   getIcons() {
     return {
@@ -130,7 +136,7 @@ export class DatabaseScratchTrackFieldsOnboardingType extends Registerable {
         props: {
           name: this.$t('databaseScratchTrackFieldsStep.fields.rating'),
           type: RatingFieldType.getType(),
-          maxValue: 5,
+          max_value: 5,
         },
         icon: icons[RatingFieldType.getType()],
         rows: [3, 1, 5],
@@ -140,6 +146,13 @@ export class DatabaseScratchTrackFieldsOnboardingType extends Registerable {
 
   getFields() {
     return {}
+  }
+
+  afterFieldCreated(field, response) {
+    const fieldHandler = fieldHandlerRegistry[field.props.type]
+    if (fieldHandler) {
+      field.rows = fieldHandler(field, response)
+    }
   }
 }
 

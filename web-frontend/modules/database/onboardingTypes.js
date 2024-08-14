@@ -14,6 +14,7 @@ import FieldService from '@baserow/modules/database/services/field'
 import RowService from '@baserow/modules/database/services/row'
 import AirtableService from '@baserow/modules/database/services/airtable'
 import DatabaseScratchTrackFieldsStep from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStep.vue'
+import DatabaseViewStep from '@baserow/modules/database/components/onboarding/DatabaseViewStep.vue'
 
 const databaseTypeCondition = (data, type) => {
   const dependingType = DatabaseOnboardingType.getType()
@@ -275,6 +276,43 @@ export class DatabaseImportOnboardingType extends OnboardingType {
       params: {
         databaseId: responses[this.getType()].database_id,
         tableId: responses[this.getType()].table_id,
+      },
+    }
+  }
+}
+
+export class DatabaseViewOnboardingType extends OnboardingType {
+  static getType() {
+    return 'database_view'
+  }
+
+  getOrder() {
+    return 2300
+  }
+
+  getFormComponent() {
+    return DatabaseViewStep
+  }
+
+  getPreviewComponent() {
+    return DatabaseAppLayoutPreview
+  }
+
+  canSkip() {
+    return true
+  }
+
+  async complete(data, responses) {
+    // TODO: Redirect to the new view page if user didn't skip it
+    return responses[DatabaseScratchTrackOnboardingType.getType()]
+  }
+
+  getCompletedRoute(data, responses) {
+    return {
+      name: 'database-table',
+      params: {
+        databaseId: responses[this.getType()].database_id,
+        tableId: responses[this.getType()].id,
       },
     }
   }

@@ -78,7 +78,7 @@ export default {
   },
   computed: {
     whatItems() {
-      const items = {
+      return {
         [this.$t('databaseScratchTrackStep.projects')]: [
           this.$t('databaseScratchTrackStep.productsRow1'),
           this.$t('databaseScratchTrackStep.productsRow2'),
@@ -100,7 +100,6 @@ export default {
           this.$t('databaseScratchTrackStep.campaignsRow3'),
         ],
       }
-      return items
     },
   },
   mounted() {

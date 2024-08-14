@@ -4,10 +4,18 @@ import {
   DatabaseOnboardingType,
   DatabaseImportOnboardingType,
   DatabaseScratchTrackOnboardingType,
+  DatabaseViewOnboardingType,
 } from '@baserow/modules/database/onboardingTypes'
 import DatabaseTablePreview from '@baserow/modules/database/components/onboarding/DatabaseTablePreview.vue'
 import { populateTable } from '@baserow/modules/database/store/table'
 import { clone } from '@baserow/modules/core/utils/object'
+import DatabaseGalleryPreview from '@baserow/modules/database/components/onboarding/DatabaseGalleryPreview.vue'
+
+// TODO: make it more flexible for premium usage
+const previewRegistry = {
+  table: DatabaseTablePreview,
+  gallery: DatabaseGalleryPreview,
+}
 
 export default {
   name: 'DatabaseAppLayoutPreview',
@@ -21,6 +29,11 @@ export default {
     },
     tableName() {
       return this.trackTableName || this.importTableName
+    },
+    viewType() {
+      return (
+        this.data[DatabaseViewOnboardingType.getType()]?.viewType || 'table'
+      )
     },
     applications() {
       const applications = AppLayoutPreview.computed.applications.call(this)
@@ -50,8 +63,9 @@ export default {
       return applications
     },
     col2Component() {
+      // FIXME: for some reason using registry is not reactive
       return this.trackTableName && this.applications[0].tables.length > 0
-        ? DatabaseTablePreview
+        ? previewRegistry[this.viewType] || DatabaseTablePreview
         : null
     },
   },

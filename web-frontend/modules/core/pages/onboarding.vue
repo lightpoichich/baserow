@@ -51,6 +51,7 @@
             </div>
             <div class="onboarding__actions">
               <Button
+                :ph-autocapture="'onboarding-continue-step-' + stepIndex"
                 type="primary"
                 size="large"
                 full-width
@@ -59,7 +60,7 @@
                 >{{ $t('onboarding.continue') }}</Button
               >
               <div v-if="canSkip" class="onboarding__skip">
-                <ButtonText tag="a" @click="skip">{{
+                <ButtonText :ph-autocapture="'onboarding-skip-step-' + stepIndex" tag="a" @click="skip">{{
                   $t('onboarding.skip')
                 }}</ButtonText>
               </div>
@@ -67,7 +68,7 @@
           </div>
         </div>
         <div v-if="stepIndex === 0" class="onboarding__cancel">
-          <ButtonText tag="a" :loading="cancelling" @click="cancel">{{
+          <ButtonText :ph-autocapture="'onboarding-cancel-step-' + stepIndex" tag="a" :loading="cancelling" @click="cancel">{{
             $t('onboarding.cancel')
           }}</ButtonText>
         </div>

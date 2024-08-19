@@ -10,8 +10,8 @@
   >
     <template v-for="loginButton in loginButtons">
       <component
-        :key="loginButton.redirect_url"
         :is="getLoginButtonComponent(loginButton)"
+        :key="loginButton.redirect_url"
         :redirect-url="addOriginalParamToUrl(loginButton.redirect_url)"
         :name="loginButton.name"
         :icon="getLoginButtonIcon(loginButton)"

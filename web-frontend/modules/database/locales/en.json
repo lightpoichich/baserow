@@ -871,88 +871,48 @@
     "tableNameLabel": "Table name"
   },
   "databaseScratchTrackFieldsStep": {
-    "title": "Chose fields for every row",
+    "title": "Choose fields for every row",
     "description": "Pick up to {selectedFieldsLimitCount} fields. You can add more later.",
     "fieldName": "Name",
     "fieldType": "Field type",
-    "fields": {
-      "description": "Description",
-      "number": "Number",
-      "date": "Date",
-      "boolean": "Finished",
-      "duration": "Duration",
-      "url": "URL",
-      "email": "Email",
-      "rating": "Rating",
-      "category": "Category",
-      "kickoffDate": "Kickoff date",
-      "dueDate": "Due date",
-      "budget": "Budget",
-      "completed": "Completed",
-      "notes": "Notes",
-      "role": "Role",
-      "phone": "Phone",
-      "active": "Active",
-      "estimatedDays": "Estimated days",
-      "startDate": "Start date",
-      "endDate": "End date"
-    },
-    "projects": {
-      "categories": {
-        "design": "Design",
-        "development": "Development",
-        "marketing": "Marketing"
-      },
-      "row1": {
-        "notes": "Acme is looking for a complete rebranding of their website with the following guidelines."
-      },
-      "row2": {
-        "notes": "Research if the current users of Soylent are interested into a new user portal."
-      },
-      "row3": {
-        "notes": "Wondering if this is worth doing after the Facebook ad boycott. Studies are showing that paid ad campaigns have become increasingly less effective."
-      }
-    },
-    "teams": {
-      "roles": {
-        "designer": "Designer",
-        "developer": "Developer",
-        "marketer": "Marketer"
-      }
-    },
-    "tasks": {
-      "row1": {
-        "description": "The logo needs to be improved to make the CTA clearer."
-      },
-      "row2": {
-        "description": "The structure is a little off, so we may need to adjust the sitemap here as well."
-      },
-      "row3": {
-        "description": "The new footer should include our contact information and also a small (but clear) CTA."
-      }
-    },
-    "campaigns": {
-      "row1": {
-        "description": "Heat up your savings with our sizzling summer sale, featuring unbeatable discounts on all your favorite products!"
-      },
-      "row2": {
-        "description": "Boost customer retention and engagement with our enticing loyalty rewards program, designed to reward your most dedicated customers."
-      },
-      "row3": {
-        "description": "Revitalize your business and captivate your audience with a dynamic brand relaunch that aligns perfectly with today's market trends and customer desires.\n"
-      }
-    },
-    "customFields": {
-      "row1": {
-        "description": "Turpis massa tincidunt dui ut ornare lectus sit amet est. Justo eget magna fermentum iaculis eu non. Commodo ullamcorper a lacus vestibulum sed arcu non. Venenatis a condimentum vitae sapien pellentesque habitant morbi. Id interdum velit laoreet id donec ultrices tincidunt. Non pulvinar neque laoreet suspendisse interdum consectetur. Magna fringilla urna porttitor rhoncus dolor purus non. Lorem dolor sed viverra ipsum nunc aliquet bibendum enim facilisis. Urna molestie at elementum eu facilisis sed odio morbi quis. Ultrices dui sapien eget mi. Orci a scelerisque purus semper eget. Accumsan tortor posuere ac ut. Feugiat nisl pretium fusce id velit ut tortor. Amet nisl suscipit adipiscing bibendum est ultricies integer quis. Pharetra sit amet aliquam id diam maecenas ultricies mi. Maecenas sed enim ut sem viverra aliquet eget. Facilisis volutpat est velit egestas dui. Venenatis a condimentum vitae sapien. Quam elementum pulvinar etiam non quam lacus suspendisse faucibus."
-      },
-      "row2": {
-        "description": "Vitae justo eget magna fermentum iaculis eu non diam. Fermentum posuere urna nec tincidunt praesent. Tristique senectus et netus et malesuada. Id interdum velit laoreet id donec. Id porta nibh venenatis cras sed felis eget velit. Porttitor eget dolor morbi non arcu risus. Fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate. Nulla posuere sollicitudin aliquam ultrices sagittis orci a. Nisl nisi scelerisque eu ultrices vitae auctor eu augue ut. Neque vitae tempus quam pellentesque nec nam aliquam. In egestas erat imperdiet sed euismod. Amet luctus venenatis lectus magna fringilla urna porttitor rhoncus dolor. Integer feugiat scelerisque varius morbi enim nunc faucibus a. Nisi vitae suscipit tellus mauris a diam maecenas. Volutpat lacus laoreet non curabitur gravida arcu. Integer feugiat scelerisque varius morbi. Mi eget mauris pharetra et ultrices neque."
-      },
-      "row3": {
-        "description": "Convallis tellus id interdum velit laoreet id donec ultrices tincidunt. Vulputate mi sit amet mauris commodo quis imperdiet massa tincidunt. Nunc lobortis mattis aliquam faucibus. Arcu ac tortor dignissim convallis aenean et tortor at risus. Nisl nunc mi ipsum faucibus. Sed tempus urna et pharetra pharetra massa. Enim neque volutpat ac tincidunt. Interdum velit laoreet id donec ultrices tincidunt arcu non sodales. Diam maecenas sed enim ut sem viverra aliquet eget sit. Risus ultricies tristique nulla aliquet enim. Velit scelerisque in dictum non consectetur a. Viverra maecenas accumsan lacus vel facilisis volutpat est. Ac tortor vitae purus faucibus ornare suspendisse sed. Velit aliquet sagittis id consectetur purus ut faucibus. Est ullamcorper eget nulla facilisi etiam dignissim diam. Interdum velit euismod in pellentesque massa. Pellentesque sit amet porttitor eget dolor morbi non arcu risus. Augue mauris augue neque gravida in fermentum et sollicitudin ac. Iaculis eu non diam phasellus vestibulum lorem sed risus."
-      }
-    }
+    "fieldDescription": "Description",
+    "fieldNumber": "Number",
+    "fieldDate": "Date",
+    "fieldBoolean": "Finished",
+    "fieldDuration": "Duration",
+    "fieldUrl": "URL",
+    "fieldEmail": "Email",
+    "fieldRating": "Rating",
+    "fieldCategory": "Category",
+    "fieldKickoffDate": "Kickoff date",
+    "fieldDueDate": "Due date",
+    "fieldBudget": "Budget",
+    "fieldCompleted": "Completed",
+    "fieldNotes": "Notes",
+    "fieldRole": "Role",
+    "fieldPhone": "Phone",
+    "fieldActive": "Active",
+    "fieldEstimatedDays": "Estimated days",
+    "fieldStartDate": "Start date",
+    "fieldEndDate": "End date",
+    "projectsCategoryDesign": "Design",
+    "projectsCategoryDevelopment": "Development",
+    "projectsCategoryMarketing": "Marketing",
+    "projectsNotesRow1": "Acme is looking for a complete rebranding of their website with the following guidelines.",
+    "projectsNotesRow2": "Research if the current users of Soylent are interested into a new user portal.",
+    "projectsNotesRow3": "Wondering if this is worth doing after the Facebook ad boycott. Studies are showing that paid ad campaigns have become increasingly less effective.",
+    "teamsRoleDesigner": "Designer",
+    "teamsRoleDeveloper": "Developer",
+    "teamsRoleMarketer": "Marketer",
+    "tasksDescriptionRow1": "The logo needs to be improved to make the CTA clearer.",
+    "tasksDescriptionRow2": "The structure is a little off, so we may need to adjust the sitemap here as well.",
+    "tasksDescriptionRow3": "The new footer should include our contact information and also a small (but clear) CTA.",
+    "campaignsDescriptionRow1": "Heat up your savings with our sizzling summer sale, featuring unbeatable discounts on all your favorite products!",
+    "campaignsDescriptionRow2": "Boost customer retention and engagement with our enticing loyalty rewards program, designed to reward your most dedicated customers.",
+    "campaignsDescriptionRow3": "Revitalize your business and captivate your audience with a dynamic brand relaunch that aligns perfectly with today's market trends and customer desires.",
+    "customFieldsDescriptionRow1": "Turpis massa tincidunt dui ut ornare lectus sit amet est.",
+    "customFieldsDescriptionRow2": "Vitae justo eget magna fermentum iaculis eu non diam.",
+    "customFieldsDescriptionRow3": "Convallis tellus id interdum velit laoreet id donec ultrices tincidunt."
   },
   "databaseScratchTrackStep": {
     "title": "What would you like to track?",

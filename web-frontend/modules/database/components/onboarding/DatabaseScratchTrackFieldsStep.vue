@@ -69,7 +69,12 @@
             "
             class="control__messages--error"
           >
-            {{ $t('error.requiredField') }}
+            <template v-if="!$v.ownField.props.name.required">
+              {{ $t('error.requiredField') }}
+            </template>
+            <template v-if="!$v.ownField.props.name.uniqueNameValidator">
+              {{ $t('error.alreadyInUse') }}
+            </template>
           </p>
         </div>
       </div>
@@ -175,6 +180,7 @@ export default {
           this.selectedFields.own = this.ownField
         } else {
           this.selectedFields[value] = this.whatItems[value]
+          this.$v.ownField.props.name.$touch()
         }
       }
       this.updateValue()
@@ -183,6 +189,11 @@ export default {
       const fields = this.selectedFields
       this.$emit('update-data', { fields })
     },
+    getSelectedFieldNames() {
+      return Object.entries(this.selectedFields)
+        .filter(([key, value]) => key !== 'own')
+        .map(([key, value]) => value.name)
+    },
   },
   validations() {
     return {
@@ -190,6 +201,13 @@ export default {
         props: {
           name: {
             required: requiredIf(() => this.isOwnFieldValidationEnabled),
+            // TODO: needs to be also triggered when predefined fields
+            // are selected (i.e. change name to "Notes" then selecting
+            // "Notes" field should trigger error here
+            uniqueNameValidator: (value) => {
+              const selectedFieldNames = this.getSelectedFieldNames()
+              return selectedFieldNames && !selectedFieldNames.includes(value)
+            },
           },
         },
       },

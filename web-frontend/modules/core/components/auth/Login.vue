@@ -9,10 +9,14 @@
             <Logo />
           </nuxt-link>
         </div>
-        <div class="auth__head">
-          <h1 class="auth__head-title">
-            {{ $t('login.title') }}
-          </h1>
+        <h1 class="auth__head-title">{{ $t('login.title') }}</h1>
+        <div v-if="settings.allow_new_signups" class="auth__head">
+          <span class="auth__head-text">
+            {{ $t('login.signUpText') }}
+            <nuxt-link :to="{ name: 'signup' }">
+              {{ $t('login.signUp') }}
+            </nuxt-link></span
+          >
           <LangPicker />
         </div>
       </div>
@@ -26,31 +30,25 @@
           :invitation="invitation"
           :original="original"
         />
+
+        <div v-if="!passwordLoginHidden" class="auth__separator">or</div>
+
         <PasswordLogin
           v-if="!passwordLoginHidden"
           :invitation="invitation"
+          :display-forgot-password="
+            settings.allow_reset_password && !passwordLoginHidden
+          "
           @success="success"
           @email-not-verified="emailNotVerified"
         >
         </PasswordLogin>
+
         <LoginActions :invitation="invitation" :original="original">
           <li v-if="passwordLoginHidden">
             <a @click="passwordLoginHiddenIfDisabled = false">
               {{ $t('login.displayPasswordLogin') }}
             </a>
-          </li>
-          <li v-if="settings.allow_reset_password && !passwordLoginHidden">
-            <nuxt-link :to="{ name: 'forgot-password' }">
-              {{ $t('login.forgotPassword') }}
-            </nuxt-link>
-          </li>
-          <li v-if="settings.allow_new_signups">
-            <slot name="signup">
-              {{ $t('login.signUpText') }}
-              <nuxt-link :to="{ name: 'signup' }">
-                {{ $t('login.signUp') }}
-              </nuxt-link>
-            </slot>
           </li>
         </LoginActions>
       </div>

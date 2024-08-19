@@ -3,17 +3,14 @@
     class="auth-provider-buttons"
     :class="{
       'auth-provider-buttons--small': showSmallLoginButtons,
-      'auth-provider-buttons--border-bottom':
-        loginButtons.length > 0 && showBorder === 'bottom',
-      'auth-provider-buttons--border-top':
-        loginButtons.length > 0 && showBorder === 'top',
       'auth-provider-buttons__no-buttons': loginButtons.length === 0,
       'auth-provider-buttons__no-buttons--hide':
         loginButtons.length === 0 && hideIfNoButtons === true,
     }"
   >
-    <div v-for="loginButton in loginButtons" :key="loginButton.redirect_url">
+    <template v-for="loginButton in loginButtons">
       <component
+        :key="loginButton.redirect_url"
         :is="getLoginButtonComponent(loginButton)"
         :redirect-url="addOriginalParamToUrl(loginButton.redirect_url)"
         :name="loginButton.name"
@@ -22,7 +19,7 @@
         :invitation="invitation"
       >
       </component>
-    </div>
+    </template>
   </div>
 </template>
 

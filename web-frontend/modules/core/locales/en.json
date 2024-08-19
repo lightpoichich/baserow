@@ -382,12 +382,12 @@
     "viewMore": "View more"
   },
   "login": {
-    "title": "Login",
+    "title": "Welcome back",
     "emailPlaceholder": "Enter your email address..",
     "passwordPlaceholder": "Enter your password..",
-    "forgotPassword": "Forgot password?",
-    "signUpText": "Don't have an account?",
-    "signUp": "Sign Up",
+    "forgotPassword": "Forgot?",
+    "signUpText": "New to Baserow?",
+    "signUp": "Sign up",
     "displayPasswordLogin": "Log in using email and password",
     "redirecting": "Redirecting to authentication provider..."
   },

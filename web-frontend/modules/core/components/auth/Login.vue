@@ -31,7 +31,12 @@
           :original="original"
         />
 
-        <div v-if="!passwordLoginHidden" class="auth__separator">or</div>
+        <div
+          v-if="!passwordLoginHidden && loginButtons.length"
+          class="auth__separator"
+        >
+          or
+        </div>
 
         <PasswordLogin
           v-if="!passwordLoginHidden"

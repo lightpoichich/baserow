@@ -231,3 +231,40 @@
     transform: rotate(720deg);
   }
 }
+
+/* spacer classes generation */
+
+@each $size in $spacings {
+  .p-#{$size},
+  .m-#{$size} {
+    padding: #{$size}px;
+  }
+
+  .pl-#{$size},
+  .px-#{$size},
+  .ml-#{$size},
+  .mx-#{$size} {
+    padding-left: #{$size}px;
+  }
+
+  .pr-#{$size},
+  .px-#{$size},
+  .mr-#{$size},
+  .mx-#{$size} {
+    padding-right: #{$size}px;
+  }
+
+  .pt-#{$size},
+  .py-#{$size},
+  .mt-#{$size},
+  .my-#{$size} {
+    padding-top: #{$size}px;
+  }
+
+  .pb-#{$size},
+  .py-#{$size},
+  .mb-#{$size},
+  .my-#{$size} {
+    padding-bottom: #{$size}px;
+  }
+}

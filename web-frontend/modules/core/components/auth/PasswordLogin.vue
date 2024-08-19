@@ -14,7 +14,7 @@
     <Error :error="error"></Error>
     <form class="password-login__form" @submit.prevent="login">
       <FormGroup
-        class="password-login__input"
+        class="mb-24"
         required
         small-label
         :label="$t('field.emailAddress')"
@@ -46,7 +46,7 @@
       </FormGroup>
 
       <FormGroup
-        class="password-login__input"
+        class="mb-32"
         required
         small-label
         :label="$t('field.password')"

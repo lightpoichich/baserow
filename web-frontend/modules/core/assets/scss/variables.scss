@@ -79,8 +79,14 @@ $baserow-icons: 'circle-empty', 'circle-checked', 'check-square', 'formula',
   'kanban', 'file-word', 'file-archive', 'gallery', 'file-powerpoint',
   'calendar', 'smile', 'smartphone', 'plus', 'heading-1', 'heading-2',
   'heading-3', 'paragraph', 'ordered-list', 'enlarge', 'share', 'settings',
+<<<<<<< HEAD
   'up-down-arrows', 'application', 'groups', 'timeline', 'dashboard';
 
 $grid-view-row-height-small: 33px;
 $grid-view-row-height-medium: 55px;
 $grid-view-row-height-large: 99px;
+=======
+  'up-down-arrows', 'application', 'groups';
+
+$spacings: 8, 12, 16, 24, 32;
+>>>>>>> 22820034b (add new spacing helpers classes)

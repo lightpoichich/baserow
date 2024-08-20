@@ -185,17 +185,22 @@ export default {
             endIndex: rows.length,
             top: 0,
           })
-          commit('UPDATE_ALL_FIELD_OPTIONS', {
-            [fieldIndex + 1]: {
-              width: 200,
+        })
+        this.fieldsDefs = fieldsDefs
+
+        for (let idx = 0; idx <= this.fieldsDefs.length; idx++) {
+          commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
+            fieldId: idx + 1,
+            values: {
+              width: 150,
               order: 32767,
               aggregation_type: '',
               aggregation_raw_type: '',
               hidden: false,
             },
           })
-        })
-        this.fieldsDefs = fieldsDefs
+        }
+
         this.$emit('focusOnTable', fieldsDefs.length > 0)
       },
       deep: true,

@@ -236,51 +236,72 @@
 
 @each $size in $spacings {
   .p-#{$size},
-  .m-#{$size} {
+  %p-#{$size} {
     padding: #{$size}px;
   }
 
-  .pl-#{$size},
   .px-#{$size},
-  .ml-#{$size},
+  %px-#{$size} {
+    padding: 0 #{$size}px;
+  }
+
+  .py-#{$size},
+  %py-#{$size} {
+    padding: #{$size}px 0;
+  }
+
+  .m-#{$size},
+  %m-#{$size} {
+    margin: #{$size}px;
+  }
+
+  .my-#{$size},
+  %my-#{$size} {
+    margin: #{$size}px 0;
+  }
+
   .mx-#{$size},
-  %pl-#{$size},
-  %px-#{$size},
-  %ml-#{$size},
   %mx-#{$size} {
+    margin: 0 #{$size}px;
+  }
+
+  .pl-#{$size},
+  %pl-#{$size} {
     padding-left: #{$size}px;
   }
 
+  .ml-#{$size},
+  %ml-#{$size} {
+    margin-left: #{$size}px;
+  }
+
   .pr-#{$size},
-  .px-#{$size},
-  .mr-#{$size},
-  .mx-#{$size},
-  %pr-#{$size},
-  %px-#{$size},
-  %mr-#{$size},
-  %mx-#{$size} {
+  %pr-#{$size} {
     padding-right: #{$size}px;
   }
 
-  .pt-#{$size},
-  .py-#{$size},
-  .mt-#{$size},
-  .my-#{$size},
-  %pt-#{$size},
-  %py-#{$size},
-  %mt-#{$size},
-  %my-#{$size} {
-    padding-top: #{$size}px;
+  .mr-#{$size},
+  %mr-#{$size} {
+    margin-right: #{$size}px;
   }
 
   .pb-#{$size},
-  .py-#{$size},
-  .mb-#{$size},
-  .my-#{$size},
-  %pb-#{$size},
-  %py-#{$size},
-  %mb-#{$size},
-  %my-#{$size} {
+  %pb-#{$size} {
     padding-bottom: #{$size}px;
+  }
+
+  .mb-#{$size},
+  %mb-#{$size} {
+    margin-bottom: #{$size}px;
+  }
+
+  .pt-#{$size},
+  %pt-#{$size} {
+    padding-top: #{$size}px;
+  }
+
+  .mt-#{$size},
+  %mt-#{$size} {
+    margin-top: #{$size}px;
   }
 }

@@ -37,10 +37,9 @@
       <template v-else>
         <template v-if="loginButtons.length">
           <LoginButtons
-            show-border="bottom"
-            :hide-if-no-buttons="loginButtonsCompact"
             :invitation="invitation"
             :original="original"
+            :hide-if-no-buttons="true"
           />
 
           <div class="auth__separator">

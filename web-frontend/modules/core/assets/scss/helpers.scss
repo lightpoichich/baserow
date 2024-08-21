@@ -243,28 +243,44 @@
   .pl-#{$size},
   .px-#{$size},
   .ml-#{$size},
-  .mx-#{$size} {
+  .mx-#{$size},
+  %pl-#{$size},
+  %px-#{$size},
+  %ml-#{$size},
+  %mx-#{$size} {
     padding-left: #{$size}px;
   }
 
   .pr-#{$size},
   .px-#{$size},
   .mr-#{$size},
-  .mx-#{$size} {
+  .mx-#{$size},
+  %pr-#{$size},
+  %px-#{$size},
+  %mr-#{$size},
+  %mx-#{$size} {
     padding-right: #{$size}px;
   }
 
   .pt-#{$size},
   .py-#{$size},
   .mt-#{$size},
-  .my-#{$size} {
+  .my-#{$size},
+  %pt-#{$size},
+  %py-#{$size},
+  %mt-#{$size},
+  %my-#{$size} {
     padding-top: #{$size}px;
   }
 
   .pb-#{$size},
   .py-#{$size},
   .mb-#{$size},
-  .my-#{$size} {
+  .my-#{$size},
+  %pb-#{$size},
+  %py-#{$size},
+  %mb-#{$size},
+  %my-#{$size} {
     padding-bottom: #{$size}px;
   }
 }

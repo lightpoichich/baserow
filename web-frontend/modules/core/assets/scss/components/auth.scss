@@ -15,7 +15,8 @@
 
 .auth__logo {
   height: 16px;
-  margin-bottom: 48px;
+
+  @extend %mb-16;
 
   & img {
     height: 100%;

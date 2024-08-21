@@ -16,7 +16,7 @@
         :disabled="isChipDisabled(whatKey)"
         :icon="whatItem.icon"
         @click="toggleSelection(whatKey)"
-        >{{ whatItem.props.name }}
+        >{{ whatItem.name }}
       </Chips>
       <Chips
         icon="iconoir-plus"
@@ -71,6 +71,9 @@
           >
             <template v-if="!$v.ownField.props.name.required">
               {{ $t('error.requiredField') }}
+            </template>
+            <template v-if="!$v.ownField.props.name.uniqueNameValidator">
+              {{ $t('error.alreadyInUse') }}
             </template>
           </p>
         </div>
@@ -167,6 +170,7 @@ export default {
       if (isAlreadySelected) {
         this.selectedFieldsCount--
         delete this.selectedFields[value]
+        this.forceValidation()
       } else {
         this.selectedFieldsCount++
         if (value === 'own') {
@@ -176,7 +180,18 @@ export default {
           }
           this.selectedFields.own = this.ownField
         } else {
-          this.selectedFields[value] = this.whatItems[value]
+          this.forceValidation()
+          const selectedItem = this.whatItems[value]
+          if (this.isNameUsed(selectedItem.props.name)) {
+            const useCount = this.useCount(selectedItem.props.name)
+            selectedItem.props.name = `${selectedItem.props.name} ${
+              useCount + 1
+            }`
+          } else {
+            selectedItem.props.name = selectedItem.name
+          }
+
+          this.selectedFields[value] = selectedItem
         }
       }
       this.updateValue()
@@ -185,10 +200,28 @@ export default {
       const fields = this.selectedFields
       this.$emit('update-data', { fields })
     },
-    getSelectedFieldNames() {
+    getSelectedFieldNames(excludeField) {
       return Object.entries(this.selectedFields)
-        .filter(([key, value]) => key !== 'own')
-        .map(([key, value]) => value.name)
+        .filter(([key, value]) => key !== excludeField)
+        .map(([key, value]) => value.props.name)
+    },
+    useCount(value, excludeField) {
+      return this.getSelectedFieldNames(excludeField).filter(
+        (name) => name === value
+      ).length
+    },
+    isNameUsed(value, excludeField) {
+      const selectedFieldNames = this.getSelectedFieldNames(excludeField)
+      return selectedFieldNames && selectedFieldNames.includes(value)
+    },
+    forceValidation() {
+      // This is needed because we need to trigger validation without
+      // changing the value (by clicking on chips). Vuelidate
+      // doesn't trigger validation if the value doesn't change.
+      const tmp = this.$v.ownField.props.name.$model
+      this.$v.ownField.props.name.$model = ''
+      this.$v.ownField.props.name.$model = tmp
+      this.$v.ownField.props.name.$touch()
     },
   },
   validations() {
@@ -197,6 +230,9 @@ export default {
         props: {
           name: {
             required: requiredIf(() => this.isOwnFieldValidationEnabled),
+            uniqueNameValidator: (value) => {
+              return !this.isNameUsed(value, 'own')
+            },
           },
         },
       },

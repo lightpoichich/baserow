@@ -235,10 +235,10 @@ export class DatabaseScratchTrackTaskFieldsOnboardingType extends DatabaseScratc
         false,
         false,
       ]),
-      description: this.getField('description', LongTextFieldType, {}, [
-        this.$t('databaseScratchTrackFieldsStep.tasksDescriptionRow1'),
-        this.$t('databaseScratchTrackFieldsStep.tasksDescriptionRow2'),
-        this.$t('databaseScratchTrackFieldsStep.tasksDescriptionRow3'),
+      description: this.getField('details', LongTextFieldType, {}, [
+        this.$t('databaseScratchTrackFieldsStep.tasksDetailsRow1'),
+        this.$t('databaseScratchTrackFieldsStep.tasksDetailsRow2'),
+        this.$t('databaseScratchTrackFieldsStep.tasksDetailsRow3'),
       ]),
     }
   }
@@ -251,10 +251,10 @@ export class DatabaseScratchTrackCampaignFieldsOnboardingType extends DatabaseSc
 
   getFields() {
     return {
-      description: this.getField('description', LongTextFieldType, {}, [
-        this.$t('databaseScratchTrackFieldsStep.campaignsDescriptionRow1'),
-        this.$t('databaseScratchTrackFieldsStep.campaignsDescriptionRow2'),
-        this.$t('databaseScratchTrackFieldsStep.campaignsDescriptionRow3'),
+      description: this.getField('details', LongTextFieldType, {}, [
+        this.$t('databaseScratchTrackFieldsStep.campaignsDetailsRow1'),
+        this.$t('databaseScratchTrackFieldsStep.campaignsDetailsRow2'),
+        this.$t('databaseScratchTrackFieldsStep.campaignsDetailsRow3'),
       ]),
       startDate: this.getField(
         'startDate',

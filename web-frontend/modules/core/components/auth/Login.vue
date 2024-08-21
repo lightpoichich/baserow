@@ -49,7 +49,7 @@
         </PasswordLogin>
 
         <LoginActions :invitation="invitation" :original="original">
-          <li v-if="passwordLoginHidden">
+          <li v-if="passwordLoginHidden" class="auth__action-link">
             <a @click="passwordLoginHiddenIfDisabled = false">
               {{ $t('login.displayPasswordLogin') }}
             </a>

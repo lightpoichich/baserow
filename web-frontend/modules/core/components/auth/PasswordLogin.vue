@@ -12,7 +12,7 @@
       </i18n>
     </Alert>
     <Error :error="error"></Error>
-    <form class="password-login__form" @submit.prevent="login">
+    <form @submit.prevent="login">
       <FormGroup
         class="mb-24"
         required
@@ -53,7 +53,7 @@
         :error="fieldHasErrors('password')"
       >
         <template v-if="displayForgotPassword" #after-label>
-          <nuxt-link :to="{ name: 'forgot-password' }">
+          <nuxt-link tabindex="3" :to="{ name: 'forgot-password' }">
             {{ $t('login.forgotPassword') }}
           </nuxt-link></template
         >
@@ -73,7 +73,7 @@
         </template>
       </FormGroup>
 
-      <div class="auth__action">
+      <div class="auth__action mb-32">
         <Button
           type="primary"
           size="large"

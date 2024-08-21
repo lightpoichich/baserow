@@ -1,5 +1,8 @@
 <template>
-  <div>
+  <div
+    class="auth__wrapper"
+    :class="{ 'auth__wrapper--small-centered': success }"
+  >
     <div v-if="!success">
       <div class="auth__logo">
         <nuxt-link :to="{ name: 'index' }">
@@ -17,9 +20,8 @@
           <template #title>{{ $t('forgotPassword.disabled') }}</template>
           <p>{{ $t('forgotPassword.disabledMessage') }}</p>
         </Alert>
-        <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
-          <i class="iconoir-arrow-left"></i>
-          {{ $t('action.backToLogin') }}
+        <nuxt-link :to="{ name: 'login' }">
+          <Button>{{ $t('action.backToLogin') }}</Button>
         </nuxt-link>
       </template>
 
@@ -35,7 +37,7 @@
             :label="$t('field.emailAddress')"
             required
             :error="$v.account.email.$error"
-            class="margin-bottom-2"
+            class="mb-32"
           >
             <FormInput
               ref="email"
@@ -51,7 +53,7 @@
               {{ $t('error.invalidEmail') }}
             </template>
           </FormGroup>
-          <div class="auth__action">
+          <div class="auth__action mb-32">
             <Button
               type="primary"
               full-width
@@ -64,10 +66,9 @@
           </div>
           <div>
             <ul class="auth__action-links">
-              <li>
-                {{ $t('forgotPassword.loginText') }}
+              <li class="auth__action-link">
                 <nuxt-link :to="{ name: 'login' }">
-                  {{ $t('action.login') }}
+                  {{ $t('forgotPassword.goBack') }}
                 </nuxt-link>
               </li>
             </ul>
@@ -75,21 +76,15 @@
         </form>
       </div>
     </div>
-    <div v-if="success" class="box__message">
-      <div class="box__message-icon">
-        <i class="iconoir-send"></i>
-      </div>
-      <p class="box__message-text">
-        {{ $t('forgotPassword.confirmation') }}
+    <div v-if="success" class="auth__wrapper auth__wrapper--small-centered">
+      <ButtonIcon icon="iconoir-mail" type="secondary"></ButtonIcon>
+      <h2>
+        {{ $t('forgotPassword.confirmationTitle') }}
+      </h2>
+      <p>
+        {{ $t('forgotPassword.confirmation', { email: account.email }) }}
       </p>
-
-      <Button
-        tag="nuxt-link"
-        :to="{ name: 'login' }"
-        type="primary"
-        size="large"
-        icon="iconoir-arrow-left"
-      >
+      <Button tag="nuxt-link" :to="{ name: 'login' }" type="primary">
         {{ $t('action.backToLogin') }}</Button
       >
     </div>

@@ -3,15 +3,6 @@
     <AuthProviderIcon :icon="icon" />
     <span v-if="!small"> {{ $t('loginButton.continueWith') }} {{ name }}</span>
   </Button>
-
-  <!-- <a
-      class="auth-provider-buttons__button"
-      :class="{ 'auth-provider-buttons__button--small': small }"
-      :href="`${loginUrl}`"
-      target="_self"
-    >
-      <div v-if="!small"></div>
-    </a> -->
 </template>
 
 <script>

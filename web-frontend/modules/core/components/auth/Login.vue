@@ -24,19 +24,18 @@
         {{ $t('login.redirecting') }}
       </div>
       <div v-else>
-        <LoginButtons
-          show-border="bottom"
-          :hide-if-no-buttons="loginButtonsCompact"
-          :invitation="invitation"
-          :original="original"
-        />
+        <template v-if="!passwordLoginHidden && loginButtons.length">
+          <LoginButtons
+            show-border="bottom"
+            :hide-if-no-buttons="loginButtonsCompact"
+            :invitation="invitation"
+            :original="original"
+          />
 
-        <div
-          v-if="!passwordLoginHidden && loginButtons.length"
-          class="auth__separator"
-        >
-          or
-        </div>
+          <div class="auth__separator">
+            {{ $t('common.or') }}
+          </div>
+        </template>
 
         <PasswordLogin
           v-if="!passwordLoginHidden"

@@ -35,11 +35,6 @@ export default {
       required: false,
       default: null,
     },
-    showBorder: {
-      type: String,
-      validate: (value) => ['top', 'bottom', 'none'].includes(value),
-      default: 'none',
-    },
     hideIfNoButtons: {
       type: Boolean,
       default: false,

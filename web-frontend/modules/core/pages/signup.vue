@@ -8,12 +8,6 @@
           <Logo />
         </nuxt-link>
       </div>
-      <!-- <div class="auth__head auth__head--more-margin">
-        <h1 class="auth__head-title">
-          {{ $t('signup.title') }}
-        </h1>
-        <LangPicker />
-      </div> -->
 
       <h1 class="auth__head-title">{{ $t('signup.headTitle') }}</h1>
       <div class="auth__head">

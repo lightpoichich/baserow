@@ -9,7 +9,7 @@
           <Logo />
         </nuxt-link>
       </div>
-      <div class="auth__head auth__head--more-margin">
+      <div class="auth__head">
         <h1 class="auth__head-title">{{ $t('forgotPassword.title') }}</h1>
         <LangPicker />
       </div>

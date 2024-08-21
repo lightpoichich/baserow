@@ -28,7 +28,7 @@ export const routes = [
   },
   {
     name: 'reset-password',
-    path: '/reset-password',
+    path: '/reset-password/:token',
     component: path.resolve(__dirname, 'pages/resetPassword.vue'),
   },
   {

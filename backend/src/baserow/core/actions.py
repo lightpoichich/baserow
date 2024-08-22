@@ -1135,3 +1135,67 @@ class CreateInitialWorkspaceActionType(ActionType):
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
+
+
+class ExportApplicationsActionType(ActionType):
+    type = "export_applications"
+    description = ActionTypeDescription(
+        _("Export applications"),
+        _(
+            'Applications "%(application_names)s" (%(application_ids)s) in workspace "%(workspace_name)s" (%(workspace_id)s) exported '
+        ),
+        WORKSPACE_ACTION_CONTEXT,
+    )
+    analytics_params = [
+        "workspace_id",
+        "application_ids",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        workspace_id: int
+        workspace_name: str
+        application_ids: int
+        application_names: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        applications: List[Application],
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Application:
+        """
+        Duplicate an existing application instance.
+        See baserow.core.handler.CoreHandler.duplicate_application for further details.
+        Undoing this action trashes the application and redoing restores it.
+
+        :param user: The user on whose behalf the application is duplicated.
+        :param application: The application instance that needs to be duplicated.
+        :param progress_builder: A progress builder instance that can be used to
+            track the progress of the duplication.
+        :return: The new (duplicated) application instance.
+        """
+
+        new_app_clone = CoreHandler().duplicate_application(
+            user,
+            application,
+            progress_builder,
+        )
+        application_type = application_type_registry.get_by_model(
+            application.specific_class
+        )
+        workspace = application.workspace
+
+        params = cls.Params(
+            workspace.id,
+            workspace.name,
+            application_type.type,
+            new_app_clone.id,
+            new_app_clone.name,
+            application.id,
+            application.name,
+        )
+        cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
+
+        return new_app_clone

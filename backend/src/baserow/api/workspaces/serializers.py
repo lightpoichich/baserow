@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from baserow.core.generative_ai.registries import generative_ai_model_type_registry
 from baserow.core.models import Workspace
+from baserow.core.job_types import job_type_registry
 
 from .users.serializers import WorkspaceUserSerializer, WorkspaceUserWorkspaceSerializer
 
@@ -56,3 +57,19 @@ class OrderWorkspacesSerializer(serializers.Serializer):
         child=serializers.IntegerField(),
         help_text="Workspace ids in the desired order.",
     )
+
+
+ExportApplicationsJobRequestSerializer = job_type_registry.get(
+    ExportApplicationsJobType.type
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    request_serializer=True,
+    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
+)
+
+ExportApplicationsJobResponseSerializer = job_type_registry.get(
+    ExportApplicationsJobType.type
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
+)

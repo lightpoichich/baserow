@@ -24,7 +24,7 @@ from django.db.models import ForeignKey, ManyToManyField, Max, Model, QuerySet
 from django.db.models.functions import Collate
 from django.db.models.sql.query import LOOKUP_SEP
 from django.db.transaction import Atomic, get_connection
-
+from cachalot.api import cachalot_disabled
 from loguru import logger
 from psycopg2 import sql
 
@@ -794,3 +794,53 @@ class CombinedForeignKeyAndManyToManyMultipleFieldPrefetch:
                 row_id_to_field_name_to_target_ids[result[0]][result[1]] = result[2]
 
         return row_id_to_field_name_to_target_ids
+
+
+def read_repeatable_multiple_applications_atomic_transaction(
+    application_ids: int,
+) -> Atomic:
+    """
+    If you want to safely read the contents of a Baserow database inside of a single
+    transaction and be guaranteed to see a single snapshot of the metadata and user
+    data contained within the Baserow db tables then use this atomic transaction context
+    manager.
+
+    This manager does two things to ensure this:
+    1. It runs in the REPEATABLE READ postgres isolation level, meaning all queries
+       will see a snapshot of the database starting at the first SELECT etc statement
+       run instead the transaction.
+    2. This query runs that first transaction itself and intentionally locks all field
+       and table metadata rows in this first SELECT statement FOR KEY SHARE. This means
+       once the transaction has obtained this lock it can proceed safely without
+       having to worry about fields being updated during the length of the transaction.
+       We need to lock these rows as otherwise Baserow's various endpoints can
+       execute ALTER TABLE and DROP TABLE statements which are not MVCC safe and will
+       break the snapshot obtained by REPEATABLE READ, see
+       https://www.postgresql.org/docs/current/mvcc-caveats.html for more info.
+
+    :param database_id: The database to obtain table and field locks for to ensure
+        safe reading.
+    :return: An atomic context manager.
+    """
+
+    # It is critical we obtain the locks in the first SELECT statement run in the
+    # REPEATABLE READ transaction so we are given a snapshot that is guaranteed to never
+    # have harmful MVCC operations run on it.
+    
+    # FIXME: for builder applications and not use database here
+    first_statement = sql.SQL(
+        """
+ SELECT * FROM database_field
+ INNER JOIN database_table ON database_field.table_id = database_table.id
+ WHERE database_table.database_id IN ({0}) FOR KEY SHARE OF database_field, database_table
+"""
+    )
+    first_statement_args = [sql.Literal(",".join(application_ids))]
+    with cachalot_disabled():
+        return transaction_atomic(
+            isolation_level=IsolationLevel.REPEATABLE_READ,
+            first_sql_to_run_in_transaction_with_args=(
+                first_statement,
+                first_statement_args,
+            ),
+        )

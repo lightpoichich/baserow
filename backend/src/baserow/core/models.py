@@ -643,3 +643,23 @@ class InstallTemplateJob(
         help_text="The template that is installed.",
     )
     installed_applications = models.JSONField(default=list)
+
+
+class ExportApplicationsJob(
+    JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
+):
+    workspace_id = models.PositiveIntegerField(
+        help_text="The workspace id that the applications are going to be exported from."
+    )
+    application_ids = models.TextField(
+        help_text="The comma separated list of application ids that are going to be exported."
+    )
+    only_structure = models.BooleanField(
+        default=False,
+        help_text="Indicates if only the structure of the applications should be "
+        "exported, without user data.",
+    )
+    exported_file_name = models.TextField(
+        blank=True,
+        help_text="The name of the exported archive file.",
+    )

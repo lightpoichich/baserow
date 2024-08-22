@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 
 from rest_framework import serializers
 
+from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.applications.serializers import (
     InstallTemplateJobApplicationsSerializer,
     PolymorphicApplicationResponseSerializer,
@@ -19,12 +20,17 @@ from baserow.api.templates.errors import (
 )
 from baserow.api.templates.serializers import TemplateSerializer
 from baserow.api.workspaces.serializers import WorkspaceSerializer
+from baserow.contrib.database.api.export.serializers import (
+    ExportedFileURLSerializerMixin,
+)
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     DuplicateApplicationActionType,
     InstallTemplateActionType,
 )
+from baserow.core.db import read_repeatable_multiple_applications_atomic_transaction, read_repeatable_single_workspace_atomic_transaction
 from baserow.core.exceptions import (
+    ApplicationDoesNotExist,
     DuplicateApplicationMaxLocksExceededException,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
@@ -33,7 +39,12 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
-from baserow.core.models import Application, DuplicateApplicationJob, InstallTemplateJob
+from baserow.core.models import (
+    Application,
+    DuplicateApplicationJob,
+    ExportApplicationsJob,
+    InstallTemplateJob,
+)
 from baserow.core.operations import CreateApplicationsWorkspaceOperationType
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
@@ -188,3 +199,91 @@ class InstallTemplateJobType(JobType):
         job.save(update_fields=("installed_applications",))
 
         return installed_applications
+
+
+class ExportApplicationsJobType(JobType):
+    type = "export_applications"
+    model_class = ExportApplicationsJob
+    max_count = 1
+
+    api_exceptions_map = {
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+    }
+
+    job_exceptions_map = {
+        # TODO: Add the exception error messages
+    }
+
+    request_serializer_field_names = ["workspace_id", "application_ids"]
+    request_serializer_field_overrides = {
+        "workspace_id": serializers.IntegerField(
+            help_text="The ID of the workspace where the template will be installed.",
+        ),
+        "application_ids": serializers.ListField(
+            required=False,
+            child=serializers.IntegerField(),
+            help_text="The application IDs to export",
+        ),
+    }
+
+    serializer_mixins = [ExportedFileURLSerializerMixin]
+    serializer_field_names = ["exported_file_name", "url"]
+
+    def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
+        return read_repeatable_multiple_applications_atomic_transaction(job.application_ids)
+
+    def prepare_values(
+        self, values: Dict[str, Any], user: AbstractUser
+    ) -> Dict[str, Any]:
+        # validate that the workspace exists, the user have access to it
+        # if provided validate the all the applications ids exist and the user has access to them
+        # if not provided, get all the applications the user has access to and return the ids
+        
+
+        workspace_id = values.get("workspace_id")
+        application_ids = values.get("application_ids")
+        
+        queryset = Application.objects.filter(workspace_id=workspace_id)
+        if application_ids:
+            queryset = queryset.filter(id__in=application_ids)
+        
+        applications = queryset.all()
+        # if len(applications) == len(applications_ids) otherwise raise a not found exception
+        CoreHandler().check_permissions(
+            user,
+            ReadApplicationsWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
+        )
+        # ensure all the applications are accessible by the user
+        
+        return {
+            "workspace_id": workspace_id,
+            "application_ids": ",".join(application_ids) if application_ids else "",
+        }
+
+    def run(self, job: ExportApplicationsJob, progress: Progress) -> str:
+        # redo the same checks and fail if something changed in the meantime
+        
+        application_ids = None
+        if job.application_ids:
+            application_ids = [int(app_id) for app_id in job.application_ids.split(",")]
+            
+        exported_file_name = action_type_registry.get_by_type(
+            ExportApplicationsActionType
+        ).do(
+            job.user,
+            job.workpace_id,
+            application_ids,
+            progress_builder=progress.create_child_builder(
+                represents_progress=progress.total
+            ),
+        )
+
+        # update the job with the new duplicated application
+        job.exported_file_name = exported_file_name
+        job.save(update_fields=("exported_file_name",))
+
+        return exported_file_name

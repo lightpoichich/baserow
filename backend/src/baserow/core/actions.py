@@ -1164,7 +1164,7 @@ class ExportApplicationsActionType(ActionType):
         user: AbstractUser,
         applications: List[Application],
         progress_builder: Optional[ChildProgressBuilder] = None,
-    ) -> Application:
+    ) -> List[Application]:
         """
         Duplicate an existing application instance.
         See baserow.core.handler.CoreHandler.duplicate_application for further details.
@@ -1177,25 +1177,31 @@ class ExportApplicationsActionType(ActionType):
         :return: The new (duplicated) application instance.
         """
 
-        new_app_clone = CoreHandler().duplicate_application(
-            user,
-            application,
-            progress_builder,
-        )
-        application_type = application_type_registry.get_by_model(
-            application.specific_class
-        )
-        workspace = application.workspace
+        # new_app_clone = CoreHandler().duplicate_application(
+        #     user,
+        #     application,
+        #     progress_builder,
+        # )
+        # application_type = application_type_registry.get_by_model(
+        #     application.specific_class
+        # )
+        # workspace = application.workspace
+        #
+        #
+        # params = cls.Params(
+        #     workspace.id,
+        #     workspace.name,
+        #     application_type.type,
+        #     new_app_clone.id,
+        #     new_app_clone.name,
+        #     application.id,
+        #     application.name,
+        # )
+        # cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
 
-        params = cls.Params(
-            workspace.id,
-            workspace.name,
-            application_type.type,
-            new_app_clone.id,
-            new_app_clone.name,
-            application.id,
-            application.name,
-        )
-        cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
+        return []
 
-        return new_app_clone
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        # TODO: Implement this
+        return RootActionScopeType.value()

@@ -27,8 +27,9 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     DuplicateApplicationActionType,
     InstallTemplateActionType,
+    ExportApplicationsActionType,
 )
-from baserow.core.db import read_repeatable_multiple_applications_atomic_transaction, read_repeatable_single_workspace_atomic_transaction
+from baserow.core.db import read_repeatable_multiple_applications_atomic_transaction
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     DuplicateApplicationMaxLocksExceededException,
@@ -217,14 +218,25 @@ class ExportApplicationsJobType(JobType):
     }
 
     request_serializer_field_names = ["workspace_id", "application_ids"]
+    # TODO: It doesn't accept empty value, empty list
     request_serializer_field_overrides = {
-        "workspace_id": serializers.IntegerField(
-            help_text="The ID of the workspace where the template will be installed.",
-        ),
         "application_ids": serializers.ListField(
+            allow_null=True,
+            allow_empty=True,
             required=False,
             child=serializers.IntegerField(),
-            help_text="The application IDs to export",
+            help_text=(
+                "The application IDs to export. If not provided, all the applications for "
+                "the workspace will be exported."
+            ),
+        ),
+        'structure_only': serializers.BooleanField(
+            required=False,
+            default=False,
+            help_text=(
+                "If True, only the structure of the applications will be exported. "
+                "If False, the data will be included as well."
+            )
         ),
     }
 
@@ -240,25 +252,25 @@ class ExportApplicationsJobType(JobType):
         # validate that the workspace exists, the user have access to it
         # if provided validate the all the applications ids exist and the user has access to them
         # if not provided, get all the applications the user has access to and return the ids
-        
+
 
         workspace_id = values.get("workspace_id")
         application_ids = values.get("application_ids")
-        
+
         queryset = Application.objects.filter(workspace_id=workspace_id)
         if application_ids:
             queryset = queryset.filter(id__in=application_ids)
-        
+
         applications = queryset.all()
         # if len(applications) == len(applications_ids) otherwise raise a not found exception
-        CoreHandler().check_permissions(
-            user,
-            ReadApplicationsWorkspaceOperationType.type,
-            workspace=workspace,
-            context=workspace,
-        )
-        # ensure all the applications are accessible by the user
-        
+        # CoreHandler().check_permissions(
+        #     user,
+        #     ReadApplicationsWorkspaceOperationType.type,
+        #     workspace=workspace,
+        #     context=workspace,
+        # )
+        # # ensure all the applications are accessible by the user
+
         return {
             "workspace_id": workspace_id,
             "application_ids": ",".join(application_ids) if application_ids else "",
@@ -266,11 +278,11 @@ class ExportApplicationsJobType(JobType):
 
     def run(self, job: ExportApplicationsJob, progress: Progress) -> str:
         # redo the same checks and fail if something changed in the meantime
-        
+
         application_ids = None
         if job.application_ids:
             application_ids = [int(app_id) for app_id in job.application_ids.split(",")]
-            
+
         exported_file_name = action_type_registry.get_by_type(
             ExportApplicationsActionType
         ).do(

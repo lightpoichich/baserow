@@ -17,6 +17,15 @@
         v-if="$hasPermission('workspace.update', workspace, workspace.id)"
         class="context__menu-item"
       >
+        <a class="context__menu-item-link" @click="openExportData">
+          <i class="context__menu-item-icon iconoir-arrow-up-circle"></i>
+          {{ $t('workspaceContext.exportWorkspace') }}
+        </a>
+      </li>
+      <li
+        v-if="$hasPermission('workspace.update', workspace, workspace.id)"
+        class="context__menu-item"
+      >
         <a class="context__menu-item-link" @click="$emit('rename')">
           <i class="context__menu-item-icon iconoir-edit-pencil"></i>
           {{ $t('workspaceContext.renameWorkspace') }}
@@ -95,6 +104,12 @@
       :initial-workspace="workspace"
     >
     </TrashModal>
+    <ExportWorkspaceModal
+      v-if="$hasPermission('workspace.update', workspace, workspace.id)"
+      ref="exportWorkspaceModal"
+      :workspace="workspace"
+    >
+    </ExportWorkspaceModal>
     <LeaveWorkspaceModal
       ref="leaveWorkspaceModal"
       :workspace="workspace"
@@ -110,13 +125,19 @@
 <script>
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import ExportWorkspaceModal from '@baserow/modules/core/components/export/ExportWorkspaceModal.vue'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import LeaveWorkspaceModal from '@baserow/modules/core/components/workspace/LeaveWorkspaceModal'
 import WorkspaceSettingsModal from '@baserow/modules/core/components/workspace/WorkspaceSettingsModal'
 
 export default {
   name: 'WorkspaceContext',
-  components: { LeaveWorkspaceModal, TrashModal, WorkspaceSettingsModal },
+  components: {
+    ExportWorkspaceModal,
+    LeaveWorkspaceModal,
+    TrashModal,
+    WorkspaceSettingsModal,
+  },
   mixins: [context],
   props: {
     workspace: {
@@ -137,6 +158,10 @@ export default {
     showWorkspaceTrashModal() {
       this.$refs.context.hide()
       this.$refs.workspaceTrashModal.show()
+    },
+    openExportData() {
+      this.$refs.context.hide()
+      this.$refs.exportWorkspaceModal.show()
     },
     async deleteWorkspace() {
       this.loading = true

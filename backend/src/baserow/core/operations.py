@@ -45,6 +45,11 @@ class ListApplicationsWorkspaceOperationType(WorkspaceCoreOperationType):
     object_scope_name = "application"
 
 
+class ReadApplicationsWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.read_applications_workspace"
+    object_scope_name = "application"
+
+
 class CreateApplicationsWorkspaceOperationType(WorkspaceCoreOperationType):
     type = "workspace.create_application"
 

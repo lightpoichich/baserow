@@ -797,7 +797,7 @@ class CombinedForeignKeyAndManyToManyMultipleFieldPrefetch:
 
 
 def read_repeatable_multiple_applications_atomic_transaction(
-    application_ids: int,
+    application_ids: str,
 ) -> Atomic:
     """
     If you want to safely read the contents of a Baserow database inside of a single
@@ -826,7 +826,7 @@ def read_repeatable_multiple_applications_atomic_transaction(
     # It is critical we obtain the locks in the first SELECT statement run in the
     # REPEATABLE READ transaction so we are given a snapshot that is guaranteed to never
     # have harmful MVCC operations run on it.
-    
+
     # FIXME: for builder applications and not use database here
     first_statement = sql.SQL(
         """

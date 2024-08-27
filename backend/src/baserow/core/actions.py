@@ -24,7 +24,7 @@ from baserow.core.models import (
     WorkspaceInvitation,
     WorkspaceUser,
 )
-from baserow.core.registries import application_type_registry
+from baserow.core.registries import application_type_registry, ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
 
@@ -1155,14 +1155,15 @@ class ExportApplicationsActionType(ActionType):
     class Params:
         workspace_id: int
         workspace_name: str
-        application_ids: int
+        application_ids: List[int]
         application_names: str
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
-        applications: List[Application],
+        workspace_id: int,
+        application_ids: List[int],
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> List[Application]:
         """
@@ -1177,31 +1178,50 @@ class ExportApplicationsActionType(ActionType):
         :return: The new (duplicated) application instance.
         """
 
-        # new_app_clone = CoreHandler().duplicate_application(
-        #     user,
-        #     application,
-        #     progress_builder,
-        # )
-        # application_type = application_type_registry.get_by_model(
-        #     application.specific_class
-        # )
-        # workspace = application.workspace
-        #
-        #
-        # params = cls.Params(
-        #     workspace.id,
-        #     workspace.name,
-        #     application_type.type,
-        #     new_app_clone.id,
-        #     new_app_clone.name,
-        #     application.id,
-        #     application.name,
-        # )
-        # cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
+        workspace = CoreHandler().get_workspace(workspace_id=workspace_id)
 
-        return []
+
+        # FIXME: Clean this
+        import os
+        import json
+
+        file_name = f"workspace_{workspace.id}"
+        current_path = os.path.abspath(os.getcwd())
+        files_path = os.path.join(current_path, f"{file_name}.zip")
+        export_path = os.path.join(current_path, f"{file_name}.json")
+
+
+        cli_import_export_config = ImportExportConfig(
+            include_permission_data=False, reduce_disk_space_usage=False
+        )
+
+        with open(files_path, "wb") as files_buffer:
+            exported_applications = CoreHandler().export_workspace_applications(
+                workspace,
+                files_buffer=files_buffer,
+                import_export_config=cli_import_export_config,
+            )
+
+        with open(export_path, "w") as export_buffer:
+            json.dump(
+                exported_applications, export_buffer, indent=None
+            )
+
+        params = cls.Params(
+            workspace_id=workspace.id,
+            workspace_name=workspace.name,
+            application_ids=application_ids,
+            application_names=",".join(
+                [
+                    CoreHandler().get_application(application_id).name
+                    for application_id in application_ids
+                ]
+            ),
+        )
+
+        cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
+        return exported_applications
 
     @classmethod
-    def scope(cls) -> ActionScopeStr:
-        # TODO: Implement this
-        return RootActionScopeType.value()
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)

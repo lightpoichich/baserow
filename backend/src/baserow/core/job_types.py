@@ -29,7 +29,7 @@ from baserow.core.actions import (
     InstallTemplateActionType,
     ExportApplicationsActionType,
 )
-from baserow.core.db import read_repeatable_multiple_applications_atomic_transaction
+from baserow.core.db import read_repeatable_multiple_applications_atomic_transaction, transaction_atomic
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     DuplicateApplicationMaxLocksExceededException,
@@ -46,7 +46,7 @@ from baserow.core.models import (
     ExportApplicationsJob,
     InstallTemplateJob,
 )
-from baserow.core.operations import CreateApplicationsWorkspaceOperationType
+from baserow.core.operations import CreateApplicationsWorkspaceOperationType, ReadApplicationsWorkspaceOperationType
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
 
@@ -244,7 +244,21 @@ class ExportApplicationsJobType(JobType):
     serializer_field_names = ["exported_file_name", "url"]
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
-        return read_repeatable_multiple_applications_atomic_transaction(job.application_ids)
+        return transaction_atomic()
+        # return read_repeatable_multiple_applications_atomic_transaction(job.application_ids)
+
+    def check_permissions(self, user, workspace, applications):
+
+        if len(applications) != len(applications):
+            # TODO: Update exception type
+            raise Exception("Some of the applications do not exist or the user does not have access to them.")
+
+        CoreHandler().check_permissions(
+            user,
+            ReadApplicationsWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
+        )
 
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
@@ -254,7 +268,10 @@ class ExportApplicationsJobType(JobType):
         # if not provided, get all the applications the user has access to and return the ids
 
 
+        handler = CoreHandler()
         workspace_id = values.get("workspace_id")
+
+        workspace = handler.get_workspace(values["workspace_id"])
         application_ids = values.get("application_ids")
 
         queryset = Application.objects.filter(workspace_id=workspace_id)
@@ -262,14 +279,8 @@ class ExportApplicationsJobType(JobType):
             queryset = queryset.filter(id__in=application_ids)
 
         applications = queryset.all()
-        # if len(applications) == len(applications_ids) otherwise raise a not found exception
-        # CoreHandler().check_permissions(
-        #     user,
-        #     ReadApplicationsWorkspaceOperationType.type,
-        #     workspace=workspace,
-        #     context=workspace,
-        # )
-        # # ensure all the applications are accessible by the user
+
+        # self.check_permissions(user=user, workspace=workspace, applications=applications)
 
         return {
             "workspace_id": workspace_id,
@@ -277,7 +288,10 @@ class ExportApplicationsJobType(JobType):
         }
 
     def run(self, job: ExportApplicationsJob, progress: Progress) -> str:
-        # redo the same checks and fail if something changed in the meantime
+
+        workspace = CoreHandler().get_workspace(job.workspace_id)
+        # FIXME: populate applications
+        # self.check_permissions(user=job.user, workspace=workspace, applications=[])
 
         application_ids = None
         if job.application_ids:
@@ -287,8 +301,8 @@ class ExportApplicationsJobType(JobType):
             ExportApplicationsActionType
         ).do(
             job.user,
-            job.workpace_id,
-            application_ids,
+            workspace_id=job.workspace_id,
+            application_ids=application_ids,
             progress_builder=progress.create_child_builder(
                 represents_progress=progress.total
             ),

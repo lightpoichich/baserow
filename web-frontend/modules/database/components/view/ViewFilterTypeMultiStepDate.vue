@@ -5,7 +5,6 @@
       :disabled="disabled"
       :value="operatorValue"
       :fixed-items="true"
-      small
       @input="setOperator($event)"
     >
       <template #value>

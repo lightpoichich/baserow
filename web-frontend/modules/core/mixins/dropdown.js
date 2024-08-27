@@ -21,6 +21,17 @@ export default {
   },
   props: {
     /**
+     * The size of the dropdown.
+     */
+    size: {
+      type: String,
+      required: false,
+      validator: function (value) {
+        return ['regular', 'large'].includes(value)
+      },
+      default: 'regular',
+    },
+    /**
      * The value of the dropdown. This can be a single value or an array of values if
      * the multiple property is set to true.
      */
@@ -73,14 +84,6 @@ export default {
      * Wether or not the dropdown is disabled.
      */
     disabled: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    /**
-     * Display the dropdown in a small version.
-     */
-    small: {
       type: Boolean,
       required: false,
       default: false,

@@ -465,34 +465,6 @@
             </div>
           </FormGroup>
 
-          <FormGroup label="Dropdown tiny" required class="margin-bottom-2">
-            <div style="width: 200px">
-              <Dropdown
-                v-model="dropdown"
-                :show-search="false"
-                class="dropdown--tiny"
-              >
-                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                <DropdownItem
-                  name="Choice 2"
-                  value="choice-2"
-                  icon="iconoir-edit-pencil"
-                ></DropdownItem>
-                <DropdownItem
-                  name="Choice 3"
-                  value="choice-3"
-                  icon="iconoir-db"
-                ></DropdownItem>
-                <DropdownItem
-                  name="Choice 4"
-                  value="choice-4"
-                  icon="iconoir-cancel"
-                  :disabled="true"
-                ></DropdownItem>
-              </Dropdown>
-            </div>
-          </FormGroup>
-
           <FormGroup label="Dropdown error" required class="margin-bottom-2">
             <div style="width: 200px">
               <Dropdown v-model="dropdown" class="dropdown--error">

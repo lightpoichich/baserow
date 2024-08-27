@@ -26,7 +26,6 @@
           max-width
           :error="$v.values.rollup_function.$error"
           :fixed-items="true"
-          small
           @hide="$v.values.rollup_function.$touch()"
         >
           <DropdownItem

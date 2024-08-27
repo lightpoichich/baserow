@@ -19,7 +19,6 @@
         v-model="values.target_field_id"
         :error="$v.values.target_field_id.$error"
         :fixed-items="true"
-        small
         @hide="$v.values.target_field_id.$touch()"
         @input="targetFieldChanged($event)"
       >

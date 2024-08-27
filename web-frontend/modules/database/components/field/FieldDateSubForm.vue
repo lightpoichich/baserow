@@ -11,7 +11,6 @@
         v-model="values.date_format"
         :error="$v.values.date_format.$error"
         :fixed-items="true"
-        small
         @hide="$v.values.date_format.$touch()"
       >
         <DropdownItem

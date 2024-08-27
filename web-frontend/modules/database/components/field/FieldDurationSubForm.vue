@@ -8,7 +8,6 @@
       v-model="values.duration_format"
       :error="$v.values.duration_format.$error"
       :fixed-items="true"
-      small
       @hide="$v.values.duration_format.$touch()"
     >
       <DropdownItem

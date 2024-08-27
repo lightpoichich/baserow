@@ -67,12 +67,12 @@ import DropdownItem from '@baserow/modules/core/components/DropdownItem'
             },
             defaultValue: false,
         },
-        small: {
+        size: {
             control: {
-                type: 'boolean',
-                options: [true, false],
+                type: 'select',
+                options: ['regular', 'large'],
             },
-            defaultValue: false,
+            defaultValue: 'regular',
         },
         tabindex: {
             control: {

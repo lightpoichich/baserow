@@ -11,7 +11,6 @@
         v-model="values.number_decimal_places"
         :error="$v.values.number_decimal_places.$error"
         :fixed-items="true"
-        small
         @hide="$v.values.number_decimal_places.$touch()"
       >
         <DropdownItem name="0 (1)" :value="0"></DropdownItem>

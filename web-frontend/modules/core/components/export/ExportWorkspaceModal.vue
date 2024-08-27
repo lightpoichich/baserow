@@ -13,13 +13,8 @@
     ></component>
     <Error :error="error"></Error>
     <div class="export-workspace-modal">
-      <ExportWorkspaceForm
-        v-if="!limitReached"
-        ref="form"
-        :snapshots="snapshots"
-        @submitted="submitted"
-      >
-        <template v-if="jobIsRunning || jobHasSucceeded" #input>
+      <ExportWorkspaceForm ref="form" @submitted="submitted">
+        <template v-if="jobIsRunning || jobHasSucceeded" #settings>
           <ProgressBar
             :value="job.progress_percentage"
             :status="jobHumanReadableState"
@@ -27,21 +22,18 @@
         </template>
         <template #default>
           <Button
-            v-if="!createFinished"
+            v-if="!loading"
             size="large"
-            :loading="createLoading"
-            :disabled="createLoading"
+            :loading="loading"
+            :disabled="loading"
           >
-            {{ $t('snapshotsModal.create') }}
+            {{ $t('exportWorkspaceModal.export') }}
           </Button>
           <Button v-else type="secondary" tag="a" size="large" @click="reset()">
-            {{ $t('snapshotsModal.reset') }}</Button
+            {{ $t('exportWorkspaceModal.reset') }}</Button
           >
         </template>
       </ExportWorkspaceForm>
-      <div v-else>
-        {{ $t('snapshotsModal.limitReached') }}
-      </div>
     </div>
     <template #actions> </template>
   </Modal>
@@ -51,7 +43,7 @@
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import SnapshotListItem from '@baserow/modules/core/components/snapshots/SnapshotListItem'
-import SnapshotsService from '@baserow/modules/core/services/snapshots'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import ExportWorkspaceForm from '@baserow/modules/core/components/export/ExportWorkspaceForm'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -71,6 +63,7 @@ export default {
   },
   data() {
     return {
+      loading: false,
       createLoading: false,
       createFinished: false,
       snapshotsLoading: false,
@@ -98,18 +91,18 @@ export default {
       modal.methods.show.bind(this)(...args)
     },
     async submitted(values) {
-      // this.createLoading = true
-      // this.hideError()
-      // try {
-      //   const { data } = await SnapshotsService(this.$client).create(
-      //     this.application.id,
-      //     values
-      //   )
-      //   this.startJobPoller(data)
-      // } catch (error) {
-      //   this.createLoading = false
-      //   this.handleError(error)
-      // }
+      this.loading = true
+      this.hideError()
+      try {
+        const { data } = await WorkspaceService(this.$client).export(
+          this.workspace.id,
+          values
+        )
+        this.startJobPoller(data)
+      } catch (error) {
+        this.loading = false
+        this.handleError(error)
+      }
     },
     async onJobDone() {
       // this.createLoading = false

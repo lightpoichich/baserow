@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Any, Dict, List
 
 from django.contrib.auth.models import AbstractUser
@@ -29,7 +30,6 @@ from baserow.core.actions import (
     InstallTemplateActionType,
     ExportApplicationsActionType,
 )
-from baserow.core.db import read_repeatable_multiple_applications_atomic_transaction, transaction_atomic
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     DuplicateApplicationMaxLocksExceededException,
@@ -46,7 +46,10 @@ from baserow.core.models import (
     ExportApplicationsJob,
     InstallTemplateJob,
 )
-from baserow.core.operations import CreateApplicationsWorkspaceOperationType, ReadApplicationsWorkspaceOperationType
+from baserow.core.operations import (
+    CreateApplicationsWorkspaceOperationType,
+    ListApplicationsWorkspaceOperationType
+)
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
 
@@ -244,8 +247,13 @@ class ExportApplicationsJobType(JobType):
     serializer_field_names = ["exported_file_name", "url"]
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
-        return transaction_atomic()
-        # return read_repeatable_multiple_applications_atomic_transaction(job.application_ids)
+
+        #TODO: add comment explaining why
+        @contextmanager
+        def empty_context():
+            yield
+
+        return empty_context()
 
     def check_permissions(self, user, workspace, applications):
 
@@ -255,7 +263,7 @@ class ExportApplicationsJobType(JobType):
 
         CoreHandler().check_permissions(
             user,
-            ReadApplicationsWorkspaceOperationType.type,
+            ListApplicationsWorkspaceOperationType.type,
             workspace=workspace,
             context=workspace,
         )
@@ -297,7 +305,7 @@ class ExportApplicationsJobType(JobType):
         if job.application_ids:
             application_ids = [int(app_id) for app_id in job.application_ids.split(",")]
 
-        exported_file_name = action_type_registry.get_by_type(
+        exported_file_url = action_type_registry.get_by_type(
             ExportApplicationsActionType
         ).do(
             job.user,
@@ -309,7 +317,8 @@ class ExportApplicationsJobType(JobType):
         )
 
         # update the job with the new duplicated application
-        job.exported_file_name = exported_file_name
+        job.exported_file_name = exported_file_url
         job.save(update_fields=("exported_file_name",))
+        print(">>>>>>>>>>>>>>>>>>>>>> EXPORTED URL", exported_file_url)
 
-        return exported_file_name
+        return exported_file_url

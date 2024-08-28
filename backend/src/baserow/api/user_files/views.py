@@ -58,6 +58,8 @@ class UploadFileView(APIView):
             raise InvalidFileStreamError("No file was provided.")
 
         file = request.FILES.get("file")
+        print(request.POST)
+        print(">>>>>>>>>>>", request.FILES)
         user_file = UserFileHandler().upload_user_file(request.user, file.name, file)
         serializer = UserFileSerializer(user_file)
         return Response(serializer.data)

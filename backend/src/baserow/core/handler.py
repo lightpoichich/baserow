@@ -4,6 +4,7 @@ import os
 import re
 import uuid
 from io import BytesIO
+from os.path import join
 from pathlib import Path
 from typing import IO, Any, Dict, List, NewType, Optional, Tuple, Union, cast
 from urllib.parse import urljoin, urlparse
@@ -1610,6 +1611,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         import_export_config: ImportExportConfig,
         application_ids=None,
         storage=None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
     ):
         """
         Exports the applications of a workspace to a list. They can later be imported
@@ -1631,15 +1633,26 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         if not storage:
             storage = default_storage
 
+        progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+
         zip_file_name = f"workspace_{workspace.id}_{uuid.uuid4()}.zip"
-        json_file_name = f"workspace_{workspace.id}.json"
+        json_file_name = f"workspace_export.json"
         temp_json_file_name = f"temp_{json_file_name}"
+
+        export_path = join(settings.EXPORT_FILES_DIRECTORY, zip_file_name)
 
         applications = workspace.application_set.all()
         if application_ids:
             applications = applications.filter(id__in=application_ids)
 
-        with storage.open(zip_file_name, "wb") as files_buffer:
+
+        app_progress_step = int(80 / len(applications))
+        last_progress_step = 100 - app_progress_step * len(applications)
+
+        # Note: this needs to be imported here to avoid circular imports
+        from baserow.contrib.database.export.handler import _create_storage_dir_if_missing_and_open
+
+        with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:
             with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
                 exported_applications = []
                 for app in applications:
@@ -1650,6 +1663,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                             application, import_export_config, files_zip, storage
                         )
                     exported_applications.append(exported_application)
+                    progress.increment(by=app_progress_step, state=f"Exporting {app.name}")
 
                 temp_json_file_path = storage.save(temp_json_file_name, ContentFile(''))
 
@@ -1658,10 +1672,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
                 with storage.open(temp_json_file_path, "rb") as temp_json_file:
                     files_zip.write(temp_json_file.name, json_file_name)
+                progress.increment(by=last_progress_step, state="Saving to file")
 
                 storage.delete(temp_json_file_path)
-
-        return storage.url(zip_file_name)
+        return zip_file_name
 
     def export_workspace_applications(
         self,

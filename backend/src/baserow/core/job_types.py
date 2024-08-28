@@ -305,20 +305,22 @@ class ExportApplicationsJobType(JobType):
         if job.application_ids:
             application_ids = [int(app_id) for app_id in job.application_ids.split(",")]
 
-        exported_file_url = action_type_registry.get_by_type(
+
+        progress_builder = progress.create_child_builder(
+            represents_progress=progress.total
+        )
+
+        exported_file_name = action_type_registry.get_by_type(
             ExportApplicationsActionType
         ).do(
             job.user,
             workspace_id=job.workspace_id,
             application_ids=application_ids,
-            progress_builder=progress.create_child_builder(
-                represents_progress=progress.total
-            ),
+            progress_builder=progress_builder
         )
 
         # update the job with the new duplicated application
-        job.exported_file_name = exported_file_url
+        job.exported_file_name = exported_file_name
         job.save(update_fields=("exported_file_name",))
-        print(">>>>>>>>>>>>>>>>>>>>>> EXPORTED URL", exported_file_url)
 
-        return exported_file_url
+        return exported_file_name

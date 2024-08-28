@@ -22,16 +22,31 @@
         </template>
         <template #default>
           <Button
-            v-if="!loading"
+            v-if="!loading && !created"
             size="large"
             :loading="loading"
             :disabled="loading"
           >
             {{ $t('exportWorkspaceModal.export') }}
           </Button>
-          <Button v-else type="secondary" tag="a" size="large" @click="reset()">
-            {{ $t('exportWorkspaceModal.reset') }}</Button
+          <Button
+            v-if="loading && !created"
+            type="secondary"
+            tag="a"
+            size="large"
+            @click="cancel()"
           >
+            {{ $t('exportWorkspaceModal.cancel') }}</Button
+          >
+          <DownloadLink
+            v-if="!loading && created"
+            class="button button--large button--full-width modal-progress__export-button"
+            :url="job.url"
+            :filename="job.exported_file_name"
+            :loading-class="'button--loading'"
+          >
+            {{ $t('exportTableLoadingBar.download') }}
+          </DownloadLink>
         </template>
       </ExportWorkspaceForm>
     </div>
@@ -63,13 +78,9 @@ export default {
   },
   data() {
     return {
+      job: null,
       loading: false,
-      createLoading: false,
-      createFinished: false,
-      snapshotsLoading: false,
-      snapshots: [],
-      // Currently we don't query the backend to fetch the limit
-      limitReached: false,
+      created: false,
     }
   },
   computed: {
@@ -105,54 +116,28 @@ export default {
       }
     },
     async onJobDone() {
-      // this.createLoading = false
-      // this.createFinished = true
-      // await this.loadSnapshots()
+      this.loading = false
+      this.created = true
     },
 
     async onJobFailed() {
-      // this.createLoading = false
-      // this.showError(
-      //   this.$t('clientHandler.notCompletedTitle'),
-      //   this.job.human_readable_error
-      // )
+      this.loading = false
+      this.showError(
+        this.$t('clientHandler.notCompletedTitle'),
+        this.job.human_readable_error
+      )
     },
 
     async onJobPollingError(error) {
-      // this.createLoading = false
-      // notifyIf(error)
+      this.loading = false
+      notifyIf(error)
     },
-    async loadSnapshots() {
-      // this.snapshotsLoading = true
-      // this.snapshots = []
-      // try {
-      //   const { data } = await SnapshotsService(this.$client).list(
-      //     this.application.id
-      //   )
-      //   this.snapshots = data
-      // } catch (error) {
-      //   this.handleError(error)
-      // } finally {
-      //   this.snapshotsLoading = false
-      // }
-    },
-    snapshotDeleted(deletedSnapshot) {
-      // this.snapshots = this.snapshots.filter(
-      //   (snapshot) => snapshot.id !== deletedSnapshot.id
-      // )
-    },
-    reset() {
-      // this.stopPollIfRunning()
-      // this.job = null
-      // this.createFinished = false
-      // this.createLoading = false
-      // this.$refs.form.resetName()
-    },
-    getCustomHumanReadableJobState(jobState) {
-      // if (jobState.startsWith('importing')) {
-      //   return this.$t('snapshotsModal.importingState')
-      // }
-      // return ''
+    cancel() {
+      this.stopPollIfRunning()
+      this.job = null
+      this.finished = false
+      this.loading = false
+      this.$refs.form.reset()
     },
   },
 }

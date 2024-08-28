@@ -1187,6 +1187,7 @@ class ExportApplicationsActionType(ActionType):
         file_url = CoreHandler().export_workspace_applications_single_file(
             workspace,
             import_export_config=cli_import_export_config,
+            progress_builder=progress_builder,
         )
 
         params = cls.Params(

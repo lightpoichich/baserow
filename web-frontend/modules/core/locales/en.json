@@ -131,7 +131,8 @@
     "title": "Export",
     "description": "Your data will be exported as a ZIP file, which can be imported into other Baserow instance.",
     "exportSettings": "Export settings",
-    "export": "Export data"
+    "export": "Export data",
+    "cancel": "Cancel"
   },
   "dashboardWorkspace": {
     "createApplication": "Create new"

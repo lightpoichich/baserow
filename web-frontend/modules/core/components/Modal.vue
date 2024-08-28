@@ -68,21 +68,6 @@
       >
         <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
       </div>
-
-      <!-- <template v-if="!sidebar">
-        <slot></slot>
-        <slot name="content"></slot>
-        <div class="modal__actions">
-          <a
-            v-if="closeButton && canClose"
-            class="modal__close"
-            @click="hide()"
-          >
-            <i class="iconoir-cancel"></i>
-          </a>
-          <slot name="actions"></slot>
-        </div>
-      </template> -->
     </div>
   </div>
 </template>

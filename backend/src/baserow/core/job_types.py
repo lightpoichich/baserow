@@ -13,7 +13,8 @@ from baserow.api.applications.serializers import (
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
-    ERROR_USER_NOT_IN_GROUP, ERROR_PERMISSION_DENIED,
+    ERROR_USER_NOT_IN_GROUP,
+    ERROR_PERMISSION_DENIED,
 )
 from baserow.api.templates.errors import (
     ERROR_TEMPLATE_DOES_NOT_EXIST,
@@ -218,9 +219,7 @@ class ExportApplicationsJobType(JobType):
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
     }
 
-    job_exceptions_map = {
-        PermissionDenied: ERROR_PERMISSION_DENIED
-    }
+    job_exceptions_map = {PermissionDenied: ERROR_PERMISSION_DENIED}
 
     request_serializer_field_names = ["workspace_id", "application_ids"]
     # FIXME: It doesn't accept empty value, empty list

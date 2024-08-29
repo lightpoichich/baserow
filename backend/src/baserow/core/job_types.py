@@ -13,7 +13,7 @@ from baserow.api.applications.serializers import (
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
-    ERROR_USER_NOT_IN_GROUP,
+    ERROR_USER_NOT_IN_GROUP, ERROR_PERMISSION_DENIED,
 )
 from baserow.api.templates.errors import (
     ERROR_TEMPLATE_DOES_NOT_EXIST,
@@ -219,11 +219,11 @@ class ExportApplicationsJobType(JobType):
     }
 
     job_exceptions_map = {
-        # TODO: Add the exception error messages
+        PermissionDenied: ERROR_PERMISSION_DENIED
     }
 
     request_serializer_field_names = ["workspace_id", "application_ids"]
-    # TODO: It doesn't accept empty value, empty list
+    # FIXME: It doesn't accept empty value, empty list
     request_serializer_field_overrides = {
         "application_ids": serializers.ListField(
             allow_null=True,

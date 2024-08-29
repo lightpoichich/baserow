@@ -1142,7 +1142,7 @@ class ExportApplicationsActionType(ActionType):
     description = ActionTypeDescription(
         _("Export applications"),
         _(
-            'Applications "%(application_names)s" (%(application_ids)s) in workspace "%(workspace_name)s" (%(workspace_id)s) exported '
+            'Applications "%(application_names)s" (%(application_ids)s) in workspace "%(group_name)s" (%(group_id)s) exported '
         ),
         WORKSPACE_ACTION_CONTEXT,
     )

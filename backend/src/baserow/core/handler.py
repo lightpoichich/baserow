@@ -1636,7 +1636,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
 
         zip_file_name = f"workspace_{workspace.id}_{uuid.uuid4()}.zip"
-        json_file_name = f"workspace_export.json"
+        json_file_name = f"data/workspace_export.json"
         temp_json_file_name = f"temp_{json_file_name}"
 
         export_path = join(settings.EXPORT_FILES_DIRECTORY, zip_file_name)
@@ -1663,7 +1663,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                             application, import_export_config, files_zip, storage
                         )
                     exported_applications.append(exported_application)
-                    progress.increment(by=app_progress_step, state=f"Exporting {app.name}")
+                    progress.increment(by=app_progress_step)
 
                 temp_json_file_path = storage.save(temp_json_file_name, ContentFile(''))
 
@@ -1672,9 +1672,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
                 with storage.open(temp_json_file_path, "rb") as temp_json_file:
                     files_zip.write(temp_json_file.name, json_file_name)
-                progress.increment(by=last_progress_step, state="Saving to file")
-
                 storage.delete(temp_json_file_path)
+
+                progress.increment(by=last_progress_step)
+
         return zip_file_name
 
     def export_workspace_applications(

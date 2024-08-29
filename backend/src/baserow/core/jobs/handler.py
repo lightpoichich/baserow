@@ -175,7 +175,6 @@ class JobHandler:
         """
 
         job_type = job_type_registry.get(job_type_name)
-
         model_class = job_type.model_class
 
         # Check how many job of same type are running simultaneously. If count > max

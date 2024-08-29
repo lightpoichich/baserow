@@ -1165,17 +1165,21 @@ class ExportApplicationsActionType(ActionType):
         workspace_id: int,
         application_ids: List[int],
         progress_builder: Optional[ChildProgressBuilder] = None,
-    ) -> List[Application]:
+    ) -> str:
         """
-        Duplicate an existing application instance.
-        See baserow.core.handler.CoreHandler.duplicate_application for further details.
-        Undoing this action trashes the application and redoing restores it.
+        Export an existing workspace or provided workspace application subset.
+        See baserow.core.handler.CoreHandler.export_workspace_applications_single_file
+        for further details.
+        This action is readonly and is not undoable.
 
         :param user: The user on whose behalf the application is duplicated.
-        :param application: The application instance that needs to be duplicated.
+        :param workspace_id: id of workspace to be exported.
+        :param application_ids: List of application ids to be exported, if omitted then all
+            applications from workspace that user has access to, will be exported.
         :param progress_builder: A progress builder instance that can be used to
             track the progress of the duplication.
-        :return: The new (duplicated) application instance.
+        :return: file name of exported applications.
+        :rtype: str
         """
 
         workspace = CoreHandler().get_workspace(workspace_id=workspace_id)
@@ -1184,7 +1188,7 @@ class ExportApplicationsActionType(ActionType):
             include_permission_data=False, reduce_disk_space_usage=False
         )
 
-        file_url = CoreHandler().export_workspace_applications_single_file(
+        file_name = CoreHandler().export_workspace_applications_single_file(
             workspace,
             import_export_config=cli_import_export_config,
             progress_builder=progress_builder,
@@ -1198,7 +1202,7 @@ class ExportApplicationsActionType(ActionType):
         )
 
         cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
-        return file_url
+        return file_name
 
     @classmethod
     def scope(cls, workspace_id: int) -> ActionScopeStr:

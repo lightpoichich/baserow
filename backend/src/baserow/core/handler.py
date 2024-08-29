@@ -1614,21 +1614,25 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         progress_builder: Optional[ChildProgressBuilder] = None,
     ):
         """
-        Exports the applications of a workspace to a list. They can later be imported
-        via the `import_applications_to_workspace` method. The result can be
-        serialized to JSON.
+        Create zip file with exported applications. If application_ids is provided, only
+        those applications will be exported.
 
         :param workspace: The workspace of which the applications must be exported.
         :type workspace: Workspace
+        :param application_ids: A list of application ids that must be exported. If
+             not provided, all applications will be exported.
         :param storage: The storage where the files can be loaded from.
         :type storage: Storage or None
         :param import_export_config: provides configuration options for the
             import/export process to customize how it works.
-        :return: A list containing the exported applications.
-        :rtype: list
+        :return: file name of the zip file with exported data
+        :rtype: str
         """
 
-        # TODO: Consider structure where json holds structure and data is in csv files
+        # Note: this needs to be imported here to avoid circular imports
+        from baserow.contrib.database.export.handler import (
+            _create_storage_dir_if_missing_and_open,
+        )
 
         if not storage:
             storage = default_storage
@@ -1647,11 +1651,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         app_progress_step = int(80 / len(applications))
         last_progress_step = 100 - app_progress_step * len(applications)
-
-        # Note: this needs to be imported here to avoid circular imports
-        from baserow.contrib.database.export.handler import (
-            _create_storage_dir_if_missing_and_open,
-        )
 
         with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:
             with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:

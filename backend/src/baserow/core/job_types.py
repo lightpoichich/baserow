@@ -249,7 +249,7 @@ class ExportApplicationsJobType(JobType):
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
         # With export, we are only doing read operations, so we don't need
-        # to wrap logic with a transaction
+        # to wrap logic within single transaction
         @contextmanager
         def empty_context():
             yield

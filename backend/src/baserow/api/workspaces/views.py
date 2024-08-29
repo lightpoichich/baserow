@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.contrib.auth.models import Permission
 from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -15,6 +16,7 @@ from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
     ERROR_USER_NOT_IN_GROUP,
+    ERROR_PERMISSION_DENIED,
 )
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.api.jobs.serializers import JobSerializer
@@ -41,6 +43,7 @@ from baserow.core.exceptions import (
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
     WorkspaceUserIsLastAdmin,
+    PermissionDenied,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import ExportApplicationsJobType
@@ -487,10 +490,12 @@ class AsyncExportApplicationsView(APIView):
         tags=["Workspace"],
         operation_id="export_workspace_applications_async",
         description=(
-            "Duplicate an application if the authorized user is in the application's "
-            "workspace. All the related children are also going to be duplicated. For example "
+            "Export workspace or set of applications application if the authorized user is "
+            "in the application's workspace. "
+            "All the related children are also going to be exported. For example "
             "in case of a database application all the underlying tables, fields, "
             "views and rows are going to be duplicated."
+            "Roles are not part of the export."
         ),
         request=None,
         responses={
@@ -501,6 +506,7 @@ class AsyncExportApplicationsView(APIView):
                     "ERROR_APPLICATION_NOT_IN_GROUP",
                     "ERROR_MAX_JOB_COUNT_EXCEEDED",
                     "ERROR_APPLICATION_DOES_NOT_EXIST",
+                    "ERROR_PERMISSION_DENIED",
                 ]
             ),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
@@ -513,6 +519,7 @@ class AsyncExportApplicationsView(APIView):
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+            PermissionDenied: ERROR_PERMISSION_DENIED,
         }
     )
     @validate_body(ExportApplicationsJobRequestSerializer, return_validated=True)

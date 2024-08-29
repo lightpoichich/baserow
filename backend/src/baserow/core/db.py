@@ -24,6 +24,7 @@ from django.db.models import ForeignKey, ManyToManyField, Max, Model, QuerySet
 from django.db.models.functions import Collate
 from django.db.models.sql.query import LOOKUP_SEP
 from django.db.transaction import Atomic, get_connection
+
 from cachalot.api import cachalot_disabled
 from loguru import logger
 from psycopg2 import sql

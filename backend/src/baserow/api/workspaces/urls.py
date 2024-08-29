@@ -3,6 +3,7 @@ from django.urls import include, path, re_path
 from .invitations import urls as invitation_urls
 from .users import urls as user_urls
 from .views import (
+    AsyncExportApplicationsView,
     CreateInitialWorkspaceView,
     WorkspaceGenerativeAISettingsView,
     WorkspaceLeaveView,
@@ -10,7 +11,6 @@ from .views import (
     WorkspacePermissionsView,
     WorkspacesView,
     WorkspaceView,
-    AsyncExportApplicationsView,
 )
 
 app_name = "baserow.api.workspaces"

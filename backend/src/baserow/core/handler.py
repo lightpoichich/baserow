@@ -1645,19 +1645,22 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         if application_ids:
             applications = applications.filter(id__in=application_ids)
 
-
         app_progress_step = int(80 / len(applications))
         last_progress_step = 100 - app_progress_step * len(applications)
 
         # Note: this needs to be imported here to avoid circular imports
-        from baserow.contrib.database.export.handler import _create_storage_dir_if_missing_and_open
+        from baserow.contrib.database.export.handler import (
+            _create_storage_dir_if_missing_and_open,
+        )
 
         with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:
             with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
                 exported_applications = []
                 for app in applications:
                     application = app.specific
-                    application_type = application_type_registry.get_by_model(application)
+                    application_type = application_type_registry.get_by_model(
+                        application
+                    )
                     with application_type.export_safe_transaction_context(application):
                         exported_application = application_type.export_serialized(
                             application, import_export_config, files_zip, storage
@@ -1665,7 +1668,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                     exported_applications.append(exported_application)
                     progress.increment(by=app_progress_step)
 
-                temp_json_file_path = storage.save(temp_json_file_name, ContentFile(''))
+                temp_json_file_path = storage.save(temp_json_file_name, ContentFile(""))
 
                 with storage.open(temp_json_file_path, "w") as temp_json_file:
                     json.dump(exported_applications, temp_json_file, indent=None)

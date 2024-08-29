@@ -189,6 +189,7 @@ class CoreConfig(AppConfig):
             DeleteWorkspaceActionType,
             DeleteWorkspaceInvitationActionType,
             DuplicateApplicationActionType,
+            ExportApplicationsActionType,
             InstallTemplateActionType,
             LeaveWorkspaceActionType,
             OrderApplicationsActionType,
@@ -197,7 +198,6 @@ class CoreConfig(AppConfig):
             UpdateApplicationActionType,
             UpdateWorkspaceActionType,
             UpdateWorkspaceInvitationActionType,
-            ExportApplicationsActionType,
         )
 
         action_type_registry.register(CreateWorkspaceActionType())
@@ -273,7 +273,11 @@ class CoreConfig(AppConfig):
 
         from baserow.core.jobs.registries import job_type_registry
 
-        from .job_types import DuplicateApplicationJobType, InstallTemplateJobType, ExportApplicationsJobType
+        from .job_types import (
+            DuplicateApplicationJobType,
+            ExportApplicationsJobType,
+            InstallTemplateJobType,
+        )
         from .snapshots.job_types import CreateSnapshotJobType, RestoreSnapshotJobType
 
         job_type_registry.register(DuplicateApplicationJobType())

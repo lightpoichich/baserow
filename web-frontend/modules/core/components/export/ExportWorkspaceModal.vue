@@ -22,7 +22,7 @@
         </template>
         <template #default>
           <Button
-            v-if="!loading && !created"
+            v-if="!loading && !finished"
             size="large"
             :loading="loading"
             :disabled="loading"
@@ -30,16 +30,16 @@
             {{ $t('exportWorkspaceModal.export') }}
           </Button>
           <Button
-            v-if="loading && !created"
+            v-if="loading && !finished"
             type="secondary"
             tag="a"
             size="large"
-            @click="cancel()"
+            @click="reset()"
           >
             {{ $t('exportWorkspaceModal.cancel') }}</Button
           >
           <DownloadLink
-            v-if="!loading && created"
+            v-if="!loading && finished"
             class="button button--large button--full-width modal-progress__export-button"
             :url="job.url"
             :filename="job.exported_file_name"
@@ -80,7 +80,7 @@ export default {
     return {
       job: null,
       loading: false,
-      created: false,
+      finished: false,
     }
   },
   computed: {
@@ -97,9 +97,8 @@ export default {
   },
   methods: {
     show(...args) {
-      this.hideError()
-      // this.loadSnapshots()
       modal.methods.show.bind(this)(...args)
+      this.reset()
     },
     async submitted(values) {
       this.loading = true
@@ -115,11 +114,13 @@ export default {
         this.handleError(error)
       }
     },
+    // eslint-disable-next-line require-await
     async onJobDone() {
       this.loading = false
-      this.created = true
+      this.finished = true
     },
 
+    // eslint-disable-next-line require-await
     async onJobFailed() {
       this.loading = false
       this.showError(
@@ -128,16 +129,17 @@ export default {
       )
     },
 
+    // eslint-disable-next-line require-await
     async onJobPollingError(error) {
       this.loading = false
       notifyIf(error)
     },
-    cancel() {
+    reset() {
       this.stopPollIfRunning()
       this.job = null
       this.finished = false
       this.loading = false
-      this.$refs.form.reset()
+      this.hideError()
     },
   },
 }

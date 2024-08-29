@@ -24,7 +24,7 @@ from baserow.core.models import (
     WorkspaceInvitation,
     WorkspaceUser,
 )
-from baserow.core.registries import application_type_registry, ImportExportConfig
+from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
 
@@ -1194,12 +1194,11 @@ class ExportApplicationsActionType(ActionType):
             workspace_id=workspace.id,
             workspace_name=workspace.name,
             application_ids=application_ids,
-            application_names=""
+            application_names="",
         )
 
         cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
         return file_url
-
 
     @classmethod
     def scope(cls, workspace_id: int) -> ActionScopeStr:

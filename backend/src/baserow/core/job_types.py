@@ -27,12 +27,13 @@ from baserow.contrib.database.api.export.serializers import (
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     DuplicateApplicationActionType,
-    InstallTemplateActionType,
     ExportApplicationsActionType,
+    InstallTemplateActionType,
 )
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     DuplicateApplicationMaxLocksExceededException,
+    PermissionDenied,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserNotInWorkspace,
@@ -48,7 +49,8 @@ from baserow.core.models import (
 )
 from baserow.core.operations import (
     CreateApplicationsWorkspaceOperationType,
-    ListApplicationsWorkspaceOperationType
+    ListApplicationsWorkspaceOperationType,
+    ReadWorkspaceOperationType,
 )
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
@@ -233,13 +235,13 @@ class ExportApplicationsJobType(JobType):
                 "the workspace will be exported."
             ),
         ),
-        'structure_only': serializers.BooleanField(
+        "structure_only": serializers.BooleanField(
             required=False,
             default=False,
             help_text=(
                 "If True, only the structure of the applications will be exported. "
                 "If False, the data will be included as well."
-            )
+            ),
         ),
     }
 
@@ -247,48 +249,52 @@ class ExportApplicationsJobType(JobType):
     serializer_field_names = ["exported_file_name", "url"]
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
-
-        #TODO: add comment explaining why
+        # With export, we are only doing read operations, so we don't need
+        # to wrap logic with a transaction
         @contextmanager
         def empty_context():
             yield
 
         return empty_context()
 
-    def check_permissions(self, user, workspace, applications):
-
-        if len(applications) != len(applications):
-            # TODO: Update exception type
-            raise Exception("Some of the applications do not exist or the user does not have access to them.")
+    def check_permissions(self, user, workspace_id, application_ids):
+        handler = CoreHandler()
+        workspace = handler.get_workspace(workspace_id=workspace_id)
 
         CoreHandler().check_permissions(
             user,
-            ListApplicationsWorkspaceOperationType.type,
+            ReadWorkspaceOperationType.type,
             workspace=workspace,
             context=workspace,
         )
 
+        applications = Application.objects.filter(
+            workspace=workspace, workspace__trashed=False
+        )
+        if application_ids:
+            applications = applications.filter(id__in=application_ids)
+
+        applications = CoreHandler().filter_queryset(
+            user,
+            ListApplicationsWorkspaceOperationType.type,
+            applications,
+            workspace=workspace,
+        )
+
+        if application_ids and len(application_ids) != len(applications):
+            raise PermissionDenied(
+                "Some of the selected applications do not exist or the user does "
+                "not have access to them."
+            )
+
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-        # validate that the workspace exists, the user have access to it
-        # if provided validate the all the applications ids exist and the user has access to them
-        # if not provided, get all the applications the user has access to and return the ids
-
-
-        handler = CoreHandler()
         workspace_id = values.get("workspace_id")
-
-        workspace = handler.get_workspace(values["workspace_id"])
         application_ids = values.get("application_ids")
-
-        queryset = Application.objects.filter(workspace_id=workspace_id)
-        if application_ids:
-            queryset = queryset.filter(id__in=application_ids)
-
-        applications = queryset.all()
-
-        # self.check_permissions(user=user, workspace=workspace, applications=applications)
+        self.check_permissions(
+            user=user, workspace_id=workspace_id, application_ids=application_ids
+        )
 
         return {
             "workspace_id": workspace_id,
@@ -296,15 +302,14 @@ class ExportApplicationsJobType(JobType):
         }
 
     def run(self, job: ExportApplicationsJob, progress: Progress) -> str:
-
-        workspace = CoreHandler().get_workspace(job.workspace_id)
-        # FIXME: populate applications
-        # self.check_permissions(user=job.user, workspace=workspace, applications=[])
-
         application_ids = None
         if job.application_ids:
             application_ids = [int(app_id) for app_id in job.application_ids.split(",")]
-
+        self.check_permissions(
+            user=job.user,
+            workspace_id=job.workspace_id,
+            application_ids=job.application_ids,
+        )
 
         progress_builder = progress.create_child_builder(
             represents_progress=progress.total
@@ -316,7 +321,7 @@ class ExportApplicationsJobType(JobType):
             job.user,
             workspace_id=job.workspace_id,
             application_ids=application_ids,
-            progress_builder=progress_builder
+            progress_builder=progress_builder,
         )
 
         # update the job with the new duplicated application

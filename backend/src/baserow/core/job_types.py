@@ -13,8 +13,8 @@ from baserow.api.applications.serializers import (
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
-    ERROR_USER_NOT_IN_GROUP,
     ERROR_PERMISSION_DENIED,
+    ERROR_USER_NOT_IN_GROUP,
 )
 from baserow.api.templates.errors import (
     ERROR_TEMPLATE_DOES_NOT_EXIST,

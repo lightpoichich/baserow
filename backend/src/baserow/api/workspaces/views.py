@@ -1,6 +1,5 @@
 from typing import Dict
 
-from django.contrib.auth.models import Permission
 from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -14,9 +13,9 @@ from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
+    ERROR_PERMISSION_DENIED,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
     ERROR_USER_NOT_IN_GROUP,
-    ERROR_PERMISSION_DENIED,
 )
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.api.jobs.serializers import JobSerializer
@@ -39,11 +38,11 @@ from baserow.core.actions import (
 )
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
+    PermissionDenied,
     UserInvalidWorkspacePermissionsError,
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
     WorkspaceUserIsLastAdmin,
-    PermissionDenied,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import ExportApplicationsJobType

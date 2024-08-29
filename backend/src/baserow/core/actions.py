@@ -1174,8 +1174,8 @@ class ExportApplicationsActionType(ActionType):
 
         :param user: The user on whose behalf the application is duplicated.
         :param workspace_id: id of workspace to be exported.
-        :param application_ids: List of application ids to be exported, if omitted then all
-            applications from workspace that user has access to, will be exported.
+        :param application_ids: List of application ids to be exported, if omitted then
+            all applications from workspace that user has access to, will be exported.
         :param progress_builder: A progress builder instance that can be used to
             track the progress of the duplication.
         :return: file name of exported applications.

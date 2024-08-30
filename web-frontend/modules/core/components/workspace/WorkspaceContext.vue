@@ -14,7 +14,10 @@
     ></div>
     <ul v-else class="context__menu">
       <li
-        v-if="$hasPermission('workspace.update', workspace, workspace.id)"
+        v-if="
+          $hasPermission('workspace.read', workspace, workspace.id) &&
+          $featureFlagIsEnabled('workspace_export')
+        "
         class="context__menu-item"
       >
         <a class="context__menu-item-link" @click="openExportData">

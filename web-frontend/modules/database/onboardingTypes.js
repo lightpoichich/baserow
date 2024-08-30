@@ -189,7 +189,7 @@ export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
       )
     }
 
-    const fieldParams = Object.values(data[this.getType()].fields)
+    const fieldParams = Object.values(data[this.getType()]?.fields || {})
     const items = [{ id: 1 }, { id: 2 }, { id: 3 }]
 
     for (const field of fieldParams) {

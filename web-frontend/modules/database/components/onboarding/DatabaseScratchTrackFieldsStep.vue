@@ -170,7 +170,6 @@ export default {
       if (isAlreadySelected) {
         this.selectedFieldsCount--
         delete this.selectedFields[value]
-        this.forceValidation()
       } else {
         this.selectedFieldsCount++
         if (value === 'own') {
@@ -180,7 +179,6 @@ export default {
           }
           this.selectedFields.own = this.ownField
         } else {
-          this.forceValidation()
           const selectedItem = this.whatItems[value]
           if (this.isNameUsed(selectedItem.props.name)) {
             const useCount = this.useCount(selectedItem.props.name)
@@ -194,6 +192,7 @@ export default {
           this.selectedFields[value] = selectedItem
         }
       }
+      this.forceValidation(value)
       this.updateValue()
     },
     updateValue() {
@@ -214,14 +213,17 @@ export default {
       const selectedFieldNames = this.getSelectedFieldNames(excludeField)
       return selectedFieldNames && selectedFieldNames.includes(value)
     },
-    forceValidation() {
+    forceValidation(value) {
       // This is needed because we need to trigger validation without
       // changing the value (by clicking on chips). Vuelidate
       // doesn't trigger validation if the value doesn't change.
-      const tmp = this.$v.ownField.props.name.$model
-      this.$v.ownField.props.name.$model = ''
-      this.$v.ownField.props.name.$model = tmp
-      this.$v.ownField.props.name.$touch()
+      // We want only to trigger validation if own field is selected
+      if (value !== 'own' && this.isChipActive('own')) {
+        const tmp = this.$v.ownField.props.name.$model
+        this.$v.ownField.props.name.$model = ''
+        this.$v.ownField.props.name.$model = tmp
+        this.$v.ownField.props.name.$touch()
+      }
     },
   },
   validations() {

@@ -231,12 +231,12 @@ describe('Premium Share View Calendar ical feed Tests', () => {
     expect(
       shareViewLinkContext
         .findComponent(ViewRotateSlugModal)
-        .findAll('.actions button')
+        .findAllComponents({ name: 'Button' })
     ).toHaveLength(1)
     // which has a button to click
     shareViewLinkContext
       .findComponent(ViewRotateSlugModal)
-      .findAll('.actions button')
+      .findAllComponents({ name: 'Button' })
       .at(0)
       .trigger('click')
 

@@ -29,7 +29,6 @@
         class="modal__content-wrapper"
         :class="{
           'modal__content-wrapper--scrollable': contentScrollable,
-          // 'modal__box-content-no-padding': !contentPadding,
         }"
       >
         <slot></slot>
@@ -129,11 +128,7 @@ export default {
       default: false,
       required: false,
     },
-    // contentPadding: {
-    //   type: Boolean,
-    //   default: true,
-    //   required: false,
-    // },
+
     rightSidebarScrollable: {
       type: Boolean,
       default: false,

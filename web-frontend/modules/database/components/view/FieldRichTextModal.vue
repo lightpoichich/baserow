@@ -2,7 +2,6 @@
   <Modal
     ref="modal"
     :full-height="true"
-    :content-padding="false"
     :right="true"
     @show="show"
     @hidden="$emit('hidden', $event)"

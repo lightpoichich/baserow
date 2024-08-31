@@ -915,6 +915,13 @@
     "customFieldsDescriptionRow2": "Vitae justo eget magna fermentum iaculis eu non diam.",
     "customFieldsDescriptionRow3": "Convallis tellus id interdum velit laoreet id donec ultrices tincidunt."
   },
+  "databaseViewStep": {
+    "title": "Try a different perspective",
+    "description": "Choose how to visualize your data",
+    "views": {
+      "gallery": "Gallery"
+    }
+  },
   "databaseScratchTrackStep": {
     "title": "What would you like to track?",
     "description": "Choose from popular use cases, or create your own.",

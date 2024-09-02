@@ -27,21 +27,27 @@
       <div v-else>
         <div class="row-comments">
           <div v-if="currentCount === 0" class="row-comments__empty">
-            <i class="row-comments__empty-icon iconoir-multi-bubble"></i>
+            <ButtonIcon
+              type="secondary"
+              class="margin-bottom-2"
+              icon="iconoir-message-text"
+            ></ButtonIcon>
+
             <div class="row-comments__empty-text">
-              <template
+              <h4>
+                {{ $t('rowCommentSidebar.noCommentsYet') }}
+              </h4>
+              <p
                 v-if="
-                  !$hasPermission(
+                  $hasPermission(
                     'database.table.create_comment',
                     table,
                     workspace.id
                   )
                 "
-                >{{ $t('rowCommentSidebar.readOnlyNoComment') }}</template
               >
-              <template v-else>
                 {{ $t('rowCommentSidebar.noComment') }}
-              </template>
+              </p>
             </div>
           </div>
           <div v-else class="row-comments__body">

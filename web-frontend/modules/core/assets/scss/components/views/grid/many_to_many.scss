@@ -11,19 +11,20 @@
   flex-flow: row;
   flex-wrap: nowrap;
   list-style: none;
-  margin: 0;
-  padding: 0 4px;
+  align-items: center;
   user-select: none;
+  gap: 5px;
+  padding: 0 4px;
+  height: 100%;
 
   .grid-field-many-to-many__cell.active & {
-    height: auto;
     flex-wrap: wrap;
+    padding: 5px 4px;
   }
 }
 
 .grid-field-many-to-many__item {
   white-space: nowrap;
-  margin: 5px 4px;
   padding: 0 5px;
   background-color: $color-neutral-100;
   display: flex;

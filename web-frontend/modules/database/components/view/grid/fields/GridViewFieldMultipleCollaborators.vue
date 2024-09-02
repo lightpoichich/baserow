@@ -7,23 +7,14 @@
         class="field-multiple-collaborators__item"
       >
         <template v-if="item.id && item.name">
-          <div
-            class="field-multiple-collaborators__name background-color--light-gray"
+          <BadgeCollaborator
+            remove-icon
+            :initials="getCollaboratorNameInitials(item)"
+            size="small"
+            @remove="removeValue($event, value, item.id)"
           >
-            <span class="field-multiple-collaborators__name-text">{{
-              getCollaboratorName(item)
-            }}</span>
-            <a
-              v-if="!readOnly"
-              class="grid-field-many-to-many__remove"
-              @click.prevent="removeValue($event, value, item.id)"
-            >
-              <i class="iconoir-cancel"></i>
-            </a>
-          </div>
-          <div class="field-multiple-collaborators__initials">
-            {{ getCollaboratorNameInitials(item) }}
-          </div>
+            {{ getCollaboratorName(item) }}
+          </BadgeCollaborator>
         </template>
       </div>
       <a

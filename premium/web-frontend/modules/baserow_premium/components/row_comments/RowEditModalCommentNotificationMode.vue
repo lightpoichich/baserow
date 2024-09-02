@@ -1,13 +1,11 @@
 <template>
-  <div>
-    <a
-      class="row-edit-modal-comments-notification-mode"
-      @click.prevent="
-        $refs.context.toggle($event.currentTarget, 'bottom', 'right', 2)
-      "
-    >
-      <i class="iconoir-bell"></i>
-    </a>
+  <li
+    class="modal__box-topbar-icon"
+    @click.prevent="
+      $refs.context.toggle($event.currentTarget, 'bottom', 'right', 2)
+    "
+  >
+    <i class="iconoir-bell"></i>
     <Context ref="context" overflow-scroll max-height-if-outside-viewport>
       <div>
         <ul class="context__menu context__menu--can-be-active">
@@ -67,7 +65,7 @@
       :name="$t('premiumFeatures.personalViews')"
       :workspace="database.workspace"
     ></PremiumModal>
-  </div>
+  </li>
 </template>
 
 <script>

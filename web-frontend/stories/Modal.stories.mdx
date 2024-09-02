@@ -18,6 +18,13 @@ import Modal from '@baserow/modules/core/components/Modal'
     }}
     decorators={[withDesign]}
     argTypes={{
+        topbar: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
         leftSidebar: {
             control: {
                 type: 'boolean',
@@ -149,7 +156,7 @@ export const Template = (args, { argTypes }) => ({
             this.$refs.modal.toggle(this.$refs.button)
         },
     },
-    template: `<div><Modal ref="modal" v-bind="$props">${args.content}<template #sidebar>${args.sidebar}</template><template #actions>${args.actions}</template></Modal><button ref="button" @click="openModal">open modal</button></div>`,
+    template: `<div><Modal ref="modal" v-bind="$props"><template #topbar-content>${args.topbarContent}</template><template #topbar-actions>${args.topbarActions}</template>${args.content}<template #sidebar>${args.sidebar}</template><template #actions>${args.actions}</template></Modal><button ref="button" @click="openModal">open modal</button></div>`,
 })
 
 <Canvas>
@@ -173,11 +180,25 @@ export const Template = (args, { argTypes }) => ({
         {Template.bind({})}
     </Story>
     <Story
-        name="Right sidebar with actions"
+        name="Right sidebar and actions"
         args={{
             rightSidebar: true,
             actions:
                 '<div><a class="row-edit-modal-comments-notification-mode"><i class="iconoir-bell"></i></a></div>',
+        }}
+    >
+        {Template.bind({})}
+    </Story>
+    <Story
+        name="Topbar"
+        args={{
+            topbar: true,
+            topbarContent: '<h3>Any content</h3>',
+            topbarActions:
+                '<li class="modal__box-topbar-icon"><i class="iconoir-bell"></i></li><li class="modal__box-topbar-icon"><i class="iconoir-message"></i></li><li class="modal__box-topbar-icon"><i class="baserow-icon-more-vertical"></i></li>',
+            content:
+                '<div class="modal__content">This is a simple modal content</div>',
+            rightSidebar: true,
         }}
     >
         {Template.bind({})}

@@ -1,6 +1,7 @@
 .control {
   display: flex;
   flex-direction: column;
+  position: relative;
 
   &.control--align-right {
     display: flex;
@@ -101,7 +102,7 @@
 
 .control__context {
   color: $palette-neutral-1100;
-  margin-left: 6px;
+  cursor: pointer;
 
   &:hover {
     text-decoration: none;

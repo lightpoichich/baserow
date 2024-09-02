@@ -3,9 +3,12 @@ import { isPrintableUnicodeCharacterKeyPress } from '@baserow/modules/core/utils
 export default {
   methods: {
     toggleDropdown(value, query) {
+      console.log(value, query)
       if (this.readOnly) {
         return
       }
+
+      console.log(this.$refs.dropdownLink)
 
       this.$refs.dropdown.toggle(this.$refs.dropdownLink, value, query)
     },

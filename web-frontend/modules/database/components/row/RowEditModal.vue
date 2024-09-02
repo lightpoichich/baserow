@@ -5,22 +5,11 @@
     :right-sidebar="hasRightSidebar"
     :content-scrollable="hasRightSidebar"
     :right-sidebar-scrollable="false"
-    :collapsible-right-sidebar="true"
+    topbar
+    :close-button="false"
     @hidden="hidden"
   >
-    <template #actions>
-      <component
-        :is="actionComponent"
-        v-for="(actionComponent, i) in rowModalActionComponents"
-        :key="i"
-        :database="database"
-        :table="table"
-        :row="row"
-      >
-      </component>
-    </template>
-
-    <h2 class="modal__title">
+    <template #topbar-content>
       <div v-if="enableNavigation" class="row-edit-modal__navigation">
         <div v-if="navigationLoading" class="loading"></div>
         <template v-else>
@@ -37,10 +26,73 @@
             <i class="iconoir-nav-arrow-down"></i>
           </a>
         </template>
-      </div>
 
-      {{ heading }}
-    </h2>
+        <span class="row-edit-modal__heading">
+          {{ $t('localBaserowGetRowForm.rowFieldLabel') }}:
+          <strong>{{ row.id }}</strong>
+        </span>
+      </div>
+    </template>
+
+    <template #topbar-actions>
+      <component
+        :is="actionComponent"
+        v-for="(actionComponent, i) in rowModalActionComponents"
+        :key="i"
+        :database="database"
+        :table="table"
+        :row="row"
+      >
+      </component>
+
+      <li
+        class="modal__box-topbar-icon"
+        :class="{ 'modal__box-topbar-icon--active': !collapseSidebar }"
+        @click="handleCollapseSidebar"
+      >
+        <i class="iconoir-message-text"></i>
+      </li>
+
+      <li
+        ref="contextMoreLink"
+        class="modal__box-topbar-icon"
+        @click="
+          $refs.moreContext.toggle($refs.contextMoreLink, 'bottom', 'right', 0)
+        "
+      >
+        <i class="baserow-icon-more-vertical"></i>
+      </li>
+
+      <Context ref="moreContext">
+        <ul class="context__menu">
+          <li class="context__menu-item">
+            <a
+              class="context__menu-item-link js-ctx-delete-row"
+              @click="$emit('duplicate-row', row)"
+            >
+              <i class="context__menu-item-icon iconoir-copy"></i>
+              {{ $t('gridView.duplicateRow') }}
+            </a>
+          </li>
+
+          <li class="context__menu-item context__menu-item--with-separator">
+            <a
+              class="context__menu-item-link context__menu-item-link--delete js-ctx-delete-row"
+              @click="$emit('delete-row', row)"
+            >
+              <i class="context__menu-item-icon iconoir-bin"></i>
+              {{ $t('gridView.deleteRow') }}
+            </a>
+          </li>
+        </ul>
+      </Context>
+
+      <RowEditModalCommentNotificationMode
+        :database="database"
+        :table="table"
+        :row="row"
+      ></RowEditModalCommentNotificationMode>
+    </template>
 
     <div class="modal__content">
       <RowEditModalFieldsList
@@ -102,6 +154,7 @@
       >
         <span ref="createFieldContextLink">
           <ButtonText
+            type="secondary"
             icon="iconoir-plus"
             @click="
               $refs.createFieldContext.toggle($refs.createFieldContextLink)
@@ -214,6 +267,11 @@ export default {
       required: false,
       default: () => true,
     },
+  },
+  data() {
+    return {
+      collapseSidebar: false,
+    }
   },
   computed: {
     ...mapGetters({
@@ -370,6 +428,10 @@ export default {
     update(context) {
       context.table = this.table
       this.$emit('update', context)
+    },
+    handleCollapseSidebar() {
+      this.collapseSidebar = !this.collapseSidebar
+      this.$refs.modal.collapseSidebar()
     },
   },
 }

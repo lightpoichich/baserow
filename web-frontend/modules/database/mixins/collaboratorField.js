@@ -19,6 +19,7 @@ export default {
      * in an API call in order to persist the new value to the field.
      */
     updateValue(newId, oldValue) {
+      console.log(newId, oldValue)
       if (!oldValue) {
         oldValue = []
       }

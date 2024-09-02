@@ -5,7 +5,7 @@
         :class="{ 'row-modal__field-item-handle': sortable }"
         data-field-handle
       ></a>
-      <i :class="field._.type.iconClass"></i>
+      <i class="row-modal__field-item-icon" :class="field._.type.iconClass"></i>
       {{ field.name }}
       <span v-if="field.description" class="margin-left-1">
         <HelpIcon
@@ -48,9 +48,9 @@
         </a>
       </li>
     </FieldContext>
+
     <component
       :is="getFieldComponent(field.type)"
-      ref="field"
       :workspace-id="database.workspace.id"
       :field="field"
       :value="row['field_' + field.id]"
@@ -66,10 +66,15 @@
 
 <script>
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
+import FieldCollaboratorDropdown from '@baserow/modules/database/components/field/FieldCollaboratorDropdown'
+import collaboratorName from '@baserow/modules/database/mixins/collaboratorName'
+import collaboratorField from '@baserow/modules/database/mixins/collaboratorField'
+import rowEditField from '@baserow/modules/database/mixins/rowEditField'
 
 export default {
   name: 'RowEditModalField',
-  components: { FieldContext },
+  components: { FieldContext, FieldCollaboratorDropdown },
+  mixins: [rowEditField, collaboratorField, collaboratorName],
   props: {
     database: {
       type: Object,
@@ -110,6 +115,11 @@ export default {
     row: {
       type: Object,
       required: true,
+    },
+    value: {
+      type: [Array, String, Boolean],
+      required: false,
+      default: null,
     },
     readOnly: {
       type: Boolean,

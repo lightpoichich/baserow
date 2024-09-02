@@ -1,3 +1,5 @@
+$modal-topbar-height: 56;
+
 .modal__wrapper {
   position: fixed;
   inset: 0;
@@ -8,6 +10,8 @@
 }
 
 .modal {
+  --modal-topbar-height: #{$modal-topbar-height}px;
+
   background-color: $white;
   position: relative;
   margin: 40px auto;
@@ -15,12 +19,6 @@
 
   @include elevation($elevation-medium);
   @include rounded($rounded-md);
-
-  &.modal--with-sidebar {
-    display: flex;
-    padding: 0;
-    max-width: 960px;
-  }
 
   &.modal--full-screen {
     @include absolute(20px);
@@ -57,6 +55,30 @@
       max-width: calc(100% - 50px);
     }
   }
+
+  &.modal--with-sidebar {
+    max-width: 960px;
+  }
+
+  &.modal--with-topbar {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.modal__box-wrapper {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  .modal--with-sidebar & {
+    display: flex;
+    padding: 0;
+  }
+
+  .modal--with-topbar & {
+    height: calc(100% - var(--modal-topbar-height));
+  }
 }
 
 .modal__title {
@@ -71,6 +93,15 @@
   &.modal__title--no-padding-left {
     padding-left: 0;
   }
+}
+
+.modal__box-topbar {
+  height: var(--modal-topbar-height);
+  width: 100%;
+  padding: 12px 24px;
+  border-bottom: 1px solid $palette-neutral-200;
+  display: flex;
+  align-items: center;
 }
 
 .modal__box-sidebar {
@@ -97,12 +128,12 @@
   }
 
   &.modal__box-sidebar--collapsed {
-    flex-basis: 48px;
+    flex-basis: 0;
   }
 }
 
 .modal__actions {
-  @include absolute(10px, 20px, auto, auto);
+  @include absolute(16px, 16px, auto, auto);
 
   display: flex;
   flex-direction: row-reverse;
@@ -111,7 +142,7 @@
 
 .modal__close,
 %modal-close {
-  font-size: 20px;
+  font-size: 16px;
   color: $palette-neutral-700;
 
   &:hover {
@@ -154,5 +185,54 @@
 
   &.modal__content-wrapper--scrollable {
     overflow-y: auto;
+  }
+}
+
+.modal__box-topbar-actions {
+  margin-left: auto;
+
+  @include flex-align-items(5px);
+}
+
+.modal__box-topbar-icons {
+  @include flex-align-items(2px);
+
+  list-style: none;
+
+  &::after {
+    content: '';
+    width: 1px;
+    height: 16px;
+    background-color: $palette-neutral-200;
+    margin: 0 16px 0 10px;
+  }
+}
+
+.modal__box-topbar-icon {
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $palette-neutral-700;
+
+  @include rounded($rounded-md);
+
+  &:hover,
+  &--active {
+    background-color: $palette-neutral-100;
+    color: $palette-neutral-900;
+    cursor: pointer;
+  }
+}
+
+.modal__box-topbar-icon-close {
+  color: $palette-neutral-700;
+  cursor: pointer;
+  font-size: 16px;
+
+  &:hover {
+    color: $palette-neutral-900;
   }
 }

@@ -1,5 +1,11 @@
 <template>
   <div class="control__elements">
+    <span v-if="!readOnly" class="row-modal__choose-button">
+      <ButtonText icon="iconoir-plus" @click.prevent="$refs.selectModal.show()">
+        {{ $t('rowEditFieldLinkRow.addLink') }}
+      </ButtonText>
+    </span>
+
     <ul class="field-link-row__items">
       <li v-for="item in value" :key="item.id" class="field-link-row__item">
         <component
@@ -26,10 +32,7 @@
         </a>
       </li>
     </ul>
-    <a v-if="!readOnly" class="add" @click.prevent="$refs.selectModal.show()">
-      <i class="iconoir-plus add__icon"></i>
-      {{ $t('rowEditFieldLinkRow.addLink') }}
-    </a>
+
     <div v-show="touched && !valid" class="error">
       {{ error }}
     </div>

@@ -7,20 +7,14 @@
         class="card-multiple-collaborators__item"
       >
         <template v-if="item.id && item.name">
-          <span
-            class="field-multiple-collaborators__name background-color--light-gray"
-            >{{
-              $options.methods.getCollaboratorName(item, parent.$store)
-            }}</span
-          >
-          <div
-            v-if="props.value"
-            class="field-multiple-collaborators__initials"
-          >
-            {{
+          <BadgeCollaborator
+            size="small"
+            :initials="
               $options.methods.getCollaboratorNameInitials(item, parent.$store)
-            }}
-          </div>
+            "
+          >
+            {{ $options.methods.getCollaboratorName(item, parent.$store) }}
+          </BadgeCollaborator>
         </template>
       </div>
     </div>

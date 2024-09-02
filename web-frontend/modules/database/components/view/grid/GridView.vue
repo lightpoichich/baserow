@@ -255,7 +255,7 @@
         >
           <a
             class="context__menu-item-link"
-            @click="duplicateSelectedRow($event, selectedRow)"
+            @click="duplicateSelectedRow(selectedRow)"
           >
             <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('gridView.duplicateRow') }}
@@ -342,6 +342,8 @@
       @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
       @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
       @refresh-row="refreshRow"
+      @duplicate-row="duplicateSelectedRow($event)"
+      @delete-row="deleteRow($event)"
     ></RowEditModal>
   </div>
 </template>
@@ -668,10 +670,11 @@ export default {
         }
       }
     },
-    duplicateSelectedRow(event, selectedRow) {
+    duplicateSelectedRow(selectedRow) {
       event.preventFieldCellUnselect = true
       this.addRowAfter(selectedRow, selectedRow)
       this.$refs.rowContext.hide()
+      this.$refs.rowEditModal.hide()
     },
     copyLinkToSelectedRow(event, selectedRow) {
       const url =
@@ -933,6 +936,7 @@ export default {
             getScrollTop,
           }
         )
+        this.$refs.rowEditModal.hide()
         await this.$store.dispatch('toast/restore', {
           trash_item_type: 'row',
           parent_trash_item_id: this.table.id,

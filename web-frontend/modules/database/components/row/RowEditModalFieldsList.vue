@@ -24,6 +24,7 @@
         :view="view"
         :table="table"
         :database="database"
+        :workspace-id="database.workspace.id"
         :sortable="sortable && fieldIsSortable(field)"
         :can-modify-fields="canModifyFields"
         :all-fields-in-table="allFieldsInTable"

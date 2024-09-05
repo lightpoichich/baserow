@@ -25,6 +25,7 @@ from baserow.config.settings.utils import (
     str_to_bool,
     try_int,
 )
+from baserow.core.feature_flag import FeatureFlags
 from baserow.core.telemetry.utils import otel_is_enabled
 from baserow.throttling_types import RateLimit
 from baserow.version import VERSION

@@ -108,7 +108,7 @@
     >
     </TrashModal>
     <ExportWorkspaceModal
-      v-if="$hasPermission('workspace.update', workspace, workspace.id)"
+      v-if="$hasPermission('workspace.read', workspace, workspace.id)"
       ref="exportWorkspaceModal"
       :workspace="workspace"
     >

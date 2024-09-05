@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils.functional import lazy
@@ -8,11 +9,24 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import serializers, status
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.schemas import get_error_schema
+from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
+from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.errors import (
+    ERROR_USER_NOT_IN_GROUP,
+    ERROR_PERMISSION_DENIED,
+    ERROR_GROUP_DOES_NOT_EXIST,
+    ERROR_FEATURE_DISABLED,
+)
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from baserow.api.jobs.serializers import JobSerializer
+from baserow.api.schemas import (
+    get_error_schema,
+    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+)
 from baserow.api.utils import DiscriminatorMappingSerializer, validate_data
 from baserow.contrib.database.api.export.errors import (
     ERROR_EXPORT_JOB_DOES_NOT_EXIST,
@@ -38,7 +52,18 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.core.exceptions import UserNotInWorkspace
+from baserow.core.exceptions import (
+    UserNotInWorkspace,
+    WorkspaceDoesNotExist,
+    ApplicationDoesNotExist,
+    PermissionDenied,
+    FeatureDisabled,
+)
+from baserow.core.feature_flag import FeatureFlags, is_feature_enabled
+from baserow.core.job_types import ExportApplicationsJobType
+from baserow.core.jobs.exceptions import MaxJobCountExceeded
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.registries import job_type_registry
 
 User = get_user_model()
 
@@ -47,6 +72,21 @@ CreateExportJobSerializer = DiscriminatorMappingSerializer(
     "Export",
     lazy(table_exporter_registry.get_option_serializer_map, dict)(),
     type_field_name="exporter_type",
+)
+
+ExportApplicationsJobRequestSerializer = job_type_registry.get(
+    ExportApplicationsJobType.type
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    request_serializer=True,
+    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
+)
+
+ExportApplicationsJobResponseSerializer = job_type_registry.get(
+    ExportApplicationsJobType.type
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
 )
 
 
@@ -174,3 +214,75 @@ class ExportJobView(APIView):
             raise ExportJobDoesNotExistException()
 
         return Response(ExportJobSerializer(job).data)
+
+
+class AsyncExportApplicationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="workspace_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the workspace that must be exported.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Workspace"],
+        operation_id="export_workspace_applications_async",
+        description=(
+            "Export workspace or set of applications application if the authorized user is "
+            "in the application's workspace. "
+            "All the related children are also going to be exported. For example "
+            "in case of a database application all the underlying tables, fields, "
+            "views and rows are going to be duplicated."
+            "Roles are not part of the export."
+        ),
+        request=None,
+        responses={
+            202: ExportApplicationsJobResponseSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_APPLICATION_NOT_IN_GROUP",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                    "ERROR_APPLICATION_DOES_NOT_EXIST",
+                    "ERROR_PERMISSION_DENIED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+            PermissionDenied: ERROR_PERMISSION_DENIED,
+            FeatureDisabled: ERROR_FEATURE_DISABLED,
+        }
+    )
+    @validate_body(ExportApplicationsJobRequestSerializer, return_validated=True)
+    def post(self, request, data: Dict, workspace_id: int) -> Response:
+        """
+        Exports the listed applications of a workspace to a ZIP file containing the
+        applications' data. If the list of applications is empty, all applications of
+        the workspace are exported.
+        """
+
+        if not is_feature_enabled(FeatureFlags.export_workspace):
+            raise FeatureDisabled("Workspace export is not available")
+
+        job = JobHandler().create_and_start_job(
+            request.user,
+            ExportApplicationsJobType.type,
+            workspace_id=workspace_id,
+            application_ids=data.get("application_ids") or [],
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)

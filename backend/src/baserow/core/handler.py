@@ -1646,10 +1646,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         export_path = join(settings.EXPORT_FILES_DIRECTORY, zip_file_name)
 
         applications = workspace.application_set.all()
+        print(">>>>>>>>>>>>>>> APPLICATIONS", applications)
         if application_ids:
             applications = applications.filter(id__in=application_ids)
 
-        app_progress_step = int(80 / len(applications))
+        app_progress_step = int(80 / (len(applications) or 1))
         last_progress_step = 100 - app_progress_step * len(applications)
 
         with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:

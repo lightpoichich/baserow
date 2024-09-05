@@ -163,5 +163,5 @@ def test_exporting_workspace_writes_file_to_storage(
                 assert len(table["fields"]) == 1
                 assert table["fields"][0]["name"] == text_field.name
                 assert len(table["rows"]) == 2
-                assert table["rows"][0]["field_1"] == "row #1"
-                assert table["rows"][1]["field_1"] == "row #2"
+                assert table["rows"][0][f"field_{text_field.id}"] == "row #1"
+                assert table["rows"][1][f"field_{text_field.id}"] == "row #2"

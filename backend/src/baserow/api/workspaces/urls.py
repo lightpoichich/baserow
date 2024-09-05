@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import include, path, re_path
 
 from .invitations import urls as invitation_urls

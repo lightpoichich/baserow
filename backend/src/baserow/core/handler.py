@@ -1646,7 +1646,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         export_path = join(settings.EXPORT_FILES_DIRECTORY, zip_file_name)
 
         applications = workspace.application_set.all()
-        print(">>>>>>>>>>>>>>> APPLICATIONS", applications)
         if application_ids:
             applications = applications.filter(id__in=application_ids)
 
@@ -1661,10 +1660,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                     application_type = application_type_registry.get_by_model(
                         application
                     )
-                    with application_type.export_safe_transaction_context(application):
-                        exported_application = application_type.export_serialized(
-                            application, import_export_config, files_zip, storage
-                        )
+                    # We don't run it in export_safe_transaction_context
+                    # as it's readonly
+                    exported_application = application_type.export_serialized(
+                        application, import_export_config, files_zip, storage
+                    )
                     exported_applications.append(exported_application)
                     progress.increment(by=app_progress_step)
 

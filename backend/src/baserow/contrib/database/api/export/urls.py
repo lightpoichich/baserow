@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from .views import ExportJobView, ExportTableView, AsyncExportApplicationsView
+from .views import AsyncExportApplicationsView, ExportJobView, ExportTableView
 
 app_name = "baserow.contrib.database.api.export"
 

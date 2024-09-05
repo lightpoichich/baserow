@@ -3,13 +3,13 @@ import zipfile
 from unittest.mock import patch
 
 from django.core.files.storage import FileSystemStorage
+from django.test.utils import override_settings
 from django.urls import reverse
 
 import pytest
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from baserow.contrib.database.rows.handler import RowHandler
-from django.test.utils import override_settings
 
 
 @pytest.mark.django_db
@@ -155,4 +155,13 @@ def test_exporting_workspace_writes_file_to_storage(
 
             with zip_ref.open("data/workspace_export.json") as json_file:
                 json_data = json.load(json_file)
-                # TODO: add proper assertion
+                assert len(json_data) == 1
+                assert json_data[0]["name"] == table.database.name
+
+                assert len(json_data[0]["tables"]) == 1
+                table = json_data[0]["tables"][0]
+                assert len(table["fields"]) == 1
+                assert table["fields"][0]["name"] == text_field.name
+                assert len(table["rows"]) == 2
+                assert table["rows"][0]["field_1"] == "row #1"
+                assert table["rows"][1]["field_1"] == "row #2"

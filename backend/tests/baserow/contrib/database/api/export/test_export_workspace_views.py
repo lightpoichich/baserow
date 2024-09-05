@@ -25,7 +25,7 @@ def test_exporting_workspace_with_feature_flag_disabled(
 
     response = api_client.post(
         reverse(
-            "api:database:export:async_export_workspace",
+            "api:database:export:export_workspace_async",
             kwargs={"workspace_id": workspace.id},
         ),
         data={},
@@ -44,7 +44,7 @@ def test_exporting_missing_workspace_returns_error(data_fixture, api_client, tmp
 
     response = api_client.post(
         reverse(
-            "api:database:export:async_export_workspace",
+            "api:database:export:export_workspace_async",
             kwargs={"workspace_id": 9999},
         ),
         data={},
@@ -67,7 +67,7 @@ def test_exporting_workspace_with_no_permissions_returns_error(
 
     response = api_client.post(
         reverse(
-            "api:database:export:async_export_workspace",
+            "api:database:export:export_workspace_async",
             kwargs={"workspace_id": workspace.id},
         ),
         data={},

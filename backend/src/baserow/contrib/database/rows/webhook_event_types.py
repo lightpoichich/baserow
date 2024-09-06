@@ -11,6 +11,21 @@ from .signals import rows_created, rows_deleted, rows_updated
 
 
 class RowsEventType(WebhookEventType):
+    def listener(self, **kwargs: dict):
+        """
+        The method that is called when the signal is triggered. By default it will
+        wait for the transition to commit to call the `listener_after_commit` method.
+
+        :param kwargs: The arguments of the signal.
+        """
+
+        # Don't do anything if `send_webhook_events` is provided and `false` because
+        # then the webhook must not be triggered.
+        if kwargs.get("send_webhook_events", True) is False:
+            return
+
+        return super().listener(**kwargs)
+
     def get_row_serializer(self, webhook, model):
         return get_row_serializer_class(
             model,

@@ -148,6 +148,7 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(DeleteViewFilterGroupActionType())
 
         from .airtable.registry import airtable_column_type_registry
+        from .data_sync.registries import data_sync_type_registry
         from .export.registries import table_exporter_registry
         from .fields.registries import field_converter_registry, field_type_registry
         from .formula.registries import formula_function_registry
@@ -525,6 +526,10 @@ class DatabaseConfig(AppConfig):
         airtable_column_type_registry.register(RichTextTextAirtableColumnType())
         airtable_column_type_registry.register(CountAirtableColumnType())
 
+        from .data_sync.data_sync_types import ICalCalendarDataSyncType
+
+        data_sync_type_registry.register(ICalCalendarDataSyncType())
+
         from baserow.contrib.database.table.usage_types import (
             TableWorkspaceStorageUsageItemType,
         )
@@ -585,6 +590,7 @@ class DatabaseConfig(AppConfig):
         )
 
         from .airtable.operations import RunAirtableImportJobOperationType
+        from .data_sync.operations import SyncTableOperationType
         from .export.operations import ExportTableOperationType
         from .fields.operations import (
             CreateFieldOperationType,
@@ -761,6 +767,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(UpdateViewFilterGroupOperationType())
         operation_type_registry.register(DeleteViewFilterGroupOperationType())
         operation_type_registry.register(ReadViewFilterGroupOperationType())
+        operation_type_registry.register(SyncTableOperationType())
 
         from baserow.core.registries import permission_manager_type_registry
 

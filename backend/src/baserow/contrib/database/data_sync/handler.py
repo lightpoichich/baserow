@@ -3,6 +3,8 @@ from typing import List
 from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.models import Database
 from baserow.contrib.database.operations import CreateTableDatabaseTableOperationType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import SearchHandler
@@ -11,6 +13,7 @@ from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import extract_allowed
 
+from ..fields.registries import field_type_registry
 from .exceptions import PropertyNotFound, UniquePrimaryPropertyNotFound
 from .models import DataSync, DataSyncProperty
 from .operations import SyncTableOperationType
@@ -21,11 +24,11 @@ class DataSyncHandler:
     def create_data_sync_table(
         self,
         user: AbstractUser,
-        database,
-        type_name,
-        visible_properties,
-        table_name,
-        **kwargs,
+        database: Database,
+        type_name: str,
+        visible_properties: List[str],
+        table_name: str,
+        **kwargs: dict,
     ) -> DataSync:
         """
         Creates a new data sync, the related table, the synced fields, and will
@@ -37,6 +40,8 @@ class DataSyncHandler:
         :param visible_properties: A list of data sync property keys that must be added.
             The primary unique ones are always added.
         :param table_name: The name of the synced table that will be created.
+        :raises PropertyNotFound:
+        :raises UniquePrimaryPropertyNotFound:
         """
 
         CoreHandler().check_permissions(
@@ -232,30 +237,78 @@ class DataSyncHandler:
             self, table=data_sync.table, user=user, force_table_refresh=True
         )
 
-    def unsync_field(self, user: AbstractUser, data_sync: DataSync, field):
-        """
-        Stops the sync of a field in a table, but keeps the field and the data. It
-        will be converted to a normal field that can be modified, but won't be in sync
-        anymore.
-
-        :param user:
-        :param data_sync:
-        :param field:
-        """
-
     def set_data_sync_visible_properties(
         self,
         user: AbstractUser,
-        data_sync,
+        data_sync: DataSync,
         visible_properties: List[str],
     ):
         """
         Changes the properties that are visible in the synced table. If a visible
-        property is removed from the list, then it will be removed from the table, it
-        won't persist like with the `unsync_field` method. If a new property is added,
-        the field will be created.
+        property is removed from the list, then it will be removed from the table. If
+        a new property is added, the field will be created.
 
-        :param user:
-        :param data_sync:
-        :param visible_properties:
+        :param user: The user on whose behalf the properties are updated.
+        :param data_sync: The data sync of which the properties must be updated.
+        :param visible_properties: A list of all properties that must be in data sync
+            table. New ones will be created, and removed ones will be deleted.
         """
+
+        # No need to do a permission check because that's handled in the FieldHandler
+        # create and delete methods.
+
+        data_sync_type = data_sync_type_registry.get_by_model(data_sync)
+        data_sync_properties = data_sync_type.get_properties(data_sync)
+
+        for data_sync_property in data_sync_properties:
+            if (
+                data_sync_property.unique_primary
+                and data_sync_property.key not in visible_properties
+            ):
+                visible_properties.insert(0, data_sync_property.key)
+
+        enabled_properties = DataSyncProperty.objects.filter(data_sync=data_sync)
+        enabled_property_keys = [p.key for p in enabled_properties]
+        properties_to_be_removed = []
+        properties_to_be_added = []
+
+        for visible_property in visible_properties:
+            data_sync_property = next(
+                (p for p in data_sync_properties if p.key == visible_property), None
+            )
+            if not data_sync_property:
+                raise PropertyNotFound(
+                    f"The property {visible_property} is not found in "
+                    f"{data_sync_type.type}."
+                )
+            if visible_property not in enabled_property_keys:
+                properties_to_be_added.append(data_sync_property)
+
+        for enabled_property in enabled_properties:
+            if enabled_property.key not in visible_properties:
+                properties_to_be_removed.append(enabled_property)
+
+        handler = FieldHandler()
+
+        for data_sync_property in properties_to_be_added:
+            baserow_field = data_sync_property.to_baserow_field()
+            baserow_field_type = field_type_registry.get_by_model(baserow_field)
+            field_kwargs = baserow_field.__dict__
+            field = handler.create_field(
+                user=user,
+                table=data_sync.table,
+                type_name=baserow_field_type.type,
+                **field_kwargs,
+            )
+            DataSyncProperty.objects.create(
+                data_sync=data_sync, field=field, key=data_sync_property.key
+            )
+
+        for data_sync_property_instance in properties_to_be_removed:
+            field = data_sync_property_instance.field
+            data_sync_property_instance.delete()
+            handler.delete_field(
+                user=user,
+                field=field,
+                permanently_delete_field=True,
+            )

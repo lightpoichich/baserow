@@ -523,3 +523,109 @@ def test_sync_data_sync_table_without_permissions(data_fixture):
 
     with pytest.raises(UserNotInWorkspace):
         DataSyncHandler().sync_data_sync_table(user=user, data_sync=data_sync)
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_set_data_sync_visible_properties_not_existing_property(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    with pytest.raises(PropertyNotFound):
+        handler.set_data_sync_visible_properties(
+            user=user,
+            data_sync=data_sync,
+            visible_properties=["test"],
+        )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_set_data_sync_visible_properties_without_permissions(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+
+    data_sync = data_fixture.create_ical_data_sync(
+        ical_url="https://baserow.io/ical.ics",
+    )
+    with pytest.raises(UserNotInWorkspace):
+        handler = DataSyncHandler()
+        handler.set_data_sync_visible_properties(
+            user=user,
+            data_sync=data_sync,
+            visible_properties=["uid", "dtend", "summary"],
+        )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_set_data_sync_visible_properties(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    handler.set_data_sync_visible_properties(
+        user=user,
+        data_sync=data_sync,
+        visible_properties=["uid", "dtend", "summary"],
+    )
+
+    fields = specific_iterator(data_sync.table.field_set.all().order_by("id"))
+    assert len(fields) == 3
+    assert fields[0].name == "Unique ID"
+    assert isinstance(fields[0], TextField)
+    assert fields[0].primary is True
+    assert fields[1].name == "End date"
+    assert fields[1].primary is False
+    assert fields[2].name == "Summary"
+    assert fields[2].primary is False
+
+    properties = DataSyncProperty.objects.filter(data_sync=data_sync).order_by("id")
+    assert len(properties) == 3
+    assert properties[0].key == "uid"
+    assert properties[0].field_id == fields[0].id
+    assert properties[1].key == "dtend"
+    assert properties[1].field_id == fields[1].id
+    assert properties[2].key == "summary"
+    assert properties[2].field_id == fields[2].id

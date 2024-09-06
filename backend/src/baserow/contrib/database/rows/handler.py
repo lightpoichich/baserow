@@ -1886,9 +1886,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             before_return=before_return,
             updated_field_ids=updated_field_ids,
             m2m_change_tracker=m2m_change_tracker,
-            # @TODO write tests for these two.
-            # @TODO make sure the `send_webhook_events` is responected for create al
-            #   well.
             send_realtime_update=send_realtime_update,
             send_webhook_events=send_webhook_events,
         )

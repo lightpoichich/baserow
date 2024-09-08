@@ -16,11 +16,11 @@ class DataSync(
     models.Model,
     WithRegistry,
 ):
-    table = models.ForeignKey(
+    table = models.OneToOneField(
         "database.Table",
         on_delete=models.CASCADE,
         null=True,
-        related_name="data_syncs",
+        related_name="data_sync",
         help_text="The table where the data is synced into.",
     )
     last_sync = models.DateTimeField(
@@ -47,7 +47,9 @@ class DataSyncProperty(models.Model):
     doesn't exist, then the property is not visible as field in the table.
     """
 
-    data_sync = models.ForeignKey(DataSync, on_delete=models.CASCADE)
+    data_sync = models.ForeignKey(
+        DataSync, on_delete=models.CASCADE, related_name="data_sync_properties"
+    )
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     key = models.CharField(
         max_length=255, help_text="The matching `key` of the `DataSyncProperty`."

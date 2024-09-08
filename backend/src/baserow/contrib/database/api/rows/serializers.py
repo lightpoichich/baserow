@@ -97,6 +97,11 @@ def get_row_serializer_class(
         if field_id_matches and field_name_matches:
             name = field["field"].name if user_field_names else field["name"]
             extra_kwargs = field_kwargs.get(field["name"], {})
+            # If the field is configured to be read-only, then we do want to include
+            # the field in the serializer for the response, but don't allow updating
+            # via the API. It should be possible to update the cell value internally
+            # because the value is then managed by something internally.
+            extra_kwargs["read_only"] = field["field"].read_only
 
             if field["name"] != name:
                 # If we are building a serializer with names which do not match the

@@ -1030,6 +1030,34 @@ def test_import_rows(
 
 
 @pytest.mark.django_db
+def test_import_rows_with_read_only_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test", order=1, read_only=True
+    )
+
+    handler = RowHandler()
+
+    rows, report = handler.import_rows(
+        user=user,
+        table=table,
+        data=[
+            [
+                "Tesla",
+            ],
+        ],
+        send_realtime_update=False,
+    )
+
+    model = table.get_model()
+    rows = list(model.objects.all())
+    assert len(rows) == 0
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
 @patch("baserow.contrib.database.rows.signals.before_rows_update.send")
 def test_move_row(before_send_mock, send_mock, data_fixture):

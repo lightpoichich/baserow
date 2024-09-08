@@ -294,7 +294,8 @@ export default {
      */
     writableFields() {
       return this.fields.filter(
-        ({ type }) => !this.fieldTypes[type].getIsReadOnly()
+        ({ type, read_only: readOnly }) =>
+          !this.fieldTypes[type].getIsReadOnly() && !readOnly
       )
     },
     /**

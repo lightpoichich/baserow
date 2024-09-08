@@ -1823,6 +1823,27 @@ def test_create_row(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_create_row_with_read_only_field(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="", read_only=True
+    )
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{text_field.id}": "test",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json_row_2 = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json_row_2[f"field_{text_field.id}"] is None
+
+
+@pytest.mark.django_db
 def test_create_empty_row_for_interesting_fields(api_client, data_fixture):
     """
     Test a common case: create a row with empty values.
@@ -2248,6 +2269,34 @@ def test_update_row(api_client, data_fixture):
     assert getattr(row_3, f"field_{decimal_field.id}") == Decimal("10.01")
     assert getattr(row_2, f"field_{number_field.id}") is None
     assert getattr(row_2, f"field_{boolean_field.id}") is False
+
+
+@pytest.mark.django_db
+def test_update_row_with_read_only_field(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="", read_only=True
+    )
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        url,
+        {
+            f"field_{text_field.id}": "Green",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json_row_1 = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json_row_1["id"] == row_1.id
+    assert response_json_row_1[f"field_{text_field.id}"] is None
 
 
 @pytest.mark.django_db

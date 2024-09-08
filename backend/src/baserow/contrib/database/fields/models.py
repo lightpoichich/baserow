@@ -125,6 +125,13 @@ class Field(
     description = models.TextField(
         help_text="Field description", default=None, null=True
     )
+    read_only = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field is read-only regardless of the field "
+        "type. If true, then it won't be possible to update the cell value via the"
+        "API.",
+    )
 
     class Meta:
         ordering = (

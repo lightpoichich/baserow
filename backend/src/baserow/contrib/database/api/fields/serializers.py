@@ -61,7 +61,10 @@ class FieldSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_read_only(self, instance):
-        return field_type_registry.get_by_model(instance.specific_class).read_only
+        return (
+            field_type_registry.get_by_model(instance.specific_class).read_only
+            or instance.read_only
+        )
 
 
 class RelatedFieldsSerializer(serializers.Serializer):

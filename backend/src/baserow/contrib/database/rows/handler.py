@@ -1523,6 +1523,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             field_object["field"]
             for field_object in model._field_objects.values()
             if not field_object["type"].read_only
+            and not field_object["field"].read_only
         ]
 
         # Sort by order then by id

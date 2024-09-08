@@ -131,7 +131,7 @@ def test_list_fields(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_list_read_only_fields(api_client, data_fixture):
+def test_list_read_only_field_types(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -148,6 +148,27 @@ def test_list_read_only_fields(api_client, data_fixture):
     assert len(response_json) == 1
     assert response_json[0]["id"] == field_1.id
     assert response_json[0]["type"] == "created_on"
+    assert response_json[0]["read_only"] is True
+
+
+@pytest.mark.django_db
+def test_list_read_only_fields(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(table=table_1, order=1, read_only=True)
+
+    response = api_client.get(
+        reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
+        **{"HTTP_AUTHORIZATION": f"JWT {jwt_token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == field_1.id
+    assert response_json[0]["type"] == "text"
     assert response_json[0]["read_only"] is True
 
 

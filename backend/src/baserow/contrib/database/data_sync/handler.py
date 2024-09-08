@@ -97,6 +97,7 @@ class DataSyncHandler:
             baserow_field = data_sync_property.to_baserow_field()
             baserow_field.order = index
             baserow_field.table = table
+            baserow_field.read_only = True
             if data_sync_property.unique_primary and not has_primary:
                 has_primary = True
                 baserow_field.primary = True
@@ -294,6 +295,7 @@ class DataSyncHandler:
             baserow_field = data_sync_property.to_baserow_field()
             baserow_field_type = field_type_registry.get_by_model(baserow_field)
             field_kwargs = baserow_field.__dict__
+            field_kwargs["read_only"] = True
             field = handler.create_field(
                 user=user,
                 table=data_sync.table,

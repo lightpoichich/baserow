@@ -13,6 +13,7 @@ from baserow.contrib.database.data_sync.exceptions import (
 )
 from baserow.contrib.database.data_sync.handler import DataSyncHandler
 from baserow.contrib.database.data_sync.models import (
+    DataSync,
     DataSyncProperty,
     ICalCalendarDataSync,
 )
@@ -636,3 +637,32 @@ def test_set_data_sync_visible_properties(data_fixture):
     assert properties[1].field_id == fields[1].id
     assert properties[2].key == "summary"
     assert properties[2].field_id == fields[2].id
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_delete_sync_data_sync_table(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+    handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+    data_sync.table.delete()
+    assert DataSync.objects.all().count() == 0
+    assert DataSyncProperty.objects.all().count() == 0

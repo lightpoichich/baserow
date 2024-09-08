@@ -57,4 +57,4 @@ class DataSyncProperty(models.Model):
 
 
 class ICalCalendarDataSync(DataSync):
-    ical_url = models.URLField()
+    ical_url = models.URLField(max_length=2000)

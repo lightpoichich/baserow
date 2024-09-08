@@ -904,4 +904,8 @@ class DatabaseApplicationType(ApplicationType):
         return database
 
     def enhance_queryset(self, queryset):
-        return queryset.prefetch_related("table_set")
+        return queryset.prefetch_related(
+            "table_set",
+            "table_set__data_sync",
+            "table_set__data_sync__data_sync_properties",
+        )

@@ -89,6 +89,44 @@ def test_get_data_sources(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_data_sources_with_shared(data_fixture):
+    page = data_fixture.create_builder_page()
+    shared_page = page.builder.page_set.get(shared=True)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+    data_source3 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+    data_source4 = data_fixture.create_builder_data_source(page=page)
+
+    shared_data_source = data_fixture.create_builder_data_source(page=shared_page)
+    shared_data_source2 = (
+        data_fixture.create_builder_local_baserow_list_rows_data_source(
+            page=shared_page
+        )
+    )
+
+    data_sources = DataSourceHandler().get_data_sources(page, with_shared=True)
+
+    assert [e.id for e in data_sources] == [
+        shared_data_source.id,
+        shared_data_source2.id,
+        data_source1.id,
+        data_source2.id,
+        data_source3.id,
+        data_source4.id,
+    ]
+
+    assert isinstance(data_sources[2].service, LocalBaserowGetRow)
+    assert isinstance(data_sources[4].service, LocalBaserowListRows)
+    assert data_sources[5].service is None
+
+
+@pytest.mark.django_db
 def test_delete_data_source(data_fixture):
     data_source = data_fixture.create_builder_local_baserow_get_row_data_source()
 

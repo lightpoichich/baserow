@@ -2,7 +2,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
@@ -81,7 +81,8 @@ class DataSourceHandler:
         self,
         page: Page,
         base_queryset: Optional[QuerySet] = None,
-        specific: bool = True,
+        with_shared: Optional[bool] = False,
+        specific: Optional[bool] = True,
     ) -> Union[QuerySet[DataSource], Iterable[DataSource]]:
         """
         Gets all the specific data_sources of a given page.
@@ -97,13 +98,17 @@ class DataSourceHandler:
             base_queryset if base_queryset is not None else DataSource.objects.all()
         )
 
-        data_source_queryset = data_source_queryset.filter(page=page).select_related(
+        if with_shared:
+            # Get the data source for the same builder on the shared page
+            data_source_queryset = data_source_queryset.filter(
+                Q(page=page) | Q(page__builder_id=page.builder_id, page__shared=True)
+            )
+        else:
+            data_source_queryset = data_source_queryset.filter(page=page)
+
+        data_source_queryset = data_source_queryset.select_related(
             "service",
-            "page",
-            "page__builder",
             "page__builder__workspace",
-            "service",
-            "service__integration",
             "service__integration__application",
         )
 
@@ -155,7 +160,10 @@ class DataSourceHandler:
 
         if not hasattr(page, "_data_sources"):
             data_sources = DataSourceHandler().get_data_sources(
-                page, base_queryset=base_queryset, specific=specific
+                page,
+                base_queryset=base_queryset,
+                specific=specific,
+                with_shared=True,
             )
             setattr(page, "_data_sources", data_sources)
 
@@ -182,7 +190,9 @@ class DataSourceHandler:
         """
 
         data_sources = self.get_data_sources_with_cache(
-            page, base_queryset=base_queryset, specific=specific
+            page,
+            base_queryset=base_queryset,
+            specific=specific,
         )
 
         for data_source in data_sources:
@@ -253,6 +263,7 @@ class DataSourceHandler:
         data_source: DataSourceForUpdate,
         service_type: Optional[ServiceType] = None,
         name: Optional[str] = None,
+        page: Optional[Page] = None,
         **kwargs,
     ) -> DataSource:
         """
@@ -302,6 +313,11 @@ class DataSourceHandler:
 
         if name is not None:
             data_source.name = name
+
+        if page is not None and data_source.page_id != page.id:
+            data_source.page = page
+            # Add the moved data source at the end of the new page
+            data_source.order = DataSource.get_last_order(page)
 
         data_source.save()
 

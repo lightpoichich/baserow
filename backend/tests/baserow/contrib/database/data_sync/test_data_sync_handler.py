@@ -5,6 +5,7 @@ from django.utils.timezone import utc
 
 import pytest
 import responses
+from freezegun import freeze_time
 
 from baserow.contrib.database.data_sync.data_sync_types import ICalCalendarDataSyncType
 from baserow.contrib.database.data_sync.exceptions import (
@@ -350,7 +351,9 @@ def test_sync_data_sync_table_create_update_delete_row(data_fixture):
         visible_properties=["uid", "dtstart", "dtend", "summary"],
         ical_url="https://baserow.io/ical.ics",
     )
-    handler.sync_data_sync_table(user=user, data_sync=data_sync)
+    with freeze_time("2021-01-01 12:00"):
+        handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
     fields = {
         p.key: p.field for p in DataSyncProperty.objects.filter(data_sync=data_sync)
     }
@@ -374,6 +377,10 @@ def test_sync_data_sync_table_create_update_delete_row(data_fixture):
         getattr(sync_1_rows[1], f"field_{fields['uid'].id}")
         == "1725220387555-95757@ical.marudot.com"
     )
+
+    assert data_sync.last_sync.year == 2021
+    assert data_sync.last_sync.month == 1
+    assert data_sync.last_sync.day == 1
 
     # Test updating rows
     responses.add(

@@ -8,6 +8,13 @@
       @mousedown.prevent
       @click.prevent="selectTable(database, table)"
     >
+      <i
+        v-if="table.data_sync"
+        v-tooltip:[syncTooltipOptions]="
+          `${$t('sidebarItem.lastSynced')}: ${lastSyncedDate}`
+        "
+        class="iconoir-data-transfer-down"
+      ></i>
       <Editable
         ref="rename"
         :value="table.name"
@@ -134,6 +141,7 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { getHumanPeriodAgoCount } from '@baserow/modules/core/utils/date'
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal'
 import SidebarDuplicateTableContextItem from '@baserow/modules/database/components/sidebar/table/SidebarDuplicateTableContextItem'
@@ -198,6 +206,20 @@ export default {
           []
         )
         .filter((component) => component !== null)
+    },
+    syncTooltipOptions() {
+      return {
+        contentClasses: ['tooltip__content--align-right'],
+      }
+    },
+    lastSyncedDate() {
+      if (!this.table.data_sync || !this.table.data_sync.last_sync) {
+        return this.$t('sidebarItem.notSynced')
+      }
+      const { period, count } = getHumanPeriodAgoCount(
+        this.table.data_sync.last_sync
+      )
+      return this.$tc(`datetime.${period}Ago`, count)
     },
   },
   methods: {

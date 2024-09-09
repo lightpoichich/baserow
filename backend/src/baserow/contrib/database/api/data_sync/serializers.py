@@ -20,4 +20,5 @@ class DataSyncSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "data_sync_properties",
+            "last_sync",
         )

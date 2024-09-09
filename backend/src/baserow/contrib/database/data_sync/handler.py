@@ -1,6 +1,7 @@
 from typing import List
 
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -129,7 +130,7 @@ class DataSyncHandler:
 
         return data_sync_instance
 
-    def sync_data_sync_table(self, user: AbstractUser, data_sync: DataSync):
+    def sync_data_sync_table(self, user: AbstractUser, data_sync: DataSync) -> DataSync:
         """
         Synchronizes the table with the data source. This will automatically create
         missing rows, update existing rows, and delete rows that no longer exist. There
@@ -234,9 +235,14 @@ class DataSyncHandler:
         ):
             SearchHandler.field_value_updated_or_created(data_sync.table)
 
+        data_sync.last_sync = timezone.now()
+        data_sync.save()
+
         table_updated.send(
             self, table=data_sync.table, user=user, force_table_refresh=True
         )
+
+        return data_sync
 
     def set_data_sync_visible_properties(
         self,

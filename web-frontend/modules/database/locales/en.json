@@ -67,7 +67,9 @@
   },
   "sidebarItem": {
     "exportTable": "Export table",
-    "webhooks": "Webhooks"
+    "webhooks": "Webhooks",
+    "lastSynced": "Last synced",
+    "notSynced": "not synced"
   },
   "duplicateTableJobType": {
     "duplicating": "Duplicating",

@@ -24,7 +24,6 @@ class DateStartICalCalendarDataSyncProperty(DataSyncProperty):
             date_include_time=True,
             date_time_format="24",
             date_show_tzinfo=True,
-            date_force_timezone=False,
         )
 
 
@@ -36,7 +35,6 @@ class DateEndICalCalendarDataSyncProperty(DataSyncProperty):
             date_include_time=True,
             date_time_format="24",
             date_show_tzinfo=True,
-            date_force_timezone=False,
         )
 
 

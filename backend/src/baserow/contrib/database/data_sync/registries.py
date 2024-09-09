@@ -39,25 +39,28 @@ class DataSyncProperty(ABC):
     @abstractmethod
     def to_baserow_field(self) -> Field:
         """
-        :return: An unsaved Baserow field model object with the correct configuration.
+        Should return an unsaved Baserow field instance. This is the field object that
+        will be used to automatically create the field.
+
+        :return: An unsaved Baserow field model object.
         """
 
 
 class DataSyncType(ModelInstanceMixin, CustomFieldsInstanceMixin, Instance, ABC):
     @abstractmethod
-    def get_properties(self, instance) -> List[DataSyncProperty]:
+    def get_properties(self, instance: "DataSync") -> List[DataSyncProperty]:
         """
         Should return a list of property objects that define the schema of the synced
         table. It should list all the available properties, but the user can choose
         which ones they want to add. The `unique_primary` ones are required.
 
-        :param instance: The model instance
-        :param auth_data:
+        :param instance: The data sync instance of which the properties must be
+            returned.
         :return: List of all properties in the data sync source.
         """
 
     @abstractmethod
-    def get_all_rows(self, instance) -> List[Dict]:
+    def get_all_rows(self, instance: "DataSync") -> List[Dict]:
         """
         Should return a list with dicts containing the raw row values. The values will
         run through the `to_baserow_value` method of the related property to convert
@@ -68,7 +71,7 @@ class DataSyncType(ModelInstanceMixin, CustomFieldsInstanceMixin, Instance, ABC)
         - Which rows already exist, update those if changed.
         - Which rows exist, but not in this list, delete those.
 
-        :param instance:
+        :param instance: The data sync instance of which the rows must be fetched.
         :raises SyncError: If something goes wrong, but don't want to fail hard and
             expose the error via the API.
         :return: List of all rows in the data sync source.

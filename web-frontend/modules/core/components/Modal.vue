@@ -2,67 +2,70 @@
   <div
     v-if="open"
     ref="modalWrapper"
-    class="modal__wrapper"
+    class="modal__overlay"
     @click="outside($event)"
   >
     <div
+      ref="modal"
       class="modal"
       :class="{
-        'modal--full-height': fullHeight,
-        'modal--full-max-height': !fullHeight && contentScrollable,
+        'modal--full-height': fullHeight && size !== 'fullscreen',
         'modal--with-sidebar': sidebar,
-        'modal--full-screen': fullScreen,
-        'modal--wide': wide,
-        'modal--small': small,
-        'modal--tiny': tiny,
+        'modal--fullscreen': size === 'fullscreen' && !fullHeight,
+        'modal--large': size === 'large',
+        'modal--small': size === 'small',
+        'modal--tiny': size === 'tiny',
         'modal--right': right,
       }"
     >
       <div
         v-if="leftSidebar"
-        class="modal__box-sidebar modal__box-sidebar--left"
-        :class="{ 'modal__box-sidebar--scrollable': leftSidebarScrollable }"
+        class="modal__sidebar modal__sidebar--left"
+        :class="{ 'modal__sidebar--scrollable': leftSidebarScrollable }"
       >
         <slot name="sidebar"></slot>
       </div>
-      <div
-        class="modal__content-wrapper"
-        :class="{
-          'modal__content-wrapper--scrollable': contentScrollable,
-        }"
-      >
-        <slot></slot>
-        <div class="modal__actions">
-          <a
-            v-if="closeButton && canClose"
-            class="modal__close"
-            @click="hide()"
-          >
-            <i class="iconoir-cancel"></i>
-          </a>
 
-          <a
-            v-if="collapsibleRightSidebar"
-            class="modal__collapse"
-            @click="collapseSidebar"
-          >
-            <i
-              :class="{
-                'iconoir-fast-arrow-right': !sidebarCollapsed,
-                'iconoir-fast-arrow-left': sidebarCollapsed,
-              }"
-            ></i>
-          </a>
-          <slot name="actions"></slot>
+      <div ref="contentWrapper" class="modal__content-wrapper">
+        <div ref="header" class="modal__header">
+          <slot name="header"></slot>
         </div>
+
+        <div ref="content" v-auto-overflow-scroll class="modal__content">
+          <slot name="content"></slot>
+        </div>
+
+        <div ref="footer" class="modal__footer">
+          <slot name="footer"></slot>
+        </div>
+      </div>
+
+      <div ref="actions" class="modal__actions">
+        <a v-if="closeButton" class="modal__close" @click="hide()">
+          <i class="iconoir-cancel"></i>
+        </a>
+
+        <a
+          v-if="collapsibleRightSidebar"
+          class="modal__collapse"
+          @click="collapseSidebar"
+        >
+          <i
+            :class="{
+              'iconoir-fast-arrow-right': !sidebarCollapsed,
+              'iconoir-fast-arrow-left': sidebarCollapsed,
+            }"
+          ></i>
+        </a>
+        <slot name="actions"></slot>
       </div>
 
       <div
         v-if="rightSidebar"
-        class="modal__box-sidebar modal__box-sidebar--right"
+        class="modal__sidebar modal__sidebar--right"
         :class="{
-          'modal__box-sidebar--scrollable': rightSidebarScrollable,
-          'modal__box-sidebar--collapsed': sidebarCollapsed,
+          'modal__sidebar--scrollable': rightSidebarScrollable,
+          'modal__sidebar--collapsed': sidebarCollapsed,
         }"
       >
         <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
@@ -93,20 +96,18 @@ export default {
       default: false,
       required: false,
     },
-    wide: {
-      type: Boolean,
-      default: false,
+    /**
+     * The size of the button.
+     */
+    size: {
       required: false,
-    },
-    small: {
-      type: Boolean,
-      default: false,
-      required: false,
-    },
-    tiny: {
-      type: Boolean,
-      default: false,
-      required: false,
+      type: String,
+      default: 'regular',
+      validator(value) {
+        return ['tiny', 'small', 'regular', 'large', 'fullscreen'].includes(
+          value
+        )
+      },
     },
     closeButton: {
       type: Boolean,
@@ -123,20 +124,9 @@ export default {
       default: false,
       required: false,
     },
-    contentScrollable: {
-      type: Boolean,
-      default: false,
-      required: false,
-    },
-
     rightSidebarScrollable: {
       type: Boolean,
       default: false,
-      required: false,
-    },
-    canClose: {
-      type: Boolean,
-      default: true,
       required: false,
     },
     collapsibleRightSidebar: {

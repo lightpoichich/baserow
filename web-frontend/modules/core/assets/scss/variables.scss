@@ -13,6 +13,7 @@ $z-index-layout-resize: 4 !default;
 $z-index-layout-col-3-1: 6 !default;
 $z-index-layout-col-3-2: 5 !default;
 
+
 // The z-index of modal and context must always be the same because they can be nested
 // inside each other. The order in html decided which must be shown over the other.
 $z-index-modal: 7 !default;
@@ -42,7 +43,10 @@ $rounded-3xl: 24px !default;
 
 $elevation-low: 0 1px 2px 0 rgba($palette-neutral-1300, 0.1) !default;
 $elevation-medium: 0 6px 12px 0 rgba($palette-neutral-1300, 0.08) !default;
-$elevation-high: 0 1px 2px 0 rgba($palette-neutral-1300, 0.1) !default;
+$elevation-high: 0 1px 2px 0 rgba($palette-neutral-1300, 0.1) !default
+
+
+$modal-max-height: 80vh;
 
 // API docs variables
 $api-docs-nav-width: 220px !default;
@@ -80,3 +84,6 @@ $baserow-icons: 'circle-empty', 'circle-checked', 'check-square', 'formula',
   'calendar', 'smile', 'smartphone', 'plus', 'heading-1', 'heading-2',
   'heading-3', 'paragraph', 'ordered-list', 'enlarge', 'share', 'settings',
   'up-down-arrows', 'application', 'groups';
+
+
+

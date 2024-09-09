@@ -33,6 +33,7 @@
     <div v-show="touched && !valid" class="error">
       {{ error }}
     </div>
+
     <SelectRowModal
       v-if="!readOnly"
       ref="selectModal"

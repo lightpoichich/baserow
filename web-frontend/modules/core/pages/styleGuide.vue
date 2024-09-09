@@ -1479,7 +1479,7 @@
               </a>
             </div>
             <div
-              class="modal__box-sidebar modal__box-sidebar--left modal__box-sidebar--scrollable"
+              class="modal__sidebar modal__sidebar--left modal__sidebar--scrollable"
             >
               <div class="modal-sidebar__head">
                 <div class="modal-sidebar__head-initials-icon">B</div>

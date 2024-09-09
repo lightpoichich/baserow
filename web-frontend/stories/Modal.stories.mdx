@@ -39,26 +39,12 @@ import Modal from '@baserow/modules/core/components/Modal'
             },
             defaultValue: false,
         },
-        wide: {
+        size: {
             control: {
-                type: 'boolean',
-                options: [true, false],
+                type: 'radio',
+                options: ['tiny', 'small', 'regular', 'large', 'fullscreen'],
             },
-            defaultValue: false,
-        },
-        small: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: false,
-        },
-        tiny: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: false,
+            defaultValue: 'regular',
         },
         closeButton: {
             control: {
@@ -81,33 +67,12 @@ import Modal from '@baserow/modules/core/components/Modal'
             },
             defaultValue: false,
         },
-        contentScrollable: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: false,
-        },
-        contentPadding: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: true,
-        },
         rightSidebarScrollable: {
             control: {
                 type: 'boolean',
                 options: [true, false],
             },
             defaultValue: false,
-        },
-        canClose: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: true,
         },
         collapsibleRightSidebar: {
             control: {
@@ -126,9 +91,16 @@ import Modal from '@baserow/modules/core/components/Modal'
         actions: {
             defaultValue: '',
         },
+        header: {
+            defaultValue:
+                '<h2>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem.</h2>',
+        },
         content: {
             defaultValue:
-                '<h2 class="modal__title">Simple modal</h2><div class="modal__content">This is a simple modal content</div>',
+                '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem.</p>',
+        },
+        footer: {
+            defaultValue: '<Button>Submit</Button>',
         },
         sidebar: {
             defaultValue:
@@ -149,7 +121,7 @@ export const Template = (args, { argTypes }) => ({
             this.$refs.modal.toggle(this.$refs.button)
         },
     },
-    template: `<div><Modal ref="modal" v-bind="$props">${args.content}<template #sidebar>${args.sidebar}</template><template #actions>${args.actions}</template></Modal><button ref="button" @click="openModal">open modal</button></div>`,
+    template: `<div><Modal ref="modal" v-bind="$props"><template #header>${args.header}</template> <template #content>${args.content}</template><template #footer>${args.footer}</template><template #sidebar>${args.sidebar}</template><template #actions>${args.actions}</template></Modal><button ref="button" @click="openModal">open modal</button></div>`,
 })
 
 <Canvas>

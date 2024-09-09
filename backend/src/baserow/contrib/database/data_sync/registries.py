@@ -69,7 +69,8 @@ class DataSyncType(ModelInstanceMixin, CustomFieldsInstanceMixin, Instance, ABC)
         - Which rows exist, but not in this list, delete those.
 
         :param instance:
-        :param auth_data:
+        :raises SyncError: If something goes wrong, but don't want to fail hard and
+            expose the error via the API.
         :return: List of all rows in the data sync source.
         """
 

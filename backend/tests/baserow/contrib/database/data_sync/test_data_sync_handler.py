@@ -476,6 +476,63 @@ def test_sync_data_sync_table_refresh_called(send_mock, data_fixture):
 
 @pytest.mark.django_db
 @responses.activate
+def test_sync_data_sync_table_sync_error(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=404,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+    data_sync = handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+    assert data_sync.last_sync is None
+    assert (
+        data_sync.last_error
+        == "The request to the URL didn't respond with an OK response code."
+    )
+
+
+@pytest.mark.django_db
+@patch(
+    "baserow.contrib.database.data_sync.data_sync_types.ICalCalendarDataSyncType.get_all_rows"
+)
+def test_sync_data_sync_table_exception_raised(mock_get_all_rows, data_fixture):
+    mock_get_all_rows.side_effect = ValueError
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    with pytest.raises(ValueError):
+        handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+
+@pytest.mark.django_db
+@responses.activate
 def test_sync_data_sync_table_with_formula_field_dependency(data_fixture):
     responses.add(
         responses.GET,

@@ -1,10 +1,13 @@
 from typing import Dict, List
 
 import advocate
+from advocate.exceptions import UnacceptableAddressException
 from icalendar import Calendar
+from requests.exceptions import RequestException
 
 from baserow.contrib.database.fields.models import DateField, TextField
 
+from .exceptions import SyncError
 from .models import ICalCalendarDataSync
 from .registries import DataSyncProperty, DataSyncType
 
@@ -57,12 +60,20 @@ class ICalCalendarDataSyncType(DataSyncType):
         ]
 
     def get_all_rows(self, instance) -> List[Dict]:
-        response = advocate.get(instance.ical_url, timeout=10)
+        try:
+            response = advocate.get(instance.ical_url, timeout=10)
+        except (RequestException, UnacceptableAddressException, ConnectionError):
+            raise SyncError("The provided URL could not be reached.")
 
         if not response.ok:
-            raise Exception("@TODO custom exception")
+            raise SyncError(
+                "The request to the URL didn't respond with an OK response code."
+            )
 
-        calendar = Calendar.from_ical(response.content)
+        try:
+            calendar = Calendar.from_ical(response.content)
+        except ValueError as e:
+            raise SyncError(f"Could not read calendar file: {str(e)}")
 
         return [
             {

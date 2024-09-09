@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.operations import CreateTableDatabaseTableOperationType
 from baserow.contrib.database.rows.handler import RowHandler
@@ -14,8 +15,7 @@ from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import extract_allowed
 
-from ..fields.registries import field_type_registry
-from .exceptions import PropertyNotFound, UniquePrimaryPropertyNotFound
+from .exceptions import PropertyNotFound, SyncError, UniquePrimaryPropertyNotFound
 from .models import DataSync, DataSyncProperty
 from .operations import SyncTableOperationType
 from .registries import data_sync_type_registry
@@ -163,10 +163,18 @@ class DataSyncHandler:
             tuple(row[key_to_field_id[key]] for key in unique_primary_keys): row
             for row in existing_rows_queryset
         }
-        rows_of_data_sync = {
-            tuple(row[key] for key in unique_primary_keys): row
-            for row in data_sync_type.get_all_rows(data_sync)
-        }
+        try:
+            rows_of_data_sync = {
+                tuple(row[key] for key in unique_primary_keys): row
+                for row in data_sync_type.get_all_rows(data_sync)
+            }
+        # If calling `get_all_rows` fails with a `SyncError`, then it's an expected
+        # error, and it shouldn't fail hard. We do want to store the error in the
+        # database to expose via the API.
+        except SyncError as e:
+            data_sync.last_error = str(e)
+            data_sync.save()
+            return data_sync
 
         rows_to_create = []
         for new_id, data in rows_of_data_sync.items():
@@ -184,6 +192,7 @@ class DataSyncHandler:
                 new_record_data = rows_of_data_sync[existing_id]
                 changed = False
                 for field, value in new_record_data.items():
+                    # @TODO move this into something more reusable in the property.
                     if existing_record[key_to_field_id[field]] != value:
                         existing_record[key_to_field_id[field]] = value
                         changed = True
@@ -236,6 +245,7 @@ class DataSyncHandler:
             SearchHandler.field_value_updated_or_created(data_sync.table)
 
         data_sync.last_sync = timezone.now()
+        data_sync.last_error = None
         data_sync.save()
 
         table_updated.send(

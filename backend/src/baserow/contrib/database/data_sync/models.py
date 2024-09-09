@@ -26,6 +26,10 @@ class DataSync(
     last_sync = models.DateTimeField(
         null=True, help_text="Timestamp when the table was last synced."
     )
+    last_error = models.TextField(
+        null=True,
+        help_text="",
+    )
     content_type = models.ForeignKey(
         ContentType,
         verbose_name="content type",

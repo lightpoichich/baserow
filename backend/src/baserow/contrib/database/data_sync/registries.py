@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List
+from typing import TYPE_CHECKING, Any, Callable, Dict, List
 
 from django.contrib.auth import get_user_model
 
@@ -12,6 +12,9 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.data_sync.models import DataSync
 
 User = get_user_model()
 

@@ -1,6 +1,10 @@
 class PropertyNotFound(Exception):
     """Raised when the property is not found in the data sync."""
 
+    def __init__(self, property, *args, **kwargs):
+        self.property = property
+        super().__init__(*args, **kwargs)
+
 
 class UniquePrimaryPropertyNotFound(Exception):
     """

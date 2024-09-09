@@ -91,8 +91,9 @@ class DataSyncHandler:
             )
             if not data_sync_property:
                 raise PropertyNotFound(
+                    visible_property,
                     f"The property {visible_property} is not found in "
-                    f"{data_sync_type.type}."
+                    f"{data_sync_type.type}.",
                 )
 
             baserow_field = data_sync_property.to_baserow_field()

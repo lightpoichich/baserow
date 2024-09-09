@@ -147,6 +147,12 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(UpdateViewFilterGroupActionType())
         action_type_registry.register(DeleteViewFilterGroupActionType())
 
+        from baserow.contrib.database.data_sync.actions import (
+            CreateDataSyncTableActionType,
+        )
+
+        action_type_registry.register(CreateDataSyncTableActionType())
+
         from .airtable.registry import airtable_column_type_registry
         from .data_sync.registries import data_sync_type_registry
         from .export.registries import table_exporter_registry

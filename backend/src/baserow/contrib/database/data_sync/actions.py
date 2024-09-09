@@ -4,7 +4,11 @@ from typing import List
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
-from baserow.contrib.database.action.scopes import DATABASE_ACTION_CONTEXT
+from baserow.contrib.database.action.scopes import (
+    DATABASE_ACTION_CONTEXT,
+    TABLE_ACTION_CONTEXT,
+    TableActionScopeType,
+)
 from baserow.contrib.database.data_sync.handler import DataSyncHandler
 from baserow.contrib.database.data_sync.models import DataSync
 from baserow.contrib.database.models import Database
@@ -13,6 +17,7 @@ from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
+    ActionType,
     ActionTypeDescription,
     UndoableActionType,
 )
@@ -58,6 +63,7 @@ class CreateDataSyncTableActionType(UndoableActionType):
             type_name=type_name,
             visible_properties=visible_properties,
             table_name=table_name,
+            **kwargs,
         )
 
         table = data_sync.table
@@ -89,3 +95,29 @@ class CreateDataSyncTableActionType(UndoableActionType):
         TrashHandler.restore_item(
             user, "table", params.table_id, parent_trash_item_id=None
         )
+
+
+class SyncDataSyncTableActionType(ActionType):
+    type = "sync_data_sync_table"
+    description = ActionTypeDescription(
+        _("Sync data sync table"),
+        _("The data sync table %(table_id)s was synchronized."),
+        TABLE_ACTION_CONTEXT,
+    )
+    analytics_params = ["data_sync_id", "table_id", "table_name"]
+
+    @dataclasses.dataclass
+    class Params:
+        data_sync_id: int
+        table_id: int
+        table_name: str
+
+    @classmethod
+    def do(cls, user: AbstractUser, data_sync: DataSync):
+        data_sync = data_sync.specific
+        data_sync = DataSyncHandler().sync_data_sync_table(user, data_sync)
+        return data_sync
+
+    @classmethod
+    def scope(cls, table_id: int) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)

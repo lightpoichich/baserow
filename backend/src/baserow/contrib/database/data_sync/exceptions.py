@@ -20,3 +20,9 @@ class SyncError(Exception):
     database, exposed via the API, and readable to the user. It should always be in
     English.
     """
+
+
+class DataSyncDoesNotExist(Exception):
+    """
+    Raised when the data sync does not exist.
+    """

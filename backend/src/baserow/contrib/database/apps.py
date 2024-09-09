@@ -149,9 +149,11 @@ class DatabaseConfig(AppConfig):
 
         from baserow.contrib.database.data_sync.actions import (
             CreateDataSyncTableActionType,
+            SyncDataSyncTableActionType,
         )
 
         action_type_registry.register(CreateDataSyncTableActionType())
+        action_type_registry.register(SyncDataSyncTableActionType())
 
         from .airtable.registry import airtable_column_type_registry
         from .data_sync.registries import data_sync_type_registry
@@ -555,6 +557,7 @@ class DatabaseConfig(AppConfig):
         from baserow.core.jobs.registries import job_type_registry
 
         from .airtable.job_types import AirtableImportJobType
+        from .data_sync.job_types import SyncDataSyncTableJobType
         from .fields.job_types import DuplicateFieldJobType
         from .file_import.job_types import FileImportJobType
         from .table.job_types import DuplicateTableJobType
@@ -563,6 +566,7 @@ class DatabaseConfig(AppConfig):
         job_type_registry.register(FileImportJobType())
         job_type_registry.register(DuplicateTableJobType())
         job_type_registry.register(DuplicateFieldJobType())
+        job_type_registry.register(SyncDataSyncTableJobType())
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)

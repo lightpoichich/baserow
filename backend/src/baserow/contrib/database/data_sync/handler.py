@@ -15,13 +15,38 @@ from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import extract_allowed
 
-from .exceptions import PropertyNotFound, SyncError, UniquePrimaryPropertyNotFound
+from .exceptions import (
+    DataSyncDoesNotExist,
+    PropertyNotFound,
+    SyncError,
+    UniquePrimaryPropertyNotFound,
+)
 from .models import DataSync, DataSyncProperty
 from .operations import SyncTableOperationType
 from .registries import data_sync_type_registry
 
 
 class DataSyncHandler:
+    def get_data_sync(self, data_sync_id: int) -> DataSync:
+        """
+        Returns the data sync matching the provided ID.
+
+        :param data_sync_id:
+        :return: The fetched data sync object.
+        """
+
+        try:
+            return (
+                DataSync.objects.select_related("table")
+                .prefetch_related("data_sync_properties")
+                .get(pk=data_sync_id)
+                .specific
+            )
+        except DataSync.DoesNotExist:
+            raise DataSyncDoesNotExist(
+                f"Data sync with ID {data_sync_id} does not exist."
+            )
+
     def create_data_sync_table(
         self,
         user: AbstractUser,
@@ -174,7 +199,7 @@ class DataSyncHandler:
         # database to expose via the API.
         except SyncError as e:
             data_sync.last_error = str(e)
-            data_sync.save()
+            data_sync.save(update_fields=("last_error",))
             return data_sync
 
         rows_to_create = []
@@ -247,7 +272,12 @@ class DataSyncHandler:
 
         data_sync.last_sync = timezone.now()
         data_sync.last_error = None
-        data_sync.save()
+        data_sync.save(
+            update_fields=(
+                "last_sync",
+                "last_error",
+            )
+        )
 
         table_updated.send(
             self, table=data_sync.table, user=user, force_table_refresh=True

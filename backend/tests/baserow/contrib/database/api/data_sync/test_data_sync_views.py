@@ -1,8 +1,16 @@
+from datetime import datetime
+
 from django.urls import reverse
+from django.utils.timezone import utc
 
 import pytest
 import responses
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_202_ACCEPTED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from baserow.contrib.database.data_sync.models import DataSync, DataSyncProperty
 
@@ -144,7 +152,7 @@ def test_create_data_sync(data_fixture, api_client):
     )
 
     user, token = data_fixture.create_user_and_token()
-    database = data_fixture.create_database_table(user=user)
+    database = data_fixture.create_database_application(user=user)
 
     url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
     response = api_client.post(
@@ -162,7 +170,8 @@ def test_create_data_sync(data_fixture, api_client):
 
     data_syncs = list(DataSync.objects.all())
     assert len(data_syncs) == 1
-    data_sync = data_syncs[0]
+    data_sync = data_syncs[0].specific
+    assert data_sync.ical_url == "https://baserow.io/ical.ics"
 
     properties = DataSyncProperty.objects.filter(data_sync=data_sync).order_by("id")
 
@@ -180,6 +189,7 @@ def test_create_data_sync(data_fixture, api_client):
                 {"field_id": properties[3].field_id, "key": "summary"},
             ],
             "last_sync": None,
+            "last_error": None,
         },
     }
 
@@ -198,7 +208,7 @@ def test_can_undo_redo_create_data_sync(api_client, data_fixture):
     )
 
     user, token = data_fixture.create_user_and_token()
-    database = data_fixture.create_database_table(user=user)
+    database = data_fixture.create_database_application(user=user)
 
     url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
     response = api_client.post(
@@ -250,3 +260,216 @@ def test_can_undo_redo_create_data_sync(api_client, data_fixture):
 
     data_sync.table.refresh_from_db()
     assert data_sync.table.trashed is False
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+def test_async_sync_data_sync_table_invalid_data_sync(api_client, data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user, token = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+
+    response = api_client.post(
+        reverse("api:database:data_sync:sync_table", kwargs={"data_sync_id": 0}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_DATA_SYNC_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+def test_async_sync_data_sync_table_failed_sync(api_client, data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=404,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user, token = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user)
+
+    url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "table_name": "Test 1",
+            "type": "ical_calendar",
+            "visible_properties": ["uid", "dtstart", "dtend", "summary"],
+            "ical_url": "https://baserow.io/ical.ics",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    data_sync_id = response.json()["data_sync"]["id"]
+
+    response = api_client.post(
+        reverse(
+            "api:database:data_sync:sync_table", kwargs={"data_sync_id": data_sync_id}
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_202_ACCEPTED
+    job = response.json()
+    assert job["id"] is not None
+    assert job["state"] == "pending"
+    assert job["type"] == "sync_data_sync_table"
+    assert job["progress_percentage"] == 0
+    assert job["data_sync"]["id"] == data_sync_id
+
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job["id"]},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job = response.json()
+    assert job["state"] == "finished"
+    assert job["type"] == "sync_data_sync_table"
+    assert job["progress_percentage"] == 100
+    assert job["data_sync"]["id"] == data_sync_id
+    assert (
+        job["data_sync"]["last_error"]
+        == "The request to the URL didn't respond with an OK response code."
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+def test_async_sync_data_sync_table_unauthorized(api_client, data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user, token = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    user_2, token_2 = data_fixture.create_user_and_token(
+        email="test_2@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user)
+
+    url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "table_name": "Test 1",
+            "type": "ical_calendar",
+            "visible_properties": ["uid", "dtstart", "dtend", "summary"],
+            "ical_url": "https://baserow.io/ical.ics",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    data_sync_id = response.json()["data_sync"]["id"]
+
+    response = api_client.post(
+        reverse(
+            "api:database:data_sync:sync_table", kwargs={"data_sync_id": data_sync_id}
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_2}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+def test_async_sync_data_sync_table(api_client, data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user, token = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user)
+
+    url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "table_name": "Test 1",
+            "type": "ical_calendar",
+            "visible_properties": ["uid", "dtstart", "dtend", "summary"],
+            "ical_url": "https://baserow.io/ical.ics",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    data_sync_id = response.json()["data_sync"]["id"]
+
+    response = api_client.post(
+        reverse(
+            "api:database:data_sync:sync_table", kwargs={"data_sync_id": data_sync_id}
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_202_ACCEPTED
+    job = response.json()
+    assert job["id"] is not None
+    assert job["state"] == "pending"
+    assert job["type"] == "sync_data_sync_table"
+    assert job["progress_percentage"] == 0
+    assert job["data_sync"]["id"] == data_sync_id
+
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job["id"]},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job = response.json()
+    assert job["state"] == "finished"
+    assert job["type"] == "sync_data_sync_table"
+    assert job["progress_percentage"] == 100
+    assert job["data_sync"]["id"] == data_sync_id
+    assert job["data_sync"]["last_error"] is None
+
+    data_sync = DataSync.objects.get(pk=data_sync_id)
+    model = data_sync.table.get_model()
+    sync_1_rows = list(model.objects.all())
+
+    fields = {
+        p.key: p.field for p in DataSyncProperty.objects.filter(data_sync=data_sync)
+    }
+
+    assert len(sync_1_rows) == 1
+    assert (
+        getattr(sync_1_rows[0], f"field_{fields['uid'].id}")
+        == "1725220374375-34056@ical.marudot.com"
+    )
+    assert getattr(sync_1_rows[0], f"field_{fields['dtstart'].id}") == datetime(
+        2024, 9, 1, 8, 0, tzinfo=utc
+    )
+    assert getattr(sync_1_rows[0], f"field_{fields['dtend'].id}") == datetime(
+        2024, 9, 1, 9, 0, tzinfo=utc
+    )
+    assert getattr(sync_1_rows[0], f"field_{fields['summary'].id}") == "Test event 0"

@@ -3,6 +3,7 @@ from django.db import models
 
 from baserow.contrib.database.data_sync.registries import data_sync_type_registry
 from baserow.contrib.database.fields.models import Field
+from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     PolymorphicContentTypeMixin,
@@ -57,6 +58,16 @@ class DataSyncProperty(models.Model):
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     key = models.CharField(
         max_length=255, help_text="The matching `key` of the `DataSyncProperty`."
+    )
+
+
+class SyncDataSyncTableJob(Job):
+    data_sync = models.ForeignKey(
+        DataSync,
+        null=True,
+        related_name="sync_data_sync_table_job",
+        on_delete=models.SET_NULL,
+        help_text="The data sync of which the table must be synced.",
     )
 
 

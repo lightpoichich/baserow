@@ -24,6 +24,7 @@ class DataSyncSerializer(serializers.ModelSerializer):
             "id",
             "data_sync_properties",
             "last_sync",
+            "last_error",
         )
 
 

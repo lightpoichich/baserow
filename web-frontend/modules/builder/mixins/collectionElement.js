@@ -18,16 +18,21 @@ export default {
       getHasMorePage: 'elementContent/getHasMorePage',
       getElementContent: 'elementContent/getElementContent',
       getReset: 'elementContent/getReset',
-      getPageDataSourceById: 'dataSource/getPageDataSourceById',
+      getPagesDataSourceById: 'dataSource/getPagesDataSourceById',
+      getSharedPage: 'page/getSharedPage',
     }),
     reset() {
       return this.getReset(this.element)
+    },
+    sharedPage() {
+      return this.getSharedPage(this.builder)
     },
     dataSource() {
       if (!this.element.data_source_id) {
         return null
       }
-      return this.getPageDataSourceById(this.page, this.element.data_source_id)
+      const pages = [this.page, this.sharedPage]
+      return this.getPagesDataSourceById(pages, this.element.data_source_id)
     },
     dataSourceType() {
       if (!this.dataSource) {
@@ -95,7 +100,6 @@ export default {
   methods: {
     ...mapActions({
       fetchElementContent: 'elementContent/fetchElementContent',
-      clearElementContent: 'elementContent/clearElementContent',
     }),
     debouncedReset() {
       clearTimeout(this.resetTimeout)

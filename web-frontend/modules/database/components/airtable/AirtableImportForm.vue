@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <form @submit.prevent="submit">
     <p class="margin-bottom-2">
       {{ $t('importFromAirtable.airtableShareLinkDescription') }}
@@ -57,4 +57,4 @@ export default {
     },
   },
 }
-</script>
+</script> -->

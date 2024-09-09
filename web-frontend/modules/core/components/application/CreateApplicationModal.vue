@@ -1,9 +1,12 @@
 <template>
   <Modal @show="loading = false">
-    <h2 class="modal__title">
-      {{ $t('action.createNew') }} {{ applicationType.getName() | lowercase }}
-    </h2>
-    <div class="modal__content">
+    <template #header>
+      <h2>
+        {{ $t('action.createNew') }} {{ applicationType.getName() | lowercase }}
+      </h2>
+    </template>
+
+    <template #content>
       <Error :error="error"></Error>
 
       <component
@@ -12,14 +15,37 @@
         :default-name="getDefaultName()"
         :loading="loading"
         @submitted="submitted"
+        @job-done="handleJobDone($event)"
+        @job-updated="handleJobUpdated($event)"
         @import-type-changed="importType = $event"
-        @hidden="hide()"
       >
       </component>
-    </div>
+    </template>
 
-    <div v-if="displayFooter" class="modal__footer">
+    <template #footer>
+      <ProgressBar
+        v-if="jobIsRunning || jobHasSucceeded"
+        :value="jobProgressPercentage"
+        :status="jobStatus"
+      />
+
+      <template v-if="importType === 'airtable'">
+        <Button
+          v-if="!jobHasSucceeded"
+          :loading="loading"
+          :disabled="loading"
+          @click="$refs.applicationForm.submit()"
+        >
+          {{ $t('importFromAirtable.importButtonLabel') }}
+        </Button>
+
+        <Button v-else type="secondary" @click="openDatabase">
+          {{ $t('importFromAirtable.openButtonLabel') }}</Button
+        >
+      </template>
+
       <Button
+        v-else
         type="primary"
         :loading="loading"
         :disabled="loading"
@@ -28,12 +54,13 @@
         {{ $t('action.add') }}
         {{ applicationType.getName() | lowercase }}
       </Button>
-    </div>
+    </template>
   </Modal>
 </template>
 
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
+
 import error from '@baserow/modules/core/mixins/error'
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 
@@ -54,17 +81,14 @@ export default {
     return {
       loading: false,
       importType: null,
+      jobHasSucceeded: false,
+      jobIsRunning: false,
+      jobStatus: '',
+      jobProgressPercentage: 0,
+      jobDatabaseId: null,
     }
   },
-  computed: {
-    displayFooter() {
-      return (
-        this.applicationType.getName() === 'Application' ||
-        (this.applicationType.getName() === 'Database' &&
-          this.importType !== 'airtable')
-      )
-    },
-  },
+  computed: {},
   methods: {
     getDefaultName() {
       const excludeNames = this.$store.getters['application/getAllOfWorkspace'](
@@ -95,6 +119,27 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    async openDatabase() {
+      const application = this.$store.getters['application/get'](
+        this.jobDatabaseId
+      )
+      const type = this.$registry.get('application', application.type)
+      if (await type.select(application, this)) {
+        this.hide()
+      }
+    },
+    handleJobDone(event) {
+      this.jobStatus = event.state
+      this.jobProgressPercentage = event.progress_percentage
+      this.jobIsRunning = false
+      this.jobHasSucceeded = true
+      this.jobDatabaseId = event.databaseId
+    },
+    handleJobUpdated(event) {
+      this.jobIsRunning = true
+      this.jobStatus = event.state
+      this.jobProgressPercentage = event.progress_percentage
     },
   },
 }

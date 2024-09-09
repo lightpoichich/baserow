@@ -48,6 +48,8 @@
       v-else-if="importType === 'airtable'"
       ref="importFromAirtable"
       @hidden="$emit('hidden', $event)"
+      @job-updated="$emit('job-updated', $event)"
+      @job-done="$emit('job-done', $event)"
     ></ImportFromAirtable>
   </div>
 </template>

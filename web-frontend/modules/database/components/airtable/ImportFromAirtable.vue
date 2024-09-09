@@ -1,56 +1,69 @@
 <template>
   <div>
-    <AirtableImportForm @submitted="importFromAirtable">
-      <Error :error="error"></Error>
-      <div class="modal-progress__actions">
-        <ProgressBar
-          v-if="jobIsRunning || jobHasSucceeded"
-          :value="job.progress_percentage"
-          :status="jobHumanReadableState"
-        />
-
-        <Button
-          v-if="!jobHasSucceeded"
-          type="primary"
+    <form @submit.prevent="submit">
+      <p class="margin-bottom-2">
+        {{ $t('importFromAirtable.airtableShareLinkDescription') }}
+        <br /><br />
+        {{ $t('importFromAirtable.airtableShareLinkBeta') }}
+      </p>
+      <FormGroup
+        :label="$t('importFromAirtable.airtableShareLinkTitle')"
+        :error="$v.values.airtableUrl.$error"
+        small-label
+        required
+        class="margin-bottom-2"
+      >
+        <FormInput
+          v-model="values.airtableUrl"
+          :error="$v.values.airtableUrl.$error"
+          :placeholder="$t('importFromAirtable.airtableShareLinkPaste')"
           size="large"
-          class="modal-progress__export-button"
-          :loading="loading"
-          :disabled="loading"
-        >
-          {{ $t('importFromAirtable.importButtonLabel') }}
-        </Button>
-
-        <Button
-          v-else
-          type="secondary"
-          size="large"
-          class="modal-progress__export-button"
-          @click="openDatabase"
-        >
-          {{ $t('importFromAirtable.openButtonLabel') }}</Button
-        >
-      </div>
-    </AirtableImportForm>
+          @blur="$v.values.airtableUrl.$touch()"
+          @input="
+            $emit(
+              'input',
+              $v.values.airtableUrl.$invalid ? '' : values.airtableUrl
+            )
+          "
+        ></FormInput>
+        <template #error>
+          {{ $t('importFromAirtable.linkError') }}
+        </template>
+      </FormGroup>
+    </form>
+    <Error :error="error"></Error>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 
+import form from '@baserow/modules/core/mixins/form'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import AirtableService from '@baserow/modules/database/services/airtable'
-import AirtableImportForm from '@baserow/modules/database/components/airtable/AirtableImportForm'
 
 export default {
   name: 'ImportFromAirtable',
-  components: { AirtableImportForm },
-  mixins: [error, jobProgress],
+  mixins: [error, jobProgress, form],
   data() {
     return {
       loading: false,
+      values: {
+        airtableUrl: '',
+      },
     }
+  },
+  validations: {
+    values: {
+      airtableUrl: {
+        valid(value) {
+          const regex = /https:\/\/airtable.com\/[shr|app](.*)$/g
+          return !!value.match(regex)
+        },
+      },
+    },
   },
   computed: {
     ...mapGetters({
@@ -61,7 +74,7 @@ export default {
     this.stopPollIfRunning()
   },
   methods: {
-    async importFromAirtable(values) {
+    async submit() {
       if (this.loading) {
         return
       }
@@ -72,7 +85,7 @@ export default {
       try {
         const { data } = await AirtableService(this.$client).create(
           this.selectedWorkspaceId,
-          values.airtableUrl
+          this.values.airtableUrl
         )
         this.startJobPoller(data)
       } catch (error) {
@@ -106,6 +119,7 @@ export default {
         ),
         importing: this.$t('importFromAirtable.stateImporting'),
       }
+
       return translations[state]
     },
     async openDatabase() {
@@ -126,6 +140,19 @@ export default {
     },
     onJobPollingError(error) {
       this.stopPollAndHandleError(error)
+    },
+    onJobDone() {
+      this.$emit('job-done', {
+        state: this.jobHumanReadableState,
+        progress_percentage: this.job.progress_percentage,
+        databaseId: this.job.database.id,
+      })
+    },
+    onJobUpdated() {
+      this.$emit('job-updated', {
+        state: this.jobHumanReadableState,
+        progress_percentage: this.job.progress_percentage,
+      })
     },
   },
 }

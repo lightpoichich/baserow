@@ -31,7 +31,7 @@
         </template>
       </FormGroup>
     </form>
-    <Error :error="error"></Error>
+    <Error class="margin-bottom-0" :error="error"></Error>
   </div>
 </template>
 

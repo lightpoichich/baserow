@@ -11,20 +11,25 @@ export default {
       downElement: null,
       headerHeight: 0,
       footerHeight: 0,
+      originalHeight: 0,
     }
   },
   mounted() {
     this.$bus.$on('close-modals', this.hide)
-    // window.addEventListener('resize', this.setContentHeight)
   },
   beforeDestroy() {
     this.$bus.$off('close-modals', this.hide)
-    window.removeEventListener('resize', this.adjustModalHeight)
+    window.removeEventListener('resize', this.setModalHeight)
+    if (this.observer) this.observer.disconnect()
   },
   destroyed() {
     window.removeEventListener('keyup', this.keyup)
   },
-
+  computed: {
+    nonFullHeightModal() {
+      return !this.fullHeight && this.size !== 'fullscreen'
+    },
+  },
   methods: {
     /**
      * Toggle the open state of the modal.
@@ -61,10 +66,11 @@ export default {
       document.body.addEventListener('mousedown', mouseDownEvent)
 
       this.$nextTick(() => {
-        //  if it's not a full height modal we have to set the height dynamically so the content can scroll
-        if (!this.fullHeight && this.size !== 'fullscreen') {
-          this.adjustModalHeight()
-          window.addEventListener('resize', this.adjustModalHeight)
+        if (this.nonFullHeightModal) {
+          this.setOriginalHeight()
+          this.setModalHeight()
+          window.addEventListener('resize', this.setModalHeight)
+          this.initObserver()
         }
 
         this.$once('hidden', () => {
@@ -78,9 +84,7 @@ export default {
      * Hide the modal.
      */
     hide(emit = true) {
-      if (!this.open) {
-        return
-      }
+      if (!this.open) return
 
       // This is a temporary fix. What happens is the modal is opened by a context menu
       // item and the user closes the modal, the element is first deleted and then the
@@ -92,30 +96,30 @@ export default {
         this.open = false
       })
 
-      if (emit) {
-        this.$emit('hidden')
-      }
+      if (emit) this.$emit('hidden')
     },
     /**
      * If someone actually clicked on the modal wrapper and not one of his children the
      * modal should be closed.
      */
     outside() {
-      if (this.downElement === this.$refs.modalWrapper) {
-        this.hide()
-      }
+      if (this.downElement === this.$refs.modalWrapper) this.hide()
     },
     /**
      * When the escape key is pressed the modal needs to be hidden.
      */
     keyup(event) {
-      if (event.key === 'Escape') {
-        this.hide()
-      }
+      if (event.key === 'Escape') this.hide()
     },
 
-    adjustModalHeight() {
+    /**
+     * This method set the modal height in order to make the content scrollable.
+     * It's useful only in the non full height mode.
+     */
+
+    setModalHeight() {
       const modal = this.$refs.modal
+
       if (!modal) return
 
       // Get the value of the CSS variable --modal-max-height
@@ -125,18 +129,37 @@ export default {
 
       // Convert 80vh to pixels
       const viewportHeight = window.innerHeight
-      const eightyVhInPixels =
+      const maxHeightInPixels =
         (parseFloat(modalMaxHeight) / 100) * viewportHeight
 
-      // Get the computed height of the modal
-      const modalHeight = modal.scrollHeight
-
-      // Check if modal height is greater than 80vh and adjust if necessary
-      if (modalHeight >= eightyVhInPixels) {
+      // If modal height is greater than the max height, then we set the height so the content is scrollable
+      if (this.originalHeight > Math.floor(maxHeightInPixels))
         modal.style.height = modalMaxHeight.trim()
-      } else {
-        modal.style.height = 'auto'
+      else modal.style.height = 'auto'
+    },
+    /**
+     * This methods add an observer on the modal slot content.
+     */
+    initObserver() {
+      const config = {
+        subtree: true,
+        childList: true,
       }
+      const self = this
+      const callback = () => {
+        self.$nextTick(() => {
+          self.slotContentChanged()
+        })
+      }
+      const observer = new MutationObserver(callback)
+      observer.observe(this.$refs.content, config)
+      this.observer = observer
+    },
+    slotContentChanged() {
+      this.setOriginalHeight()
+    },
+    setOriginalHeight() {
+      this.originalHeight = this.$refs.modal.scrollHeight
     },
   },
 }

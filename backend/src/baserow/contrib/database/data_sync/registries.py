@@ -57,6 +57,17 @@ class DataSyncType(ModelInstanceMixin, CustomFieldsInstanceMixin, Instance, ABC)
         table. It should list all the available properties, but the user can choose
         which ones they want to add. The `unique_primary` ones are required.
 
+        A property can be changed to another type, but the field will only be updated
+        for the user if they make any change in the visible fields. It's therefore
+        recommended to keep either the `get_all_rows` value of the field compatible
+        with both the new and old field type, or introduce a new property with a
+        different key.
+
+        It's okay to delete or add properties. If they're deleted, then they the
+        field will persistent until the user changes the visible fields, but when
+        syncing the cell value remains empty. A new property can be added by the
+        user by changing the visible fields.
+
         :param instance: The data sync instance of which the properties must be
             returned.
         :return: List of all properties in the data sync source.

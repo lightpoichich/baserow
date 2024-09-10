@@ -179,7 +179,14 @@ class DataSyncHandler:
         data_sync_type = data_sync_type_registry.get_by_model(data_sync)
         all_properties = data_sync_type.get_properties(data_sync)
         unique_primary_keys = [p.key for p in all_properties if p.unique_primary]
-        enabled_properties = DataSyncProperty.objects.filter(data_sync=data_sync)
+        all_property_keys = [p.key for p in all_properties]
+        # Only fetch the properties that are allowed from the data sync type because
+        # it could be that a property was deleted from the data sync type, but still
+        # exists as `DataSyncProperty`. In that case, it should be ignored because
+        # the cell value might not exist in the `get_all_rows` method.
+        enabled_properties = DataSyncProperty.objects.filter(
+            data_sync=data_sync, key__in=all_property_keys
+        )
         key_to_field_id = {p.key: f"field_{p.field_id}" for p in enabled_properties}
 
         existing_rows_queryset = model.objects.all().values(
@@ -316,8 +323,10 @@ class DataSyncHandler:
                 visible_properties.insert(0, data_sync_property.key)
 
         enabled_properties = DataSyncProperty.objects.filter(data_sync=data_sync)
-        enabled_property_keys = [p.key for p in enabled_properties]
+        enabled_properties_per_key = {p.key: p for p in enabled_properties}
+        enabled_property_keys = enabled_properties_per_key.keys()
         properties_to_be_removed = []
+        properties_to_be_updated = []
         properties_to_be_added = []
 
         for visible_property in visible_properties:
@@ -331,6 +340,14 @@ class DataSyncHandler:
                 )
             if visible_property not in enabled_property_keys:
                 properties_to_be_added.append(data_sync_property)
+            elif visible_property in enabled_property_keys:
+                enabled_property = enabled_properties_per_key[visible_property]
+                existing_field_class = enabled_property.field.specific_class
+                new_field = data_sync_property.to_baserow_field()
+                # If the field type has changed, then it must be updated.
+                # @TODO let the property decide whether if has changed or not.
+                if not isinstance(new_field, existing_field_class):
+                    properties_to_be_updated.append(data_sync_property)
 
         for enabled_property in enabled_properties:
             if enabled_property.key not in visible_properties:
@@ -343,14 +360,34 @@ class DataSyncHandler:
             baserow_field_type = field_type_registry.get_by_model(baserow_field)
             field_kwargs = baserow_field.__dict__
             field_kwargs["read_only"] = True
+            # It could be that a field with the same name already exists. In that case,
+            # we don't want to block the creation of the field, but rather find a name
+            # that works.
+            new_name = handler.find_next_unused_field_name(
+                data_sync.table,
+                [field_kwargs.pop("name")],
+            )
             field = handler.create_field(
                 user=user,
                 table=data_sync.table,
                 type_name=baserow_field_type.type,
+                name=new_name,
                 **field_kwargs,
             )
             DataSyncProperty.objects.create(
                 data_sync=data_sync, field=field, key=data_sync_property.key
+            )
+
+        for data_sync_property in properties_to_be_updated:
+            enabled_property = enabled_properties_per_key[data_sync_property.key]
+            baserow_field = data_sync_property.to_baserow_field()
+            baserow_field_type = field_type_registry.get_by_model(baserow_field)
+            field_kwargs = baserow_field.__dict__
+            enabled_property.field = handler.update_field(
+                user=user,
+                field=enabled_property.field.specific,
+                new_type_name=baserow_field_type.type,
+                **field_kwargs,
             )
 
         for data_sync_property_instance in properties_to_be_removed:

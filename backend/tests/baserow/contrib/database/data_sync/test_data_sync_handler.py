@@ -7,7 +7,10 @@ import pytest
 import responses
 from freezegun import freeze_time
 
-from baserow.contrib.database.data_sync.data_sync_types import ICalCalendarDataSyncType
+from baserow.contrib.database.data_sync.data_sync_types import (
+    ICalCalendarDataSyncType,
+    UIDICalCalendarDataSyncProperty,
+)
 from baserow.contrib.database.data_sync.exceptions import (
     PropertyNotFound,
     UniquePrimaryPropertyNotFound,
@@ -20,7 +23,7 @@ from baserow.contrib.database.data_sync.models import (
 )
 from baserow.contrib.database.data_sync.registries import DataSyncTypeRegistry
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.fields.models import LongTextField, TextField
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInWorkspace
 
@@ -444,6 +447,65 @@ def test_sync_data_sync_table_create_update_delete_row(data_fixture):
 
 @pytest.mark.django_db
 @responses.activate
+def test_sync_data_sync_table_property_removed_from_data_sync_type(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync_handler = DataSyncHandler()
+    data_sync = data_sync_handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    registry = DataSyncTypeRegistry()
+
+    class TmpICalCalendarDataSync(ICalCalendarDataSyncType):
+        def get_properties(self, *args, **kwargs) -> dict:
+            properties = [
+                p for p in super().get_properties(*args, **kwargs) if p.key != "dtstart"
+            ]
+            return properties
+
+    registry.register(TmpICalCalendarDataSync())
+
+    with patch(
+        "baserow.contrib.database.data_sync.handler.data_sync_type_registry",
+        new=registry,
+    ):
+        data_sync_handler.sync_data_sync_table(
+            user=user,
+            data_sync=data_sync,
+        )
+
+    fields = {
+        p.key: p.field for p in DataSyncProperty.objects.filter(data_sync=data_sync)
+    }
+
+    model = data_sync.table.get_model()
+    sync_rows = list(model.objects.all())
+
+    assert data_sync.table.field_set.all().count() == 2
+    assert len(sync_rows) == 1
+    assert (
+        getattr(sync_rows[0], f"field_{fields['uid'].id}")
+        == "1725220374375-34056@ical.marudot.com"
+    )
+    assert getattr(sync_rows[0], f"field_{fields['dtstart'].id}") is None
+
+
+@pytest.mark.django_db
+@responses.activate
 @patch("baserow.contrib.database.table.signals.table_updated.send")
 def test_sync_data_sync_table_refresh_called(send_mock, data_fixture):
     responses.add(
@@ -648,6 +710,144 @@ def test_set_data_sync_visible_properties_without_permissions(data_fixture):
             data_sync=data_sync,
             visible_properties=["uid", "dtend", "summary"],
         )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_set_data_sync_visible_properties_field_name_already_exists(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync_handler = DataSyncHandler()
+
+    data_sync = data_sync_handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+    data_fixture.create_text_field(user, table=data_sync.table, name="Summary")
+    data_sync_handler.set_data_sync_visible_properties(
+        user=user,
+        data_sync=data_sync,
+        visible_properties=["uid", "dtstart", "summary"],
+    )
+
+    fields = specific_iterator(data_sync.table.field_set.all().order_by("id"))
+    assert len(fields) == 4
+    assert fields[3].name == "Summary 2"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_set_data_sync_visible_properties_field_types_changed(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync_handler = DataSyncHandler()
+    data_sync = data_sync_handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    registry = DataSyncTypeRegistry()
+
+    class TmpUIDICalCalendarDataSyncProperty(UIDICalCalendarDataSyncProperty):
+        def to_baserow_field(self) -> TextField:
+            return LongTextField(name=self.name)
+
+    class TmpICalCalendarDataSync(ICalCalendarDataSyncType):
+        def get_properties(self, *args, **kwargs) -> dict:
+            properties = super().get_properties(*args, **kwargs)
+            properties[0] = TmpUIDICalCalendarDataSyncProperty("uid", "Unique ID")
+            return properties
+
+    registry.register(TmpICalCalendarDataSync())
+
+    with patch(
+        "baserow.contrib.database.data_sync.handler.data_sync_type_registry",
+        new=registry,
+    ):
+        data_sync_handler.set_data_sync_visible_properties(
+            user=user,
+            data_sync=data_sync,
+            visible_properties=["uid"],
+        )
+
+    fields = specific_iterator(data_sync.table.field_set.all().order_by("id"))
+    assert len(fields) == 1
+    assert fields[0].name == "Unique ID"
+    assert isinstance(fields[0], LongTextField)
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_set_data_sync_visible_properties_property_removed_from_data_sync(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync_handler = DataSyncHandler()
+    data_sync = data_sync_handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    registry = DataSyncTypeRegistry()
+
+    class TmpICalCalendarDataSync(ICalCalendarDataSyncType):
+        def get_properties(self, *args, **kwargs) -> dict:
+            properties = [
+                p for p in super().get_properties(*args, **kwargs) if p.key != "dtstart"
+            ]
+            return properties
+
+    registry.register(TmpICalCalendarDataSync())
+
+    with patch(
+        "baserow.contrib.database.data_sync.handler.data_sync_type_registry",
+        new=registry,
+    ):
+        data_sync_handler.set_data_sync_visible_properties(
+            user=user,
+            data_sync=data_sync,
+            visible_properties=["uid"],
+        )
+
+    fields = specific_iterator(data_sync.table.field_set.all().order_by("id"))
+    assert len(fields) == 1
+    assert fields[0].name == "Unique ID"
+    assert isinstance(fields[0], TextField)
 
 
 @pytest.mark.django_db

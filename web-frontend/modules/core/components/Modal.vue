@@ -12,6 +12,9 @@
         'modal--full-height': fullHeight && size !== 'fullscreen',
         'modal--with-sidebar': sidebar,
         'modal--with-topbar': topbar,
+        'modal--with-header': hasHeader,
+        'modal--with-right-sidebar': rightSidebar,
+        'modal--with-left-sidebar': leftSidebar,
         'modal--fullscreen': size === 'fullscreen' && !fullHeight,
         'modal--large': size === 'large',
         'modal--small': size === 'small',
@@ -35,16 +38,12 @@
       </div>
 
       <div class="modal__wrapper">
-        <div
-          v-if="leftSidebar"
-          class="modal__sidebar modal__sidebar--left"
-          :class="{ 'modal__sidebar--scrollable': leftSidebarScrollable }"
-        >
+        <div v-if="leftSidebar" class="modal__sidebar modal__sidebar--left">
           <slot name="sidebar"></slot>
         </div>
 
         <div ref="contentWrapper" class="modal__content-wrapper">
-          <div ref="header" class="modal__header">
+          <div v-if="hasHeader" ref="header" class="modal__header">
             <slot name="header"></slot>
           </div>
 
@@ -52,41 +51,16 @@
             <slot name="content"></slot>
           </div>
 
-          <div ref="footer" class="modal__footer">
+          <div v-if="hasFooter" ref="footer" class="modal__footer">
             <slot name="footer"></slot>
           </div>
         </div>
 
-        <a v-if="closeButton" class="modal__close" @click="hide()">
+        <a v-if="closeButton && !topbar" class="modal__close" @click="hide()">
           <i class="iconoir-cancel"></i>
         </a>
-        <!-- 
-        <div ref="actions" class="modal__actions">
-          
 
-          <a
-            v-if="collapsibleRightSidebar"
-            class="modal__collapse"
-            @click="collapseSidebar"
-          >
-            <i
-              :class="{
-                'iconoir-fast-arrow-right': !sidebarCollapsed,
-                'iconoir-fast-arrow-left': sidebarCollapsed,
-              }"
-            ></i>
-          </a>
-          <slot name="actions"></slot>
-        </div> -->
-
-        <div
-          v-if="rightSidebar"
-          class="modal__sidebar modal__sidebar--right"
-          :class="{
-            'modal__sidebar--scrollable': rightSidebarScrollable,
-            'modal__sidebar--collapsed': sidebarCollapsed,
-          }"
-        >
+        <div v-if="rightSidebar" class="modal__sidebar modal__sidebar--right">
           <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
         </div>
       </div>
@@ -116,9 +90,14 @@ export default {
       default: false,
       required: false,
     },
-    fullScreen: {
+    hasHeader: {
       type: Boolean,
-      default: false,
+      default: true,
+      required: false,
+    },
+    hasFooter: {
+      type: Boolean,
+      default: true,
       required: false,
     },
     /**
@@ -140,21 +119,6 @@ export default {
       required: false,
     },
     fullHeight: {
-      type: Boolean,
-      default: false,
-      required: false,
-    },
-    leftSidebarScrollable: {
-      type: Boolean,
-      default: false,
-      required: false,
-    },
-    rightSidebarScrollable: {
-      type: Boolean,
-      default: false,
-      required: false,
-    },
-    collapsibleRightSidebar: {
       type: Boolean,
       default: false,
       required: false,

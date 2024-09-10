@@ -32,14 +32,21 @@ import Modal from '@baserow/modules/core/components/Modal'
             },
             defaultValue: false,
         },
-        rightSidebar: {
+        hasHeader: {
             control: {
                 type: 'boolean',
                 options: [true, false],
             },
-            defaultValue: false,
+            defaultValue: true,
         },
-        fullScreen: {
+        hasFooter: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: true,
+        },
+        rightSidebar: {
             control: {
                 type: 'boolean',
                 options: [true, false],
@@ -61,27 +68,6 @@ import Modal from '@baserow/modules/core/components/Modal'
             defaultValue: true,
         },
         fullHeight: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: false,
-        },
-        leftSidebarScrollable: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: false,
-        },
-        rightSidebarScrollable: {
-            control: {
-                type: 'boolean',
-                options: [true, false],
-            },
-            defaultValue: false,
-        },
-        collapsibleRightSidebar: {
             control: {
                 type: 'boolean',
                 options: [true, false],
@@ -113,6 +99,13 @@ import Modal from '@baserow/modules/core/components/Modal'
             defaultValue:
                 '<div class="modal-sidebar__head"><div class="avatar avatar--rounded avatar--large avatar--blue"><span class="avatar__initials">S</span></div> <div class="modal-sidebar__head-name">Settings</div></div><ul class="modal-sidebar__nav"><li><a class="modal-sidebar__nav-link active"><i class="modal-sidebar__nav-icon iconoir-user"></i>Account</a></li><li><a class="modal-sidebar__nav-link"><i class="modal-sidebar__nav-icon iconoir-lock"></i>Password</a></li><li><a class="modal-sidebar__nav-link"><i class="modal-sidebar__nav-icon iconoir-mail"></i>Email notifications</a></li><li><a class="modal-sidebar__nav-link"><i class="modal-sidebar__nav-icon iconoir-key-alt-plus"></i>Database tokens</a></li><li><a class="modal-sidebar__nav-link"><i class="modal-sidebar__nav-icon iconoir-cancel"></i>Delete account</a></li></ul>',
         },
+        topbarContent: {
+            defaultValue: '<h3 class="margin-bottom-0">Any content</h3>',
+        },
+        topbarActions: {
+            defaultValue:
+                '<li class="modal__topbar-icon"><i class="iconoir-bell"></i></li><li class="modal__topbar-icon"><i class="iconoir-message"></i></li><li class="modal__topbar-icon"><i class="baserow-icon-more-vertical"></i></li>',
+        },
     }}
 />
 
@@ -128,7 +121,7 @@ export const Template = (args, { argTypes }) => ({
             this.$refs.modal.toggle(this.$refs.button)
         },
     },
-    template: `<div><Modal ref="modal" v-bind="$props"><template #header>${args.header}</template> <template #content>${args.content}</template><template #footer>${args.footer}</template><template #sidebar>${args.sidebar}</template><template #actions>${args.actions}</template></Modal><button ref="button" @click="openModal">open modal</button></div>`,
+    template: `<div><Modal ref="modal" v-bind="$props"><template #topbar-content>${args.topbarContent}</template><template #topbar-actions>${args.topbarActions}</template><template #header>${args.header}</template> <template #content>${args.content}</template><template #footer>${args.footer}</template><template #sidebar>${args.sidebar}</template><template #actions>${args.actions}</template></Modal><button ref="button" @click="openModal">open modal</button></div>`,
 })
 
 <Canvas>
@@ -157,6 +150,15 @@ export const Template = (args, { argTypes }) => ({
             rightSidebar: true,
             actions:
                 '<div><a class="row-edit-modal-comments-notification-mode"><i class="iconoir-bell"></i></a></div>',
+        }}
+    >
+        {Template.bind({})}
+    </Story>
+    <Story
+        name="Topbar"
+        args={{
+            topbar: true,
+            rightSidebar: true,
         }}
     >
         {Template.bind({})}

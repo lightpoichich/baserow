@@ -9,8 +9,6 @@ export default {
       // when you release the mouse at different coordinates. Therefore we expect this
       // variable to be set on mousedown to be consistent.
       downElement: null,
-      headerHeight: 0,
-      footerHeight: 0,
       originalHeight: 0,
     }
   },

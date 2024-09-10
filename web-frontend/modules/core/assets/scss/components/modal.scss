@@ -91,10 +91,7 @@
   position: relative;
   background-color: $color-neutral-50;
   flex: 0 0;
-
-  &.modal__sidebar--scrollable {
-    overflow-y: auto;
-  }
+  overflow-y: auto;
 
   &.modal__sidebar--left {
     flex-basis: 200px;
@@ -109,10 +106,6 @@
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
   }
-
-  &.modal__sidebar--collapsed {
-    flex-basis: 48px;
-  }
 }
 
 .modal__close,
@@ -124,6 +117,7 @@
   display: flex;
   flex-direction: row-reverse;
   align-items: baseline;
+  z-index: 1;
 
   &:hover {
     color: $palette-neutral-900;
@@ -145,6 +139,10 @@
 .modal__content {
   padding: 24px;
   overflow-y: auto;
+
+  .modal:not(.modal--with-header):not(.modal--with-right-sidebar) & {
+    padding: 40px 24px 24px;
+  }
 }
 
 .modal__footer {
@@ -185,6 +183,12 @@
   .modal--with-topbar & {
     height: calc(100% - var(--modal-topbar-height));
   }
+}
+
+.modal__topbar-actions {
+  margin-left: auto;
+
+  @include flex-align-items(5px);
 }
 
 .modal__topbar-icons {

@@ -11,6 +11,7 @@
       :class="{
         'modal--full-height': fullHeight && size !== 'fullscreen',
         'modal--with-sidebar': sidebar,
+        'modal--with-topbar': topbar,
         'modal--fullscreen': size === 'fullscreen' && !fullHeight,
         'modal--large': size === 'large',
         'modal--small': size === 'small',
@@ -18,57 +19,76 @@
         'modal--right': right,
       }"
     >
-      <div
-        v-if="leftSidebar"
-        class="modal__sidebar modal__sidebar--left"
-        :class="{ 'modal__sidebar--scrollable': leftSidebarScrollable }"
-      >
-        <slot name="sidebar"></slot>
-      </div>
+      <div v-if="topbar" class="modal__topbar">
+        <slot name="topbar-content"></slot>
 
-      <div ref="contentWrapper" class="modal__content-wrapper">
-        <div ref="header" class="modal__header">
-          <slot name="header"></slot>
-        </div>
+        <div class="modal__topbar-actions">
+          <ul class="modal__topbar-icons">
+            <slot name="topbar-actions"></slot>
+          </ul>
 
-        <div ref="content" v-auto-overflow-scroll class="modal__content">
-          <slot name="content"></slot>
-        </div>
-
-        <div ref="footer" class="modal__footer">
-          <slot name="footer"></slot>
+          <i
+            class="iconoir-cancel modal__topbar-icon-close"
+            @click="hide()"
+          ></i>
         </div>
       </div>
 
-      <div ref="actions" class="modal__actions">
+      <div class="modal__wrapper">
+        <div
+          v-if="leftSidebar"
+          class="modal__sidebar modal__sidebar--left"
+          :class="{ 'modal__sidebar--scrollable': leftSidebarScrollable }"
+        >
+          <slot name="sidebar"></slot>
+        </div>
+
+        <div ref="contentWrapper" class="modal__content-wrapper">
+          <div ref="header" class="modal__header">
+            <slot name="header"></slot>
+          </div>
+
+          <div ref="content" class="modal__content">
+            <slot name="content"></slot>
+          </div>
+
+          <div ref="footer" class="modal__footer">
+            <slot name="footer"></slot>
+          </div>
+        </div>
+
         <a v-if="closeButton" class="modal__close" @click="hide()">
           <i class="iconoir-cancel"></i>
         </a>
+        <!-- 
+        <div ref="actions" class="modal__actions">
+          
 
-        <a
-          v-if="collapsibleRightSidebar"
-          class="modal__collapse"
-          @click="collapseSidebar"
+          <a
+            v-if="collapsibleRightSidebar"
+            class="modal__collapse"
+            @click="collapseSidebar"
+          >
+            <i
+              :class="{
+                'iconoir-fast-arrow-right': !sidebarCollapsed,
+                'iconoir-fast-arrow-left': sidebarCollapsed,
+              }"
+            ></i>
+          </a>
+          <slot name="actions"></slot>
+        </div> -->
+
+        <div
+          v-if="rightSidebar"
+          class="modal__sidebar modal__sidebar--right"
+          :class="{
+            'modal__sidebar--scrollable': rightSidebarScrollable,
+            'modal__sidebar--collapsed': sidebarCollapsed,
+          }"
         >
-          <i
-            :class="{
-              'iconoir-fast-arrow-right': !sidebarCollapsed,
-              'iconoir-fast-arrow-left': sidebarCollapsed,
-            }"
-          ></i>
-        </a>
-        <slot name="actions"></slot>
-      </div>
-
-      <div
-        v-if="rightSidebar"
-        class="modal__sidebar modal__sidebar--right"
-        :class="{
-          'modal__sidebar--scrollable': rightSidebarScrollable,
-          'modal__sidebar--collapsed': sidebarCollapsed,
-        }"
-      >
-        <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
+          <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
+        </div>
       </div>
     </div>
   </div>
@@ -81,6 +101,11 @@ export default {
   name: 'Modal',
   mixins: [baseModal],
   props: {
+    topbar: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
     leftSidebar: {
       type: Boolean,
       default: false,

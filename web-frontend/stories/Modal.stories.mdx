@@ -18,6 +18,13 @@ import Modal from '@baserow/modules/core/components/Modal'
     }}
     decorators={[withDesign]}
     argTypes={{
+        topbar: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
         leftSidebar: {
             control: {
                 type: 'boolean',
@@ -97,7 +104,7 @@ import Modal from '@baserow/modules/core/components/Modal'
         },
         content: {
             defaultValue:
-                '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem.</p>',
+                '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam urna tortor, pharetra sodales risus ac, lobortis imperdiet lorem.</p>',
         },
         footer: {
             defaultValue: '<Button>Submit</Button>',

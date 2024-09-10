@@ -112,6 +112,53 @@ LOCATION:London
 END:VEVENT
 END:VCALENDAR"""
 
+ICAL_FEED_WITH_TWO_ITEMS_SAME_ID = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ical.marudot.com//iCal Event Maker
+X-WR-CALNAME:Test feed
+NAME:Test feed
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+LAST-MODIFIED:20231222T233358Z
+TZURL:https://www.tzurl.org/zoneinfo-outlook/Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZNAME:CEST
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZNAME:CET
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20240901T195345Z
+UID:1725220387555-95757@ical.marudot.com
+DTSTART;TZID=Europe/Berlin:20240901T100000
+DTEND;TZID=Europe/Berlin:20240901T110000
+SUMMARY:Test event 1
+URL:https://baserow.io
+DESCRIPTION:Test description 1
+LOCATION:Amsterdam
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20240901T195345Z
+UID:1725220387555-95757@ical.marudot.com
+DTSTART;TZID=Europe/Berlin:20240902T130000
+DTEND;TZID=Europe/Berlin:20240902T150000
+SUMMARY:Test event 2
+DESCRIPTION:Test description 2
+LOCATION:London
+END:VEVENT
+END:VCALENDAR"""
+
 ICAL_FEED_WITH_THREE_ITEMS = """BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//ical.marudot.com//iCal Event Maker
@@ -502,6 +549,71 @@ def test_sync_data_sync_table_property_removed_from_data_sync_type(data_fixture)
         == "1725220374375-34056@ical.marudot.com"
     )
     assert getattr(sync_rows[0], f"field_{fields['dtstart'].id}") is None
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_sync_data_sync_table_multiple_unique_primary_properties(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS_SAME_ID,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync_handler = DataSyncHandler()
+    data_sync = data_sync_handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    registry = DataSyncTypeRegistry()
+
+    class TmpICalCalendarDataSync(ICalCalendarDataSyncType):
+        def get_properties(self, *args, **kwargs) -> dict:
+            properties = super().get_properties(*args, **kwargs)
+            for p in properties:
+                if p.key == "summary":
+                    p.unique_primary = True
+            return properties
+
+    registry.register(TmpICalCalendarDataSync())
+
+    with patch(
+        "baserow.contrib.database.data_sync.handler.data_sync_type_registry",
+        new=registry,
+    ):
+        data_sync_handler.sync_data_sync_table(
+            user=user,
+            data_sync=data_sync,
+        )
+
+    fields = {
+        p.key: p.field for p in DataSyncProperty.objects.filter(data_sync=data_sync)
+    }
+
+    model = data_sync.table.get_model()
+    sync_rows = list(model.objects.all())
+
+    assert data_sync.table.field_set.all().count() == 2
+    assert len(sync_rows) == 2
+    assert (
+        getattr(sync_rows[0], f"field_{fields['uid'].id}")
+        == "1725220387555-95757@ical.marudot.com"
+    )
+    assert getattr(sync_rows[0], f"field_{fields['summary'].id}") == "Test event 1"
+    assert (
+        getattr(sync_rows[1], f"field_{fields['uid'].id}")
+        == "1725220387555-95757@ical.marudot.com"
+    )
+    assert getattr(sync_rows[1], f"field_{fields['summary'].id}") == "Test event 2"
 
 
 @pytest.mark.django_db

@@ -56,7 +56,7 @@ END:VCALENDAR"""
 @pytest.mark.django_db
 def test_create_data_sync_no_permissions(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
-    database = data_fixture.create_database_table()
+    database = data_fixture.create_database_application()
 
     url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
     response = api_client.post(
@@ -78,7 +78,7 @@ def test_create_data_sync_no_permissions(data_fixture, api_client):
 @pytest.mark.django_db
 def test_create_data_sync_invalid_type(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
-    database = data_fixture.create_database_table(user=user)
+    database = data_fixture.create_database_application(user=user)
 
     url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
     response = api_client.post(
@@ -99,7 +99,7 @@ def test_create_data_sync_invalid_type(data_fixture, api_client):
 @pytest.mark.django_db
 def test_create_data_sync_wrong_properties(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
-    database = data_fixture.create_database_table(user=user)
+    database = data_fixture.create_database_application(user=user)
 
     url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
     response = api_client.post(
@@ -122,7 +122,7 @@ def test_create_data_sync_wrong_properties(data_fixture, api_client):
 @pytest.mark.django_db
 def test_create_data_sync_invalid_polymorphic_property(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
-    database = data_fixture.create_database_table(user=user)
+    database = data_fixture.create_database_application(user=user)
 
     url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
     response = api_client.post(

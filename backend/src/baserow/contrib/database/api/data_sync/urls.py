@@ -1,8 +1,7 @@
-from django.urls import re_path
 from django.conf import settings
+from django.urls import re_path
 
 from .views import DataSyncsView, SyncDataSyncTableView
-
 
 app_name = "baserow.contrib.database.api.data_sync"
 urlpatterns = []

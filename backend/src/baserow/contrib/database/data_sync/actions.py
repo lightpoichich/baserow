@@ -101,21 +101,36 @@ class SyncDataSyncTableActionType(ActionType):
     type = "sync_data_sync_table"
     description = ActionTypeDescription(
         _("Sync data sync table"),
-        _("The data sync table %(table_id)s was synchronized."),
+        _("The data sync synchronized"),
         TABLE_ACTION_CONTEXT,
     )
     analytics_params = ["data_sync_id", "table_id", "table_name"]
 
     @dataclasses.dataclass
     class Params:
-        data_sync_id: int
+        database_id: int
+        database_name: str
         table_id: int
         table_name: str
+        data_sync_id: int
 
     @classmethod
     def do(cls, user: AbstractUser, data_sync: DataSync):
         data_sync = data_sync.specific
         data_sync = DataSyncHandler().sync_data_sync_table(user, data_sync)
+
+        table = data_sync.table
+        database = table.database
+        workspace = database.workspace
+        params = cls.Params(
+            database.id,
+            database.name,
+            table.id,
+            table.name,
+            data_sync.id,
+        )
+        cls.register_action(user, params, cls.scope(table.id), workspace=workspace)
+
         return data_sync
 
     @classmethod

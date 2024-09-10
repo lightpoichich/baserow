@@ -71,9 +71,7 @@ class DataSyncsView(APIView):
             data_sync_type_registry, CreateDataSyncSerializer
         ),
         responses={
-            200: DiscriminatorCustomFieldsMappingSerializer(
-                data_sync_type_registry, TableSerializer
-            ),
+            200: TableSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

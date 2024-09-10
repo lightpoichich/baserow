@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from django.core.cache import cache
+from django.db import transaction
 from django.urls import reverse
 from django.utils.timezone import utc
 
@@ -12,7 +14,16 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from baserow.contrib.database.data_sync.models import DataSync, DataSyncProperty
+from baserow.contrib.database.data_sync.exceptions import (
+    SyncDataSyncTableAlreadyRunning,
+)
+from baserow.contrib.database.data_sync.models import (
+    DataSync,
+    DataSyncProperty,
+    SyncDataSyncTableJob,
+)
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.tasks import run_async_job
 
 ICAL_FEED_WITH_ONE_ITEMS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -347,6 +358,46 @@ def test_async_sync_data_sync_table_failed_sync(api_client, data_fixture):
         job["data_sync"]["last_error"]
         == "The request to the URL didn't respond with an OK response code."
     )
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+def test_async_sync_data_sync_table_failed_sync(api_client, data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=404,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user, token = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user)
+
+    url = reverse("api:database:data_sync:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "table_name": "Test 1",
+            "type": "ical_calendar",
+            "visible_properties": ["uid", "dtstart", "dtend", "summary"],
+            "ical_url": "https://baserow.io/ical.ics",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    data_sync_id = response.json()["data_sync"]["id"]
+
+    cache.add(f"data_sync_{data_sync_id}_syncing_table", "locked", timeout=2)
+
+    job = SyncDataSyncTableJob.objects.create(data_sync_id=data_sync_id, user=user)
+    with pytest.raises(SyncDataSyncTableAlreadyRunning):
+        run_async_job(job.id)
+
+    job.refresh_from_db()
+    assert job.human_readable_error == "The sync data sync job is already running."
 
 
 @pytest.mark.django_db(transaction=True)

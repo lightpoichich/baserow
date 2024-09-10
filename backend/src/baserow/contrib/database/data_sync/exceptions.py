@@ -26,3 +26,10 @@ class DataSyncDoesNotExist(Exception):
     """
     Raised when the data sync does not exist.
     """
+
+
+class SyncDataSyncTableAlreadyRunning(Exception):
+    """
+    Raised when the table is sync is initiated, but it's already running. Only one sync
+    can be running concurrently.
+    """

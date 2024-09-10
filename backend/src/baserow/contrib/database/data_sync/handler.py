@@ -1,6 +1,7 @@
 from typing import List
 
 from django.contrib.auth.models import AbstractUser
+from django.core.cache import cache
 from django.utils import timezone
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
@@ -18,6 +19,7 @@ from baserow.core.utils import extract_allowed
 from .exceptions import (
     DataSyncDoesNotExist,
     PropertyNotFound,
+    SyncDataSyncTableAlreadyRunning,
     SyncError,
     UniquePrimaryPropertyNotFound,
 )
@@ -156,6 +158,9 @@ class DataSyncHandler:
 
         return data_sync_instance
 
+    def get_table_sync_lock_key(self, data_sync_id):
+        return f"data_sync_{data_sync_id}_syncing_table"
+
     def sync_data_sync_table(self, user: AbstractUser, data_sync: DataSync) -> DataSync:
         """
         Synchronizes the table with the data source. This will automatically create
@@ -164,6 +169,8 @@ class DataSyncHandler:
 
         :param user: The user on whose behalf the data sync is triggered.
         :param data_sync: The data sync object that must be synced.
+        :raises SyncDataSyncTableAlreadyRunning: if the data sync table is already
+            being synced. Only one can run concurrently.
         :return:
         """
 
@@ -173,6 +180,49 @@ class DataSyncHandler:
             workspace=data_sync.table.database.workspace,
             context=data_sync.table,
         )
+
+        try:
+            lock_key = self.get_table_sync_lock_key(data_sync.id)
+            lock_acquired = cache.add(lock_key, "locked", timeout=2)
+
+            if not lock_acquired:
+                raise SyncDataSyncTableAlreadyRunning(
+                    f"Sync data sync table of data sync {data_sync.id} is already"
+                    f"running"
+                )
+
+            try:
+                self._do_sync_table(user, data_sync)
+            finally:
+                cache.delete(lock_key)
+        # If calling `get_all_rows` fails with a `SyncError`, then it's an expected
+        # error, and it shouldn't fail hard. We do want to store the error in the
+        # database to expose via the API.
+        except SyncError as e:
+            data_sync.last_error = str(e)
+            data_sync.save(update_fields=("last_error",))
+            return data_sync
+
+        data_sync.last_sync = timezone.now()
+        data_sync.last_error = None
+        data_sync.save(
+            update_fields=(
+                "last_sync",
+                "last_error",
+            )
+        )
+
+        table_updated.send(
+            self, table=data_sync.table, user=user, force_table_refresh=True
+        )
+
+        return data_sync
+
+    def _do_sync_table(self, user, data_sync):
+        """
+
+        :return:
+        """
 
         model = data_sync.table.get_model()
 
@@ -196,18 +246,10 @@ class DataSyncHandler:
             tuple(row[key_to_field_id[key]] for key in unique_primary_keys): row
             for row in existing_rows_queryset
         }
-        try:
-            rows_of_data_sync = {
-                tuple(row[key] for key in unique_primary_keys): row
-                for row in data_sync_type.get_all_rows(data_sync)
-            }
-        # If calling `get_all_rows` fails with a `SyncError`, then it's an expected
-        # error, and it shouldn't fail hard. We do want to store the error in the
-        # database to expose via the API.
-        except SyncError as e:
-            data_sync.last_error = str(e)
-            data_sync.save(update_fields=("last_error",))
-            return data_sync
+        rows_of_data_sync = {
+            tuple(row[key] for key in unique_primary_keys): row
+            for row in data_sync_type.get_all_rows(data_sync)
+        }
 
         rows_to_create = []
         for new_id, data in rows_of_data_sync.items():
@@ -276,21 +318,6 @@ class DataSyncHandler:
             or len(row_ids_to_delete) > 0
         ):
             SearchHandler.field_value_updated_or_created(data_sync.table)
-
-        data_sync.last_sync = timezone.now()
-        data_sync.last_error = None
-        data_sync.save(
-            update_fields=(
-                "last_sync",
-                "last_error",
-            )
-        )
-
-        table_updated.send(
-            self, table=data_sync.table, user=user, force_table_refresh=True
-        )
-
-        return data_sync
 
     def set_data_sync_visible_properties(
         self,

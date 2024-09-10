@@ -10,3 +10,8 @@ ERROR_DATA_SYNC_DOES_NOT_EXIST = (
     HTTP_404_NOT_FOUND,
     "The provided data sync or table does not exist.",
 )
+ERROR_SYNC_DATA_SYNC_ALREADY_RUNNING = (
+    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+    HTTP_400_BAD_REQUEST,
+    "The sync data sync job is already running.",
+)

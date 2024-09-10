@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.utils.timezone import utc
 
 import pytest
@@ -13,6 +14,7 @@ from baserow.contrib.database.data_sync.data_sync_types import (
 )
 from baserow.contrib.database.data_sync.exceptions import (
     PropertyNotFound,
+    SyncDataSyncTableAlreadyRunning,
     UniquePrimaryPropertyNotFound,
 )
 from baserow.contrib.database.data_sync.handler import DataSyncHandler
@@ -766,6 +768,135 @@ def test_sync_data_sync_table_without_permissions(data_fixture):
 
     with pytest.raises(UserNotInWorkspace):
         DataSyncHandler().sync_data_sync_table(user=user, data_sync=data_sync)
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_sync_data_sync_table_already_running(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    cache.add(f"data_sync_{data_sync.id}_syncing_table", "locked", timeout=2)
+
+    with pytest.raises(SyncDataSyncTableAlreadyRunning):
+        handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_sync_data_sync_table_lock_is_removed(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    handler.sync_data_sync_table(user=user, data_sync=data_sync)
+    assert cache.get(f"data_sync_{data_sync.id}_syncing_table") != "locked"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_sync_data_sync_table_lock_is_removed_on_sync_error(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=404,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    data_sync = handler.sync_data_sync_table(user=user, data_sync=data_sync)
+    assert data_sync.last_error
+    assert cache.get(f"data_sync_{data_sync.id}_syncing_table") != "locked"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_sync_data_sync_table_lock_is_removed_on_failure(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=404,
+        body=ICAL_FEED_WITH_TWO_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    registry = DataSyncTypeRegistry()
+
+    class TmpICalCalendarDataSync(ICalCalendarDataSyncType):
+        def get_all_rows(self, *args, **kwargs) -> dict:
+            raise ValueError("test")
+
+    registry.register(TmpICalCalendarDataSync())
+
+    with patch(
+        "baserow.contrib.database.data_sync.handler.data_sync_type_registry",
+        new=registry,
+    ):
+        with pytest.raises(ValueError):
+            handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+    assert cache.get(f"data_sync_{data_sync.id}_syncing_table") != "locked"
 
 
 @pytest.mark.django_db

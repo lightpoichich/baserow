@@ -1,8 +1,15 @@
 from rest_framework import serializers
 
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.contrib.database.api.data_sync.errors import ERROR_DATA_SYNC_DOES_NOT_EXIST
-from baserow.contrib.database.data_sync.exceptions import DataSyncDoesNotExist
+from baserow.contrib.database.api.data_sync.errors import (
+    ERROR_DATA_SYNC_DOES_NOT_EXIST,
+    ERROR_SYNC_DATA_SYNC_ALREADY_RUNNING,
+)
+from baserow.contrib.database.api.data_sync.serializers import DataSyncSerializer
+from baserow.contrib.database.data_sync.exceptions import (
+    DataSyncDoesNotExist,
+    SyncDataSyncTableAlreadyRunning,
+)
 from baserow.contrib.database.db.atomic import (
     read_repeatable_read_single_table_transaction,
 )
@@ -12,7 +19,6 @@ from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 
-from ..api.data_sync.serializers import DataSyncSerializer
 from .actions import SyncDataSyncTableActionType
 from .handler import DataSyncHandler
 from .models import SyncDataSyncTableJob
@@ -26,9 +32,11 @@ class SyncDataSyncTableJobType(JobType):
 
     api_exceptions_map = {
         DataSyncDoesNotExist: ERROR_DATA_SYNC_DOES_NOT_EXIST,
+        SyncDataSyncTableAlreadyRunning: ERROR_SYNC_DATA_SYNC_ALREADY_RUNNING,
     }
     job_exceptions_map = {
         UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        SyncDataSyncTableAlreadyRunning: ERROR_SYNC_DATA_SYNC_ALREADY_RUNNING[2],
     }
     request_serializer_field_names = ["data_sync_id"]
     request_serializer_field_overrides = {

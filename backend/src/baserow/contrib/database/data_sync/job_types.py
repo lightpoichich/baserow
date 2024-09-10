@@ -59,4 +59,5 @@ class SyncDataSyncTableJobType(JobType):
         data_sync = action_type_registry.get_by_type(SyncDataSyncTableActionType).do(
             job.user, data_sync
         )
+        progress.set_progress(100)
         return data_sync

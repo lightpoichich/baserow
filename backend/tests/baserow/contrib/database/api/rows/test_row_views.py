@@ -1543,6 +1543,22 @@ def test_list_rows_join_lookup_incompatible_field(data_fixture, api_client):
 
 
 @pytest.mark.django_db
+def test_cannot_create_row_with_data_sync(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_ical_data_sync(table=table)
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_CREATE_ROWS_IN_TABLE"
+
+
+@pytest.mark.django_db
 def test_create_row(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -2451,6 +2467,23 @@ def test_move_row(api_client, data_fixture):
         response_json["detail"]["before_id"][0]["error"]
         == "A valid integer is required."
     )
+
+
+@pytest.mark.django_db
+def test_cannot_delete_row_by_id_with_data_sync(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_ical_data_sync(table=table)
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {jwt_token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DELETE_ROWS_IN_TABLE"
 
 
 @pytest.mark.django_db

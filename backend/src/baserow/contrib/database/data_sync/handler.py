@@ -163,7 +163,7 @@ class DataSyncHandler:
 
     def sync_data_sync_table(self, user: AbstractUser, data_sync: DataSync) -> DataSync:
         """
-        Synchronizes the table with the data source. This will automatically create
+        Synchronizes the table with the data sync. This will automatically create
         missing rows, update existing rows, and delete rows that no longer exist. There
         can only be one data sync active at the same time to avoid conflicts.
 

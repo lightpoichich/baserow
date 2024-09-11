@@ -206,6 +206,24 @@ def test_batch_create_rows_field_validation(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_cannot_batch_create_rows_with_data_sync(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_ical_data_sync(table=table)
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    request_body = {"items": [{}]}
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_CREATE_ROWS_IN_TABLE"
+
+
+@pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_create_rows(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
@@ -1959,6 +1977,27 @@ def test_batch_delete_rows_trash_them(api_client, data_fixture):
     assert getattr(row_1, "trashed") is True
     assert getattr(row_2, "trashed") is True
     assert getattr(row_3, "trashed") is False
+
+
+@pytest.mark.django_db
+def test_cannot_batch_delete_rows_with_data_sync(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_ical_data_sync(table=table)
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": table.id})
+    request_body = {"items": [row_1.id]}
+
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DELETE_ROWS_IN_TABLE"
 
 
 @pytest.mark.django_db

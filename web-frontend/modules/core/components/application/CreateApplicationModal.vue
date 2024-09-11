@@ -1,29 +1,71 @@
 <template>
-  <Modal @show="loading = false">
-    <h2 class="box__title">
-      {{ $t('action.createNew') }} {{ applicationType.getName() | lowercase }}
-    </h2>
-    <Error :error="error"></Error>
-    <component
-      :is="applicationType.getApplicationFormComponent()"
-      ref="applicationForm"
-      :default-name="getDefaultName()"
-      :loading="loading"
-      @submitted="submitted"
-      @hidden="hide()"
-    >
-    </component>
-  </Modal>
+  <ModalV2 @show="loading = false">
+    <template #header-content>
+      <h2>
+        {{ $t('action.createNew') }} {{ applicationType.getName() | lowercase }}
+      </h2>
+    </template>
+
+    <template #content>
+      <Error :error="error"></Error>
+
+      <component
+        :is="applicationType.getApplicationFormComponent()"
+        ref="applicationForm"
+        :default-name="getDefaultName()"
+        :loading="loading"
+        @submitted="submitted"
+        @job-done="handleJobDone($event)"
+        @job-updated="handleJobUpdated($event)"
+        @import-type-changed="importType = $event"
+      >
+      </component>
+    </template>
+
+    <template #footer-content>
+      <ProgressBar
+        v-if="importType === 'airtable' && (jobIsRunning || jobHasSucceeded)"
+        :value="jobProgressPercentage"
+        :status="jobStatus"
+      />
+
+      <template v-if="importType === 'airtable'">
+        <Button
+          v-if="!jobHasSucceeded"
+          :loading="loading"
+          :disabled="loading"
+          @click="$refs.applicationForm.submit()"
+        >
+          {{ $t('importFromAirtable.importButtonLabel') }}
+        </Button>
+
+        <Button v-else type="secondary" @click="openDatabase">
+          {{ $t('importFromAirtable.openButtonLabel') }}</Button
+        >
+      </template>
+
+      <Button
+        v-else
+        type="primary"
+        :loading="loading"
+        :disabled="loading"
+        @click="$refs.applicationForm.submit()"
+      >
+        {{ $t('action.add') }}
+        {{ applicationType.getName() | lowercase }}
+      </Button>
+    </template>
+  </ModalV2>
 </template>
 
 <script>
-import modal from '@baserow/modules/core/mixins/modal'
+import modalv2 from '@baserow/modules/core/mixins/modalV2'
 import error from '@baserow/modules/core/mixins/error'
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'CreateApplicationModal',
-  mixins: [modal, error],
+  mixins: [modalv2, error],
   props: {
     applicationType: {
       type: Object,
@@ -37,8 +79,15 @@ export default {
   data() {
     return {
       loading: false,
+      importType: null,
+      jobHasSucceeded: false,
+      jobIsRunning: false,
+      jobStatus: '',
+      jobProgressPercentage: 0,
+      jobDatabaseId: null,
     }
   },
+  computed: {},
   methods: {
     getDefaultName() {
       const excludeNames = this.$store.getters['application/getAllOfWorkspace'](
@@ -69,6 +118,29 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    async openDatabase() {
+      const application = this.$store.getters['application/get'](
+        this.jobDatabaseId
+      )
+      const type = this.$registry.get('application', application.type)
+      if (await type.select(application, this)) {
+        this.hide()
+        this.jobIsRunning = false
+        this.jobHasSucceeded = false
+      }
+    },
+    handleJobDone(event) {
+      this.jobStatus = event.state
+      this.jobProgressPercentage = event.progress_percentage
+      this.jobIsRunning = false
+      this.jobHasSucceeded = true
+      this.jobDatabaseId = event.databaseId
+    },
+    handleJobUpdated(event) {
+      this.jobIsRunning = true
+      this.jobStatus = event.state
+      this.jobProgressPercentage = event.progress_percentage
     },
   },
 }

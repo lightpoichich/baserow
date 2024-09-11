@@ -245,6 +245,7 @@ def test_to_baserow_database_export():
         "order": 0,
         "primary": True,
         "text_default": "",
+        "read_only": False,
     }
     assert baserow_database_export["tables"][0]["fields"][1] == {
         "type": "email",
@@ -252,6 +253,7 @@ def test_to_baserow_database_export():
         "name": "Email",
         "order": 1,
         "primary": False,
+        "read_only": False,
     }
     assert len(baserow_database_export["tables"][0]["rows"]) == 3
     assert baserow_database_export["tables"][0]["rows"][0] == {
@@ -356,6 +358,7 @@ def test_to_baserow_database_export_without_primary_value():
             "order": 32767,
             "primary": True,
             "text_default": "",
+            "read_only": False,
         }
     ]
 

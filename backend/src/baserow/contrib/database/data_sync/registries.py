@@ -3,10 +3,14 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List
 
 from django.contrib.auth import get_user_model
 
+from baserow.contrib.database.data_sync.export_serialized import (
+    DataSyncExportSerializedStructure,
+)
 from baserow.contrib.database.fields.models import Field
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
+    ImportExportMixin,
     Instance,
     ModelInstanceMixin,
     ModelRegistryMixin,
@@ -49,7 +53,9 @@ class DataSyncProperty(ABC):
         """
 
 
-class DataSyncType(ModelInstanceMixin, CustomFieldsInstanceMixin, Instance, ABC):
+class DataSyncType(
+    ModelInstanceMixin, CustomFieldsInstanceMixin, ImportExportMixin, Instance, ABC
+):
     @abstractmethod
     def get_properties(self, instance: "DataSync") -> List[DataSyncProperty]:
         """
@@ -90,6 +96,70 @@ class DataSyncType(ModelInstanceMixin, CustomFieldsInstanceMixin, Instance, ABC)
             expose the error via the API.
         :return: List of all rows in the data sync source.
         """
+
+    def export_serialized(self, instance: "DataSync"):
+        """
+        Exports the data sync properties and the `allowed_fields` to the serialized
+        format.
+        """
+
+        properties = instance.data_sync_properties.all()
+        type_specific = {
+            field: getattr(instance, field) for field in self.allowed_fields
+        }
+        return DataSyncExportSerializedStructure.data_sync(
+            id=instance.id,
+            type_name=self.type,
+            last_sync=instance.last_sync.isoformat(),
+            last_error=instance.last_error,
+            properties=[
+                DataSyncExportSerializedStructure.property(
+                    key=p.key, field_id=p.field_id
+                )
+                for p in properties
+            ],
+            **type_specific,
+        )
+
+    def import_serialized(self, table, serialized_values, id_mapping):
+        """
+        Imports the data sync properties and the `allowed_fields`.
+        """
+
+        from .models import DataSyncProperty as DataSyncPropertyModel
+
+        if "database_table_data_sync" not in id_mapping:
+            id_mapping["database_table_data_sync"] = {}
+
+        serialized_copy = serialized_values.copy()
+        original_id = serialized_copy.pop("id")
+        properties = serialized_copy.pop("properties", [])
+        serialized_copy.pop("type")
+        type_properties = {
+            field: serialized_copy.get(field) for field in self.allowed_fields
+        }
+        data_sync = self.model_class.objects.create(
+            table=table,
+            last_sync=serialized_copy["last_sync"],
+            last_error=serialized_copy["last_error"],
+            **type_properties,
+        )
+
+        properties_to_be_created = []
+        for property in properties:
+            properties_to_be_created.append(
+                DataSyncPropertyModel(
+                    data_sync=data_sync,
+                    field_id=id_mapping["database_fields"][property["field_id"]],
+                    key=property["key"],
+                )
+            )
+
+        DataSyncPropertyModel.objects.bulk_create(properties_to_be_created)
+
+        id_mapping["database_table_data_sync"][original_id] = data_sync.id
+
+        return data_sync
 
 
 class DataSyncTypeRegistry(ModelRegistryMixin, CustomFieldsRegistryMixin, Registry):

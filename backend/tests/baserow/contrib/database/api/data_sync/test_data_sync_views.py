@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from django.core.cache import cache
-from django.db import transaction
 from django.urls import reverse
 from django.utils.timezone import utc
 
@@ -22,7 +21,6 @@ from baserow.contrib.database.data_sync.models import (
     DataSyncProperty,
     SyncDataSyncTableJob,
 )
-from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.tasks import run_async_job
 
 ICAL_FEED_WITH_ONE_ITEMS = """BEGIN:VCALENDAR
@@ -362,7 +360,7 @@ def test_async_sync_data_sync_table_failed_sync(api_client, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @responses.activate
-def test_async_sync_data_sync_table_failed_sync(api_client, data_fixture):
+def test_async_sync_data_sync_table_already_running(api_client, data_fixture):
     responses.add(
         responses.GET,
         "https://baserow.io/ical.ics",

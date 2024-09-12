@@ -2,7 +2,8 @@ from typing import List
 
 from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext as _
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -13,6 +14,8 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.signals import table_created, table_updated
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import extract_allowed
 
@@ -147,6 +150,10 @@ class DataSyncHandler:
             )
 
         DataSyncProperty.objects.bulk_create(properties_to_create)
+
+        # Create default view.
+        with translation.override(user.profile.language):
+            ViewHandler().create_view(user, table, GridViewType.type, name=_("Grid"))
 
         # Create the table schema in the database.
         with safe_django_schema_editor() as schema_editor:

@@ -26,6 +26,7 @@ from baserow.contrib.database.data_sync.models import (
 from baserow.contrib.database.data_sync.registries import DataSyncTypeRegistry
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import LongTextField, TextField
+from baserow.contrib.database.views.models import GridView
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInWorkspace
 
@@ -409,6 +410,10 @@ def test_sync_data_sync_table_create_update_delete_row(data_fixture):
     fields = {
         p.key: p.field for p in DataSyncProperty.objects.filter(data_sync=data_sync)
     }
+
+    views = list(data_sync.table.view_set.all())
+    assert len(views) == 1
+    assert isinstance(views[0].specific, GridView)
 
     model = data_sync.table.get_model()
     sync_1_rows = list(model.objects.all())

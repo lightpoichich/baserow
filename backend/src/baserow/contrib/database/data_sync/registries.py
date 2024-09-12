@@ -34,6 +34,13 @@ class DataSyncProperty(ABC):
     possible for the user to exclude them in the table.
     """
 
+    immutable_properties = False
+    """
+    Indicates whether the properties of the related field are immutable. This will
+    probably be `True` for a date field so that the user can configure how it's
+    formatted, but `False` for select options because those should be a fixed set.
+    """
+
     def __init__(self, key, name):
         """
         :param key: A unique key that must never be changed.

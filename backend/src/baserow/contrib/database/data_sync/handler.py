@@ -131,7 +131,7 @@ class DataSyncHandler:
             baserow_field.table = table
             baserow_field.read_only = True
             baserow_field.immutable_type = True
-            baserow_field.immutable_properties = True
+            baserow_field.immutable_properties = data_sync_property.immutable_properties
             if data_sync_property.unique_primary and not has_primary:
                 has_primary = True
                 baserow_field.primary = True
@@ -228,11 +228,6 @@ class DataSyncHandler:
         return data_sync
 
     def _do_sync_table(self, user, data_sync):
-        """
-
-        :return:
-        """
-
         model = data_sync.table.get_model()
 
         data_sync_type = data_sync_type_registry.get_by_model(data_sync)
@@ -399,7 +394,9 @@ class DataSyncHandler:
             field_kwargs = baserow_field.__dict__
             field_kwargs["read_only"] = True
             field_kwargs["immutable_type"] = True
-            field_kwargs["immutable_properties"] = True
+            field_kwargs[
+                "immutable_properties"
+            ] = data_sync_property.immutable_properties
             # It could be that a field with the same name already exists. In that case,
             # we don't want to block the creation of the field, but rather find a name
             # that works.
@@ -407,6 +404,7 @@ class DataSyncHandler:
                 data_sync.table,
                 [field_kwargs.pop("name")],
             )
+            print(field_kwargs)
             field = handler.create_field(
                 user=user,
                 table=data_sync.table,

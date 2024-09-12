@@ -14,12 +14,15 @@ from .registries import DataSyncProperty, DataSyncType
 
 class UIDICalCalendarDataSyncProperty(DataSyncProperty):
     unique_primary = True
+    immutable_properties = True
 
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
 
 class DateStartICalCalendarDataSyncProperty(DataSyncProperty):
+    immutable_properties = False
+
     def to_baserow_field(self) -> DateField:
         return DateField(
             name=self.name,
@@ -31,6 +34,8 @@ class DateStartICalCalendarDataSyncProperty(DataSyncProperty):
 
 
 class DateEndICalCalendarDataSyncProperty(DataSyncProperty):
+    immutable_properties = False
+
     def to_baserow_field(self) -> DateField:
         return DateField(
             name=self.name,
@@ -42,6 +47,8 @@ class DateEndICalCalendarDataSyncProperty(DataSyncProperty):
 
 
 class SummaryICalCalendarDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 

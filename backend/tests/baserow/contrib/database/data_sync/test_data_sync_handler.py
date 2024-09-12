@@ -326,6 +326,7 @@ def test_create_data_sync_table(send_mock, data_fixture):
     assert fields[1].date_time_format == "24"
     assert fields[1].date_show_tzinfo is True
     assert fields[1].read_only is True
+    assert fields[1].immutable_properties is False
     # assert fields[1].date_force_timezone is False # @TODO fix this
     assert fields[2].name == "End date"
     assert fields[2].primary is False
@@ -1142,6 +1143,7 @@ def test_set_data_sync_visible_properties(data_fixture):
     assert fields[2].name == "Summary"
     assert fields[2].primary is False
     assert fields[2].read_only is True
+    assert fields[2].immutable_properties is True
 
     properties = DataSyncProperty.objects.filter(data_sync=data_sync).order_by("id")
     assert len(properties) == 3

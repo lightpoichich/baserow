@@ -52,6 +52,19 @@ class DataSyncProperty(ABC):
         :return: An unsaved Baserow field model object.
         """
 
+    def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
+        """
+        Checks if the provided cell value is equal. This is used to check if the
+        row must be updated.
+
+        :param baserow_row_value: The row value from the Baserow row.
+        :param data_sync_row_value:  The row value from the data sync `get_all_rows`
+            row.
+        :return: `True` if the value is equal.
+        """
+
+        return baserow_row_value == data_sync_row_value
+
 
 class DataSyncType(
     ModelInstanceMixin, CustomFieldsInstanceMixin, ImportExportMixin, Instance, ABC

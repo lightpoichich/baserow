@@ -238,6 +238,7 @@ class DataSyncHandler:
             data_sync=data_sync, key__in=all_property_keys
         )
         key_to_field_id = {p.key: f"field_{p.field_id}" for p in enabled_properties}
+        key_to_property = {p.key: p for p in all_properties}
 
         existing_rows_queryset = model.objects.all().values(
             *["id"] + list(key_to_field_id.values())
@@ -267,8 +268,9 @@ class DataSyncHandler:
                 new_record_data = rows_of_data_sync[existing_id]
                 changed = False
                 for field, value in new_record_data.items():
-                    # @TODO move this into something more reusable in the property.
-                    if existing_record[key_to_field_id[field]] != value:
+                    baserow_row_value = existing_record[key_to_field_id[field]]
+                    data_sync_property = key_to_property[field]
+                    if not data_sync_property.is_equal(baserow_row_value, value):
                         existing_record[key_to_field_id[field]] = value
                         changed = True
                 if changed:

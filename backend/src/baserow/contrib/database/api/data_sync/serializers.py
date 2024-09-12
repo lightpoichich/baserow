@@ -9,10 +9,7 @@ from baserow.contrib.database.data_sync.registries import data_sync_type_registr
 class DataSyncPropertySerializer(serializers.ModelSerializer):
     class Meta:
         model = DataSyncProperty
-        fields = (
-            "field_id",
-            "key",
-        )
+        fields = ("field_id", "key", "unique_primary")
 
 
 class DataSyncSerializer(serializers.ModelSerializer):

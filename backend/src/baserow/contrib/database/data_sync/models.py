@@ -59,6 +59,14 @@ class DataSyncProperty(models.Model):
     key = models.CharField(
         max_length=255, help_text="The matching `key` of the `DataSyncProperty`."
     )
+    # This field must be stored in this model because it must be exposed via the API,
+    # and we can't call the `get_properties` method everytime it's needed because it
+    # could be slow.
+    unique_primary = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the data sync property is used for unique "
+        "identification when syncing.",
+    )
 
 
 class SyncDataSyncTableJob(Job):

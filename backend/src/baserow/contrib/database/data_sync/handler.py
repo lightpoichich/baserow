@@ -142,6 +142,7 @@ class DataSyncHandler:
                     data_sync=data_sync_instance,
                     field=baserow_field,
                     key=visible_property,
+                    unique_primary=data_sync_property.unique_primary,
                 )
             )
 
@@ -379,7 +380,13 @@ class DataSyncHandler:
                 new_field = data_sync_property.to_baserow_field()
                 # If the field type has changed, then it must be updated.
                 # @TODO let the property decide whether if has changed or not.
-                if not isinstance(new_field, existing_field_class):
+                if (
+                    not isinstance(new_field, existing_field_class)
+                    or data_sync_property.immutable_properties
+                    != enabled_property.field.immutable_properties
+                    or data_sync_property.unique_primary
+                    != enabled_property.unique_primary
+                ):
                     properties_to_be_updated.append(data_sync_property)
 
         for enabled_property in enabled_properties:
@@ -404,7 +411,6 @@ class DataSyncHandler:
                 data_sync.table,
                 [field_kwargs.pop("name")],
             )
-            print(field_kwargs)
             field = handler.create_field(
                 user=user,
                 table=data_sync.table,
@@ -413,7 +419,10 @@ class DataSyncHandler:
                 **field_kwargs,
             )
             DataSyncProperty.objects.create(
-                data_sync=data_sync, field=field, key=data_sync_property.key
+                data_sync=data_sync,
+                field=field,
+                key=data_sync_property.key,
+                unique_primary=data_sync_property.unique_primary,
             )
 
         for data_sync_property in properties_to_be_updated:
@@ -421,12 +430,17 @@ class DataSyncHandler:
             baserow_field = data_sync_property.to_baserow_field()
             baserow_field_type = field_type_registry.get_by_model(baserow_field)
             field_kwargs = baserow_field.__dict__
+            field_kwargs[
+                "immutable_properties"
+            ] = data_sync_property.immutable_properties
             enabled_property.field = handler.update_field(
                 user=user,
                 field=enabled_property.field.specific,
                 new_type_name=baserow_field_type.type,
                 **field_kwargs,
             )
+            enabled_property.unique_primary = data_sync_property.unique_primary
+            enabled_property.save(update_fields=("unique_primary",))
 
         for data_sync_property_instance in properties_to_be_removed:
             field = data_sync_property_instance.field

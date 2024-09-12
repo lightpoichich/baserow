@@ -192,10 +192,26 @@ def test_create_data_sync(data_fixture, api_client):
         "data_sync": {
             "id": data_sync.id,
             "data_sync_properties": [
-                {"field_id": properties[0].field_id, "key": "uid"},
-                {"field_id": properties[1].field_id, "key": "dtstart"},
-                {"field_id": properties[2].field_id, "key": "dtend"},
-                {"field_id": properties[3].field_id, "key": "summary"},
+                {
+                    "field_id": properties[0].field_id,
+                    "key": "uid",
+                    "unique_primary": True,
+                },
+                {
+                    "field_id": properties[1].field_id,
+                    "key": "dtstart",
+                    "unique_primary": False,
+                },
+                {
+                    "field_id": properties[2].field_id,
+                    "key": "dtend",
+                    "unique_primary": False,
+                },
+                {
+                    "field_id": properties[3].field_id,
+                    "key": "summary",
+                    "unique_primary": False,
+                },
             ],
             "last_sync": None,
             "last_error": None,

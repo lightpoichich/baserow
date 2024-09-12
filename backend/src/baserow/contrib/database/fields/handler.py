@@ -531,7 +531,12 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         else:
             to_field_type = from_field_type
 
-        allowed_fields = ["name", "description"] + to_field_type.allowed_fields
+        allowed_fields = [
+            "name",
+            "description",
+            "immutable_type",
+            "immutable_properties",
+        ] + to_field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
 
         if field.primary and not to_field_type.can_be_primary_field(field_values):
@@ -886,6 +891,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             field_id=field.id,
             field=field,
             user=user,
+            allow_deleting_primary=allow_deleting_primary,
         )
 
         FieldDependencyHandler.break_dependencies_delete_dependants(field)

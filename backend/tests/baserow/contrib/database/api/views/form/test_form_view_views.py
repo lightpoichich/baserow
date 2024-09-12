@@ -8,6 +8,7 @@ from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
 
 import pytest
+import responses
 from freezegun import freeze_time
 from PIL import Image
 from rest_framework.status import (
@@ -18,6 +19,7 @@ from rest_framework.status import (
     HTTP_413_REQUEST_ENTITY_TOO_LARGE,
 )
 
+from baserow.contrib.database.data_sync.handler import DataSyncHandler
 from baserow.contrib.database.views.models import (
     FormView,
     FormViewFieldOptions,
@@ -26,6 +28,44 @@ from baserow.contrib.database.views.models import (
 )
 from baserow.core.user_files.models import UserFile
 from baserow.test_utils.helpers import AnyInt, setup_interesting_test_table
+
+ICAL_FEED_WITH_ONE_ITEMS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ical.marudot.com//iCal Event Maker
+X-WR-CALNAME:Test feed
+NAME:Test feed
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+LAST-MODIFIED:20231222T233358Z
+TZURL:https://www.tzurl.org/zoneinfo-outlook/Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZNAME:CEST
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZNAME:CET
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20240901T195538Z
+UID:1725220374375-34056@ical.marudot.com
+DTSTART;TZID=Europe/Berlin:20240901T100000
+DTEND;TZID=Europe/Berlin:20240901T110000
+SUMMARY:Test event 0
+URL:https://baserow.io
+DESCRIPTION:Test description 1
+LOCATION:Amsterdam
+END:VEVENT
+END:VCALENDAR"""
 
 
 @pytest.mark.django_db
@@ -396,6 +436,46 @@ def test_submit_form_with_link_row_field(api_client, data_fixture):
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",
     }
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_submit_form_with_data_sync(api_client, data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    handler = DataSyncHandler()
+
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    form = data_fixture.create_form_view(
+        table=data_sync.table,
+        public=True,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+
+    FormViewFieldOptions.objects.all().update(required=True, enabled=True)
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(url, {"summary": "Test"}, format="json")
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST, response_json
+    assert response_json["error"] == "ERROR_CANNOT_CREATE_ROWS_IN_TABLE"
 
 
 @pytest.mark.django_db
@@ -918,6 +998,46 @@ def test_test_enable_form_view_file_field_options(api_client, data_fixture):
         response_json["detail"]
         == "The created_on field type is not compatible with the form view."
     )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_test_enable_read_only_field(api_client, data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    handler = DataSyncHandler()
+
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        visible_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    form_view = data_fixture.create_form_view(table=data_sync.table)
+
+    field = data_sync.table.field_set.all().first()
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {"field_options": {field.id: {"enabled": True}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FORM_VIEW_READ_ONLY_FIELD_IS_NOT_SUPPORTED"
 
 
 @pytest.mark.django_db

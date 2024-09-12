@@ -101,7 +101,9 @@ def get_row_serializer_class(
             # the field in the serializer for the response, but don't allow updating
             # via the API. It should be possible to update the cell value internally
             # because the value is then managed by something internally.
-            extra_kwargs["read_only"] = field["field"].read_only
+            if field["field"].read_only:
+                extra_kwargs["read_only"] = field["field"].read_only
+                extra_kwargs.pop("required", None)
 
             if field["name"] != name:
                 # If we are building a serializer with names which do not match the

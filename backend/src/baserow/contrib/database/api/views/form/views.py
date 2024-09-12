@@ -24,6 +24,7 @@ from baserow.contrib.database.api.views.errors import (
 )
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.fields.models import FileField, LongTextField
+from baserow.contrib.database.rows.exceptions import CannotCreateRowsInTable
 from baserow.contrib.database.views.actions import SubmitFormActionType
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
@@ -42,6 +43,7 @@ from baserow.core.user_files.exceptions import (
 )
 from baserow.core.user_files.handler import UserFileHandler
 
+from ...rows.errors import ERROR_CANNOT_CREATE_ROWS_IN_TABLE
 from .errors import (
     ERROR_FORM_DOES_NOT_EXIST,
     ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM,
@@ -122,6 +124,7 @@ class SubmitFormViewView(APIView):
         {
             ViewDoesNotExist: ERROR_FORM_DOES_NOT_EXIST,
             NoAuthorizationToPubliclySharedView: ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM,
+            CannotCreateRowsInTable: ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
         }
     )
     @transaction.atomic

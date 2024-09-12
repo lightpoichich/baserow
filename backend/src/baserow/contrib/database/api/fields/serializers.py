@@ -42,11 +42,15 @@ class FieldSerializer(serializers.ModelSerializer):
             "type",
             "primary",
             "read_only",
+            "immutable_type",
+            "immutable_properties",
             "description",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
+            "immutable_type": {"read_only": True},
+            "immutable_properties": {"read_only": True},
             "description": {
                 "required": False,
                 "default": None,

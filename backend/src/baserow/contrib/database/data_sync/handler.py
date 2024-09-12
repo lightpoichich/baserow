@@ -130,6 +130,8 @@ class DataSyncHandler:
             baserow_field.order = index
             baserow_field.table = table
             baserow_field.read_only = True
+            baserow_field.immutable_type = True
+            baserow_field.immutable_properties = True
             if data_sync_property.unique_primary and not has_primary:
                 has_primary = True
                 baserow_field.primary = True
@@ -396,6 +398,8 @@ class DataSyncHandler:
             baserow_field_type = field_type_registry.get_by_model(baserow_field)
             field_kwargs = baserow_field.__dict__
             field_kwargs["read_only"] = True
+            field_kwargs["immutable_type"] = True
+            field_kwargs["immutable_properties"] = True
             # It could be that a field with the same name already exists. In that case,
             # we don't want to block the creation of the field, but rather find a name
             # that works.

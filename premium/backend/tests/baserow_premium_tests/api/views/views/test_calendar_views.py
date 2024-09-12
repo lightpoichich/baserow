@@ -972,6 +972,8 @@ def test_get_public_calendar_view_with_single_select_and_cover(
                 "date_show_tzinfo": False,
                 "date_time_format": "24",
                 "description": None,
+                "immutable_properties": False,
+                "immutable_type": False,
             },
             {
                 "id": public_field.id,
@@ -983,6 +985,8 @@ def test_get_public_calendar_view_with_single_select_and_cover(
                 "type": "text",
                 "read_only": False,
                 "description": None,
+                "immutable_properties": False,
+                "immutable_type": False,
             },
         ],
         "view": {

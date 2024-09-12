@@ -132,6 +132,18 @@ class Field(
         "type. If true, then it won't be possible to update the cell value via the"
         "API.",
     )
+    immutable_type = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field type is immutable. If true, then it "
+        "won't be possible to change the field type via the API.",
+    )
+    immutable_properties = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field properties are immutable. If true, "
+        "then it won't be possible to change them type via the API.",
+    )
 
     class Meta:
         ordering = (

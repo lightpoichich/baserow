@@ -535,6 +535,138 @@ def test_update_field(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_field_immutable_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_type=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json()["error"] == "ERROR_IMMUTABLE_FIELD_TYPE"
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_type_change_properties(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_type=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"number_decimal_places": 2},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_properties(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_properties=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"number_decimal_places": 2},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json()["error"] == "ERROR_IMMUTABLE_FIELD_PROPERTIES"
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_properties_change_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_properties=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_properties_change_type_and_properties(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_properties=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"type": "text", "text_default": "test"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json()["error"] == "ERROR_IMMUTABLE_FIELD_PROPERTIES"
+
+
+@pytest.mark.django_db
+def test_update_field_cannot_change_read_only_and_immutable_properties(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {
+            "type": "text",
+            "read_only": True,
+            "immutable_type": True,
+            "immutable_properties": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["read_only"] is False
+    assert response_json["immutable_type"] is False
+    assert response_json["immutable_properties"] is False
+
+
+@pytest.mark.django_db
 def test_update_field_number_type_deprecation_error(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1109,9 +1241,13 @@ def test_change_primary_field_field_with_primary(api_client, data_fixture):
                 "read_only": False,
                 "description": None,
                 "text_default": "",
+                "immutable_properties": False,
+                "immutable_type": False,
             }
         ],
         "text_default": "",
+        "immutable_properties": False,
+        "immutable_type": False,
     }
 
 

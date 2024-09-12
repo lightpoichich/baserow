@@ -295,6 +295,8 @@ def test_import_export_created_by_field(data_fixture):
         "order": field.order,
         "primary": False,
         "read_only": False,
+        "immutable_type": False,
+        "immutable_properties": False,
         "type": "created_by",
     }
 

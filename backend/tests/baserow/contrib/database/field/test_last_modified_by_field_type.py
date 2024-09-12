@@ -292,6 +292,8 @@ def test_import_export_last_modified_by_field(data_fixture):
         "primary": False,
         "type": "last_modified_by",
         "read_only": False,
+        "immutable_type": False,
+        "immutable_properties": False,
     }
 
 

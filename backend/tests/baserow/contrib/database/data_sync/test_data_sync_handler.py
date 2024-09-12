@@ -317,6 +317,8 @@ def test_create_data_sync_table(send_mock, data_fixture):
     assert isinstance(fields[0], TextField)
     assert fields[0].primary is True
     assert fields[0].read_only is True
+    assert fields[0].immutable_type is True
+    assert fields[0].immutable_properties is True
     assert fields[1].name == "Start date"
     assert fields[1].primary is False
     assert fields[1].date_format == "ISO"

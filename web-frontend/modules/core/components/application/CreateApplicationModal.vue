@@ -64,7 +64,7 @@
 </template>
 
 <script>
-import modalv2 from '@baserow/modules/core/mixins/modalV2'
+import modalv2 from '@baserow/modules/core/mixins/modalv2'
 import error from '@baserow/modules/core/mixins/error'
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 

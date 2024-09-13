@@ -1,5 +1,10 @@
 <template>
-  <ModalV2 @show="loading = false">
+  <ModalV2
+    :can-close="!jobIsRunning"
+    :close-button="!jobIsRunning"
+    @show="loading = false"
+    @hidden="handleHidden"
+  >
     <template #header-content>
       <h2>
         {{ $t('action.createNew') }} {{ applicationType.getName() | lowercase }}
@@ -141,6 +146,14 @@ export default {
       this.jobIsRunning = true
       this.jobStatus = event.state
       this.jobProgressPercentage = event.progress_percentage
+    },
+    handleHidden() {
+      this.importType = null
+      this.jobIsRunning = false
+      this.jobHasSucceeded = false
+      this.jobStatus = ''
+      this.jobProgressPercentage = 0
+      this.jobDatabaseId = null
     },
   },
 }

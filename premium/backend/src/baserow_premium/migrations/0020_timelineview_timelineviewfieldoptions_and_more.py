@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ("database", "0158_field_description"),
-        ("baserow_premium", "0018_aifield_ai_file_field"),
+        ("baserow_premium", "0019_calendarview_ical_slug"),
     ]
 
     operations = [

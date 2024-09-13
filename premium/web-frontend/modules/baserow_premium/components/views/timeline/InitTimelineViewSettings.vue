@@ -1,14 +1,13 @@
 <template>
-  <Modal>
-    <h2 class="box__title">
-      {{ $t('selectDateFieldModal.chooseDateField') }}
+  <div class="box">
+    <h2 :style="{ marginBottom: '32px' }">
+      {{ $t('initTimelineViewSettings.settings') }}
     </h2>
     <Error :error="error"></Error>
-    <DateFieldSelectForm
+    <TimelineViewSettingsForm
       ref="dateFieldSelectForm"
-      :date-fields="dateFields"
-      :date-field-id="dateFieldId"
-      :table="table"
+      :all-date-fields="dateFields"
+      :view="view"
       @submitted="submitted"
     >
       <div class="actions">
@@ -18,19 +17,19 @@
           >
         </div>
       </div>
-    </DateFieldSelectForm>
-  </Modal>
+    </TimelineViewSettingsForm>
+  </div>
 </template>
 
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
-import DateFieldSelectForm from '@baserow_premium/components/views/calendar/DateFieldSelectForm'
+import TimelineViewSettingsForm from './TimelineViewSettingsForm'
 
 export default {
-  name: 'SelectDateFieldModal',
+  name: 'InitTimelineViewSettings',
   components: {
-    DateFieldSelectForm,
+    TimelineViewSettingsForm,
   },
   mixins: [modal, error],
   props: {
@@ -77,12 +76,14 @@ export default {
       try {
         await this.$store.dispatch('view/update', {
           view,
-          values: { date_field: values.dateFieldId },
+          values: {
+            start_date_field: values.startDateFieldId,
+            end_date_field: values.endDateFieldId,
+          },
         })
         this.$emit('refresh', {
           includeFieldOptions: true,
         })
-        this.hide()
       } catch (error) {
         this.handleError(error)
       } finally {
@@ -93,3 +94,10 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.box {
+  margin: 20px auto;
+  max-width: 480px;
+}
+</style>

@@ -1,0 +1,13 @@
+.timeline-grid-header {
+    @extend %timeline-grid;
+
+    border-top: 1px solid $color-neutral-200;
+    border-bottom: 1px solid $color-neutral-200;
+}
+
+.timeline-grid-header__column {
+    @extend %timeline-grid__column;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -1,0 +1,47 @@
+%timeline-grid {
+    position: relative;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.timeline-grid {
+    @extend %timeline-grid;
+}
+
+%timeline-grid__column {
+    position: absolute;
+    height: 100%;
+}
+
+.timeline-grid__column {
+    @extend %timeline-grid__column;
+    border-right: 1px solid $color-neutral-200;
+ }
+
+.timeline-grid__row {
+    position: absolute;
+    display: flex;
+    align-items: center;
+}
+
+.timeline-grid__row-start {
+    position: absolute;
+    z-index: 2;
+}
+
+.timeline-grid__row-event {
+    @include elevation($elevation-low);
+
+    background-color: white;
+    z-index: 1;
+    border: 1px solid $color-neutral-400;
+    border-radius: 4px;
+    margin: 0 6px 0 4px;
+    height: 80%;
+    width: 100%;
+    padding-left: 8px;
+    display: flex;
+    align-items: center;
+}

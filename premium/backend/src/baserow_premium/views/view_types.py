@@ -626,9 +626,9 @@ class TimelineViewType(ViewType):
         """
 
         serialized_copy = serialized_values.copy()
-        if "date_field_id" in serialized_copy:
-            serialized_copy["date_field_id"] = id_mapping["database_fields"][
-                serialized_copy.pop("date_field_id")
+        if "start_date_field_id" in serialized_copy:
+            serialized_copy["start_date_field_id"] = id_mapping["database_fields"][
+                serialized_copy.pop("start_date_field_id")
             ]
 
         field_options = serialized_copy.pop("field_options")
@@ -671,7 +671,8 @@ class TimelineViewType(ViewType):
 
     def export_prepared_values(self, view: TimelineView) -> Dict[str, Any]:
         values = super().export_prepared_values(view)
-        values["date_field"] = view.date_field_id
+        values["start_date_field"] = view.start_date_field_id
+        values["end_date_field"] = view.end_date_field_id
         return values
 
     def get_visible_field_options_in_order(self, timeline_view: TimelineView):
@@ -699,10 +700,11 @@ class TimelineViewType(ViewType):
             fields = [f for f in fields if f.id in field_ids_to_check]
 
         for field in fields:
-            # If the `date_field_id` is set, we must always expose the field
+            # If the `start_date_field_id` is set, we must always expose the field
             # because the values are needed.
             if field.id in [
-                view.date_field_id,
+                view.start_date_field_id,
+                view.end_date_field_id,
             ]:
                 continue
 

@@ -26,8 +26,6 @@
 </template>
 
 <script>
-import { floor, ceil } from '@baserow/modules/core/utils/number'
-
 /**
  * This component will render custom scrollbars to a scrollable div. They will
  * automatically adjust when you resize the window and can be dragged.
@@ -41,7 +39,7 @@ export default {
      */
     vertical: {
       required: false,
-      type: String,
+      type: Function,
       default: null,
     },
     /**
@@ -50,7 +48,7 @@ export default {
      */
     horizontal: {
       required: false,
-      type: String,
+      type: Function,
       default: null,
     },
   },
@@ -72,23 +70,20 @@ export default {
 
     // Register the event when the window is resized because the size of the scrollbars
     // might need to updated.
-    this.$el.resizeEventListener = () => this.update()
-    window.addEventListener('resize', this.$el.resizeEventListener)
+    window.addEventListener('resize', this.update)
 
     // Register the mouseup event for when the user releases the mouse button. This is
     // needed for the dragging of the scrollbar handle.
-    this.$el.mouseUpEventListener = (event) => this.mouseUp(event)
-    window.addEventListener('mouseup', this.$el.mouseUpEventListener)
+    window.addEventListener('mouseup', this.mouseUp)
 
     // Register the mousemove event for when the user moves his mouse. This is needed
     // for the dragging of the scrollbar handle.
-    this.$el.mouseMoveEventListener = (event) => this.mouseMove(event)
-    window.addEventListener('mousemove', this.$el.mouseMoveEventListener)
+    window.addEventListener('mousemove', this.$el.mouseMove)
   },
   beforeDestroy() {
-    window.removeEventListener('resize', this.$el.resizeEventListener)
-    window.removeEventListener('mouseup', this.$el.mouseUpEventListener)
-    window.removeEventListener('mousemove', this.$el.mouseMoveEventListener)
+    window.removeEventListener('resize', this.update)
+    window.removeEventListener('mouseup', this.mouseUp)
+    window.removeEventListener('mousemove', this.mouseMove)
   },
   methods: {
     update() {
@@ -105,16 +100,19 @@ export default {
      * parent.
      */
     updateVertical() {
-      const element = this.$parent[this.vertical]()
+      const element = this.vertical()
       const show = element.scrollHeight > element.clientHeight
-      // @TODO if the client height is very high we have a minimum of 2%, but this needs
+      //  if the client height is very high we have a minimum of 2%, but this needs
       //  to be subtracted from the top position so that it fits. Same goes for the
       //  horizontal handler.
-      const height = Math.max(
-        floor((element.clientHeight / element.scrollHeight) * 100, 2),
-        2
-      )
-      const top = ceil((element.scrollTop / element.scrollHeight) * 100, 2)
+      const minHeight = 2
+      let height = (element.clientHeight / element.scrollHeight) * 100
+      let total = 100
+      if (height < minHeight) {
+        total = total - (minHeight - height)
+        height = minHeight
+      }
+      const top = (element.scrollTop / element.scrollHeight) * total
 
       this.verticalShow = show
       this.verticalHeight = height
@@ -126,13 +124,17 @@ export default {
      * parent.
      */
     updateHorizontal() {
-      const element = this.$parent[this.horizontal]()
+      const element = this.horizontal()
       const show = element.scrollWidth > element.clientWidth
-      const width = Math.max(
-        floor((element.clientWidth / element.scrollWidth) * 100, 2),
-        2
-      )
-      const left = ceil((element.scrollLeft / element.scrollWidth) * 100, 2)
+      const minWidth = 2
+      let width = (element.clientWidth / element.scrollWidth) * 100
+      let total = 100
+      if (width < minWidth) {
+        total = total - (minWidth - width)
+        width = minWidth
+      }
+      const left = (element.scrollLeft / element.scrollWidth) * total
+
       this.horizontalShow = show
       this.horizontalWidth = width
       this.horizontalLeft = left
@@ -164,7 +166,7 @@ export default {
     mouseMove(event) {
       if (this.dragging === 'vertical') {
         event.preventDefault()
-        const element = this.$parent[this.vertical]()
+        const element = this.vertical()
         const delta = event.clientY - this.mouseStart
         const pixel = element.scrollHeight / element.clientHeight
         const top = Math.ceil((this.elementStart + delta) * pixel)
@@ -175,7 +177,7 @@ export default {
 
       if (this.dragging === 'horizontal') {
         event.preventDefault()
-        const element = this.$parent[this.horizontal]()
+        const element = this.horizontal()
         const delta = event.clientX - this.mouseStart
         const pixel = element.scrollWidth / element.clientWidth
         const left = Math.ceil((this.elementStart + delta) * pixel)

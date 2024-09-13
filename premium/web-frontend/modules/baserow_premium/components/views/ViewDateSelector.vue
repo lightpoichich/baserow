@@ -1,15 +1,15 @@
 <template>
-  <div class="calendar-date-selector">
-    <a class="calendar-date-selector__prev" @click="selectPrevious">
+  <div class="view-date-selector">
+    <a class="view-date-selector__prev" @click="selectPrevious">
       <i class="iconoir-nav-arrow-left"></i>
     </a>
-    <a class="calendar-date-selector__next" @click="selectNext">
+    <a class="view-date-selector__next" @click="selectNext">
       <i class="iconoir-nav-arrow-right"></i>
     </a>
 
     <Button type="secondary" size="large" @click="selectCurrent">
-      {{ $t('calendarDateSelector.today') }}</Button
-    >
+      {{ $t('viewDateSelector.today') }}
+    </Button>
   </div>
 </template>
 
@@ -17,12 +17,8 @@
 import moment from '@baserow/modules/core/moment'
 
 export default {
-  name: 'CalendarDateSelector',
+  name: 'ViewDateSelector',
   props: {
-    currentDate: {
-      type: String,
-      required: true,
-    },
     selectedDate: {
       type: Object,
       required: true,
@@ -34,8 +30,7 @@ export default {
       this.$emit('date-selected', newSelectedDate)
     },
     selectCurrent() {
-      const newSelectedDate = moment(this.currentDate)
-      this.$emit('date-selected', newSelectedDate)
+      this.$emit('date-selected', moment())
     },
     selectNext() {
       const newSelectedDate = moment(this.selectedDate).add(1, 'month')

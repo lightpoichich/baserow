@@ -1,41 +1,27 @@
 {
   "premium": {
-      "user": {
-          "isStaff": "Is staff",
-          "isWorkspaceAdmin": "Is workspace admin",
-          "active": "Active",
-          "deactivated": "Deactivated"
-      },
-      "adminType": {
-          "dashboard": "Dashboard",
-          "users": "Users",
-          "workspaces": "Workspaces",
-          "licenses": "Licenses"
-      },
-      "viewType": {
-          "kanban": "Kanban",
-          "calendar": "Calendar",
-          "timeline": "Timeline"
-      },
-      "exporterType": {
-          "json": "Export to JSON",
-          "xml": "Export to XML"
-      },
-      "deactivated": "Available in premium version"
-  },
-  "adminType": {
-    "dashboard": "Dashboard",
-    "users": "Users",
-    "workspaces": "Workspaces",
-    "licenses": "Manage licenses"
-  },
-  "viewType": {
-    "kanban": "Kanban",
-    "calendar": "Calendar"
-  },
-  "exporterType": {
-    "json": "Export to JSON",
-    "xml": "Export to XML"
+    "user": {
+      "isStaff": "Is staff",
+      "isWorkspaceAdmin": "Is workspace admin",
+      "active": "Active",
+      "deactivated": "Deactivated"
+    },
+    "adminType": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "workspaces": "Workspaces",
+      "licenses": "Manage licenses"
+    },
+    "viewType": {
+      "kanban": "Kanban",
+      "timeline": "Timeline",
+      "calendar": "Calendar"
+    },
+    "exporterType": {
+      "json": "Export to JSON",
+      "xml": "Export to XML"
+    },
+    "deactivated": "Available in premium version"
   },
   "premiumModal": {
     "title": "Upgrade to use the {name}",
@@ -222,7 +208,7 @@
     "displayedBy": "Displayed by “{fieldName}” field",
     "labels": "Labels"
   },
-  "calendarDateSelector": {
+  "viewDateSelector": {
     "today": "Today"
   },
   "calendarMonthDay": {

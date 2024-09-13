@@ -84,6 +84,7 @@ export default (context) => {
   store.registerModule('row_comments', rowCommentsStore)
   store.registerModule('page/view/kanban', kanbanStore)
   store.registerModule('page/view/calendar', calendarStore)
+  store.registerModule('page/view/timeline', timelineStore)
   store.registerModule('template/view/kanban', kanbanStore)
   store.registerModule('template/view/calendar', calendarStore)
   store.registerModule('template/view/timeline', timelineStore)

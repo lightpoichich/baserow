@@ -92,7 +92,12 @@ export default {
 
         this.clickTimestamp = timestamp
       }
-      this.addEventListenerWithAutoRemove(this.$el, 'click', clickEventListener)
+      // this.addEventListenerWithAutoRemove(this.$el, 'click', clickEventListener)
+      this.addEventListenerWithAutoRemove(
+        this.$el,
+        'dblclick',
+        this.doubleClick
+      )
 
       // Register a body click event listener so that we can detect if a user has
       // clicked outside the field. If that happens we want to unselect the field and

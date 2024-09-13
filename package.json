@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "vue3-perfect-scrollbar": "^2.0.0",
+    "vue3-perfect-scrollbar-z": "^1.0.0"
+  }
+}

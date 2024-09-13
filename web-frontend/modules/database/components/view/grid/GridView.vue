@@ -6,8 +6,8 @@
   >
     <Scrollbars
       ref="scrollbars"
-      horizontal="getHorizontalScrollbarElement"
-      vertical="getVerticalScrollbarElement"
+      :horizontal="getHorizontalScrollbarElement"
+      :vertical="getVerticalScrollbarElement"
       :style="{ left: leftWidth + 'px' }"
       @vertical="verticalScroll"
       @horizontal="horizontalScroll"

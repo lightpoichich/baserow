@@ -536,10 +536,8 @@ export class TimelineViewType extends PremiumViewType {
   }
 
   async fetch({ store }, database, view, fields, storePrefix = '') {
-    await store.dispatch(storePrefix + 'view/timeline/resetAndFetchInitial', {
-      timelineId: view.id,
-      startDateFieldId: view.start_date_field,
-      endDateFieldId: view.end_date_field,
+    await store.dispatch(storePrefix + 'view/timeline/fetchInitial', {
+      viewId: view.id,
       fields,
     })
   }
@@ -555,23 +553,23 @@ export class TimelineViewType extends PremiumViewType {
   ) {
     // We need to prevent multiple requests as updates and deletes regarding
     // the date field are handled inside afterFieldUpdated and afterFieldDeleted
-    const dateFieldId =
-      store.getters[storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'](
-        fields
-      )
-    if (
-      ['field_deleted', 'field_updated'].includes(sourceEvent?.type) &&
-      sourceEvent?.data?.field_id === dateFieldId
-    ) {
-      return
-    }
-    await store.dispatch(storePrefix + 'view/timeline/refreshAndFetchInitial', {
-      timelineId: view.id,
-      startDateFieldId: view.start_date_field,
-      endDateFieldId: view.end_date_field,
-      fields,
-      includeFieldOptions,
-    })
+    // const dateFieldId =
+    //   store.getters[storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'](
+    //     fields
+    //   )
+    // if (
+    //   ['field_deleted', 'field_updated'].includes(sourceEvent?.type) &&
+    //   sourceEvent?.data?.field_id === dateFieldId
+    // ) {
+    //   return
+    // }
+    // await store.dispatch(storePrefix + 'view/timeline/refreshAndFetchInitial', {
+    //   timelineId: view.id,
+    //   startDateFieldId: view.start_date_field,
+    //   endDateFieldId: view.end_date_field,
+    //   fields,
+    //   includeFieldOptions,
+    // })
   }
 
   async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
@@ -663,47 +661,47 @@ export class TimelineViewType extends PremiumViewType {
   }
 
   async afterFieldUpdated(context, field, oldField, fieldType, storePrefix) {
-    const fields = [field]
-    const dateFieldId =
-      context.rootGetters[
-        storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'
-      ](fields)
+    // const fields = [field]
+    // const dateFieldId =
+    //   context.rootGetters[
+    //     storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'
+    //   ](fields)
 
-    if (dateFieldId === field.id) {
-      const type = this.app.$registry.get('field', field.type)
-      if (!type.canRepresentDate(field)) {
-        this._setFieldToNull(context, field, 'date_field')
-        await context.dispatch(
-          storePrefix + 'view/timeline/reset',
-          {},
-          { root: true }
-        )
-      } else {
-        await context.dispatch(
-          storePrefix + 'view/timeline/fetchInitial',
-          {
-            includeFieldOptions: false,
-            fields,
-          },
-          { root: true }
-        )
-      }
-    }
+    // if (dateFieldId === field.id) {
+    //   const type = this.app.$registry.get('field', field.type)
+    //   if (!type.canRepresentDate(field)) {
+    //     this._setFieldToNull(context, field, 'date_field')
+    //     await context.dispatch(
+    //       storePrefix + 'view/timeline/reset',
+    //       {},
+    //       { root: true }
+    //     )
+    //   } else {
+    //     await context.dispatch(
+    //       storePrefix + 'view/timeline/fetchInitial',
+    //       {
+    //         includeFieldOptions: false,
+    //         fields,
+    //       },
+    //       { root: true }
+    //     )
+    //   }
+    // }
   }
 
   async afterFieldDeleted(context, field, fieldType, storePrefix = '') {
-    const fields = [field]
-    this._setFieldToNull(context, field, 'start_date_field')
-    const startDateFieldId =
-      context.rootGetters[
-        storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'
-      ](fields)
-    if (dateFieldId === field.id) {
-      await context.dispatch(
-        storePrefix + 'view/timeline/reset',
-        {},
-        { root: true }
-      )
-    }
+    // const fields = [field]
+    // this._setFieldToNull(context, field, 'start_date_field')
+    // const startDateFieldId =
+    //   context.rootGetters[
+    //     storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'
+    //   ](fields)
+    // if (dateFieldId === field.id) {
+    //   await context.dispatch(
+    //     storePrefix + 'view/timeline/reset',
+    //     {},
+    //     { root: true }
+    //   )
+    // }
   }
 }

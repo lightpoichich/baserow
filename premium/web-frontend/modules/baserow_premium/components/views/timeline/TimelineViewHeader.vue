@@ -11,16 +11,7 @@
           {{ selectDateFieldLinkText }}
         </span>
       </a>
-      <SelectDateFieldModal
-        ref="selectDateFieldModal"
-        :view="view"
-        :table="table"
-        :fields="fields"
-        :database="database"
-        :date-field-id="dateFieldId(fields)"
-        @refresh="$emit('refresh', $event)"
-      >
-      </SelectDateFieldModal>
+     
     </li>
     <li v-if="dateFieldId(fields) != null" class="header__filter-item">
       <a
@@ -151,17 +142,17 @@ export default {
       )
     },
   },
-  watch: {
-    fields() {
-      const df = this.getDateField(this.fields)
-      if (
-        !df ||
-        this.$registry.get('field', df.type).canRepresentDate(df) === false
-      ) {
-        this.showChooseDateFieldModal()
-      }
-    },
-  },
+  // watch: {
+  //   fields() {
+  //     const df = this.getDateField(this.fields)
+  //     if (
+  //       !df ||
+  //       this.$registry.get('field', df.type).canRepresentDate(df) === false
+  //     ) {
+  //       this.showChooseDateFieldModal()
+  //     }
+  //   },
+  // },
   beforeCreate() {
     this.$options.computed = {
       ...(this.$options.computed || {}),
@@ -180,9 +171,9 @@ export default {
     }
   },
   mounted() {
-    if (this.dateFieldId(this.fields) == null) {
-      this.showChooseDateFieldModal()
-    }
+    // if (this.dateFieldId(this.fields) == null) {
+    //   this.showChooseDateFieldModal()
+    // }
   },
   methods: {
     showChooseDateFieldModal() {

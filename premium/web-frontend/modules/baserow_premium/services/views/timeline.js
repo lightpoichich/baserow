@@ -3,13 +3,11 @@ import addPublicAuthTokenHeader from '@baserow/modules/database/utils/publicView
 export default (client) => {
   return {
     fetchRows({
-      timelineId,
+      viewId,
       limit = 100,
       offset = null,
       includeFieldOptions = false,
       includeRowMetadata = true,
-      fromTimestamp = null,
-      toTimestamp = null,
       userTimeZone = null,
       publicUrl = false,
       publicAuthToken = null,
@@ -36,9 +34,6 @@ export default (client) => {
         params.append('include', include.join(','))
       }
 
-      params.append('from_timestamp', fromTimestamp.toISOString())
-      params.append('to_timestamp', toTimestamp.toISOString())
-
       if (userTimeZone) {
         params.append('user_timezone', userTimeZone)
       }
@@ -57,7 +52,7 @@ export default (client) => {
 
       const url = publicUrl ? 'public/rows/' : ''
 
-      return client.get(`/database/views/timeline/${timelineId}/${url}`, config)
+      return client.get(`/database/views/timeline/${viewId}/${url}`, config)
     },
   }
 }

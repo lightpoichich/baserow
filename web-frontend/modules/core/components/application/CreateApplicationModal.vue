@@ -32,8 +32,8 @@
       <template v-if="importType === 'airtable'">
         <Button
           v-if="!jobHasSucceeded"
-          :loading="loading"
-          :disabled="loading"
+          :loading="jobIsRunning"
+          :disabled="jobIsRunning"
           @click="$refs.applicationForm.submit()"
         >
           {{ $t('importFromAirtable.importButtonLabel') }}

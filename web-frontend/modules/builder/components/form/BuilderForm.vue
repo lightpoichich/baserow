@@ -1,5 +1,6 @@
 <template>
   <ApplicationForm
+    ref="applicationForm"
     :default-values="{ name: defaultName }"
     @submitted="$emit('submitted', $event)"
   >
@@ -19,6 +20,11 @@ export default {
     loading: {
       type: Boolean,
       required: true,
+    },
+  },
+  methods: {
+    submit() {
+      this.$refs.applicationForm.submit()
     },
   },
 }

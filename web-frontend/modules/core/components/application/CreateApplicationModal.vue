@@ -22,6 +22,7 @@
         @submitted="submitted"
         @job-done="handleJobDone($event)"
         @job-updated="handleJobUpdated($event)"
+        @job-failed="handleJobFailed($event)"
         @import-type-changed="importType = $event"
       >
       </component>
@@ -37,9 +38,9 @@
       <template v-if="importType === 'airtable'">
         <Button
           v-if="!jobHasSucceeded"
-          :loading="jobIsRunning"
-          :disabled="jobIsRunning"
-          @click="$refs.applicationForm.submit()"
+          :loading="loading"
+          :disabled="loading"
+          @click="handleImportFromAirtableBtn"
         >
           {{ $t('importFromAirtable.importButtonLabel') }}
         </Button>
@@ -135,11 +136,16 @@ export default {
         this.jobHasSucceeded = false
       }
     },
+    handleImportFromAirtableBtn() {
+      this.loading = true
+      this.$refs.applicationForm.submit()
+    },
     handleJobDone(event) {
       this.jobStatus = event.state
       this.jobProgressPercentage = event.progress_percentage
       this.jobIsRunning = false
       this.jobHasSucceeded = true
+      this.loading = false
       this.jobDatabaseId = event.databaseId
     },
     handleJobUpdated(event) {
@@ -154,6 +160,12 @@ export default {
       this.jobStatus = ''
       this.jobProgressPercentage = 0
       this.jobDatabaseId = null
+    },
+    handleJobFailed(event) {
+      this.jobStatus = event.state
+      this.jobIsRunning = false
+      this.loading = false
+      this.jobHasSucceeded = false
     },
   },
 }

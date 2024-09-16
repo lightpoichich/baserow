@@ -137,6 +137,9 @@ export default {
         this.job.human_readable_error
       )
       this.stopPollAndHandleError(error)
+      this.$emit('job-failed', {
+        state: this.jobHumanReadableState,
+      })
     },
     onJobPollingError(error) {
       this.stopPollAndHandleError(error)

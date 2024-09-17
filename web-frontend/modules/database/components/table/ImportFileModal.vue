@@ -1,70 +1,59 @@
 <template>
-  <Modal
+  <ModalV2
     :right-sidebar="!isTableCreation"
-    :right-sidebar-scrollable="true"
-    :close-button="false"
+    :close-button="!jobIsInProgress"
+    :can-close="!jobIsInProgress"
     @show=";[(importer = ''), reset()]"
     @hide="stopPollIfRunning()"
   >
+    <template #header-content>
+      <h2>
+        {{
+          isTableCreation
+            ? $t('importFileModal.title')
+            : $t('importFileModal.additionalImportTitle', {
+                table: table.name,
+              })
+        }}
+      </h2>
+    </template>
     <template #content>
-      <div class="import-modal__header">
-        <h2 class="import-modal__title">
-          {{
-            isTableCreation
-              ? $t('importFileModal.title')
-              : $t('importFileModal.additionalImportTitle', {
-                  table: table.name,
-                })
-          }}
-        </h2>
-        <div class="modal__actions">
-          <a v-if="isTableCreation" class="modal__close" @click="hide()">
-            <i class="iconoir-cancel"></i>
-          </a>
-        </div>
-      </div>
-
-      <div class="control margin-bottom-2">
-        <FormGroup
-          :label="$t('importFileModal.importLabel')"
-          small-label
-          required
-        >
-          <ul class="choice-items margin-top-1">
-            <li v-if="isTableCreation">
-              <a
-                class="choice-items__link"
-                :class="{ active: importer === '' }"
-                @click=";[(importer = ''), reset()]"
-              >
-                <i class="choice-items__icon iconoir-copy"></i>
-                <span>{{ $t('importFileModal.newTable') }}</span>
-                <i
-                  v-if="importer === ''"
-                  class="choice-items__icon-active iconoir-check-circle"
-                ></i>
-              </a>
-            </li>
-            <li v-for="importerType in importerTypes" :key="importerType.type">
-              <a
-                class="choice-items__link"
-                :class="{ active: importer === importerType.type }"
-                @click=";[(importer = importerType.type), reset()]"
-              >
-                <i
-                  class="choice-items__icon"
-                  :class="importerType.iconClass"
-                ></i>
-                <span> {{ importerType.getName() }}</span>
-                <i
-                  v-if="importer === importerType.type"
-                  class="choice-items__icon-active iconoir-check-circle"
-                ></i>
-              </a>
-            </li>
-          </ul>
-        </FormGroup>
-      </div>
+      <FormGroup
+        :label="$t('importFileModal.importLabel')"
+        small-label
+        required
+      >
+        <ul class="choice-items margin-top-1">
+          <li v-if="isTableCreation">
+            <a
+              class="choice-items__link"
+              :class="{ active: importer === '' }"
+              @click=";[(importer = ''), reset()]"
+            >
+              <i class="choice-items__icon iconoir-copy"></i>
+              <span>{{ $t('importFileModal.newTable') }}</span>
+              <i
+                v-if="importer === ''"
+                class="choice-items__icon-active iconoir-check-circle"
+              ></i>
+            </a>
+          </li>
+          <li v-for="importerType in importerTypes" :key="importerType.type">
+            <a
+              class="choice-items__link"
+              :class="{ active: importer === importerType.type }"
+              @click=";[(importer = importerType.type), reset()]"
+            >
+              <i class="choice-items__icon" :class="importerType.iconClass"></i>
+              <span> {{ importerType.getName() }}</span>
+              <i
+                v-if="importer === importerType.type"
+                class="choice-items__icon-active iconoir-check-circle"
+              ></i>
+            </a>
+          </li>
+        </ul>
+      </FormGroup>
 
       <TableForm
         ref="tableForm"
@@ -119,52 +108,51 @@
           />
         </Tab>
       </Tabs>
-
-      <div
-        v-if="!jobHasSucceeded || errorReport.length === 0"
-        class="modal-progress__actions"
-      >
-        <ProgressBar
-          v-if="importInProgress && showProgressBar"
-          :value="progressPercentage"
-          :status="humanReadableState"
-        />
-        <div class="align-right">
-          <Button
-            type="primary"
-            size="large"
-            :loading="importInProgress || (jobHasSucceeded && !isTableCreated)"
-            :disabled="
-              importInProgress ||
-              !canBeSubmitted ||
-              (jobHasSucceeded && !isTableCreated)
-            "
-            @click="$refs.tableForm.submit()"
-          >
-            {{
-              isTableCreation
-                ? $t('importFileModal.addButton')
-                : $t('importFileModal.importButton')
-            }}
-          </Button>
-        </div>
-      </div>
-      <div v-else class="align-right">
-        <Button
-          type="primary"
-          size="large"
-          :loading="!isTableCreated"
-          @click="openTable()"
-        >
-          {{
-            isTableCreation
-              ? $t('importFileModal.openCreatedTable')
-              : $t('importFileModal.showTable')
-          }}
-        </Button>
-      </div>
     </template>
-    <template v-if="!isTableCreation" #sidebar>
+
+    <template
+      v-if="!jobHasSucceeded || errorReport.length === 0"
+      #footer-content
+    >
+      <ProgressBar
+        v-if="importInProgress && showProgressBar"
+        :value="progressPercentage"
+        :status="humanReadableState"
+      />
+      <Button
+        type="primary"
+        size="large"
+        :loading="jobIsInProgress"
+        :disabled="
+          importInProgress ||
+          !canBeSubmitted ||
+          (jobHasSucceeded && !isTableCreated)
+        "
+        @click="$refs.tableForm.submit()"
+      >
+        {{
+          isTableCreation
+            ? $t('importFileModal.addButton')
+            : $t('importFileModal.importButton')
+        }}
+      </Button>
+    </template>
+    <template v-else #footer-content>
+      <Button
+        type="primary"
+        size="large"
+        :loading="!isTableCreated"
+        @click="openTable()"
+      >
+        {{
+          isTableCreation
+            ? $t('importFileModal.openCreatedTable')
+            : $t('importFileModal.showTable')
+        }}
+      </Button>
+    </template>
+
+    <template v-if="!isTableCreation" #sidebar-content>
       <div class="import-modal__field-mapping">
         <div v-if="header.length > 0" class="import-modal__field-mapping-body">
           <h3>{{ $t('importFileModal.fieldMappingTitle') }}</h3>
@@ -200,18 +188,13 @@
           </div>
         </div>
       </div>
-      <div class="modal__actions">
-        <a class="modal__close" @click="hide()">
-          <i class="iconoir-cancel"></i>
-        </a>
-      </div>
     </template>
-  </Modal>
+  </ModalV2>
 </template>
 
 <script>
 import { clone } from '@baserow/modules/core/utils/object'
-import modal from '@baserow/modules/core/mixins/modal'
+import modalv2 from '@baserow/modules/core/mixins/modalv2'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import TableService from '@baserow/modules/database/services/table'
@@ -229,7 +212,7 @@ import TableForm from './TableForm'
 export default {
   name: 'ImportFileModal',
   components: { TableForm, SimpleGrid },
-  mixins: [modal, error, jobProgress],
+  mixins: [modalv2, error, jobProgress],
   props: {
     database: {
       type: Object,
@@ -425,6 +408,11 @@ export default {
       } else {
         return []
       }
+    },
+    jobIsInProgress() {
+      return (
+        this.importInProgress || (this.jobHasSucceeded && !this.isTableCreated)
+      )
     },
   },
   beforeDestroy() {

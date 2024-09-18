@@ -20,14 +20,15 @@ export default {
   data() {
     return {
       values: {
-        structure_only: false,
+        only_structure: false,
+        application_ids: [],
       },
     }
   },
   validations() {
     return {
       values: {
-        structure_only: {
+        only_structure: {
           required,
         },
       },

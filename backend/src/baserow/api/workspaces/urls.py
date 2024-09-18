@@ -10,6 +10,7 @@ from .views import (
     WorkspacePermissionsView,
     WorkspacesView,
     WorkspaceView,
+    AsyncExportWorkspaceApplicationsView,
 )
 
 app_name = "baserow.api.workspaces"
@@ -37,5 +38,10 @@ urlpatterns = [
         r"create-initial-workspace/$",
         CreateInitialWorkspaceView.as_view(),
         name="create_initial_workspace",
+    ),
+    re_path(
+        r"(?P<workspace_id>[0-9]+)/export/async/$",
+        AsyncExportWorkspaceApplicationsView.as_view(),
+        name="export_workspace_async",
     ),
 ]

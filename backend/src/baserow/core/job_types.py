@@ -234,7 +234,7 @@ class ExportApplicationsJobType(JobType):
                 "the workspace will be exported."
             ),
         ),
-        "structure_only": serializers.BooleanField(
+        "only_structure": serializers.BooleanField(
             required=False,
             default=False,
             help_text=(

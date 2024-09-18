@@ -1,7 +1,10 @@
+from typing import Dict
+
 from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,6 +14,8 @@ from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
     ERROR_USER_NOT_IN_GROUP,
+    ERROR_PERMISSION_DENIED,
+    ERROR_FEATURE_DISABLED,
 )
 from baserow.api.schemas import (
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
@@ -34,6 +39,9 @@ from baserow.core.exceptions import (
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
     WorkspaceUserIsLastAdmin,
+    ApplicationDoesNotExist,
+    FeatureDisabled,
+    PermissionDenied,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.notifications.handler import NotificationHandler
@@ -47,6 +55,18 @@ from .serializers import (
     WorkspaceSerializer,
     get_generative_ai_settings_serializer,
 )
+from ..applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
+from ..jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from ..jobs.serializers import JobSerializer
+from ...contrib.database.api.export.views import (
+    ExportApplicationsJobResponseSerializer,
+    ExportApplicationsJobRequestSerializer,
+)
+from ...core.feature_flag import is_feature_enabled, FeatureFlags
+from ...core.job_types import ExportApplicationsJobType
+from ...core.jobs.exceptions import MaxJobCountExceeded
+from ...core.jobs.handler import JobHandler
+from ...core.jobs.registries import job_type_registry
 
 
 class WorkspacesView(APIView):
@@ -442,3 +462,75 @@ class CreateInitialWorkspaceView(APIView):
             CreateInitialWorkspaceActionType
         ).do(request.user)
         return Response(WorkspaceUserWorkspaceSerializer(workspace_user).data)
+
+
+class AsyncExportWorkspaceApplicationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="workspace_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the workspace that must be exported.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Workspace"],
+        operation_id="export_workspace_applications_async",
+        description=(
+            "Export workspace or set of applications application if the authorized user is "
+            "in the application's workspace. "
+            "All the related children are also going to be exported. For example "
+            "in case of a database application all the underlying tables, fields, "
+            "views and rows are going to be duplicated."
+            "Roles are not part of the export."
+        ),
+        request=None,
+        responses={
+            202: ExportApplicationsJobResponseSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_APPLICATION_NOT_IN_GROUP",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                    "ERROR_APPLICATION_DOES_NOT_EXIST",
+                    "ERROR_PERMISSION_DENIED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+            PermissionDenied: ERROR_PERMISSION_DENIED,
+            FeatureDisabled: ERROR_FEATURE_DISABLED,
+        }
+    )
+    @validate_body(ExportApplicationsJobRequestSerializer, return_validated=True)
+    def post(self, request, data: Dict, workspace_id: int) -> Response:
+        """
+        Exports the listed applications of a workspace to a ZIP file containing the
+        applications' data. If the list of applications is empty, all applications of
+        the workspace are exported.
+        """
+
+        if not is_feature_enabled(FeatureFlags.export_workspace):
+            raise FeatureDisabled("Workspace export is not available")
+
+        job = JobHandler().create_and_start_job(
+            request.user,
+            ExportApplicationsJobType.type,
+            workspace_id=workspace_id,
+            application_ids=data.get("application_ids") or [],
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)

@@ -58,7 +58,7 @@
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import SnapshotListItem from '@baserow/modules/core/components/snapshots/SnapshotListItem'
-import ExportService from '@baserow/modules/database/services/export'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import ExportWorkspaceForm from '@baserow/modules/core/components/export/ExportWorkspaceForm'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -104,10 +104,9 @@ export default {
       this.loading = true
       this.hideError()
       try {
-        const { data } = await ExportService(this.$client).exportWorkspace(
-          this.workspace.id,
-          values
-        )
+        const { data } = await WorkspaceService(
+          this.$client
+        ).exportApplications(this.workspace.id, values)
         this.startJobPoller(data)
       } catch (error) {
         this.loading = false

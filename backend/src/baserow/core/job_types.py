@@ -222,7 +222,6 @@ class ExportApplicationsJobType(JobType):
     job_exceptions_map = {PermissionDenied: ERROR_PERMISSION_DENIED}
 
     request_serializer_field_names = ["workspace_id", "application_ids"]
-    # FIXME: It doesn't accept empty value, empty list
     request_serializer_field_overrides = {
         "application_ids": serializers.ListField(
             allow_null=True,
@@ -256,11 +255,11 @@ class ExportApplicationsJobType(JobType):
 
         return empty_context()
 
-    def check_permissions(self, user, workspace_id, application_ids):
+    def get_workspace_and_applications(self, user, workspace_id, application_ids):
         handler = CoreHandler()
         workspace = handler.get_workspace(workspace_id=workspace_id)
 
-        CoreHandler().check_permissions(
+        handler.check_permissions(
             user,
             ReadWorkspaceOperationType.type,
             workspace=workspace,
@@ -286,28 +285,33 @@ class ExportApplicationsJobType(JobType):
                 "not have access to them."
             )
 
+        return workspace, applications
+
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
         workspace_id = values.get("workspace_id")
         application_ids = values.get("application_ids")
-        self.check_permissions(
+
+        self.get_workspace_and_applications(
             user=user, workspace_id=workspace_id, application_ids=application_ids
         )
 
         return {
             "workspace_id": workspace_id,
-            "application_ids": ",".join(application_ids) if application_ids else "",
+            "application_ids": ",".join(map(str, application_ids)) if application_ids else "",
         }
 
     def run(self, job: ExportApplicationsJob, progress: Progress) -> str:
-        application_ids = None
-        if job.application_ids:
-            application_ids = [int(app_id) for app_id in job.application_ids.split(",")]
-        self.check_permissions(
+
+        application_ids = job.application_ids
+        if application_ids:
+            application_ids = application_ids.split(",")
+
+        workspace, applications = self.get_workspace_and_applications(
             user=job.user,
             workspace_id=job.workspace_id,
-            application_ids=job.application_ids,
+            application_ids=application_ids,
         )
 
         progress_builder = progress.create_child_builder(
@@ -318,12 +322,11 @@ class ExportApplicationsJobType(JobType):
             ExportApplicationsActionType
         ).do(
             job.user,
-            workspace_id=job.workspace_id,
-            application_ids=application_ids,
+            workspace=workspace,
+            applications=applications,
             progress_builder=progress_builder,
         )
 
-        # update the job with the new duplicated application
         job.exported_file_name = exported_file_name
         job.save(update_fields=("exported_file_name",))
 

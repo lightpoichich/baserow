@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
+from baserow.contrib.database.import_export_handler import ImportExportHandler
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
@@ -1162,8 +1163,8 @@ class ExportApplicationsActionType(ActionType):
     def do(
         cls,
         user: AbstractUser,
-        workspace_id: int,
-        application_ids: Optional[List[int]] = None,
+        workspace: Workspace,
+        applications: Optional[List[Application]] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> str:
         """
@@ -1173,8 +1174,8 @@ class ExportApplicationsActionType(ActionType):
         This action is readonly and is not undoable.
 
         :param user: The user on whose behalf the application is duplicated.
-        :param workspace_id: id of workspace to be exported.
-        :param application_ids: List of application ids to be exported, if omitted then
+        :param workspace: Workspace instance to be exported.
+        :param applications: List of application instances to be exported, if omitted then
             all applications from workspace that user has access to, will be exported.
         :param progress_builder: A progress builder instance that can be used to
             track the progress of the duplication.
@@ -1182,22 +1183,21 @@ class ExportApplicationsActionType(ActionType):
         :rtype: str
         """
 
-        workspace = CoreHandler().get_workspace(workspace_id=workspace_id)
-
         cli_import_export_config = ImportExportConfig(
             include_permission_data=False, reduce_disk_space_usage=False
         )
 
-        file_name = CoreHandler().export_workspace_applications_single_file(
+        file_name = ImportExportHandler().export_workspace_applications(
             workspace,
             import_export_config=cli_import_export_config,
+            applications=applications,
             progress_builder=progress_builder,
         )
 
         params = cls.Params(
             workspace_id=workspace.id,
             workspace_name=workspace.name,
-            application_ids=application_ids,
+            application_ids=[application.id for application in applications],
             application_names="",
         )
 

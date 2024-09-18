@@ -6,6 +6,6 @@
 
 <script>
 export default {
-  name: 'SnapshotModalWarning',
+  name: 'ExportWorkspaceModalWarning',
 }
 </script>

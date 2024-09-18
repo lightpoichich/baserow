@@ -1163,7 +1163,7 @@ class ExportApplicationsActionType(ActionType):
         cls,
         user: AbstractUser,
         workspace_id: int,
-        application_ids: List[int],
+        application_ids: Optional[List[int]] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> str:
         """

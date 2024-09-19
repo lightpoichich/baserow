@@ -20,7 +20,9 @@ tracer = trace.get_tracer(__name__)
 
 
 class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
-    def export_application(self, app, import_export_config, files_zip, storage):
+    def export_application(
+        self, app, import_export_config, files_zip, storage, progress
+    ):
         application = app.specific
         application_type = application_type_registry.get_by_model(application)
 
@@ -28,6 +30,7 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
             exported_application = application_type.export_serialized(
                 application, import_export_config, files_zip, storage
             )
+        progress.increment()
         return exported_application
 
     def export_multiple_applications(
@@ -37,11 +40,9 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
 
         for app in applications:
             exported_application = self.export_application(
-                app, import_export_config, files_zip, storage
+                app, import_export_config, files_zip, storage, progress
             )
             exported_applications.append(exported_application)
-            # Fixme: fix progressbar increment
-            progress.increment(by=1)
         return exported_applications
 
     def export_json_data(self, file_name, exported_applications, files_zip, storage):
@@ -89,14 +90,12 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
             storage = default_storage
 
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+        export_app_progress = progress.create_child(80, len(applications) or 1)
 
         zip_file_name = f"workspace_{workspace.id}_{uuid.uuid4()}.zip"
         json_file_name = f"data/workspace_export.json"
 
         export_path = join(settings.EXPORT_FILES_DIRECTORY, zip_file_name)
-
-        app_progress_step = int(80 / (len(applications) or 1))
-        last_progress_step = 100 - app_progress_step * len(applications)
 
         with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:
             with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
@@ -105,10 +104,10 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
                     import_export_config,
                     files_zip,
                     storage,
-                    progress,
+                    export_app_progress,
                 )
                 self.export_json_data(
                     json_file_name, exported_applications, files_zip, storage
                 )
-                progress.increment(by=last_progress_step)
+                progress.increment(by=20)
         return zip_file_name

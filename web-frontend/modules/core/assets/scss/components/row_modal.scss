@@ -17,6 +17,10 @@
   margin-bottom: 20px;
   padding: 0;
   position: relative;
+
+  .dropdown__items {
+    z-index: 2;
+  }
 }
 
 .row-modal__field-item-icon {

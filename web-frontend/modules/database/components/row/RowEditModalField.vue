@@ -5,7 +5,7 @@
         :class="{ 'row-modal__field-item-handle': sortable }"
         data-field-handle
       ></a>
-      <i :class="field._.type.iconClass"></i>
+      <i class="row-modal__field-item-icon" :class="field._.type.iconClass"></i>
       {{ field.name }}
       <span v-if="field.description" class="margin-left-1">
         <HelpIcon

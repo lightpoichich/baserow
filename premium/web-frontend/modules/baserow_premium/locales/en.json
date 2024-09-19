@@ -30,8 +30,8 @@
   },
   "rowCommentSidebar": {
     "onlyPremium": "Row comments are available in the premium version.",
-    "readOnlyNoComment": "No comments for this row.",
-    "noComment": "No comments for this row yet. Use the form below to add a comment.",
+    "noCommentsYet": "No comments yet",
+    "noComment": "Use the form below to start a conversation.",
     "comment": "Comment",
     "more": "More information",
     "name": "Comments"

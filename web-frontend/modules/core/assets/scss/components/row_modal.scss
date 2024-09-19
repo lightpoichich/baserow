@@ -16,6 +16,11 @@
 .row-modal__field-item {
   margin-bottom: 20px;
   padding: 0;
+  position: relative;
+}
+
+.row-modal__field-item-icon {
+  color: $palette-neutral-600;
 }
 
 .row-modal__field-item-handle {
@@ -84,4 +89,11 @@
 
 .row-modal__add-field-icon {
   font-size: 20px;
+}
+
+.row-modal__choose-button {
+  position: absolute;
+  right: 0;
+  top: -4px;
+  display: block;
 }

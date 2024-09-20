@@ -1,7 +1,11 @@
 <template>
   <div class="control__elements">
     <span v-if="!readOnly" ref="dropdownLink" class="row-modal__choose-button">
-      <ButtonText icon="iconoir-plus" @click.prevent="toggleDropdown()">
+      <ButtonText
+        type="secondary"
+        icon="iconoir-plus"
+        @click.prevent="toggleDropdown()"
+      >
         {{ $t('rowEditFieldMultipleCollaborators.addCollaborator') }}
       </ButtonText></span
     >

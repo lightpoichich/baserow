@@ -1,7 +1,11 @@
 <template>
   <div class="control__elements">
     <span v-if="!readOnly" class="row-modal__choose-button">
-      <ButtonText icon="iconoir-plus" @click.prevent="$refs.selectModal.show()">
+      <ButtonText
+        type="secondary"
+        icon="iconoir-plus"
+        @click.prevent="$refs.selectModal.show()"
+      >
         {{ $t('rowEditFieldLinkRow.addLink') }}
       </ButtonText>
     </span>

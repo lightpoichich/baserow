@@ -255,6 +255,7 @@ def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
         user_source=user_source,
     )
     fake_request.user = user_source_user
+    fake_request.GET.get.return_value = None
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
     # To ensure all rows are returned

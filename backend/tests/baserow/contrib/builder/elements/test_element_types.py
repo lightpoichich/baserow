@@ -633,6 +633,7 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
         user_source=user_source,
     )
     fake_request.user = user_source_user
+    fake_request.GET.get.return_value = None
     dispatch_context = BuilderDispatchContext(fake_request, page, offset=0, count=20)
 
     with pytest.raises(FormDataProviderChunkInvalidException):
@@ -1261,6 +1262,7 @@ def test_choice_element_integer_option_values(data_fixture):
         user_source=user_source,
     )
     fake_request.user = user_source_user
+    fake_request.GET.get.return_value = None
     dispatch_context = BuilderDispatchContext(fake_request, page, offset=0, count=20)
 
     for value in expected_choices:

@@ -29,7 +29,6 @@
     "viewPricing": "View pricing"
   },
   "rowCommentSidebar": {
-    "onlyPremium": "Row comments are available in the premium version.",
     "noCommentsYet": "No comments yet",
     "noComment": "Use the form below to start a conversation.",
     "comment": "Comment",

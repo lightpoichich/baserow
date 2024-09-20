@@ -3,23 +3,26 @@
     <template v-if="!hasPremiumFeaturesEnabled">
       <div class="row-comments">
         <div class="row-comments__empty">
-          <i class="row-comments__empty-icon iconoir-multi-bubble"></i>
-          <div class="row-comments__empty-text">
-            {{ $t('rowCommentSidebar.onlyPremium') }}
-          </div>
+          <h4>
+            {{ $t('rowCommentSidebar.upgradeTitle') }}
+          </h4>
+          <p>
+            {{ $t('rowCommentSidebar.upgradeText') }}
+          </p>
           <Button
+            icon="baserow-icon-lock-open"
             type="primary"
-            icon="iconoir-no-lock"
             @click="$refs.premiumModal.show()"
           >
-            {{ $t('rowCommentSidebar.more') }}
+            {{ $t('rowCommentSidebar.upgradeButton') }}
           </Button>
+
+          <PremiumModal
+            ref="premiumModal"
+            :name="$t('rowCommentSidebar.name')"
+            :workspace="workspace"
+          ></PremiumModal>
         </div>
-        <PremiumModal
-          ref="premiumModal"
-          :name="$t('rowCommentSidebar.name')"
-          :workspace="workspace"
-        ></PremiumModal>
       </div>
     </template>
     <template v-else>

@@ -693,7 +693,6 @@ export default {
       }
     },
     duplicateSelectedRow(selectedRow) {
-      console.log(selectedRow)
       event.preventFieldCellUnselect = true
       this.addRowAfter(selectedRow, selectedRow)
       this.$refs.rowContext.hide()
@@ -944,7 +943,6 @@ export default {
       this.addRow(nextRow, values)
     },
     async deleteRow(row) {
-      console.log('delete row', row)
       try {
         this.$refs.rowContext.hide()
         // We need a small helper function that calculates the current scrollTop because

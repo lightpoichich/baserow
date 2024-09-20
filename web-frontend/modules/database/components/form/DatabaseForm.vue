@@ -51,6 +51,7 @@
       @job-updated="$emit('job-updated', $event)"
       @job-done="$emit('job-done', $event)"
       @job-failed="$emit('job-failed', $event)"
+      @job-polling-error="$emit('job-failed', $event)"
       @submitted="$emit('submitted', $event)"
     ></ImportFromAirtable>
   </div>

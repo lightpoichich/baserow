@@ -23,6 +23,7 @@
         @job-done="handleJobDone($event)"
         @job-updated="handleJobUpdated($event)"
         @job-failed="handleJobFailed($event)"
+        @job-polling-error="handleJobFailed($event)"
         @import-type-changed="importType = $event"
       >
       </component>

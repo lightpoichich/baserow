@@ -89,6 +89,9 @@ export default {
         )
         this.startJobPoller(data)
       } catch (error) {
+        this.$emit('job-failed', {
+          state: this.jobHumanReadableState,
+        })
         this.stopPollAndHandleError(error, {
           ERROR_MAX_JOB_COUNT_EXCEEDED: new ResponseErrorMessage(
             this.$t('importFromAirtable.errorJobAlreadyRunningTitle'),
@@ -143,6 +146,9 @@ export default {
     },
     onJobPollingError(error) {
       this.stopPollAndHandleError(error)
+      this.$emit('job-polling-error', {
+        state: this.jobHumanReadableState,
+      })
     },
     onJobDone() {
       this.$emit('job-done', {

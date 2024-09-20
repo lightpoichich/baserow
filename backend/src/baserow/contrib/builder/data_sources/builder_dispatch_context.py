@@ -6,7 +6,6 @@ except ImportError:
     from backports.cached_property import cached_property
 
 from django.conf import settings
-
 from django.http import HttpRequest
 
 from baserow.contrib.builder.data_providers.registries import (

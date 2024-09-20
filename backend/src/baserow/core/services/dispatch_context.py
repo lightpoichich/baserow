@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 from typing import Dict, List, Optional
 
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext

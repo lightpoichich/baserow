@@ -5,6 +5,9 @@ from django.shortcuts import reverse
 
 import pytest
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -22,9 +25,6 @@ from baserow.core.services.registries import service_type_registry
 from baserow.core.utils import MirrorDict
 from baserow.test_utils.helpers import AnyStr
 from baserow.test_utils.pytest_conftest import FakeDispatchContext, fake_import_formula
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 
 
 @pytest.mark.django_db

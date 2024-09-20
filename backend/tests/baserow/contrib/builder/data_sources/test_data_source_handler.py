@@ -1,6 +1,4 @@
 from decimal import Decimal
-
-from django.http import HttpRequest
 from unittest.mock import patch
 
 from django.shortcuts import reverse

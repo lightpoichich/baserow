@@ -1,6 +1,6 @@
 import pytest
 
-from baserow.core.handler import CoreHandler
+from baserow.contrib.database.import_export_handler import ImportExportHandler
 from baserow.core.registries import ImportExportConfig
 
 
@@ -14,7 +14,7 @@ def test_create_export_file(data_fixture):
         include_permission_data=False, reduce_disk_space_usage=False
     )
 
-    file_name = CoreHandler().export_workspace_applications_single_file(
+    file_name = ImportExportHandler().export_workspace_applications(
         workspace=workspace, import_export_config=cli_import_export_config
     )
 

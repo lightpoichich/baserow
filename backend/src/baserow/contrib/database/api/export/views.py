@@ -6,18 +6,14 @@ from django.utils.functional import lazy
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import serializers, status
+from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, validate_body
-from baserow.api.errors import (
-    ERROR_USER_NOT_IN_GROUP,
-)
-from baserow.api.schemas import (
-    get_error_schema,
-)
+from baserow.api.decorators import map_exceptions
+from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.schemas import get_error_schema
 from baserow.api.utils import DiscriminatorMappingSerializer, validate_data
 from baserow.contrib.database.api.export.errors import (
     ERROR_EXPORT_JOB_DOES_NOT_EXIST,
@@ -43,9 +39,7 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.core.exceptions import (
-    UserNotInWorkspace,
-)
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.job_types import ExportApplicationsJobType
 from baserow.core.jobs.registries import job_type_registry
 

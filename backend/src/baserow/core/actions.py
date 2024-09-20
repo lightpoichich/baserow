@@ -1142,9 +1142,7 @@ class ExportApplicationsActionType(ActionType):
     type = "export_applications"
     description = ActionTypeDescription(
         _("Export applications"),
-        _(
-            'Applications "%(application_names)s" (%(application_ids)s) exported'
-        ),
+        _('Applications "%(application_names)s" (%(application_ids)s) exported'),
         WORKSPACE_ACTION_CONTEXT,
     )
     analytics_params = [
@@ -1175,8 +1173,9 @@ class ExportApplicationsActionType(ActionType):
 
         :param user: The user on whose behalf the application is duplicated.
         :param workspace: Workspace instance to be exported.
-        :param applications: List of application instances to be exported, if omitted then
-            all applications from workspace that user has access to, will be exported.
+        :param applications: List of application instances to be exported, if omitted
+            then all applications from workspace that user has access to, will be
+            exported.
         :param progress_builder: A progress builder instance that can be used to
             track the progress of the duplication.
         :return: file name of exported applications.

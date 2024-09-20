@@ -5,16 +5,14 @@ from typing import Optional
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
-
-from baserow.core.registries import ImportExportConfig, application_type_registry
-
 from django.core.files.base import ContentFile
-from django.core.files.storage import Storage, default_storage
-
-from baserow.core.telemetry.utils import baserow_trace_methods
-from baserow.core.utils import ChildProgressBuilder
+from django.core.files.storage import default_storage
 
 from opentelemetry import trace
+
+from baserow.core.registries import ImportExportConfig, application_type_registry
+from baserow.core.telemetry.utils import baserow_trace_methods
+from baserow.core.utils import ChildProgressBuilder
 
 tracer = trace.get_tracer(__name__)
 
@@ -89,8 +87,8 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
             _create_storage_dir_if_missing_and_open,
         )
 
-        if not storage:
-            storage = default_storage
+        storage = storage or default_storage
+        applications = applications or []
 
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
         export_app_progress = progress.create_child(80, len(applications) or 1)
@@ -100,7 +98,9 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
 
         export_path = self.get_export_path(zip_file_name)
 
-        with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:
+        with _create_storage_dir_if_missing_and_open(
+            export_path, storage
+        ) as files_buffer:
             with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
                 exported_applications = self.export_multiple_applications(
                     applications,

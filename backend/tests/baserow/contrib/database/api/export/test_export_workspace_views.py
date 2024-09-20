@@ -1,5 +1,4 @@
 import json
-import os
 import zipfile
 from unittest.mock import patch
 
@@ -98,7 +97,8 @@ def test_exporting_interesting_database(
     storage = FileSystemStorage(location=storage_location, base_url="http://localhost")
 
     with patch(
-        "baserow.contrib.database.import_export_handler.default_storage", new=storage
+        "baserow.contrib.database.import_export_handler.default_storage",
+        new=storage,
     ):
         database = setup_interesting_test_database(
             data_fixture,
@@ -118,6 +118,14 @@ def test_exporting_interesting_database(
 
         file_path = tmpdir.join(settings.EXPORT_FILES_DIRECTORY, file_name)
         assert file_path.isfile()
+
+        with zipfile.ZipFile(file_path, "r") as zip_ref:
+            assert "data/workspace_export.json" in zip_ref.namelist()
+
+            with zip_ref.open("data/workspace_export.json") as json_file:
+                json_data = json.load(json_file)
+                assert len(json_data) == 1
+                assert json_data[0]["name"] == database.name
 
 
 @pytest.mark.django_db(transaction=True)
@@ -146,63 +154,66 @@ def test_exporting_workspace_writes_file_to_storage(
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with patch("baserow.contrib.database.export.handler.default_storage", new=storage):
-        token = data_fixture.generate_token(user)
-        with django_capture_on_commit_callbacks(execute=True):
-            response = api_client.post(
-                reverse(
-                    "api:workspaces:export_workspace_async",
-                    kwargs={"workspace_id": table.database.workspace.id},
-                ),
-                data={
-                    "application_ids": [],
-                },
+        with patch(
+            "baserow.contrib.database.export.handler.default_storage", new=storage
+        ):
+            token = data_fixture.generate_token(user)
+            with django_capture_on_commit_callbacks(execute=True):
+                response = api_client.post(
+                    reverse(
+                        "api:workspaces:export_workspace_async",
+                        kwargs={"workspace_id": table.database.workspace.id},
+                    ),
+                    data={
+                        "application_ids": [],
+                    },
+                    format="json",
+                    HTTP_AUTHORIZATION=f"JWT {token}",
+                )
+            response_json = response.json()
+
+            job_id = response_json["id"]
+            assert response_json == {
+                "exported_file_name": "",
+                "human_readable_error": "",
+                "id": job_id,
+                "progress_percentage": 0,
+                "state": "pending",
+                "type": "export_applications",
+                "url": None,
+            }
+
+            response = api_client.get(
+                reverse("api:jobs:item", kwargs={"job_id": job_id}),
                 format="json",
                 HTTP_AUTHORIZATION=f"JWT {token}",
             )
-        response_json = response.json()
+            response_json = response.json()
 
-        job_id = response_json["id"]
-        assert response_json == {
-            "exported_file_name": "",
-            "human_readable_error": "",
-            "id": job_id,
-            "progress_percentage": 0,
-            "state": "pending",
-            "type": "export_applications",
-            "url": None,
-        }
+            file_name = response_json["exported_file_name"]
 
-        response = api_client.get(
-            reverse("api:jobs:item", kwargs={"job_id": job_id}),
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
-        response_json = response.json()
+            assert response_json["state"] == "finished"
+            assert response_json["progress_percentage"] == 100
+            assert (
+                response_json["url"]
+                == f"{settings.PUBLIC_BACKEND_URL}/media/export_files/{file_name}"
+            )
 
-        file_name = response_json["exported_file_name"]
+            file_path = tmpdir.join(settings.EXPORT_FILES_DIRECTORY, file_name)
+            assert file_path.isfile()
 
-        assert response_json["state"] == "finished"
-        assert response_json["progress_percentage"] == 100
-        assert (
-            response_json["url"]
-            == f"{settings.PUBLIC_BACKEND_URL}/media/export_files/{file_name}"
-        )
+            with zipfile.ZipFile(file_path, "r") as zip_ref:
+                assert "data/workspace_export.json" in zip_ref.namelist()
 
-        file_path = tmpdir.join(settings.EXPORT_FILES_DIRECTORY, file_name)
-        assert file_path.isfile()
+                with zip_ref.open("data/workspace_export.json") as json_file:
+                    json_data = json.load(json_file)
+                    assert len(json_data) == 1
+                    assert json_data[0]["name"] == table.database.name
 
-        with zipfile.ZipFile(file_path, "r") as zip_ref:
-            assert "data/workspace_export.json" in zip_ref.namelist()
-
-            with zip_ref.open("data/workspace_export.json") as json_file:
-                json_data = json.load(json_file)
-                assert len(json_data) == 1
-                assert json_data[0]["name"] == table.database.name
-
-                assert len(json_data[0]["tables"]) == 1
-                table = json_data[0]["tables"][0]
-                assert len(table["fields"]) == 1
-                assert table["fields"][0]["name"] == text_field.name
-                assert len(table["rows"]) == 2
-                assert table["rows"][0][f"field_{text_field.id}"] == "row #1"
-                assert table["rows"][1][f"field_{text_field.id}"] == "row #2"
+                    assert len(json_data[0]["tables"]) == 1
+                    table = json_data[0]["tables"][0]
+                    assert len(table["fields"]) == 1
+                    assert table["fields"][0]["name"] == text_field.name
+                    assert len(table["rows"]) == 2
+                    assert table["rows"][0][f"field_{text_field.id}"] == "row #1"
+                    assert table["rows"][1][f"field_{text_field.id}"] == "row #2"

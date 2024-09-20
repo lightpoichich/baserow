@@ -498,7 +498,7 @@ class DispatchDataSourcesView(APIView):
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, page_id: int):
+    def post(self, request, page_id: str):
         """
         Call the given data_source related service dispatch method.
         """

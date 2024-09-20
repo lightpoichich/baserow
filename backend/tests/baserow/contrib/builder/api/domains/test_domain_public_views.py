@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import ANY, MagicMock, patch
 
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -376,3 +376,96 @@ def test_ask_public_builder_domain_exists_with_public_backend_and_web_frontend_d
     url = reverse("api:builder:domains:ask_exists") + "?domain=web-frontend.localhost"
     response = api_client.get(url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.builder.api.domains.public_views.BuilderDispatchContext")
+@patch(
+    "baserow.contrib.builder.api.domains.public_views.DataSourceService.dispatch_data_source"
+)
+@patch(
+    "baserow.contrib.builder.api.domains.public_views.DataSourceHandler.get_data_source"
+)
+def test_public_dispatch_data_source_view(
+    mock_get_data_source,
+    mock_dispatch_data_source,
+    mock_builder_dispatch_context,
+    api_client,
+):
+    """
+    Test the PublicDispatchDataSourceView endpoint.
+
+    Ensure that the field_names are computed to secure the backend.
+    """
+
+    mock_data_source = MagicMock()
+    mock_get_data_source.return_value = mock_data_source
+
+    mock_response = {}
+    mock_dispatch_data_source.return_value = mock_response
+
+    mock_dispatch_context = MagicMock()
+    mock_builder_dispatch_context.return_value = mock_dispatch_context
+
+    mock_data_source_id = 100
+    url = reverse(
+        "api:builder:domains:public_dispatch",
+        kwargs={"data_source_id": mock_data_source_id},
+    )
+    response = api_client.post(url)
+
+    assert response.status_code == 200
+    assert response.json() == mock_response
+    mock_get_data_source.assert_called_once_with(mock_data_source_id)
+    mock_builder_dispatch_context.assert_called_once_with(
+        ANY,
+        mock_data_source.page,
+        use_field_names=True,
+    )
+    mock_dispatch_data_source.assert_called_once_with(
+        ANY, mock_data_source, mock_dispatch_context
+    )
+
+
+@pytest.mark.django_db
+@patch(
+    "baserow.contrib.builder.api.domains.public_views.DataSourceService.dispatch_page_data_sources"
+)
+@patch("baserow.contrib.builder.api.domains.public_views.BuilderDispatchContext")
+@patch("baserow.contrib.builder.api.domains.public_views.PageHandler.get_page")
+def test_public_dispatch_data_sources_view(
+    mock_get_page,
+    mock_builder_dispatch_context,
+    mock_dispatch_page_data_sources,
+    api_client,
+):
+    """
+    Test the PublicDispatchDataSourcesView endpoint.
+
+    Ensure that the field_names are computed to secure the backend.
+    """
+
+    mock_page = MagicMock()
+    mock_get_page.return_value = mock_page
+
+    mock_dispatch_context = MagicMock()
+    mock_builder_dispatch_context.return_value = mock_dispatch_context
+
+    mock_service_contents = {"101": "mock_content"}
+    mock_dispatch_page_data_sources.return_value = mock_service_contents
+
+    mock_page_id = 100
+    url = reverse(
+        "api:builder:domains:public_dispatch_all", kwargs={"page_id": mock_page_id}
+    )
+    response = api_client.post(url)
+
+    assert response.status_code == 200
+    assert response.json() == mock_service_contents
+    mock_get_page.assert_called_once_with(mock_page_id)
+    mock_builder_dispatch_context.assert_called_once_with(
+        ANY, mock_page, use_field_names=True
+    )
+    mock_dispatch_page_data_sources.assert_called_once_with(
+        ANY, mock_page, mock_dispatch_context
+    )

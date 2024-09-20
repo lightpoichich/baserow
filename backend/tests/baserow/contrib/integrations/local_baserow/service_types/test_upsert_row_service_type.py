@@ -1,4 +1,5 @@
 from io import BytesIO
+from unittest.mock import MagicMock
 
 import pytest
 from rest_framework.exceptions import ValidationError
@@ -11,6 +12,9 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
     LocalBaserowUpsertRow,
+)
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
 )
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowUpsertRowServiceType,
@@ -197,14 +201,14 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
     integration = data_fixture.create_local_baserow_integration(
         application=builder, user=user, authorized_user=user
     )
-    database = data_fixture.create_database_application(workspace=builder.workspace)
-    table = TableHandler().create_table_and_fields(
+    table, fields, _ = data_fixture.build_table(
         user=user,
-        database=database,
-        name=data_fixture.fake.name(),
-        fields=[
-            ("Cost", "number", {}),
-            ("Name", "text", {}),
+        columns=[
+            ("Cost", "number"),
+            ("Name", "text"),
+        ],
+        rows=[
+            ["500", "BMW"],
         ],
     )
     cost = table.field_set.get(name="Cost")
@@ -216,33 +220,42 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
     )
 
     data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
-        page=page, table=table, integration=integration
+        page=page, integration=integration, table=table
     )
-
     service = data_fixture.create_local_baserow_upsert_row_service(
         table=table,
         row_id=f'get("data_source.{data_source.id}.id")',
         integration=integration,
     )
-    service_type = service.get_type()
     service.field_mappings.create(
         field=cost, value=f'get("data_source.{data_source.id}.{cost.db_column}")'
     )
-    service.field_mappings.create(
-        field=name, value=f'get("data_source.{data_source.id}.{name.db_column}")'
+
+    # formula_context = {
+    #     "data_source": {
+    #         str(data_source.id): {
+    #             cost.db_column: 5,
+    #             name.db_column: "test",
+    #             "id": row.id,
+    #         }
+    #     },
+    # }
+
+    # dispatch_context = FakeDispatchContext(context=formula_context)
+
+    fake_request = MagicMock()
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=page.builder
     )
+    user_source_user = data_fixture.create_user_source_user(
+        user_source=user_source,
+    )
+    fake_request.user = user_source_user
+    fake_request.data = {"page_parameter": {"id": 10}}
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
-    formula_context = {
-        "data_source": {
-            str(data_source.id): {
-                cost.db_column: 5,
-                name.db_column: "test",
-                "id": row.id,
-            }
-        },
-    }
+    service_type = service.get_type()
 
-    dispatch_context = FakeDispatchContext(context=formula_context)
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     service_type.dispatch_data(service, dispatch_values, dispatch_context)
 
@@ -329,15 +342,13 @@ def test_local_baserow_upsert_row_service_dispatch_transform(
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
-    database = data_fixture.create_database_application(
-        workspace=page.builder.workspace
-    )
-    table = TableHandler().create_table_and_fields(
+    table, fields, _ = data_fixture.build_table(
         user=user,
-        database=database,
-        name=data_fixture.fake.name(),
-        fields=[
-            ("Ingredient", "text", {}),
+        columns=[
+            ("Ingredient", "text"),
+        ],
+        rows=[
+            ["Turmeric"],
         ],
     )
     ingredient = table.field_set.get(name="Ingredient")
@@ -349,7 +360,37 @@ def test_local_baserow_upsert_row_service_dispatch_transform(
     service_type = service.get_type()
     service.field_mappings.create(field=ingredient, value='get("page_parameter.id")')
 
-    dispatch_context = FakeDispatchContext(context={"page_parameter": {"id": 2}})
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+        row_id="1",
+    )
+
+    data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {"value": f"get('data_source.0.0.field_{field.id}')"},
+            }
+            for field in fields
+        ],
+    )
+
+    fake_request = MagicMock()
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=page.builder
+    )
+    user_source_user = data_fixture.create_user_source_user(
+        user_source=user_source,
+    )
+    fake_request.user = user_source_user
+    fake_request.data = {"page_parameter": {"id": 2}}
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
@@ -359,8 +400,8 @@ def test_local_baserow_upsert_row_service_dispatch_transform(
     serialized_row = service_type.dispatch_transform(dispatch_data)
     assert dict(serialized_row) == {
         "id": dispatch_data["data"].id,
-        "order": "1.00000000000000000000",
-        ingredient.db_column: str(2),
+        "order": str(dispatch_data["data"].order),
+        ingredient.db_column: str(fake_request.data["page_parameter"]["id"]),
     }
 
 

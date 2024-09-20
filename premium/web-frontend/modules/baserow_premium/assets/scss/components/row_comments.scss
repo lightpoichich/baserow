@@ -49,32 +49,22 @@
 }
 
 .row-comments__comment--editing {
-  background-color: $color-neutral-100;
+  background-color: $palette-neutral-100;
 }
 
 .row-comments__comment-head {
   display: flex;
   margin-bottom: 6px;
-
-  .row-comments__comment--right & {
-    justify-items: flex-end;
-    flex-direction: row-reverse;
-  }
 }
 
 .row-comments__comment-head-initial {
   flex: 0 0 30px;
   border-radius: 100%;
-  background-color: $color-primary-500;
+  background-color: $palette-blue-500;
   color: $white;
   font-weight: 600;
 
   @include center-text(30px, 12px);
-
-  .row-comments__comment--right & {
-    margin-right: 0;
-    margin-left: 10px;
-  }
 }
 
 .row-comments__comment-edited {
@@ -104,10 +94,6 @@
 
   font-size: 12px;
   line-height: 22px;
-
-  .row-comments__comment--right & {
-    text-align: right;
-  }
 }
 
 .row-comments__comment-head-time {
@@ -115,10 +101,6 @@
 
   font-size: 11px;
   color: $palette-neutral-700;
-
-  .row-comments__comment--right & {
-    text-align: right;
-  }
 }
 
 .row-comments__comment-text {
@@ -132,8 +114,9 @@
   margin-right: auto;
   border-top-left-radius: 3px;
   word-wrap: break-word;
-  border: 1px solid $color-neutral-200;
+  border: 1px solid $palette-neutral-400;
   white-space: pre-line;
+  word-break: break-all;
 
   @include rounded($rounded-md);
   @include elevation($elevation-low);
@@ -142,25 +125,12 @@
     font-size: 13px;
   }
 
-  .row-comments__comment--right & {
-    background-color: $color-primary-200;
-    border: 1px solid $color-primary-200;
-    text-align: right;
-    margin-left: auto;
-    margin-right: 0;
-    border-top-right-radius: 3px;
-    box-shadow: none;
-
-    @include rounded($rounded-md);
-  }
-
   .row-comments__comment--editing & {
     background-color: white;
     text-align: revert;
-    border: 1px solid $color-neutral-200;
-    margin-right: 20px;
-    margin-left: 0;
-    width: 100%;
+    border: 1px solid $palette-neutral-400;
+    margin-left: 30px;
+    width: auto;
   }
 
   & p {

@@ -1,12 +1,16 @@
 import mimetypes
 import pathlib
 
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+
 from baserow.core.models import UserFile
+from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import random_string
 
 
 class UserFileFixtures:
-    def create_user_file(self, **kwargs):
+    def create_user_file(self, storage=None, **kwargs):
         if "original_name" not in kwargs:
             kwargs["original_name"] = self.fake.file_name()
 
@@ -30,4 +34,11 @@ class UserFileFixtures:
         if "sha256_hash" not in kwargs:
             kwargs["sha256_hash"] = random_string(64)
 
-        return UserFile.objects.create(**kwargs)
+        user_file = UserFile.objects.create(**kwargs)
+        path = UserFileHandler().user_file_path(user_file.name)
+
+        content = f'test file  {kwargs["original_name"]} at {path}'
+
+        storage = storage or default_storage
+        storage.save(path, ContentFile(content))
+        return user_file

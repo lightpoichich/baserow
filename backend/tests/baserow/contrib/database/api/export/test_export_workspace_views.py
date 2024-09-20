@@ -1,4 +1,5 @@
 import json
+import os
 import zipfile
 from unittest.mock import patch
 
@@ -9,7 +10,10 @@ from django.urls import reverse
 import pytest
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from baserow.contrib.database.import_export_handler import ImportExportHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.registries import ImportExportConfig
+from baserow.test_utils.helpers import setup_interesting_test_database
 
 
 @pytest.mark.django_db
@@ -25,7 +29,7 @@ def test_exporting_workspace_with_feature_flag_disabled(
 
     response = api_client.post(
         reverse(
-            "api:database:export:export_workspace_async",
+            "api:workspaces:export_workspace_async",
             kwargs={"workspace_id": workspace.id},
         ),
         data={},
@@ -44,7 +48,7 @@ def test_exporting_missing_workspace_returns_error(data_fixture, api_client, tmp
 
     response = api_client.post(
         reverse(
-            "api:database:export:export_workspace_async",
+            "api:workspaces:export_workspace_async",
             kwargs={"workspace_id": 9999},
         ),
         data={},
@@ -67,7 +71,7 @@ def test_exporting_workspace_with_no_permissions_returns_error(
 
     response = api_client.post(
         reverse(
-            "api:database:export:export_workspace_async",
+            "api:workspaces:export_workspace_async",
             kwargs={"workspace_id": workspace.id},
         ),
         data={},
@@ -79,7 +83,44 @@ def test_exporting_workspace_with_no_permissions_returns_error(
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
+def test_exporting_interesting_database(
+    data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database_name = "To be exported"
+
+    cli_import_export_config = ImportExportConfig(
+        include_permission_data=False, reduce_disk_space_usage=False
+    )
+    storage_location = str(tmpdir)
+    storage = FileSystemStorage(location=storage_location, base_url="http://localhost")
+
+    with patch(
+        "baserow.contrib.database.import_export_handler.default_storage", new=storage
+    ):
+        database = setup_interesting_test_database(
+            data_fixture,
+            user=user,
+            workspace=workspace,
+            name=database_name,
+            storage=storage,
+        )
+
+        file_name = ImportExportHandler().export_workspace_applications(
+            workspace,
+            import_export_config=cli_import_export_config,
+            applications=[database],
+            storage=storage,
+            progress_builder=None,
+        )
+
+        file_path = tmpdir.join(settings.EXPORT_FILES_DIRECTORY, file_name)
+        assert file_path.isfile()
+
+
+@pytest.mark.django_db(transaction=True)
 def test_exporting_workspace_writes_file_to_storage(
     data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
 ):
@@ -109,7 +150,7 @@ def test_exporting_workspace_writes_file_to_storage(
         with django_capture_on_commit_callbacks(execute=True):
             response = api_client.post(
                 reverse(
-                    "api:database:export:export_workspace_async",
+                    "api:workspaces:export_workspace_async",
                     kwargs={"workspace_id": table.database.workspace.id},
                 ),
                 data={
@@ -138,16 +179,16 @@ def test_exporting_workspace_writes_file_to_storage(
         )
         response_json = response.json()
 
-        filename = response_json["exported_file_name"]
+        file_name = response_json["exported_file_name"]
 
         assert response_json["state"] == "finished"
         assert response_json["progress_percentage"] == 100
         assert (
             response_json["url"]
-            == f"{settings.PUBLIC_BACKEND_URL}/media/export_files/{filename}"
+            == f"{settings.PUBLIC_BACKEND_URL}/media/export_files/{file_name}"
         )
 
-        file_path = tmpdir.join(settings.EXPORT_FILES_DIRECTORY, filename)
+        file_path = tmpdir.join(settings.EXPORT_FILES_DIRECTORY, file_name)
         assert file_path.isfile()
 
         with zipfile.ZipFile(file_path, "r") as zip_ref:

@@ -56,6 +56,9 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
             files_zip.write(temp_json_file.name, file_name)
         storage.delete(temp_json_file_path)
 
+    def get_export_path(self, file_name):
+        return join(settings.EXPORT_FILES_DIRECTORY, file_name)
+
     def export_workspace_applications(
         self,
         workspace,
@@ -95,7 +98,7 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
         zip_file_name = f"workspace_{workspace.id}_{uuid.uuid4()}.zip"
         json_file_name = f"data/workspace_export.json"
 
-        export_path = join(settings.EXPORT_FILES_DIRECTORY, zip_file_name)
+        export_path = self.get_export_path(zip_file_name)
 
         with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:
             with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:

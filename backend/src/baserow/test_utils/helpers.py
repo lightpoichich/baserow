@@ -84,6 +84,7 @@ def setup_interesting_test_table(
     name: Optional[str] = None,
     file_suffix: Optional[str] = None,
     user_kwargs: Optional[Dict[str, Any]] = None,
+    storage=None,
 ):
     """
     Constructs a testing table with every field type, their sub types and any other
@@ -178,8 +179,6 @@ def setup_interesting_test_table(
         .values_list("id", flat=True)
     )
 
-    file_suffix = file_suffix or ""
-
     values = {
         "text": "text",
         "long_text": "long_text",
@@ -263,11 +262,13 @@ def setup_interesting_test_table(
             original_name=f"a.txt",
             unique=f"hashed{file_suffix}",
             sha256_hash="name",
+            storage=storage,
         )
         data_fixture.create_user_file(
             original_name=f"b.txt",
             unique=f"other{file_suffix}",
             sha256_hash="name",
+            storage=storage,
         )
 
     missing_fields = (
@@ -345,6 +346,7 @@ def setup_interesting_test_table(
             original_name=f"name{file_suffix}.txt",
             unique=f"test{file_suffix}",
             sha256_hash=f"hash{file_suffix}",
+            storage=storage,
         )
     linked_row_7 = row_handler.create_row(
         user=user,
@@ -404,6 +406,7 @@ def setup_interesting_test_database(
     database: Optional[Database] = None,
     name: Optional[str] = None,
     user_kwargs=None,
+    storage=None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -423,6 +426,7 @@ def setup_interesting_test_database(
             database=database,
             name=table_name,
             file_suffix=table_name,
+            storage=storage,
         )
 
     return database

@@ -264,7 +264,7 @@
         >
           <a
             class="context__menu-item-link"
-            @click="duplicateSelectedRow(selectedRow)"
+            @click="duplicateSelectedRow($event, selectedRow)"
           >
             <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('gridView.duplicateRow') }}
@@ -352,7 +352,7 @@
       @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
       @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
       @refresh-row="refreshRow"
-      @duplicate-row="duplicateSelectedRow($event)"
+      @duplicate-row="duplicateSelectedRow($event, selectedRow)"
       @delete-row="deleteRow($event)"
     ></RowEditModal>
   </div>
@@ -692,7 +692,7 @@ export default {
         }
       }
     },
-    duplicateSelectedRow(selectedRow) {
+    duplicateSelectedRow(event, selectedRow) {
       event.preventFieldCellUnselect = true
       this.addRowAfter(selectedRow, selectedRow)
       this.$refs.rowContext.hide()
@@ -1032,6 +1032,7 @@ export default {
         return
       }
 
+      this.selectedRow = row
       this.$refs.rowEditModal.show(row.id)
       this.$emit('selected-row', row)
     },

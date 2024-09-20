@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import patch
 
 from django.conf import settings as django_settings
@@ -740,3 +740,7 @@ class FakeDispatchContext(DispatchContext):
             return "999"
 
         return get_value_at_path(self.context, key)
+
+    @property
+    def field_names(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
+        return {}

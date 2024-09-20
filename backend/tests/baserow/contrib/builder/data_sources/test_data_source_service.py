@@ -1,5 +1,5 @@
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 
@@ -19,7 +19,7 @@ from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
 from baserow.core.services.models import Service
 from baserow.core.services.registries import DispatchTypes, service_type_registry
-from baserow.test_utils.helpers import AnyStr
+from baserow.test_utils.helpers import AnyStr, get_dispatch_context
 
 
 @pytest.mark.django_db
@@ -370,7 +370,7 @@ def test_move_data_source_trigger_order_recalculed(
 
 
 @pytest.mark.django_db
-def test_dispatch_data_source(data_fixture):
+def test_dispatch_data_source(data_fixture, api_request_factory):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -399,8 +399,35 @@ def test_dispatch_data_source(data_fixture):
         table=table,
         row_id="2",
     )
+    data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {
+                    "value": f"get('data_source.{data_source.id}.0.field_{field.id}')"
+                },
+            }
+            for field in fields
+        ],
+    )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    data_fixture.create_builder_heading_element(
+        page=page,
+        level=2,
+        value=(
+            f"concat(get('data_source.{data_source.id}.field_{fields[0].id}'),"
+            f"get('data_source.{data_source.id}.field_{fields[1].id}'))"
+        ),
+    )
+
+    url = "api:builder:domains:public_dispatch_all"
+    dispatch_context = get_dispatch_context(
+        url, data_fixture, api_request_factory, builder, page
+    )
+
     result = DataSourceService().dispatch_data_source(
         user, data_source, dispatch_context
     )
@@ -414,7 +441,7 @@ def test_dispatch_data_source(data_fixture):
 
 
 @pytest.mark.django_db
-def test_dispatch_page_data_sources(data_fixture):
+def test_dispatch_page_data_sources(data_fixture, api_request_factory):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -443,6 +470,21 @@ def test_dispatch_page_data_sources(data_fixture):
         table=table,
         row_id="2",
     )
+    data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {
+                    "value": f"get('data_source.{data_source.id}.0.field_{field.id}')"
+                },
+            }
+            for field in fields
+        ],
+    )
+
     data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
@@ -451,6 +493,21 @@ def test_dispatch_page_data_sources(data_fixture):
         table=table,
         row_id="3",
     )
+    data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source2,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {
+                    "value": f"get('data_source.{data_source.id}.0.field_{field.id}')"
+                },
+            }
+            for field in fields
+        ],
+    )
+
     data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
@@ -460,7 +517,29 @@ def test_dispatch_page_data_sources(data_fixture):
         row_id="b",
     )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    data_fixture.create_builder_heading_element(
+        page=page,
+        level=2,
+        value=(
+            f"concat(get('data_source.{data_source.id}.field_{fields[0].id}'),"
+            f"get('data_source.{data_source.id}.field_{fields[1].id}'))"
+        ),
+    )
+
+    data_fixture.create_builder_heading_element(
+        page=page,
+        level=2,
+        value=(
+            f"concat(get('data_source.{data_source2.id}.field_{fields[0].id}'),"
+            f"get('data_source.{data_source2.id}.field_{fields[1].id}'))"
+        ),
+    )
+
+    url = "api:builder:domains:public_dispatch_all"
+    dispatch_context = get_dispatch_context(
+        url, data_fixture, api_request_factory, builder, page
+    )
+
     result = DataSourceService().dispatch_page_data_sources(
         user, page, dispatch_context
     )
@@ -512,6 +591,8 @@ def test_dispatch_data_source_permission_denied(data_fixture, stub_check_permiss
 
     formula_context = MagicMock()
     formula_context.cache = {}
+    type(formula_context.request).user = PropertyMock(return_value=user)
+    type(formula_context).page = PropertyMock(return_value=page)
 
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException

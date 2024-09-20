@@ -3,6 +3,7 @@ from collections import defaultdict
 from io import BytesIO
 from tempfile import tempdir
 from zipfile import ZIP_DEFLATED, ZipFile
+from unittest.mock import MagicMock
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
@@ -599,12 +600,13 @@ def test_choice_element_is_valid(data_fixture):
 @pytest.mark.django_db
 def test_choice_element_is_valid_formula_data_source(data_fixture):
     user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
     table, fields, rows = data_fixture.build_table(
         user=user,
         columns=[("Name", "text")],
         rows=[["BMW"], ["Audi"], ["Seat"], ["Volvo"]],
     )
-    builder = data_fixture.create_builder_application(user=user)
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
     )
@@ -618,18 +620,27 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
     choice = ElementService().create_element(
         page=page,
         user=user,
+        data_source=data_source,
         element_type=element_type_registry.get("choice"),
         option_type=ChoiceElement.OPTION_TYPE.FORMULAS,
         formula_value=f"get('data_source.{data_source.id}.*.{fields[0].db_column}')",
     )
 
     # Call is_valid with an option that is not present in the list raises an exception
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
+    fake_request = MagicMock()
+    user_source = data_fixture.create_user_source_with_first_type(application=builder)
+    user_source_user = data_fixture.create_user_source_user(
+        user_source=user_source,
+    )
+    fake_request.user = user_source_user
+    dispatch_context = BuilderDispatchContext(fake_request, page, offset=0, count=20)
+
     with pytest.raises(FormDataProviderChunkInvalidException):
         ChoiceElementType().is_valid(choice, "Invalid", dispatch_context)
 
     # Call is_valid with a valid option simply returns its value
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(fake_request, page, offset=0, count=20)
+
     assert ChoiceElementType().is_valid(choice, "BMW", dispatch_context) == "BMW"
 
 
@@ -1243,7 +1254,15 @@ def test_choice_element_integer_option_values(data_fixture):
     )
 
     expected_choices = [row.id for row in rows]
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
+
+    fake_request = MagicMock()
+    user_source = data_fixture.create_user_source_with_first_type(application=builder)
+    user_source_user = data_fixture.create_user_source_user(
+        user_source=user_source,
+    )
+    fake_request.user = user_source_user
+    dispatch_context = BuilderDispatchContext(fake_request, page, offset=0, count=20)
+
     for value in expected_choices:
         dispatch_context.reset_call_stack()
         assert ChoiceElementType().is_valid(choice, value, dispatch_context) is value

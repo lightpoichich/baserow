@@ -4,6 +4,9 @@ from unittest.mock import MagicMock
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -12,9 +15,6 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
     LocalBaserowUpsertRow,
-)
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
 )
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowUpsertRowServiceType,
@@ -231,18 +231,6 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
         field=cost, value=f'get("data_source.{data_source.id}.{cost.db_column}")'
     )
 
-    # formula_context = {
-    #     "data_source": {
-    #         str(data_source.id): {
-    #             cost.db_column: 5,
-    #             name.db_column: "test",
-    #             "id": row.id,
-    #         }
-    #     },
-    # }
-
-    # dispatch_context = FakeDispatchContext(context=formula_context)
-
     fake_request = MagicMock()
     user_source = data_fixture.create_user_source_with_first_type(
         application=page.builder
@@ -252,6 +240,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
     )
     fake_request.user = user_source_user
     fake_request.data = {"page_parameter": {"id": 10}}
+    fake_request.GET.get.return_value = None
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
     service_type = service.get_type()

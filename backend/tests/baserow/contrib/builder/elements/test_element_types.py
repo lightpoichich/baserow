@@ -2,8 +2,8 @@ import json
 from collections import defaultdict
 from io import BytesIO
 from tempfile import tempdir
-from zipfile import ZIP_DEFLATED, ZipFile
 from unittest.mock import MagicMock
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage

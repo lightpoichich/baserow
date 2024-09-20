@@ -1,11 +1,8 @@
 from decimal import Decimal
-from django.http import HttpRequest
-
 from unittest.mock import patch
 
 from django.shortcuts import reverse
 from django.test import override_settings
-
 
 import pytest
 

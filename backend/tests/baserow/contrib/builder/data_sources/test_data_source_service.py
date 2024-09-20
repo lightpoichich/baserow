@@ -1,13 +1,8 @@
 from decimal import Decimal
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from django.http import HttpRequest
-
 import pytest
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
     DataSourceImproperlyConfigured,

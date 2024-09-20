@@ -1299,7 +1299,7 @@ class LocalBaserowGetRowUserServiceType(
             # Ensure that only the field_names explicitly used in the page are
             # fetched from the database.
             queryset = queryset.only(*all_field_names)
-       
+
         field_names = None
         if dispatch_context.field_names is not None:
             field_names = dispatch_context.field_names.get("external", {}).get(

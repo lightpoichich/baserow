@@ -561,21 +561,41 @@ class TimelineViewType(ViewType):
         Check if the provided date field belongs to the same table.
         """
 
-        date_field_value = values.get("date_field", None)
-        if date_field_value is not None:
-            if isinstance(date_field_value, int):
-                values["date_field"] = date_field_value = Field.objects.get(
-                    pk=date_field_value
+        start_date_field_value = values.get("start_date_field", None)
+        if start_date_field_value is not None:
+            if isinstance(start_date_field_value, int):
+                values["start_date_field"] = start_date_field_value = Field.objects.get(
+                    pk=start_date_field_value
                 )
 
-            date_field_value = date_field_value.specific
-            field_type = field_type_registry.get_by_model(date_field_value)
-            if not field_type.can_represent_date(date_field_value):
+            start_date_field_value = start_date_field_value.specific
+            field_type = field_type_registry.get_by_model(start_date_field_value)
+            if not field_type.can_represent_date(start_date_field_value):
                 raise IncompatibleField()
 
             if (
-                isinstance(date_field_value, Field)
-                and date_field_value.table_id != table.id
+                isinstance(start_date_field_value, Field)
+                and start_date_field_value.table_id != table.id
+            ):
+                raise FieldNotInTable(
+                    "The provided date field id does not belong to the timeline "
+                    "view's table."
+                )
+        end_date_field_value = values.get("end_date_field", None)
+        if end_date_field_value is not None:
+            if isinstance(end_date_field_value, int):
+                values["end_date_field"] = end_date_field_value = Field.objects.get(
+                    pk=end_date_field_value
+                )
+
+            end_date_field_value = end_date_field_value.specific
+            field_type = field_type_registry.get_by_model(end_date_field_value)
+            if not field_type.can_represent_date(end_date_field_value):
+                raise IncompatibleField()
+
+            if (
+                isinstance(end_date_field_value, Field)
+                and end_date_field_value.table_id != table.id
             ):
                 raise FieldNotInTable(
                     "The provided date field id does not belong to the timeline "
@@ -596,8 +616,10 @@ class TimelineViewType(ViewType):
         """
 
         serialized = super().export_serialized(timeline, cache, files_zip, storage)
-        if timeline.date_field_id:
-            serialized["date_field_id"] = timeline.date_field_id
+        if timeline.start_date_field_id:
+            serialized["start_date_field_id"] = timeline.start_date_field_id
+        if timeline.end_date_field_id:
+            serialized["end_date_field_id"] = timeline.end_date_field_id
 
         serialized_field_options = []
         for field_option in timeline.get_field_options():
@@ -629,6 +651,10 @@ class TimelineViewType(ViewType):
         if "start_date_field_id" in serialized_copy:
             serialized_copy["start_date_field_id"] = id_mapping["database_fields"][
                 serialized_copy.pop("start_date_field_id")
+            ]
+        if "end_date_field_id" in serialized_copy:
+            serialized_copy["end_date_field_id"] = id_mapping["database_fields"][
+                serialized_copy.pop("end_date_field_id")
             ]
 
         field_options = serialized_copy.pop("field_options")
@@ -680,9 +706,10 @@ class TimelineViewType(ViewType):
             timeline_view.get_field_options(create_if_missing=True)
             .filter(
                 Q(hidden=False)
-                # If the `date_field_id` is set, we must always expose the field
-                # because the values are needed.
-                | Q(field_id=timeline_view.date_field_id)
+                # If the `start_date_field_id` and the `end_date_field_id` is set, we
+                # must always expose the field because the values are needed.
+                | Q(field_id=timeline_view.start_date_field_id)
+                | Q(field_id=timeline_view.end_date_field_id)
             )
             .order_by("order", "field__id")
         )

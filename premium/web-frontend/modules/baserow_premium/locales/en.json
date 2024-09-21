@@ -208,6 +208,15 @@
     "displayedBy": "Displayed by “{fieldName}” field",
     "labels": "Labels"
   },
+  "timelineViewHeader": {
+    "dateSettings": "Date settings",
+    "labels": "Labels"
+  },
+  "timelineViewSettingsForm": {
+    "startDateField": "Start date",
+    "endDateField": "End date",
+    "noCompatibleDateFields": "There are no date fields in this table, please create one first."
+  },
   "viewDateSelector": {
     "today": "Today"
   },

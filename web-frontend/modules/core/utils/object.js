@@ -175,3 +175,55 @@ export function fixPropertyReactivityForProvide(
   })
   return staticProperties
 }
+
+/**
+ * MixinBuilder is a class that allows you to easily create mixins for classes.
+ * Code taken from https://rasaturyan.medium.com/multiple-inheritance-in-javascript-es6-4999e4b6584c
+ *
+ * @example
+ * // some base class
+ * class BaseClass { }
+ *
+ * // SocialNetworkMixin
+ * const SocialNetwork = (superclass) => class extends superclass {
+ *     foo() {
+ *         console.log('foo');
+ *     }
+ * }
+ *
+ * // AdProviderMixin
+ * const AdProvider = (superclass) => class extends superclass {
+ *     bar() {
+ *         console.log('bar');
+ *     }
+ * }
+ *
+ * // Our helper class that will make things look better
+ * class MixinBuilder {
+ *     constructor(superclass) {
+ *         this.superclass = superclass;
+ *     }
+ *     with(...mixins) {
+ *         return mixins.reduce((c, mixin) => mixin(c), this.superclass);
+ *     }
+ * }
+ *
+ * // this will combine everything in one class
+ * const mix = (superclass) => new MixinBuilder(superclass);
+ *
+ * class Facebook extends mix(BaseClass).with(SocialNetwork, AdProvider) {}
+ * const fb = new Facebook();
+ * fb.foo(); // Output: 'foo'
+ * fb.bar(); // Output: 'bar'
+ */
+class MixinBuilder {
+  constructor(superclass) {
+    this.superclass = superclass
+  }
+
+  with(...mixins) {
+    return mixins.reduce((c, mixin) => mixin(c), this.superclass)
+  }
+}
+
+export const mix = (superclass) => new MixinBuilder(superclass)

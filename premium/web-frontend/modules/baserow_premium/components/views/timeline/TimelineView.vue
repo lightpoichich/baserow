@@ -1,9 +1,16 @@
 <template>
   <div class="timeline-view">
     <TimelineContainer
-      :store-prefix="storePrefix"
       :fields="fields"
       :view="view"
+      :table="table"
+      :database="database"
+      :read-only="readOnly"
+      :store-prefix="storePrefix"
+      @selected-row="$emit('selected-row', $event)"
+      @refresh="$emit('refresh', $event)"
+      @navigate-previous="$emit('navigate-previous', $event)"
+      @navigate-next="$emit('navigate-next', $event)"
     />
   </div>
 </template>
@@ -49,12 +56,3 @@ export default {
   },
 }
 </script>
-
-<style scoped>
-.timeline-view {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  height: 100%;
-}
-</style>

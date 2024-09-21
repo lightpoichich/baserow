@@ -145,6 +145,7 @@ export default {
     onShow() {
       this.showDescription = this.$refs.form.isDescriptionFieldNotEmpty()
     },
+    handleFileTypeChanged(event) {},
   },
 }
 </script>

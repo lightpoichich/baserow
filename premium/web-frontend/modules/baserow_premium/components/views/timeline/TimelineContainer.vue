@@ -46,15 +46,55 @@
         :rows-buffer="rowsBuffer"
         :row-height="rowHeight"
         :row-count="rowCount"
+        :min-height="gridHeight"
         :scroll-left="scrollLeft"
         :scroll-right="scrollRigth"
+        :scroll-now="scrollNow"
         @goto-start="scrollToStartDate"
         @goto-end="scrollToEndDate"
+        @edit-row="rowClick"
       />
     </div>
+    <RowEditModal
+      ref="rowEditModal"
+      enable-navigation
+      :database="database"
+      :table="table"
+      :view="view"
+      :all-fields-in-table="fields"
+      :primary-is-sortable="true"
+      :visible-fields="visibleFields"
+      :hidden-fields="hiddenFields"
+      :rows="rows"
+      :read-only="
+        readOnly ||
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
+      "
+      :show-hidden-fields="showHiddenFieldsInRowModal"
+      @hidden="$emit('selected-row', undefined)"
+      @toggle-hidden-fields-visibility="
+        showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
+      "
+      @update="updateValue"
+      @order-fields="orderFields"
+      @toggle-field-visibility="toggleFieldVisibility"
+      @field-updated="$emit('refresh', $event)"
+      @field-deleted="$emit('refresh')"
+      @field-created="showFieldCreated"
+      @field-created-callback-done="afterFieldCreatedUpdateFieldOptions"
+      @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
+      @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
+      @refresh-row="refreshRow"
+    >
+    </RowEditModal>
   </div>
 </template>
 <script>
+import { mapGetters } from 'vuex'
 import ResizeObserver from 'resize-observer-polyfill'
 import debounce from 'lodash/debounce'
 import moment from '@baserow/modules/core/moment'
@@ -62,11 +102,21 @@ import {
   recycleSlots,
   orderSlots,
 } from '@baserow/modules/database/utils/virtualScrolling'
+import {
+  sortFieldsByOrderAndIdFunction,
+  filterVisibleFieldsFunction,
+  filterHiddenFieldsFunction,
+} from '@baserow/modules/database/utils/view'
 import ViewDateIndicator from '@baserow_premium/components/views/ViewDateIndicator'
 import ViewDateSelector from '@baserow_premium/components/views/ViewDateSelector'
 import TimelineSidebar from '@baserow_premium/components/views/timeline/TimelineSidebar.vue'
 import TimelineGrid from '@baserow_premium/components/views/timeline/TimelineGrid.vue'
 import TimelineGridHeader from '@baserow_premium/components/views/timeline/TimelineGridHeader.vue'
+import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
+import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
+import { populateRow } from '@baserow/modules/database/store/view/grid'
+import { clone } from '@baserow/modules/core/utils/object'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'TimelineContainer',
@@ -76,7 +126,9 @@ export default {
     TimelineGridHeader,
     ViewDateIndicator,
     ViewDateSelector,
+    RowEditModal,
   },
+  mixins: [viewHelpers],
   props: {
     view: {
       type: Object,
@@ -84,6 +136,18 @@ export default {
     },
     fields: {
       type: Array,
+      required: true,
+    },
+    table: {
+      type: Object,
+      required: true,
+    },
+    database: {
+      type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
     storePrefix: {
@@ -108,6 +172,8 @@ export default {
       viewHeaderHeight: 72,
       scrollLeft: 0,
       scrollRigth: 0,
+      scrollNow: 0,
+      showHiddenFieldsInRowModal: false,
       // monthly view settings
       visibleColumnCount: 31,
       unit: 'day',
@@ -143,6 +209,55 @@ export default {
     },
     gridBodyHeightOffset() {
       return this.viewHeaderHeight + this.gridHeaderHeight
+    },
+    visibleFields() {
+      const fieldOptions = this.fieldOptions
+      return this.fields
+        .filter(filterVisibleFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+    },
+    hiddenFields() {
+      const fieldOptions = this.fieldOptions
+      return this.fields
+        .filter(filterHiddenFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+    },
+    activeSearchTerm() {
+      return this.$store.getters[
+        `${this.storePrefix}view/timeline/getActiveSearchTerm`
+      ]
+    },
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
+  },
+  watch: {
+    rows() {
+      this.$nextTick(() => {
+        this.updateRowsBuffer()
+        this.updateRowsBufferEventFlags()
+      })
+    },
+    row: {
+      deep: true,
+      handler(row, oldRow) {
+        if (this.$refs.rowEditModal) {
+          if (
+            (oldRow === null && row !== null) ||
+            (oldRow && row && oldRow.id !== row.id)
+          ) {
+            this.populateAndEditRow(row)
+          } else if (oldRow !== null && row === null) {
+            // Pass emit=false as argument into the hide function because that will
+            // prevent emitting another `hidden` event of the `RowEditModal` which can
+            // result in the route changing twice.
+            this.$refs.rowEditModal.hide(false)
+          }
+        }
+      },
+    },
+    visibleFields() {
+      this.updateRowsBuffer()
     },
   },
   mounted() {
@@ -183,6 +298,20 @@ export default {
     this.$once('hook:beforeDestroy', () => {
       resizeObserver.unobserve(el)
     })
+
+    if (this.row !== null) {
+      this.populateAndEditRow(this.row)
+    }
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        fieldOptions:
+          this.$options.propsData.storePrefix +
+          'view/timeline/getAllFieldOptions',
+      }),
+    }
   },
   methods: {
     dateDiff(startDate, endDate, includeEnd = true) {
@@ -197,7 +326,7 @@ export default {
     updateGridDimensions() {
       const el = this.scrollAreaElement
       this.gridWidth = el.clientWidth
-      this.gridHeight = Math.max(el.clientHeight, el.scrollHeight)
+      this.gridHeight = el.clientHeight
       this.columnWidth = Math.max(
         this.gridWidth / this.visibleColumnCount,
         this.minColumnWidth
@@ -242,63 +371,85 @@ export default {
       this.updateRowsBufferEventFlags()
     },
     getRowDate(row, field) {
-      // TODO: use format and proper timezone
       const rowValue = row[`field_${field.id}`]
-      return rowValue ? moment(rowValue) : null
+      if (!rowValue) {
+        return null
+      }
+      const fieldType = this.$registry.get('field', field.type)
+      return fieldType.parseInputValue(field, rowValue)
+    },
+    getRowLabel(row) {
+      return this.visibleFields
+        .map((f) => {
+          const fieldType = this.$registry.get('field', f.type)
+          const cellValue = row[`field_${f.id}`]
+          return fieldType.toHumanReadableString(f, cellValue)
+        })
+        .join(' - ')
+    },
+    updateSlotEventFlags(slot) {
+      const { startIndex, endIndex } = this.getVisibleColumnsRange()
+      const showGotoStartIcon =
+        slot.item.startIndex && slot.item.startIndex < startIndex
+      const showGotoEndIcon =
+        slot.item.endIndex && slot.item.endIndex > endIndex
+      const needsUpdate =
+        showGotoStartIcon !== slot.item.showGotoStartIcon ||
+        showGotoEndIcon !== slot.item.showGotoEndIcon
+      if (needsUpdate) {
+        slot.item.showGotoStartIcon = showGotoStartIcon
+        slot.item.showGotoEndIcon = showGotoEndIcon
+        // Force a re-render of the slot.
+        const item = slot.item
+        slot.item = null
+        slot.item = item
+      }
     },
     updateRowsBufferEventFlags() {
       // Based on the visible columns, we want to set if we need to show the
       // icon to go the the event start or end date.
-      const { startIndex, endIndex } = this.getVisibleColumnsRange()
       this.rowsBuffer.forEach((slot, index) => {
         if (!slot.item) {
           return
         }
-        const showGotoStartIcon =
-          slot.item.startIndex && slot.item.startIndex < startIndex
-        const showGotoEndIcon =
-          slot.item.endIndex && slot.item.endIndex > endIndex
-        const needsUpdate =
-          showGotoStartIcon !== slot.item.showGotoStartIcon ||
-          showGotoEndIcon !== slot.item.showGotoEndIcon
-        if (needsUpdate) {
-          slot.item.showGotoStartIcon = showGotoStartIcon
-          slot.item.showGotoEndIcon = showGotoEndIcon
-          // Force a re-render of the slot.
-          const item = slot.item
-          slot.item = null
-          slot.item = item
-        }
+        this.updateSlotEventFlags(slot)
       })
     },
     setupRowEvent(row) {
       if (row === null) {
         return null
       }
-      const startDate = this.getRowDate(row, this.startDateField)
-      const startIndex = startDate
-        ? this.dateDiff(this.firstAvailableDate, startDate, false)
-        : null
-      const startOffset = startIndex ? startIndex * this.columnWidth : null
-      const endDate = this.getRowDate(row, this.endDateField)
-      const endIndex = endDate
-        ? this.dateDiff(this.firstAvailableDate, endDate)
-        : null
-      const endOffset = endIndex ? endIndex * this.columnWidth : null
-      const width =
-        endIndex && startIndex ? (endIndex - startIndex) * this.columnWidth : 0
-      const title = row[`field_${this.primaryField.id}`]
-      return {
+      const event = {
         id: row.id,
-        title,
+        title: row[`field_${this.primaryField.id}`],
+        label: this.getRowLabel(row),
+        row,
+      }
+      if (!this.startDateField || !this.endDateField) {
+        return event
+      }
+      const startDate = this.getRowDate(row, this.startDateField)
+      const endDate = this.getRowDate(row, this.endDateField)
+      if (!startDate || !endDate || startDate.isAfter(endDate)) {
+        return event
+      }
+      const startIndex = this.dateDiff(this.firstAvailableDate, startDate, false)
+      const startOffset = startIndex * this.columnWidth + 3
+      const endIndex = this.dateDiff(this.firstAvailableDate, endDate)
+      const endOffset = endIndex * this.columnWidth
+      const width = (endIndex - startIndex) * this.columnWidth - 8
+
+      return {
+        ...event,
         startDate,
         endDate,
         startIndex,
-        endIndex,
         startOffset,
+        endIndex,
         endOffset,
         width,
-        row,
+        showGotoStartIcon: false,
+        showGotoEndIcon: false,
       }
     },
     updateRowsBuffer(sort = true) {
@@ -308,7 +459,7 @@ export default {
         .map(this.setupRowEvent)
       const getPosition = (row, pos) => ({
         top: (startIndex + pos) * this.rowHeight,
-        left: row?.startIndex ? row.startIndex * this.columnWidth : -1,
+        left: row?.startIndex ? row.startIndex * this.columnWidth : null,
       })
       const rowsToRender = endIndex - startIndex
       recycleSlots(this.rowsBuffer, visibleRows, getPosition, rowsToRender)
@@ -350,6 +501,7 @@ export default {
       const getPosition = (col, pos) => ({
         left: (startIndex + pos) * this.columnWidth,
       })
+      this.scrollNow = moment().diff(this.firstAvailableDate, 'hour') / 24 * this.columnWidth
       this.firstVisibleDate = this.firstAvailableDate
         .clone()
         .add(startIndex + 1, this.unit)
@@ -361,7 +513,7 @@ export default {
     },
     scrollToStartDate(date) {
       const dateDiff = this.dateDiff(this.firstAvailableDate, date)
-      const colIndex = Math.max(0, dateDiff - 5)
+      const colIndex = Math.max(0, dateDiff - 2)
       const scrollOffset = colIndex * this.columnWidth
       this.scrollHorizontal(scrollOffset, 'smooth')
     },
@@ -369,7 +521,7 @@ export default {
       const dateDiff = this.dateDiff(this.firstAvailableDate, date)
       const colIndex = Math.min(
         this.columns.length,
-        dateDiff - this.visibleColumnCount + 5
+        dateDiff - this.visibleColumnCount + 1
       )
       const scrollOffset = colIndex * this.columnWidth
       this.scrollHorizontal(scrollOffset, 'smooth')
@@ -382,6 +534,70 @@ export default {
         false
       )
       this.scrollHorizontal(firstVisibleIndex * this.columnWidth, 'smooth')
+    },
+    async updateValue({ field, row, value, oldValue }) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/timeline/updateRowValue',
+          {
+            table: this.table,
+            view: this.view,
+            fields: this.fields,
+            row,
+            field,
+            value,
+            oldValue,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'field')
+      }
+      // Update also the values needed to propery show the event in the timeline if the
+      // row is in the buffer.
+      const slot = this.rowsBuffer.find((slot) => slot.item?.id === row.id)
+      if (slot) {
+        slot.item = this.setupRowEvent(row)
+        this.updateSlotEventFlags(slot)
+      }
+    },
+    /**
+     * Is called when the user clicks on the card but did not move it to another
+     * position.
+     */
+    rowClick(row) {
+      this.$refs.rowEditModal.show(row.id)
+      this.$emit('selected-row', row)
+    },
+    /**
+     * Calls action in the store to refresh row directly from the backend - f. ex.
+     * when editing row from a different table, when editing is complete, we need
+     * to refresh the 'main' row that's 'under' the RowEdit modal.
+     */
+    async refreshRow(row) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/timeline/refreshRowFromBackend',
+          { table: this.table, row }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
+    },
+    /**
+     * Calls the fieldCreated callback and shows the hidden fields section
+     * because new fields are hidden by default.
+     */
+    showFieldCreated({ fetchNeeded, ...context }) {
+      this.fieldCreated({ fetchNeeded, ...context })
+      this.showHiddenFieldsInRowModal = true
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
   },
 }

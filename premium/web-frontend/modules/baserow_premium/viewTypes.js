@@ -1,4 +1,5 @@
 import {
+  BaseBufferedRowViewType,
   maxPossibleOrderValue,
   ViewType,
 } from '@baserow/modules/database/viewTypes'
@@ -14,6 +15,7 @@ import PremiumFeatures from '@baserow_premium/features'
 import { isAdhocFiltering } from '@baserow/modules/database/utils/view'
 import CalendarCreateIcalSharedViewLink from '@baserow_premium/components/views/calendar/CalendarCreateIcalSharedViewLink'
 import CalendarSharingIcalSlugSection from '@baserow_premium/components/views/calendar/CalendarSharingIcalSlugSection'
+import { mix } from '@baserow/modules/core/utils/object'
 
 class PremiumViewType extends ViewType {
   getDeactivatedText() {
@@ -488,7 +490,12 @@ export class CalendarViewType extends PremiumViewType {
   }
 }
 
-export class TimelineViewType extends PremiumViewType {
+const BaseBufferedRowViewTypeMixin = () =>
+  class extends BaseBufferedRowViewType {}
+
+export class TimelineViewType extends mix(PremiumViewType).with(
+  BaseBufferedRowViewTypeMixin
+) {
   static getType() {
     return 'timeline'
   }
@@ -507,11 +514,11 @@ export class TimelineViewType extends PremiumViewType {
   }
 
   canFilter() {
-    return false
+    return true
   }
 
   canSort() {
-    return false
+    return true
   }
 
   canShare() {
@@ -532,174 +539,5 @@ export class TimelineViewType extends PremiumViewType {
 
   getComponent() {
     return TimelineView
-  }
-
-  async fetch({ store }, database, view, fields, storePrefix = '') {
-    await store.dispatch(storePrefix + 'view/timeline/fetchInitial', {
-      viewId: view.id,
-      fields,
-    })
-  }
-
-  async refresh(
-    { store },
-    database,
-    view,
-    fields,
-    storePrefix = '',
-    includeFieldOptions = false,
-    sourceEvent = null
-  ) {
-    // We need to prevent multiple requests as updates and deletes regarding
-    // the date field are handled inside afterFieldUpdated and afterFieldDeleted
-    // const dateFieldId =
-    //   store.getters[storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'](
-    //     fields
-    //   )
-    // if (
-    //   ['field_deleted', 'field_updated'].includes(sourceEvent?.type) &&
-    //   sourceEvent?.data?.field_id === dateFieldId
-    // ) {
-    //   return
-    // }
-    // await store.dispatch(storePrefix + 'view/timeline/refreshAndFetchInitial', {
-    //   timelineId: view.id,
-    //   startDateFieldId: view.start_date_field,
-    //   endDateFieldId: view.end_date_field,
-    //   fields,
-    //   includeFieldOptions,
-    // })
-  }
-
-  async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
-    await store.dispatch(
-      storePrefix + 'view/timeline/forceUpdateAllFieldOptions',
-      fieldOptions,
-      {
-        root: true,
-      }
-    )
-  }
-
-  updated(context, view, oldView, storePrefix) {
-    return view.date_field !== oldView.date_field
-  }
-
-  async rowCreated(
-    { store },
-    tableId,
-    fields,
-    values,
-    metadata,
-    storePrefix = ''
-  ) {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(storePrefix + 'view/timeline/createdNewRow', {
-        view: store.getters['view/getSelected'],
-        values,
-        fields,
-      })
-    }
-  }
-
-  async rowUpdated(
-    { store },
-    tableId,
-    fields,
-    row,
-    values,
-    metadata,
-    storePrefix = ''
-  ) {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(storePrefix + 'view/timeline/updatedExistingRow', {
-        view: store.getters['view/getSelected'],
-        fields,
-        row,
-        values,
-      })
-    }
-  }
-
-  async rowDeleted({ store }, tableId, fields, row, storePrefix = '') {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(storePrefix + 'view/timeline/deletedExistingRow', {
-        view: store.getters['view/getSelected'],
-        row,
-        fields,
-      })
-    }
-  }
-
-  async afterFieldCreated(
-    { dispatch },
-    table,
-    field,
-    fieldType,
-    storePrefix = ''
-  ) {
-    const value = fieldType.getEmptyValue(field)
-    await dispatch(
-      storePrefix + 'view/timeline/addField',
-      { field, value },
-      { root: true }
-    )
-    await dispatch(
-      storePrefix + 'view/timeline/setFieldOptionsOfField',
-      {
-        field,
-        // The default values should be the same as in the `TimelineViewFieldOptions`
-        // model in the backend to stay consistent.
-        values: {
-          hidden: true,
-          order: maxPossibleOrderValue,
-        },
-      },
-      { root: true }
-    )
-  }
-
-  async afterFieldUpdated(context, field, oldField, fieldType, storePrefix) {
-    // const fields = [field]
-    // const dateFieldId =
-    //   context.rootGetters[
-    //     storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'
-    //   ](fields)
-    // if (dateFieldId === field.id) {
-    //   const type = this.app.$registry.get('field', field.type)
-    //   if (!type.canRepresentDate(field)) {
-    //     this._setFieldToNull(context, field, 'date_field')
-    //     await context.dispatch(
-    //       storePrefix + 'view/timeline/reset',
-    //       {},
-    //       { root: true }
-    //     )
-    //   } else {
-    //     await context.dispatch(
-    //       storePrefix + 'view/timeline/fetchInitial',
-    //       {
-    //         includeFieldOptions: false,
-    //         fields,
-    //       },
-    //       { root: true }
-    //     )
-    //   }
-    // }
-  }
-
-  async afterFieldDeleted(context, field, fieldType, storePrefix = '') {
-    // const fields = [field]
-    // this._setFieldToNull(context, field, 'start_date_field')
-    // const startDateFieldId =
-    //   context.rootGetters[
-    //     storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'
-    //   ](fields)
-    // if (dateFieldId === field.id) {
-    //   await context.dispatch(
-    //     storePrefix + 'view/timeline/reset',
-    //     {},
-    //     { root: true }
-    //   )
-    // }
   }
 }

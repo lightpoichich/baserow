@@ -2,17 +2,25 @@
   <ul v-if="!tableLoading" class="header__filter header__filter--full-width">
     <li class="header__filter-item">
       <a
+        ref="dateSettingsLink"
         class="header__filter-link"
-        :class="!canChooseDateField ? 'header__filter-link--disabled' : ''"
-        @click="showChooseDateFieldModal"
+        :class="!canChooseDatesField ? 'header__filter-link--disabled' : ''"
+        @click="showChooseDatesFieldContext"
       >
         <i class="header__filter-icon iconoir-calendar"></i>
         <span class="header__filter-name">
-          {{ selectDateFieldLinkText }}
+          {{ $t('timelineViewHeader.dateSettings') }}
         </span>
       </a>
+      <SelectDatesFieldContext
+        ref="dateSettingsContext"
+        :fields="fields"
+        :view="view"
+        @refresh="$emit('refresh', $event)"
+      >
+      </SelectDatesFieldContext>
     </li>
-    <li v-if="dateFieldId(fields) != null" class="header__filter-item">
+    <li v-if="startDateFieldId != null" class="header__filter-item">
       <a
         ref="customizeContextLink"
         class="header__filter-link"
@@ -27,7 +35,7 @@
       >
         <i class="header__filter-icon iconoir-list"></i>
         <span class="header__filter-name">{{
-          $t('calendarViewHeader.labels')
+          $t('timelineViewHeader.labels')
         }}</span>
       </a>
       <ViewFieldsContext
@@ -45,7 +53,7 @@
     <li v-if="isDev" class="header__filter-item">
       <div>
         <Badge color="yellow" indicator>Debug</Badge>
-        <span>{{ timezone(fields) }}</span>
+        <span>{{ timezone }}</span>
       </div>
     </li>
     <li class="header__filter-item header__filter-item--right">
@@ -64,15 +72,16 @@
 import { mapState, mapGetters } from 'vuex'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import SelectDateFieldModal from '@baserow_premium/components/views/calendar/SelectDateFieldModal'
+import SelectDatesFieldContext from '@baserow_premium/components/views/timeline/SelectDatesFieldContext'
 import ViewFieldsContext from '@baserow/modules/database/components/view/ViewFieldsContext'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
+import { getUserTimeZone } from '@baserow/modules/core/utils/date'
 
 export default {
-  name: 'CalendarViewHeader',
+  name: 'TimelineViewHeader',
   components: {
     ViewFieldsContext,
-    SelectDateFieldModal,
+    SelectDatesFieldContext,
     ViewSearch,
   },
   props: {
@@ -103,18 +112,21 @@ export default {
     },
   },
   computed: {
-    selectDateFieldLinkText() {
-      const df = this.getDateField(this.fields)
-      if (
-        !df ||
-        this.$registry.get('field', df.type).canRepresentDate(df) === false
-      ) {
-        return this.$t('calendarViewHeader.displayBy')
+    startDateFieldId() {
+      return this.view.start_date_field
+    },
+    startDateField() {
+      return this.getStartDateField()
+    },
+    timezone() {
+      const dateField = this.startDateField
+      let timezone
+      if (dateField?.date_include_time) {
+        timezone = dateField.date_force_timezone
       } else {
-        return this.$t('calendarViewHeader.displayedBy', {
-          fieldName: this.displayedByFieldName,
-        })
+        timezone = getUserTimeZone()
       }
+      return timezone
     },
     displayedByFieldName() {
       for (let i = 0; i < this.fields.length; i++) {
@@ -130,7 +142,7 @@ export default {
     ...mapState({
       tableLoading: (state) => state.table.loading,
     }),
-    canChooseDateField() {
+    canChooseDatesField() {
       return (
         !this.readOnly &&
         this.$hasPermission(
@@ -141,49 +153,36 @@ export default {
       )
     },
   },
-  // watch: {
-  //   fields() {
-  //     const df = this.getDateField(this.fields)
-  //     if (
-  //       !df ||
-  //       this.$registry.get('field', df.type).canRepresentDate(df) === false
-  //     ) {
-  //       this.showChooseDateFieldModal()
-  //     }
-  //   },
-  // },
   beforeCreate() {
     this.$options.computed = {
       ...(this.$options.computed || {}),
       ...mapGetters({
-        timezone:
-          this.$options.propsData.storePrefix + 'view/calendar/getTimeZone',
         fieldOptions:
           this.$options.propsData.storePrefix +
-          'view/calendar/getAllFieldOptions',
-        dateFieldId:
-          this.$options.propsData.storePrefix +
-          'view/calendar/getDateFieldIdIfNotTrashed',
-        getDateField:
-          this.$options.propsData.storePrefix + 'view/calendar/getDateField',
+          'view/timeline/getAllFieldOptions',
       }),
     }
   },
-  mounted() {
-    // if (this.dateFieldId(this.fields) == null) {
-    //   this.showChooseDateFieldModal()
-    // }
-  },
   methods: {
-    showChooseDateFieldModal() {
-      if (this.canChooseDateField) {
-        this.$refs.selectDateFieldModal.show()
+    getStartDateField() {
+      return this.fields.find(
+        (field) => field.id === this.view.start_date_field
+      )
+    },
+    showChooseDatesFieldContext() {
+      if (this.canChooseDatesField) {
+        this.$refs.dateSettingsContext.toggle(
+            this.$refs.dateSettingsLink,
+            'bottom',
+            'left',
+            4
+          )
       }
     },
     async updateAllFieldOptions({ newFieldOptions, oldFieldOptions }) {
       try {
         await this.$store.dispatch(
-          this.storePrefix + 'view/calendar/updateAllFieldOptions',
+          this.storePrefix + 'view/timeline/updateAllFieldOptions',
           {
             newFieldOptions,
             oldFieldOptions,
@@ -203,7 +202,7 @@ export default {
     async updateFieldOptionsOfField({ field, values, oldValues }) {
       try {
         await this.$store.dispatch(
-          this.storePrefix + 'view/calendar/updateFieldOptionsOfField',
+          this.storePrefix + 'view/timeline/updateFieldOptionsOfField',
           {
             field,
             values,
@@ -224,7 +223,7 @@ export default {
     async orderFieldOptions({ order }) {
       try {
         await this.$store.dispatch(
-          this.storePrefix + 'view/calendar/updateFieldOptionsOrder',
+          this.storePrefix + 'view/timeline/updateFieldOptionsOrder',
           {
             order,
             readOnly: this.readOnly,

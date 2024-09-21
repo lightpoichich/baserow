@@ -69,7 +69,7 @@ export default {
       type: Array,
       required: true,
     },
-    viewSettings: {
+    view: {
       type: Object,
       required: true,
     },
@@ -77,8 +77,8 @@ export default {
   data() {
     return {
       values: {
-        startDateFieldId: null,
-        endDateFieldId: null,
+        startDateFieldId: this.view.start_date_field || null,
+        endDateFieldId: this.view.end_date_field || null,
       },
     }
   },

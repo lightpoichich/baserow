@@ -774,7 +774,7 @@ export class GridViewType extends ViewType {
  * enable real time collaboration and will make sure that the rows are in the store
  * are updated properly.
  */
-class BaseBufferedRowView extends ViewType {
+export class BaseBufferedRowViewType extends ViewType {
   getDefaultFieldOptionValues() {
     return {}
   }
@@ -961,7 +961,7 @@ class BaseBufferedRowView extends ViewType {
   }
 }
 
-export class GalleryViewType extends BaseBufferedRowView {
+export class GalleryViewType extends BaseBufferedRowViewType {
   static getType() {
     return 'gallery'
   }

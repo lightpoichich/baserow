@@ -752,6 +752,7 @@ export default ({ service, customPopulateRow }) => {
         dispatch('fetchAllFieldAggregationData', { view })
         throw error
       }
+      return row
     },
     /**
      * When an existing row is updated, the state in the store must also be updated.

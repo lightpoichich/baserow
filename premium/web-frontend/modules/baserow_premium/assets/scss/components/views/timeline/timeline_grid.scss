@@ -59,7 +59,13 @@
     border-radius: 4px;
     height: 80%;
     width: 100%;
+   
+}
+
+.timeline-grid__row-event-label-decoration {
     padding-left: 8px;
+    height: 100%;
+    width: 100%;
     display: flex;
     align-items: center;
 }

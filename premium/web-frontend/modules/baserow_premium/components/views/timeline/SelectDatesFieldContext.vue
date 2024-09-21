@@ -9,7 +9,7 @@
       @submitted="submitted"
     >
       <div class="actions">
-        <div class="align-right">
+        <div>
           <Button type="secondary" :loading="loading" :disabled="loading">
             {{ $t('selectDateFieldModal.save') }}</Button
           >

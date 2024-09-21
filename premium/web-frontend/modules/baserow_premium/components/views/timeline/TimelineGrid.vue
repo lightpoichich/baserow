@@ -6,7 +6,6 @@
       width: `${gridWidth}px`,
     }"
   >
-
     <template v-for="slot in columnsBuffer">
       <div
         v-show="slot.item !== undefined"
@@ -41,15 +40,27 @@
           class="timeline-grid__row-event"
           @click="$emit('edit-row', slot.item)"
         >
-          <div
-            :ref="`label-${slot.id}`"
-            class="timeline-grid__row-event-label"
-            :style="{
-              transform: `translateX(${getLabelOffset(slot)}px)`,
-            }"
+          
+          <RecursiveWrapper
+            :components="wrapperComponent(slot)"
+            first-component-class="timeline-grid__row-event-label-decoration"
           >
-            {{ slot.item?.label }}
-          </div>
+          <component
+            v-for="dec in slot.item.firstCellDecorations"
+            :is="dec.component"
+            :key="dec.decoration.id"
+            v-bind="dec.propsFn(slot.item.row)"
+          />
+            <div
+              :ref="`label-${slot.id}`"
+              class="timeline-grid__row-event-label"
+              :style="{
+                transform: `translateX(${getLabelOffset(slot)}px)`,
+              }"
+            >
+              {{ slot.item?.label }}
+            </div>
+          </RecursiveWrapper>
         </div>
 
         <div
@@ -118,9 +129,12 @@
 
 <script>
 import moment from '@baserow/modules/core/moment'
+import RecursiveWrapper from '@baserow/modules/database/components/RecursiveWrapper'
+import EmptyEventWrapper from '@baserow_premium/components/views/timeline/EmptyEventWrapper'
 
 export default {
   name: 'TimelineGrid',
+  components: { RecursiveWrapper },
   props: {
     columnsBuffer: {
       type: Array,
@@ -172,6 +186,13 @@ export default {
     },
   },
   methods: {
+    wrapperComponent(slot) {
+      const decoration = slot.item?.wrapperDecorations.map((comp) => ({
+        ...comp,
+        props: comp.propsFn(slot.item?.row),
+      }))
+      return decoration.length ? decoration : [{component: EmptyEventWrapper}]
+    },
     formatDate(date, format) {
       return moment(date).format(format)
     },

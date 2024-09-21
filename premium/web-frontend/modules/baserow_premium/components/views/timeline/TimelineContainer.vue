@@ -114,6 +114,7 @@ import TimelineGrid from '@baserow_premium/components/views/timeline/TimelineGri
 import TimelineGridHeader from '@baserow_premium/components/views/timeline/TimelineGridHeader.vue'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
+import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 import { populateRow } from '@baserow/modules/database/store/view/grid'
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -128,7 +129,7 @@ export default {
     ViewDateSelector,
     RowEditModal,
   },
-  mixins: [viewHelpers],
+  mixins: [viewHelpers, viewDecoration],
   props: {
     view: {
       type: Object,
@@ -259,6 +260,9 @@ export default {
     visibleFields() {
       this.updateRowsBuffer()
     },
+    activeDecorations() {
+      this.updateRowsBuffer()
+    },
   },
   mounted() {
     const updateRowsOrderDebounced = debounce(
@@ -302,6 +306,7 @@ export default {
     if (this.row !== null) {
       this.populateAndEditRow(this.row)
     }
+    console.log(this.decorationsByPlace)
   },
   beforeCreate() {
     this.$options.computed = {
@@ -424,6 +429,8 @@ export default {
         title: row[`field_${this.primaryField.id}`],
         label: this.getRowLabel(row),
         row,
+        firstCellDecorations: this.decorationsByPlace?.first_cell || [],
+        wrapperDecorations: this.decorationsByPlace?.wrapper || [],
       }
       if (!this.startDateField || !this.endDateField) {
         return event

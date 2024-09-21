@@ -27,15 +27,15 @@ export const state = () => ({
 export const mutations = {
   ...timelineBufferedRows.mutations,
   ...timelineFieldOptions.mutations,
-  SET_START_FIELD_ID(state, startDateFieldId ) {
+  SET_START_FIELD_ID(state, startDateFieldId) {
     state.startDateFieldId = startDateFieldId
   },
-  SET_END_FIELD_ID(state, endDateFieldId ) {
+  SET_END_FIELD_ID(state, endDateFieldId) {
     state.endDateFieldId = endDateFieldId
   },
-  SET_TITLE_FIELD_ID(state, titleFieldId ) {
+  SET_TITLE_FIELD_ID(state, titleFieldId) {
     state.titleFieldId = titleFieldId
-  }
+  },
 }
 
 export const actions = {
@@ -52,8 +52,6 @@ export const actions = {
       initialRowArguments: { includeFieldOptions: true },
     })
     await dispatch('forceUpdateAllFieldOptions', data.field_options)
-    
-
   },
 }
 

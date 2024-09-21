@@ -1,6 +1,10 @@
 <template>
   <div class="timeline-view">
-    <TimelineContainer :storePrefix="storePrefix" :fields="fields" :view="view"/>
+    <TimelineContainer
+      :store-prefix="storePrefix"
+      :fields="fields"
+      :view="view"
+    />
   </div>
 </template>
 <script>
@@ -45,7 +49,6 @@ export default {
   },
 }
 </script>
-
 
 <style scoped>
 .timeline-view {

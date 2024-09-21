@@ -65,7 +65,7 @@ export default {
     el.tooltipOptions = getOptions(el, binding)
     el.onClickOutsideCallback = null
 
-    el.updatePositionEvent = () => {
+    el.updatePositionEvent = (event) => {
       const rect = el.getBoundingClientRect()
       const position = el.getAttribute('tooltip-position') || 'bottom'
       const rectTooltip = el.tooltipElement.getBoundingClientRect()
@@ -87,6 +87,28 @@ export default {
             'auto'
           )
           break
+        case 'bottom-right':
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left = rect.left + 'px'
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-left',
+            rect.width / 2 + 'px' // Middle of the main element
+          )
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-right',
+            'auto'
+          )
+          break
+        case 'bottom-cursor':
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left =
+            Math.max(
+              rect.left + 6,
+              Math.min(rect.left + rect.width - 6, event.x)
+            ) -
+            rectTooltip.width / 2 +
+            'px'
+          break
         default:
           el.tooltipElement.style.top = rect.bottom + 4 + 'px'
           el.tooltipElement.style.left = rect.left + rect.width / 2 + 'px'
@@ -99,7 +121,7 @@ export default {
       el.tooltipTimeout = null
     }
 
-    el.tooltipMouseEnterEvent = () => {
+    el.tooltipMouseEnterEvent = (event) => {
       switchToTooltip(el)
       const position = el.getAttribute('tooltip-position') || 'bottom'
       const hide = el.getAttribute('hide-tooltip')
@@ -142,7 +164,7 @@ export default {
       }
       el.tooltipContentElement.className = contentClasses.join(' ')
 
-      el.updatePositionEvent()
+      el.updatePositionEvent(event)
       // we just entered, so we don't want any previously set timeout to close
       // the tooltip content
       el.removeTimeout()

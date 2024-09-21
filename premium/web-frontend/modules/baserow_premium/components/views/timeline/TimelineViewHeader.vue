@@ -11,7 +11,6 @@
           {{ selectDateFieldLinkText }}
         </span>
       </a>
-     
     </li>
     <li v-if="dateFieldId(fields) != null" class="header__filter-item">
       <a

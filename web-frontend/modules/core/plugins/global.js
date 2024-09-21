@@ -58,7 +58,6 @@ import RadioButton from '@baserow/modules/core/components/RadioButton'
 import Thumbnail from '@baserow/modules/core/components/Thumbnail'
 import ColorInput from '@baserow/modules/core/components/ColorInput'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
-import VirtualList from 'vue-virtual-scroll-list'
 
 function setupVue(Vue) {
   Vue.component('Context', Context)
@@ -106,7 +105,6 @@ function setupVue(Vue) {
   Vue.component('Logo', Logo)
   Vue.component('ReadOnlyForm', ReadOnlyForm)
   Vue.component('FormSection', FormSection)
-  Vue.component('VirtualList', VirtualList)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

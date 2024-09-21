@@ -6,11 +6,11 @@
     >
       <ViewDateIndicator
         v-if="firstVisibleDate"
-        :selectedDate="firstVisibleDate"
+        :selected-date="firstVisibleDate"
       />
       <ViewDateSelector
         v-if="firstVisibleDate"
-        :selectedDate="firstVisibleDate"
+        :selected-date="firstVisibleDate"
         @date-selected="selectDate"
       />
     </div>
@@ -20,9 +20,9 @@
       class="timeline-container__grid-header"
     >
       <TimelineGridHeader
-        :columnsBuffer="columnsBuffer"
-        :columnCount="columns.length"
-        :columnWidth="columnWidth"
+        :columns-buffer="columnsBuffer"
+        :column-count="columns.length"
+        :column-width="columnWidth"
       />
     </div>
     <div
@@ -40,45 +40,21 @@
         :rowHeight="rowHeight"
       /> -->
       <TimelineGrid
-        :columnsBuffer="columnsBuffer"
-        :columnCount="columns.length"
-        :columnWidth="columnWidth"
-        :rowsBuffer="rowsBuffer"
-        :rowHeight="rowHeight"
-        :rowCount="rowCount"
-      />
-      <TimelineGridOverlay
-        v-if="$refs.gridBody"
-        :style="{
-          left: `${scrollAreaElement?.scrollLeft}px`,
-          width: `${gridWidth}px`,
-        }"
-        :rowsBuffer="rowsBuffer"
-        :rowHeight="rowHeight"
-        :rowCount="rowCount"
-        @goto-start="
-          ($event) =>
-            scrollHorizontal(
-              (dateDiff(firstAvailableDate, $event) - 5) * columnWidth,
-              'smooth'
-            )
-        "
-        @goto-end="
-          ($event) =>
-            scrollHorizontal(
-              (dateDiff(firstAvailableDate, $event) -
-                this.visibleColumnCount +
-                5) *
-                columnWidth,
-              'smooth'
-            )
-        "
+        :columns-buffer="columnsBuffer"
+        :column-count="columns.length"
+        :column-width="columnWidth"
+        :rows-buffer="rowsBuffer"
+        :row-height="rowHeight"
+        :row-count="rowCount"
+        :scroll-left="scrollLeft"
+        :scroll-right="scrollRigth"
+        @goto-start="scrollToStartDate"
+        @goto-end="scrollToEndDate"
       />
     </div>
   </div>
 </template>
 <script>
-import Vue from 'vue'
 import ResizeObserver from 'resize-observer-polyfill'
 import debounce from 'lodash/debounce'
 import moment from '@baserow/modules/core/moment'
@@ -90,7 +66,6 @@ import ViewDateIndicator from '@baserow_premium/components/views/ViewDateIndicat
 import ViewDateSelector from '@baserow_premium/components/views/ViewDateSelector'
 import TimelineSidebar from '@baserow_premium/components/views/timeline/TimelineSidebar.vue'
 import TimelineGrid from '@baserow_premium/components/views/timeline/TimelineGrid.vue'
-import TimelineGridOverlay from '@baserow_premium/components/views/timeline/TimelineGridOverlay.vue'
 import TimelineGridHeader from '@baserow_premium/components/views/timeline/TimelineGridHeader.vue'
 
 export default {
@@ -99,7 +74,6 @@ export default {
     TimelineSidebar,
     TimelineGrid,
     TimelineGridHeader,
-    TimelineGridOverlay,
     ViewDateIndicator,
     ViewDateSelector,
   },
@@ -119,7 +93,7 @@ export default {
   },
   data() {
     return {
-      rowHeight: 32,
+      rowHeight: 38,
       minColumnWidth: 32,
       columnWidth: 32,
       rowsBuffer: [],
@@ -130,8 +104,10 @@ export default {
       sidebarWidth: 240,
       gridWidth: 0,
       gridHeight: 0,
-      gridHeaderHeight: 32,
+      gridHeaderHeight: 36,
       viewHeaderHeight: 72,
+      scrollLeft: 0,
+      scrollRigth: 0,
       // monthly view settings
       visibleColumnCount: 31,
       unit: 'day',
@@ -183,7 +159,10 @@ export default {
         this.prevScrollTop = el.scrollTop
         updateRowsOrderDebounced()
       }
+
       if (el.scrollLeft !== this.prevScrollLeft) {
+        this.scrollLeft = el.scrollLeft
+        this.scrollRigth = el.scrollLeft + this.gridWidth
         this.prevScrollLeft = el.scrollLeft
         this.updateGridColumns()
         this.updateRowsBufferEventFlags()
@@ -223,6 +202,8 @@ export default {
         this.gridWidth / this.visibleColumnCount,
         this.minColumnWidth
       )
+      this.scrollLeft = el.scrollLeft
+      this.scrollRigth = el.scrollLeft + this.gridWidth
     },
     getVisibleRowsRange() {
       const el = this.scrollAreaElement
@@ -273,21 +254,16 @@ export default {
         if (!slot.item) {
           return
         }
-        const showGotoStartIcon = slot.item.startIndex < startIndex
-        const showGotoEndIcon = slot.item.endIndex > endIndex
+        const showGotoStartIcon =
+          slot.item.startIndex && slot.item.startIndex < startIndex
+        const showGotoEndIcon =
+          slot.item.endIndex && slot.item.endIndex > endIndex
         const needsUpdate =
           showGotoStartIcon !== slot.item.showGotoStartIcon ||
           showGotoEndIcon !== slot.item.showGotoEndIcon
         if (needsUpdate) {
           slot.item.showGotoStartIcon = showGotoStartIcon
           slot.item.showGotoEndIcon = showGotoEndIcon
-          if (slot.item.id === 8) {
-            console.log(
-              'updateRowsBufferEventFlags',
-              showGotoStartIcon,
-              showGotoEndIcon
-            )
-          }
           // Force a re-render of the slot.
           const item = slot.item
           slot.item = null
@@ -301,7 +277,7 @@ export default {
       }
       const startDate = this.getRowDate(row, this.startDateField)
       const startIndex = startDate
-        ? this.dateDiff(this.firstAvailableDate, startDate)
+        ? this.dateDiff(this.firstAvailableDate, startDate, false)
         : null
       const startOffset = startIndex ? startIndex * this.columnWidth : null
       const endDate = this.getRowDate(row, this.endDateField)
@@ -348,10 +324,14 @@ export default {
             this.lastAvailableDate
           ),
         },
-        (_, i) => ({
-          id: i,
-          date: moment(this.firstAvailableDate).add(i, this.unit),
-        })
+        (_, i) => {
+          const date = moment(this.firstAvailableDate).add(i, this.unit)
+          return {
+            id: i,
+            date,
+            isWeekend: date.isoWeekday() > 5,
+          }
+        }
       )
 
       const firstVisibleDate = moment().startOf(this.range)
@@ -379,6 +359,21 @@ export default {
       this.scrollAreaElement.scroll({ left, behavior })
       this.$refs.gridHeader.scroll({ left, behavior })
     },
+    scrollToStartDate(date) {
+      const dateDiff = this.dateDiff(this.firstAvailableDate, date)
+      const colIndex = Math.max(0, dateDiff - 5)
+      const scrollOffset = colIndex * this.columnWidth
+      this.scrollHorizontal(scrollOffset, 'smooth')
+    },
+    scrollToEndDate(date) {
+      const dateDiff = this.dateDiff(this.firstAvailableDate, date)
+      const colIndex = Math.min(
+        this.columns.length,
+        dateDiff - this.visibleColumnCount + 5
+      )
+      const scrollOffset = colIndex * this.columnWidth
+      this.scrollHorizontal(scrollOffset, 'smooth')
+    },
     selectDate(date) {
       const firstVisibleDate = date.startOf(this.range)
       const firstVisibleIndex = this.dateDiff(
@@ -391,28 +386,3 @@ export default {
   },
 }
 </script>
-
-<style>
-.timeline-container {
-  height: 100%;
-  width: 100%;
-  background-color: white;
-  position: relative;
-}
-
-.timeline-container__grid-header {
-  width: 100%;
-  overflow: hidden;
-}
-
-.timeline-container__grid-body {
-  width: 100%;
-  overflow: auto;
-  position: relative;
-}
-
-.timeline-container__header {
-  display: flex;
-  justify-content: space-between;
-}
-</style>

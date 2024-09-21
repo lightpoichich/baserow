@@ -1,0 +1,22 @@
+.timeline-container {
+    height: 100%;
+    width: 100%;
+    background-color: white;
+    position: relative;
+  }
+  
+  .timeline-container__grid-header {
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .timeline-container__grid-body {
+    width: 100%;
+    overflow: auto;
+    position: relative;
+  }
+  
+  .timeline-container__header {
+    display: flex;
+    justify-content: space-between;
+  }

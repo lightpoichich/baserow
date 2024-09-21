@@ -81,17 +81,6 @@ export default {
      * remove the event listeners when the cell is unselected.
      */
     setupAllEventListenersOnCellSelected() {
-      const clickEventListener = (event) => {
-        const timestamp = new Date().getTime()
-        if (
-          this.clickTimestamp !== null &&
-          timestamp - this.clickTimestamp < 200
-        ) {
-          this.doubleClick(event)
-        }
-
-        this.clickTimestamp = timestamp
-      }
       // this.addEventListenerWithAutoRemove(this.$el, 'click', clickEventListener)
       this.addEventListenerWithAutoRemove(
         this.$el,

@@ -1,21 +1,17 @@
 <template>
   <div
     class="timeline-grid-header"
-    :style="{
-      height: `${headerHeight}px`,
-      width: `${gridWidth}px`,
-    }"
+    :style="{ width: `${gridWidth}px`, height: '100%' }"
   >
     <template v-for="slot in columnsBuffer">
       <div
+        v-show="slot.item !== undefined"
         :key="'h' + slot.id"
         :style="{
           transform: `translateX(${slot.position.left || 0}px)`,
           width: `${columnWidth}px`,
-          height: `${headerHeight}px`,
         }"
         class="timeline-grid-header__column"
-        v-show="slot.item !== undefined"
       >
         <div>{{ formatDate(slot.item.date, 'D') }}</div>
       </div>
@@ -40,10 +36,6 @@ export default {
     columnCount: {
       type: Number,
       required: true,
-    },
-    headerHeight: {
-      type: Number,
-      default: 32,
     },
   },
   computed: {

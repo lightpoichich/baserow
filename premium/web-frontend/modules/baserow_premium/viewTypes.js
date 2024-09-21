@@ -488,7 +488,6 @@ export class CalendarViewType extends PremiumViewType {
   }
 }
 
-
 export class TimelineViewType extends PremiumViewType {
   static getType() {
     return 'timeline'
@@ -666,7 +665,6 @@ export class TimelineViewType extends PremiumViewType {
     //   context.rootGetters[
     //     storePrefix + 'view/timeline/getStartDateFieldIdIfNotTrashed'
     //   ](fields)
-
     // if (dateFieldId === field.id) {
     //   const type = this.app.$registry.get('field', field.type)
     //   if (!type.canRepresentDate(field)) {

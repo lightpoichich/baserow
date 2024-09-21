@@ -97,10 +97,6 @@
     "tldjs": "^2.3.1",
     "uuid": "9.0.0",
     "vue-chartjs": "4.1.2",
-    "vue-perfect-scrollbar": "^0.2.1",
-    "vue-scroll-sync": "^1.0.5",
-    "vue-virtual-scroll-list": "^2.3.5",
-    "vue-virtual-scroller": "^1.1.2",
     "vue2-smooth-scroll": "^1.6.0",
     "vuejs-datepicker": "1.6.2",
     "vuelidate": "0.7.7"

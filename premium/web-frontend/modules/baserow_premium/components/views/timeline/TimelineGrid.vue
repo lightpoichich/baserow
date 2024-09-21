@@ -8,6 +8,7 @@
   >
     <template v-for="slot in columnsBuffer">
       <div
+        v-show="slot.item !== undefined"
         :key="'c' + slot.id"
         :style="{
           transform: `translateX(${slot.position.left || 0}px)`,
@@ -15,12 +16,18 @@
           height: `${gridHeight}px`,
         }"
         class="timeline-grid__column"
-        v-show="slot.item !== undefined"
+        :class="{ 'timeline-grid__column--weekend': slot.item?.isWeekend }"
       ></div>
     </template>
     <template v-for="slot in rowsBuffer">
       <div
+        v-show="slot.item !== undefined"
         :key="'r' + slot.id"
+        v-tooltip="
+          `${slot.item?.startDate?.format(
+            'll'
+          )} -> ${slot.item?.endDate?.format('ll')}`
+        "
         :style="{
           transform: `translateY(${slot.position.top || 0}px) translateX(${
             slot.item?.startOffset || 0
@@ -29,10 +36,38 @@
           width: `${slot.item?.width || 0}px`,
         }"
         class="timeline-grid__row"
-        v-show="slot.item !== undefined"
+        tooltip-position="bottom-cursor"
       >
         <div v-if="slot.item" class="timeline-grid__row-event">
           <div>{{ slot.item.title }}</div>
+        </div>
+
+        <div
+          v-if="slot.item?.showGotoStartIcon"
+          v-tooltip="slot.item.startDate.format('ll')"
+          tooltip-position="bottom-right"
+          :style="{
+            transform: `translateX(${scrollLeft - slot.item.startOffset}px)`,
+          }"
+          class="timeline-grid__row-goto-start"
+          @click="$emit('goto-start', slot.item.startDate)"
+        >
+          <i class="iconoir-arrow-left"></i>
+        </div>
+
+        <div
+          v-if="slot.item?.showGotoEndIcon"
+          v-tooltip="slot.item.endDate.format('ll')"
+          tooltip-position="bottom-left"
+          :style="{
+            transform: `translateX(${
+              scrollRight - slot.item.startOffset - 22
+            }px)`,
+          }"
+          class="timeline-grid__row-goto-end"
+          @click="$emit('goto-end', slot.item.endDate)"
+        >
+          <i class="iconoir-arrow-right"></i>
         </div>
       </div>
     </template>
@@ -66,6 +101,14 @@ export default {
       required: true,
     },
     rowCount: {
+      type: Number,
+      required: true,
+    },
+    scrollLeft: {
+      type: Number,
+      required: true,
+    },
+    scrollRight: {
       type: Number,
       required: true,
     },

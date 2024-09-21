@@ -1,11 +1,17 @@
 <template>
-  <div class="timeline-sidebar" :style="{height: `${rowHeight * rowCount}px`}">
-    <template v-for="slot in rowsBuffer" >
+  <div
+    class="timeline-sidebar"
+    :style="{ height: `${rowHeight * rowCount}px` }"
+  >
+    <template v-for="slot in rowsBuffer">
       <div
-        :key="slot.id"
-        :style="{ transform: `translateY(${rowsBuffer[0]?.position.top || 0}px)`, height: `${rowHeight}px` }"
-        class="timeline-sidebar__event"
         v-show="slot.item !== undefined"
+        :key="slot.id"
+        :style="{
+          transform: `translateY(${rowsBuffer[0]?.position.top || 0}px)`,
+          height: `${rowHeight}px`,
+        }"
+        class="timeline-sidebar__event"
       >
         <div v-if="slot.item">
           {{ getRowTitle(slot.item) }}
@@ -54,7 +60,7 @@ export default {
   width: 200px;
 }
 
-.timeline-sidebar__event {  
+.timeline-sidebar__event {
   width: 100%;
   border: 1px solid grey;
 }

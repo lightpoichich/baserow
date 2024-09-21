@@ -16,7 +16,11 @@ import timelineStore from '@baserow_premium/store/view/timeline'
 import impersonatingStore from '@baserow_premium/store/impersonating'
 import { PremiumDatabaseApplicationType } from '@baserow_premium/applicationTypes'
 import { registerRealtimeEvents } from '@baserow_premium/realtime'
-import { KanbanViewType, CalendarViewType, TimelineViewType } from '@baserow_premium/viewTypes'
+import {
+  KanbanViewType,
+  CalendarViewType,
+  TimelineViewType,
+} from '@baserow_premium/viewTypes'
 
 import {
   LeftBorderColorViewDecoratorType,

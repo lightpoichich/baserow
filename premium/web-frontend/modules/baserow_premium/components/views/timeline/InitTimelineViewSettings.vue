@@ -8,6 +8,7 @@
       ref="dateFieldSelectForm"
       :all-date-fields="dateFields"
       :view="view"
+      :read-only="false"
       @submitted="submitted"
     >
       <div class="actions">
@@ -37,22 +38,9 @@ export default {
       type: Object,
       required: true,
     },
-    table: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
-    },
-    database: {
-      type: Object,
-      required: true,
-    },
-    dateFieldId: {
-      type: Number,
-      required: false,
-      default: null,
     },
   },
   data() {

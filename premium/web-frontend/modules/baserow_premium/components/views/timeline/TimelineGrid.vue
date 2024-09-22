@@ -40,17 +40,16 @@
           class="timeline-grid__row-event"
           @click="$emit('edit-row', slot.item)"
         >
-          
           <RecursiveWrapper
             :components="wrapperComponent(slot)"
             first-component-class="timeline-grid__row-event-label-decoration"
           >
-          <component
-            v-for="dec in slot.item.firstCellDecorations"
-            :is="dec.component"
-            :key="dec.decoration.id"
-            v-bind="dec.propsFn(slot.item.row)"
-          />
+            <component
+              :is="dec.component"
+              v-for="dec in slot.item?.firstCellDecorations"
+              :key="dec.decoration.id"
+              v-bind="dec.propsFn(slot.item.row)"
+            />
             <div
               :ref="`label-${slot.id}`"
               class="timeline-grid__row-event-label"
@@ -191,7 +190,9 @@ export default {
         ...comp,
         props: comp.propsFn(slot.item?.row),
       }))
-      return decoration.length ? decoration : [{component: EmptyEventWrapper}]
+      return decoration?.length
+        ? decoration
+        : [{ component: EmptyEventWrapper }]
     },
     formatDate(date, format) {
       return moment(date).format(format)

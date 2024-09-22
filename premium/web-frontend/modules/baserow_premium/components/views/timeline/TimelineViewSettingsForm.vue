@@ -6,13 +6,17 @@
           {{ $t('timelineViewSettingsForm.startDateField') }}
         </label>
         <div class="control__elements">
-          <Dropdown v-model="values.startDateFieldId" :show-search="true">
+          <Dropdown
+            v-model="values.startDateFieldId"
+            :show-search="true"
+            :disabled="readOnly"
+            :placeholder="readOnly ? ' ' : $t('action.makeChoice')"
+          >
             <DropdownItem :key="null" name="" :value="null">
               <div :style="{ height: '15px' }"></div>
             </DropdownItem>
             <DropdownItem
-              v-for="dateField in allDateFields"
-              v-if="dateField.id !== values.endDateFieldId"
+              v-for="dateField in availableStartDateFields"
               :key="dateField.id"
               :name="dateField.name"
               :value="dateField.id"
@@ -30,13 +34,16 @@
           {{ $t('timelineViewSettingsForm.endDateField') }}
         </label>
         <div class="control__elements">
-          <Dropdown v-model="values.endDateFieldId" :show-search="true">
+          <Dropdown
+            v-model="values.endDateFieldId"
+            :show-search="true"
+            :disabled="readOnly"
+          >
             <DropdownItem :key="null" name="" :value="null">
               <div :style="{ height: '15px' }"></div>
             </DropdownItem>
             <DropdownItem
-              v-for="dateField in allDateFields"
-              v-if="dateField.id !== values.startDateFieldId"
+              v-for="dateField in availableEndDateFields"
               :key="dateField.id"
               :name="dateField.name"
               :value="dateField.id"
@@ -73,6 +80,10 @@ export default {
       type: Object,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -82,7 +93,30 @@ export default {
       },
     }
   },
-  mounted() {},
+  computed: {
+    availableStartDateFields() {
+      return this.allDateFields.filter(
+        (f) => f.id !== this.values.endDateFieldId
+      )
+    },
+    availableEndDateFields() {
+      return this.allDateFields.filter(
+        (f) => f.id !== this.values.startDateFieldId
+      )
+    },
+  },
+  watch: {
+    'view.start_date_field'(value) {
+      if (this.values.startDateFieldId === null) {
+        this.values.startDateFieldId = value
+      }
+    },
+    'view.end_date_field'(value) {
+      if (this.values.endDateFieldId === null) {
+        this.values.endDateFieldId = value
+      }
+    },
+  },
   methods: {
     fieldIcon(type) {
       const ft = this.$registry.get('field', type)

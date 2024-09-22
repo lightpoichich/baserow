@@ -147,6 +147,11 @@ export default {
       type: Object,
       required: true,
     },
+    showRows: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -186,7 +191,9 @@ export default {
   },
   computed: {
     rows() {
-      return this.$store.getters[this.storePrefix + 'view/timeline/getRows']
+      return this.showRows
+        ? this.$store.getters[this.storePrefix + 'view/timeline/getRows']
+        : []
     },
     rowCount() {
       return this.rows.length
@@ -260,7 +267,7 @@ export default {
     visibleFields() {
       this.updateRowsBuffer()
     },
-    activeDecorations() {
+    'view.decorations'() {
       this.updateRowsBuffer()
     },
   },
@@ -306,7 +313,6 @@ export default {
     if (this.row !== null) {
       this.populateAndEditRow(this.row)
     }
-    console.log(this.decorationsByPlace)
   },
   beforeCreate() {
     this.$options.computed = {
@@ -440,7 +446,11 @@ export default {
       if (!startDate || !endDate || startDate.isAfter(endDate)) {
         return event
       }
-      const startIndex = this.dateDiff(this.firstAvailableDate, startDate, false)
+      const startIndex = this.dateDiff(
+        this.firstAvailableDate,
+        startDate,
+        false
+      )
       const startOffset = startIndex * this.columnWidth + 3
       const endIndex = this.dateDiff(this.firstAvailableDate, endDate)
       const endOffset = endIndex * this.columnWidth
@@ -508,7 +518,8 @@ export default {
       const getPosition = (col, pos) => ({
         left: (startIndex + pos) * this.columnWidth,
       })
-      this.scrollNow = moment().diff(this.firstAvailableDate, 'hour') / 24 * this.columnWidth
+      this.scrollNow =
+        (moment().diff(this.firstAvailableDate, 'hour') / 24) * this.columnWidth
       this.firstVisibleDate = this.firstAvailableDate
         .clone()
         .add(startIndex + 1, this.unit)
@@ -573,7 +584,7 @@ export default {
      */
     rowClick(row) {
       this.$refs.rowEditModal.show(row.id)
-      this.$emit('selected-row', row)
+      // this.$emit('selected-row', row) // TODO: investigate why is causing some max-recursion error
     },
     /**
      * Calls action in the store to refresh row directly from the backend - f. ex.

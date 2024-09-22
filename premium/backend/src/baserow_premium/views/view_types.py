@@ -747,5 +747,16 @@ class TimelineViewType(ViewType):
 
         return hidden_field_ids
 
+    def _reset_views_with_incpompatible_fields(self, field):
+        TimelineView.objects.filter(start_date_field_id=field.id).update(
+            start_date_field_id=None
+        )
+        TimelineView.objects.filter(end_date_field_id=field.id).update(
+            end_date_field_id=None
+        )
+
+    def after_field_delete(self, field: Field) -> None:
+        self._reset_views_with_incpompatible_fields(field)
+
     def enhance_queryset(self, queryset):
         return queryset.prefetch_related("timelineviewfieldoptions_set")

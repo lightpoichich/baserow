@@ -212,10 +212,16 @@
     "dateSettings": "Date settings",
     "labels": "Labels"
   },
+  "selectDateFieldContext": {
+    "update": "Update"
+  },
   "timelineViewSettingsForm": {
     "startDateField": "Start date",
     "endDateField": "End date",
     "noCompatibleDateFields": "There are no date fields in this table, please create one first."
+  },
+  "initTimelineViewSettings": {
+    "settings": "Date settings"
   },
   "viewDateSelector": {
     "today": "Today"

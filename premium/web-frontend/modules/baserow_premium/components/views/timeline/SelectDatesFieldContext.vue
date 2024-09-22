@@ -1,17 +1,16 @@
 <template>
-  <Context
-    :style="{ padding: '16px 20px', width: '320px' }"
-  >
+  <Context :style="{ padding: '16px 20px', width: '320px' }">
     <TimelineViewSettingsForm
       ref="datesFieldSelectForm"
       :all-date-fields="allDateFields"
       :view="view"
+      :read-only="readOnly"
       @submitted="submitted"
     >
       <div class="actions">
-        <div>
+        <div v-if="!readOnly">
           <Button type="secondary" :loading="loading" :disabled="loading">
-            {{ $t('selectDateFieldModal.save') }}</Button
+            {{ $t('selectDateFieldContext.update') }}</Button
           >
         </div>
       </div>
@@ -37,6 +36,10 @@ export default {
     },
     fields: {
       type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

@@ -4,10 +4,14 @@
       <a
         ref="dateSettingsLink"
         class="header__filter-link"
-        :class="!canChooseDatesField ? 'header__filter-link--disabled' : ''"
         @click="showChooseDatesFieldContext"
       >
-        <i class="header__filter-icon iconoir-calendar"></i>
+        <i
+          class="header__filter-icon"
+          :class="[
+            needsDateFields ? 'iconoir-warning-triangle' : 'iconoir-calendar',
+          ]"
+        ></i>
         <span class="header__filter-name">
           {{ $t('timelineViewHeader.dateSettings') }}
         </span>
@@ -16,11 +20,12 @@
         ref="dateSettingsContext"
         :fields="fields"
         :view="view"
+        :read-only="!canChooseDateField"
         @refresh="$emit('refresh', $event)"
       >
       </SelectDatesFieldContext>
     </li>
-    <li v-if="startDateFieldId != null" class="header__filter-item">
+    <li v-if="!needsDateFields" class="header__filter-item">
       <a
         ref="customizeContextLink"
         class="header__filter-link"
@@ -112,11 +117,26 @@ export default {
     },
   },
   computed: {
+    canChooseDateField() {
+      return (
+        !this.readOnly &&
+        this.$hasPermission(
+          'database.table.view.update',
+          this.view,
+          this.database.workspace.id
+        )
+      )
+    },
     startDateFieldId() {
       return this.view.start_date_field
     },
     startDateField() {
       return this.getStartDateField()
+    },
+    needsDateFields() {
+      return (
+        this.getStartDateField() === null || this.getEndDateField() === null
+      )
     },
     timezone() {
       const dateField = this.startDateField
@@ -142,16 +162,6 @@ export default {
     ...mapState({
       tableLoading: (state) => state.table.loading,
     }),
-    canChooseDatesField() {
-      return (
-        !this.readOnly &&
-        this.$hasPermission(
-          'database.table.view.update',
-          this.view,
-          this.database.workspace.id
-        )
-      )
-    },
   },
   beforeCreate() {
     this.$options.computed = {
@@ -164,20 +174,29 @@ export default {
     }
   },
   methods: {
+    getDateField(fieldId) {
+      const field = this.fields.find((field) => field.id === fieldId)
+      if (field) {
+        const fieldType = this.$registry.get('field', field.type)
+        if (fieldType.canRepresentDate(field)) {
+          return field
+        }
+      }
+      return null
+    },
     getStartDateField() {
-      return this.fields.find(
-        (field) => field.id === this.view.start_date_field
-      )
+      return this.getDateField(this.view.start_date_field)
+    },
+    getEndDateField() {
+      return this.getDateField(this.view.end_date_field)
     },
     showChooseDatesFieldContext() {
-      if (this.canChooseDatesField) {
-        this.$refs.dateSettingsContext.toggle(
-            this.$refs.dateSettingsLink,
-            'bottom',
-            'left',
-            4
-          )
-      }
+      this.$refs.dateSettingsContext.toggle(
+        this.$refs.dateSettingsLink,
+        'bottom',
+        'left',
+        4
+      )
     },
     async updateAllFieldOptions({ newFieldOptions, oldFieldOptions }) {
       try {

@@ -27,6 +27,11 @@
     </div>
     <div
       ref="gridBody"
+      v-auto-scroll="{
+        enabled: () => dragAndDropDraggingRow !== null,
+        speed: 5,
+        padding: 20,
+      }"
       :style="{
         height: `calc(100% - ${gridBodyHeightOffset}px)`,
       }"
@@ -50,9 +55,28 @@
         :scroll-left="scrollLeft"
         :scroll-right="scrollRigth"
         :scroll-now="scrollNow"
+        @expand-row="rowClick"
         @goto-start="scrollToStartDate"
         @goto-end="scrollToEndDate"
-        @edit-row="rowClick"
+        @hover-row="setRowHover"
+        @resize-row="resizeRow"
+        @mousedown="
+          ($event) =>
+            rowDown(
+              $event.event,
+              $event.slot.item.row,
+              readOnly ||
+                !$hasPermission(
+                  'database.table.move_row',
+                  table,
+                  database.workspace.id
+                )
+            )
+        "
+        @mousemove="($event) => rowMoveOver($event.event, $event.slot.item.row)"
+        @mouseenter="
+          ($event) => rowMoveOver($event.event, $event.slot.item.row)
+        "
       />
     </div>
     <RowEditModal
@@ -115,6 +139,7 @@ import TimelineGridHeader from '@baserow_premium/components/views/timeline/Timel
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
+import bufferedRowsDragAndDrop from '@baserow/modules/database/mixins/bufferedRowsDragAndDrop'
 import { populateRow } from '@baserow/modules/database/store/view/grid'
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -129,7 +154,7 @@ export default {
     ViewDateSelector,
     RowEditModal,
   },
-  mixins: [viewHelpers, viewDecoration],
+  mixins: [viewHelpers, bufferedRowsDragAndDrop, viewDecoration],
   props: {
     view: {
       type: Object,
@@ -180,12 +205,13 @@ export default {
       scrollRigth: 0,
       scrollNow: 0,
       showHiddenFieldsInRowModal: false,
+      dragAndDropCloneClass: 'timeline-view__row--dragging-clone',
       // monthly view settings
       visibleColumnCount: 31,
       unit: 'day',
       range: 'month',
-      firstAvailableDate: moment().subtract(1, 'year').startOf('year'),
-      lastAvailableDate: moment().add(1, 'year').endOf('year'),
+      firstAvailableDate: moment.utc().subtract(1, 'year').startOf('year'),
+      lastAvailableDate: moment.utc().add(1, 'year').endOf('year'),
       firstVisibleDate: null,
     }
   },
@@ -266,9 +292,11 @@ export default {
     },
     visibleFields() {
       this.updateRowsBuffer()
+      this.updateRowsBufferEventFlags()
     },
-    'view.decorations'() {
+    activeDecorations() {
       this.updateRowsBuffer()
+      this.updateRowsBufferEventFlags()
     },
   },
   mounted() {
@@ -325,6 +353,9 @@ export default {
     }
   },
   methods: {
+    getDragAndDropStoreName(props) {
+      return `${props.storePrefix}view/timeline`
+    },
     dateDiff(startDate, endDate, includeEnd = true) {
       return endDate.diff(startDate, this.unit) + (includeEnd ? 1 : 0)
     },
@@ -435,6 +466,8 @@ export default {
         title: row[`field_${this.primaryField.id}`],
         label: this.getRowLabel(row),
         row,
+        startFieldId: this.view.start_date_field,
+        endFieldId: this.view.end_date_field,
         firstCellDecorations: this.decorationsByPlace?.first_cell || [],
         wrapperDecorations: this.decorationsByPlace?.wrapper || [],
       }
@@ -451,10 +484,12 @@ export default {
         startDate,
         false
       )
-      const startOffset = startIndex * this.columnWidth + 3
+      const padStart = 3
+      const padEnd = 8
+      const startOffset = startIndex * this.columnWidth
       const endIndex = this.dateDiff(this.firstAvailableDate, endDate)
       const endOffset = endIndex * this.columnWidth
-      const width = (endIndex - startIndex) * this.columnWidth - 8
+      const width = (endIndex - startIndex) * this.columnWidth
 
       return {
         ...event,
@@ -465,6 +500,8 @@ export default {
         endIndex,
         endOffset,
         width,
+        padStart,
+        padEnd,
         showGotoStartIcon: false,
         showGotoEndIcon: false,
       }
@@ -553,7 +590,34 @@ export default {
       )
       this.scrollHorizontal(firstVisibleIndex * this.columnWidth, 'smooth')
     },
+    async resizeRow(row, fieldId, offset) {
+      if (!offset) {
+        return
+      }
+      const oldValue = row[`field_${fieldId}`]
+      const field = this.fields.find((f) => f.id === fieldId)
+      const fieldType = this.$registry.get('field', field.type)
+      const newDate = this.firstAvailableDate.clone().add(offset, this.unit)
+      const newValue = fieldType.formatValue(field, newDate)
+      await this.updateValue({
+        field,
+        row,
+        value: newValue,
+        oldValue,
+      })
+    },
     async updateValue({ field, row, value, oldValue }) {
+
+      const optimisticUiCallback = (r) => {
+        // Update also the values needed to propery show the event in the timeline if the
+        // row is in the buffer.
+        const slot = this.rowsBuffer.find((slot) => slot.item?.row.id === r.id)
+        if (slot) {
+          slot.item = this.setupRowEvent(r)
+          this.updateSlotEventFlags(slot)
+        }
+      }
+
       try {
         await this.$store.dispatch(
           this.storePrefix + 'view/timeline/updateRowValue',
@@ -565,18 +629,19 @@ export default {
             field,
             value,
             oldValue,
+            optimisticUiCallback,
           }
         )
       } catch (error) {
         notifyIf(error, 'field')
       }
-      // Update also the values needed to propery show the event in the timeline if the
-      // row is in the buffer.
-      const slot = this.rowsBuffer.find((slot) => slot.item?.id === row.id)
-      if (slot) {
-        slot.item = this.setupRowEvent(row)
-        this.updateSlotEventFlags(slot)
-      }
+      optimisticUiCallback(row)
+    },
+    async setRowHover(row, hover) {
+      await this.$store.dispatch(
+        `${this.storePrefix}view/timeline/setRowHover`,
+        { row, hover }
+      )
     },
     /**
      * Is called when the user clicks on the card but did not move it to another
@@ -584,7 +649,7 @@ export default {
      */
     rowClick(row) {
       this.$refs.rowEditModal.show(row.id)
-      // this.$emit('selected-row', row) // TODO: investigate why is causing some max-recursion error
+      this.$emit('selected-row', row) // TODO: investigate why is causing some max-recursion error
     },
     /**
      * Calls action in the store to refresh row directly from the backend - f. ex.

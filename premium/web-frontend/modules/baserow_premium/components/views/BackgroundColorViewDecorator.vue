@@ -1,10 +1,12 @@
 <template functional>
   <div
     :class="
-      props.value ? `${data.class || ''} background-color--${props.value}` : ''
+      props.value
+        ? `${data.class || ''} background-color--${props.value}`
+        : `${data.class || ''}`
     "
   >
-    <slot />
+    <slot></slot>
   </div>
 </template>
 

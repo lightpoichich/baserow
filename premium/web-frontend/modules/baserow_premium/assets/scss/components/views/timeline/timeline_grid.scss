@@ -45,6 +45,16 @@
     display: flex;
     align-items: center;
     cursor: pointer;
+
+    &.timeline-grid__row--dragging {
+        visibility: hidden;
+    }
+
+    &.timeline-grid__row--dragging-clone {
+        pointer-events: none;
+        opacity: 0.9;
+        height: 32px;
+      }
 }
 
 .timeline-grid__row-start {
@@ -59,7 +69,19 @@
     border-radius: 4px;
     height: 80%;
     width: 100%;
-   
+}
+
+.timeline-grid__row-event-resize-handle {
+    position: absolute;
+    width: 3px;
+    height: 60%;
+    background-color: $color-neutral-400;
+    display: none;
+    cursor: ew-resize;
+}
+
+.timeline-grid__row-event-resize-handle--visible {
+    display: block;
 }
 
 .timeline-grid__row-event-label-decoration {

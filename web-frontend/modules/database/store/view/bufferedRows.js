@@ -61,6 +61,8 @@ export default ({ service, customPopulateRow }) => {
     if (row._ == null) {
       row._ = {
         metadata,
+        dragging: false,
+        hovering: false,
       }
     }
     // Matching rows for front-end only search is not yet properly
@@ -248,6 +250,9 @@ export default ({ service, customPopulateRow }) => {
       state.rows[index]._.dragging = false
       state.draggingRow = null
       state.draggingOriginalBefore = null
+    },
+    SET_ROW_HOVER(state, { index, hover }) {
+      state.rows[index]._.hovering = hover
     },
     SET_SEARCH(state, { activeSearchTerm }) {
       state.activeSearchTerm = activeSearchTerm
@@ -694,7 +699,7 @@ export default ({ service, customPopulateRow }) => {
      */
     async updateRowValue(
       { commit, dispatch },
-      { table, view, row, field, fields, value, oldValue }
+      { table, view, row, field, fields, value, oldValue, optimisticUiCallback }
     ) {
       const { newRowValues, oldRowValues, updateRequestValues } =
         prepareNewOldAndUpdateRequestValues(
@@ -720,6 +725,10 @@ export default ({ service, customPopulateRow }) => {
         row,
         values: { ...newRowValues },
       })
+
+      if (optimisticUiCallback) {
+        optimisticUiCallback(row)
+      }
 
       try {
         // Add the update actual update function to the queue so that the same row
@@ -910,6 +919,15 @@ export default ({ service, customPopulateRow }) => {
       if (index > -1) {
         commit('DELETE_ROW_AT_INDEX', { index })
       }
+    },
+    /**
+     * Set the hover state of a row in the store.
+     */
+    setRowHover({ commit, getters }, { row, hover }) {
+      const index = getters.getRows.findIndex(
+        (r) => r !== null && r.id === row.id
+      )
+      commit('SET_ROW_HOVER', { index, hover })
     },
     /**
      * Brings the provided row in a dragging state so that it can freely moved to

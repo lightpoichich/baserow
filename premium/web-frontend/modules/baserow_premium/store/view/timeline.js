@@ -6,6 +6,7 @@ export function populateRow(row, metadata = {}) {
   row._ = {
     metadata,
     dragging: false,
+    hovering: false,
   }
   return row
 }
@@ -18,8 +19,6 @@ const timelineBufferedRows = bufferedRows({
 const timelineFieldOptions = fieldOptions()
 
 export const state = () => ({
-  startDateFieldId: null,
-  endDateFieldId: null,
   ...timelineBufferedRows.state(),
   ...timelineFieldOptions.state(),
 })
@@ -27,25 +26,12 @@ export const state = () => ({
 export const mutations = {
   ...timelineBufferedRows.mutations,
   ...timelineFieldOptions.mutations,
-  SET_START_FIELD_ID(state, startDateFieldId) {
-    state.startDateFieldId = startDateFieldId
-  },
-  SET_END_FIELD_ID(state, endDateFieldId) {
-    state.endDateFieldId = endDateFieldId
-  },
-  SET_TITLE_FIELD_ID(state, titleFieldId) {
-    state.titleFieldId = titleFieldId
-  },
 }
 
 export const actions = {
   ...timelineBufferedRows.actions,
   ...timelineFieldOptions.actions,
   async fetchInitial({ dispatch, commit, rootGetters }, { viewId, fields }) {
-    const view = rootGetters['view/get'](viewId)
-    commit('SET_START_FIELD_ID', view.start_date_field)
-    commit('SET_END_FIELD_ID', view.end_date_field)
-
     const data = await dispatch('fetchInitialRows', {
       viewId,
       fields,

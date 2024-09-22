@@ -20,6 +20,11 @@ export default {
       required: false,
       default: null,
     },
+    stopPropagation: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -31,6 +36,9 @@ export default {
   methods: {
     start(event) {
       event.preventDefault()
+      if (this.stopPropagation) {
+        event.stopPropagation()
+      }
       this.dragging = true
       this.mouseStart = event.clientX
       this.startWidth = parseFloat(this.width)

@@ -26,14 +26,14 @@ export default {
   },
   methods: {
     selectPrevious() {
-      const newSelectedDate = moment(this.selectedDate).subtract(1, 'month')
+      const newSelectedDate = moment.utc(this.selectedDate).subtract(1, 'month')
       this.$emit('date-selected', newSelectedDate)
     },
     selectCurrent() {
-      this.$emit('date-selected', moment())
+      this.$emit('date-selected', moment.utc())
     },
     selectNext() {
-      const newSelectedDate = moment(this.selectedDate).add(1, 'month')
+      const newSelectedDate = moment.utc(this.selectedDate).add(1, 'month')
       this.$emit('date-selected', newSelectedDate)
     },
   },

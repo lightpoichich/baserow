@@ -370,6 +370,9 @@ export default {
       context.table = this.table
       this.$emit('update', context)
     },
+    isOpen() {
+      return this.getRootModal().isOpen()
+    },
   },
 }
 </script>

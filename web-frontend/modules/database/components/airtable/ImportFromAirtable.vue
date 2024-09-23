@@ -75,6 +75,7 @@ export default {
   },
   methods: {
     async submit() {
+      this.$emit('submit')
       if (this.loading) {
         return
       }

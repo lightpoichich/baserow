@@ -1,7 +1,7 @@
 <template>
   <ModalV2
-    :can-close="!jobIsRunning"
-    :close-button="!jobIsRunning"
+    :can-close="!job.isRunning"
+    :close-button="!job.isRunning"
     @show="loading = false"
     @hidden="handleHidden"
   >
@@ -20,6 +20,7 @@
         :default-name="getDefaultName()"
         :loading="loading"
         @submitted="submitted"
+        @airtable-submitted="handleAirtableSubmitted"
         @job-done="handleJobDone($event)"
         @job-updated="handleJobUpdated($event)"
         @job-failed="handleJobFailed($event)"
@@ -30,37 +31,17 @@
     </template>
 
     <template #footer-content>
-      <ProgressBar
-        v-if="importType === 'airtable' && (jobIsRunning || jobHasSucceeded)"
-        :value="jobProgressPercentage"
-        :status="jobStatus"
-      />
-
-      <template v-if="importType === 'airtable'">
-        <Button
-          v-if="!jobHasSucceeded"
-          :loading="loading"
-          :disabled="loading"
-          @click="handleImportFromAirtableBtn"
-        >
-          {{ $t('importFromAirtable.importButtonLabel') }}
-        </Button>
-
-        <Button v-else type="secondary" @click="openDatabase">
-          {{ $t('importFromAirtable.openButtonLabel') }}</Button
-        >
-      </template>
-
-      <Button
-        v-else
-        type="primary"
+      <component
+        :is="applicationType.getApplicationFormFooterComponent()"
+        ref="applicationFormFooter"
+        :application-type="applicationType"
+        :import-type="importType"
         :loading="loading"
-        :disabled="loading"
-        @click="$refs.applicationForm.submit()"
+        :job="job"
+        @submit="handleSubmit"
+        @open-database="handleOpenDatabase"
       >
-        {{ $t('action.add') }}
-        {{ applicationType.getName() | lowercase }}
-      </Button>
+      </component>
     </template>
   </ModalV2>
 </template>
@@ -87,11 +68,13 @@ export default {
     return {
       loading: false,
       importType: null,
-      jobHasSucceeded: false,
-      jobIsRunning: false,
-      jobStatus: '',
-      jobProgressPercentage: 0,
-      jobDatabaseId: null,
+      job: {
+        hasSucceeded: false,
+        isRunning: false,
+        status: '',
+        progressPercentage: 0,
+        databaseId: null,
+      },
     }
   },
   computed: {},
@@ -126,47 +109,54 @@ export default {
         this.loading = false
       }
     },
-    async openDatabase() {
+    async handleOpenDatabase() {
       const application = this.$store.getters['application/get'](
-        this.jobDatabaseId
+        this.job.databaseId
       )
       const type = this.$registry.get('application', application.type)
       if (await type.select(application, this)) {
         this.hide()
-        this.jobIsRunning = false
-        this.jobHasSucceeded = false
+        this.job.isRunning = false
+        this.job.hasSucceeded = false
       }
+    },
+    handleSubmit() {
+      this.loading = true
+      this.$refs.applicationForm.submit()
     },
     handleImportFromAirtableBtn() {
       this.loading = true
       this.$refs.applicationForm.submit()
     },
     handleJobDone(event) {
-      this.jobStatus = event.state
-      this.jobProgressPercentage = event.progress_percentage
-      this.jobIsRunning = false
-      this.jobHasSucceeded = true
+      this.job.hasSucceeded = true
+      this.job.status = event.state
+      this.job.progressPercentage = event.progress_percentage
+      this.job.databaseId = event.databaseId
+      this.job.isRunning = false
       this.loading = false
-      this.jobDatabaseId = event.databaseId
     },
     handleJobUpdated(event) {
-      this.jobIsRunning = true
-      this.jobStatus = event.state
-      this.jobProgressPercentage = event.progress_percentage
+      this.job.isRunning = true
+      this.job.status = event.state
+      this.job.progressPercentage = event.progress_percentage
     },
     handleHidden() {
       this.importType = null
-      this.jobIsRunning = false
-      this.jobHasSucceeded = false
-      this.jobStatus = ''
-      this.jobProgressPercentage = 0
-      this.jobDatabaseId = null
+      this.job.isRunning = false
+      this.job.hasSucceeded = false
+      this.job.status = ''
+      this.job.progressPercentage = 0
+      this.job.databaseId = null
     },
     handleJobFailed(event) {
-      this.jobStatus = event.state
-      this.jobIsRunning = false
+      this.job.status = event.state
+      this.job.isRunning = false
       this.loading = false
-      this.jobHasSucceeded = false
+      this.job.hasSucceeded = false
+    },
+    handleAirtableSubmitted(event) {
+      this.loading = true
     },
   },
 }

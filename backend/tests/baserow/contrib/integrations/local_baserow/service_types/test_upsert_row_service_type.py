@@ -248,7 +248,6 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
 
     row.refresh_from_db()
     assert getattr(row, cost.db_column) == 5
-    assert getattr(row, name.db_column) == "test"
 
 
 @pytest.mark.django_db

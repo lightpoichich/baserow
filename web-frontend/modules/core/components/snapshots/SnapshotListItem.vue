@@ -22,7 +22,14 @@
         @click="restore"
         >{{ $t('snapshotListItem.restore') }}</a
       >
-      <a class="snapshots-modal__delete" @click="showDelete">{{
+      <a
+        v-if="restoreLoading"
+        class="snapshots-modal__delete"
+        @click="cancelJob(job.id)"
+      >
+        {{ $t('snapshotsModal.cancel') | lowercase }}
+      </a>
+      <a v-else class="snapshots-modal__delete" @click="showDelete">{{
         $t('snapshotListItem.delete')
       }}</a>
       <DeleteSnapshotModal
@@ -39,13 +46,14 @@ import SnapshotsService from '@baserow/modules/core/services/snapshots'
 import DeleteSnapshotModal from '@baserow/modules/core/components/snapshots/DeleteSnapshotModal'
 import { getHumanPeriodAgoCount } from '@baserow/modules/core/utils/date'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import jobProgress from '@baserow/modules/core/mixins/jobProgress'
+import job from '@baserow/modules/core/mixins/job'
+import { RestoreSnapshotJobType } from '@baserow/modules/core/jobTypes'
 
 export default {
   components: {
     DeleteSnapshotModal,
   },
-  mixins: [jobProgress],
+  mixins: [job],
   props: {
     snapshot: {
       type: Object,
@@ -64,17 +72,47 @@ export default {
       return this.$tc(`datetime.${period}Ago`, count)
     },
   },
-  beforeDestroy() {
-    this.stopPollIfRunning()
+  mounted() {
+    if (this.snapshot.restore_job_id && !this.job) {
+      this.restoreRunningState()
+    }
   },
   methods: {
+    restoreRunningState() {
+      const runningJob = this.$store.getters['job/getUnfinishedJobs'].find(
+        (job) => {
+          return (
+            job.type === RestoreSnapshotJobType.getType() &&
+            job.snapshot.id === this.snapshot.id
+          )
+        }
+      )
+      if (runningJob) {
+        this.job = runningJob
+        this.restoreLoading = true
+      }
+    },
+    onJobCancelled() {
+      this.restoreLoading = false
+      this.restoreFinished = false
+    },
+    showError(error, message) {
+      if (error.message && !message) {
+        message = error.message
+      }
+      if (message) {
+        this.$store.dispatch('toast/error', error, message)
+      } else {
+        notifyIf(error)
+      }
+    },
     async restore() {
       this.restoreLoading = true
       try {
-        const { data } = await SnapshotsService(this.$client).restore(
+        const { data: job } = await SnapshotsService(this.$client).restore(
           this.snapshot.id
         )
-        this.startJobPoller(data)
+        await this.createAndMonitorJob(job)
       } catch (error) {
         this.restoreLoading = false
         notifyIf(error)
@@ -83,23 +121,17 @@ export default {
     showDelete() {
       this.$refs.deleteSnapshotModal.show()
     },
-    // eslint-disable-next-line require-await
-    async onJobDone() {
+    onJobDone() {
       this.restoreLoading = false
       this.restoreFinished = true
     },
-    // eslint-disable-next-line require-await
-    async onJobFailed() {
+
+    onJobFailed() {
       this.restoreLoading = false
       this.showError(
         this.$t('clientHandler.notCompletedTitle'),
         this.$t('clientHandler.notCompletedDescription')
       )
-    },
-    // eslint-disable-next-line require-await
-    async onJobPollingError(error) {
-      this.restoreLoading = false
-      notifyIf(error)
     },
     getCustomHumanReadableJobState(jobState) {
       if (jobState.startsWith('importing')) {

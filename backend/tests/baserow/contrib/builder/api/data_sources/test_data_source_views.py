@@ -1679,7 +1679,7 @@ def create_user_table_and_role(data_fixture, user, builder, user_role):
         ("foo_role", "bar_role", False),
         # When the user and Element roles match, the fields should
         # be returned.
-        # ("foo_role", "foo_role", True),
+        ("foo_role", "foo_role", True),
     ],
 )
 def test_dispatch_data_sources_list_rows_with_elements_and_role(

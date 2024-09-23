@@ -645,30 +645,8 @@ def test_dispatch_data_source(api_client, data_fixture):
         row_id="2",
     )
 
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[0].id}')"
-                },
-            },
-            {
-                "name": "FieldB",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[1].id}')"
-                },
-            },
-        ],
-    )
-
     url = reverse(
-        "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": data_source.id},
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
     )
 
     response = api_client.post(
@@ -777,8 +755,7 @@ def test_dispatch_data_source_permission_denied(api_client, data_fixture):
     )
 
     url = reverse(
-        "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": data_source.id},
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
     )
 
     response = api_client.post(
@@ -820,30 +797,8 @@ def test_dispatch_data_source_using_formula(api_client, data_fixture):
         row_id='get("page_parameter.id")',
     )
 
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[0].id}')"
-                },
-            },
-            {
-                "name": "FieldB",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[1].id}')"
-                },
-            },
-        ],
-    )
-
     url = reverse(
-        "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": data_source.id},
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
     )
 
     response = api_client.post(
@@ -924,8 +879,7 @@ def test_dispatch_data_source_improperly_configured(api_client, data_fixture):
     )
 
     url = reverse(
-        "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": data_source1.id},
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source1.id}
     )
 
     # The given dispatch query context is wrong
@@ -946,8 +900,7 @@ def test_dispatch_data_source_improperly_configured(api_client, data_fixture):
     )
 
     url = reverse(
-        "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": data_source2.id},
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source2.id}
     )
 
     # The given dispatch query context is wrong
@@ -968,8 +921,7 @@ def test_dispatch_data_source_improperly_configured(api_client, data_fixture):
     )
 
     url = reverse(
-        "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": data_source3.id},
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source3.id}
     )
 
     # The given dispatch query context is wrong
@@ -991,8 +943,7 @@ def test_dispatch_data_source_improperly_configured(api_client, data_fixture):
     )
 
     url = reverse(
-        "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": data_source4.id},
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source4.id}
     )
 
 
@@ -1018,14 +969,15 @@ def test_dispatch_data_sources(api_client, data_fixture):
         user=user, application=builder
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
-    data_source_1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
         integration=integration,
         view=view,
         table=table,
+        row_id="2",
     )
-    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
         integration=integration,
@@ -1033,7 +985,7 @@ def test_dispatch_data_sources(api_client, data_fixture):
         table=table,
         row_id="3",
     )
-    data_source_3 = data_fixture.create_builder_local_baserow_get_row_data_source(
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
         integration=integration,
@@ -1041,7 +993,7 @@ def test_dispatch_data_sources(api_client, data_fixture):
         table=table,
         row_id="4",
     )
-    data_source_4 = data_fixture.create_builder_local_baserow_get_row_data_source(
+    data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
         integration=integration,
@@ -1049,49 +1001,11 @@ def test_dispatch_data_sources(api_client, data_fixture):
         table=table,
         row_id="bad",
     )
-    data_source_5 = data_fixture.create_builder_local_baserow_get_row_data_source(
+    data_source4 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user, integration=integration, view=view, table=table, row_id="4"
     )
 
-    # In order for the API to return the Data Source fields, there must be
-    # at least one element that uses the field in its formula.
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source_1,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {"value": f"get('current_record.field_{fields[0].id}')"},
-            },
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {"value": f"get('current_record.field_{fields[1].id}')"},
-            },
-        ],
-    )
-
-    data_fixture.create_builder_heading_element(
-        page=page,
-        level=2,
-        value=(
-            f"concat(get('data_source.{data_source_2.id}.field_{fields[0].id}'),"
-            f"get('data_source.{data_source_2.id}.field_{fields[1].id}'))"
-        ),
-    )
-    data_fixture.create_builder_heading_element(
-        page=page,
-        level=2,
-        value=(
-            f"concat(get('data_source.{data_source_3.id}.field_{fields[0].id}'),"
-            f"get('data_source.{data_source_3.id}.field_{fields[1].id}'))"
-        ),
-    )
-
-    url = reverse(
-        "api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}
-    )
+    url = reverse("api:builder:data_source:dispatch-all", kwargs={"page_id": page.id})
 
     response = api_client.post(
         url,
@@ -1102,48 +1016,25 @@ def test_dispatch_data_sources(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        str(data_source_1.id): {
-            "has_next_page": False,
-            "results": [
-                {
-                    fields[0].db_column: "BMW",
-                    fields[1].db_column: "Blue",
-                    "id": rows[0].id,
-                    "order": AnyStr(),
-                },
-                {
-                    fields[0].db_column: "Audi",
-                    fields[1].db_column: "Orange",
-                    "id": rows[1].id,
-                    "order": AnyStr(),
-                },
-                {
-                    fields[0].db_column: "2Cv",
-                    fields[1].db_column: "Green",
-                    "id": rows[2].id,
-                    "order": AnyStr(),
-                },
-                {
-                    fields[0].db_column: "Tesla",
-                    fields[1].db_column: "Dark",
-                    "id": rows[3].id,
-                    "order": AnyStr(),
-                },
-            ],
+        str(data_source.id): {
+            fields[1].db_column: "Orange",
+            fields[0].db_column: "Audi",
+            "id": rows[1].id,
+            "order": AnyStr(),
         },
-        str(data_source_2.id): {
-            fields[0].db_column: "2Cv",
+        str(data_source1.id): {
             fields[1].db_column: "Green",
+            fields[0].db_column: "2Cv",
             "id": rows[2].id,
             "order": AnyStr(),
         },
-        str(data_source_3.id): {
-            fields[0].db_column: "Tesla",
+        str(data_source2.id): {
             fields[1].db_column: "Dark",
+            fields[0].db_column: "Tesla",
             "id": rows[3].id,
             "order": AnyStr(),
         },
-        str(data_source_4.id): {
+        str(data_source3.id): {
             "_error": "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
             "detail": "The data_source configuration is incorrect: "
             "The `row_id` formula can't be resolved: "

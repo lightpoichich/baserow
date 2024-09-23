@@ -1,8 +1,6 @@
 # Job handling overview
 
-This document is intended for developers who want to work with job subsystem. It's a
-general technical overview: introduces main concepts and workflows, and shows possible
-extension points.
+This document is intended for developers who want to work with job subsystem. It's an overview documentation to describe main concepts, components and workflows, and shows possible extension points.
 
 Job subsystem allows to move costly operations, like exporting data, updating calculated
 values in tables or updating indexing information etc, outside backend process. Jobs are
@@ -24,16 +22,15 @@ used in the backend application. The main components are:
 
 ## Job workflow
 
-A job workflow contains 4 main workflows:
+A job workflow contains 3 main workflows:
 
-* job creation
-* job execution
+* job creation and execution
 * job cancellation
 * job status update
 
 Note: each part (frontend, backend, celery) runs in separate containers and uses
 different communication channels to pass messages/data. The communication may be
-synchronous or asynchronous depending on the specific path.
+synchronous or asynchronous depending on a specific path.
 
 Additionally there's a job cleanup task that is independent but also supplementary.
 

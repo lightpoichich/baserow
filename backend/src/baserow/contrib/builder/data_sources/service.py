@@ -264,30 +264,38 @@ class DataSourceService:
             if isinstance(results[data_source.id], Exception):
                 continue
 
+            field_names = dispatch_context.field_names.get("external", {}).get(
+                data_source.service.id, []
+            )
             if data_source.service.get_type().returns_list:
                 new_result = []
                 for row in results[data_source.id]["results"]:
-                    new_result.append(
-                        {
-                            key: value
-                            for key, value in row.items()
-                            if key
-                            in dispatch_context.field_names["external"][
-                                data_source.service.id
-                            ]
-                        }
-                    )
+                    new_row = {}
+                    for key, value in row.items():
+                        if not key.startswith("field_"):
+                            # Ensure keys like "id" and "order" are included
+                            # in new_row
+                            new_row[key] = value
+                        elif key in field_names:
+                            # Only include the field if it is in the
+                            # external/safe field_names list
+                            new_row[key] = value
+                    new_result.append(new_row)
                 results[data_source.id] = {
                     **results[data_source.id],
                     "results": new_result,
                 }
             else:
-                results[data_source.id] = {
-                    key: value
-                    for key, value in results[data_source.id].items()
-                    if key
-                    in dispatch_context.field_names["external"][data_source.service.id]
-                }
+                new_result = {}
+                for key, value in results[data_source.id].items():
+                    if not key.startswith("field_"):
+                        # Ensure keys like "id" and "order" are included in new_row
+                        new_result[key] = value
+                    elif key in field_names:
+                        # Only include the field if it is in the external/safe
+                        # field_names list
+                        new_result[key] = value
+                results[data_source.id] = new_result
 
         return results
 

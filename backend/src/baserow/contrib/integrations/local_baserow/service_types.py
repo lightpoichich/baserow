@@ -978,9 +978,7 @@ class LocalBaserowListRowsUserServiceType(
                 # fetched from the database.
                 queryset = queryset.only(*all_field_names)
 
-            field_names = dispatch_context.field_names.get("external", {}).get(
-                service.id, []
-            )
+            field_names = all_field_names
 
         offset, count = dispatch_context.range(service)
 
@@ -1291,19 +1289,17 @@ class LocalBaserowGetRowUserServiceType(
         model = table.get_model()
         queryset = self.build_queryset(service, table, dispatch_context, model)
 
-        all_field_names = dispatch_context.field_names.get("all", {}).get(
-            service.id, None
-        )
-        if all_field_names is not None:
-            # Ensure that only the field_names explicitly used in the page are
-            # fetched from the database.
-            queryset = queryset.only(*all_field_names)
-
         field_names = None
         if dispatch_context.field_names is not None:
-            field_names = dispatch_context.field_names.get("external", {}).get(
-                service.id, []
+            all_field_names = dispatch_context.field_names.get("all", {}).get(
+                service.id, None
             )
+            if all_field_names is not None:
+                # Ensure that only the field_names explicitly used in the page are
+                # fetched from the database.
+                queryset = queryset.only(*all_field_names)
+
+            field_names = all_field_names
 
         # If no row id is provided return the first item from the queryset
         # This is useful when we want to use filters to specifically choose one

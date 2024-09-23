@@ -255,7 +255,41 @@ class DataSourceService:
             workspace=data_sources[0].page.builder.workspace,
         )
 
-        return self.handler.dispatch_data_sources(data_sources, dispatch_context)
+        results = self.handler.dispatch_data_sources(data_sources, dispatch_context)
+
+        if dispatch_context.field_names is None:
+            return results
+
+        for data_source in data_sources:
+            if isinstance(results[data_source.id], Exception):
+                continue
+
+            if data_source.service.get_type().returns_list:
+                new_result = []
+                for row in results[data_source.id]["results"]:
+                    new_result.append(
+                        {
+                            key: value
+                            for key, value in row.items()
+                            if key
+                            in dispatch_context.field_names["external"][
+                                data_source.service.id
+                            ]
+                        }
+                    )
+                results[data_source.id] = {
+                    **results[data_source.id],
+                    "results": new_result,
+                }
+            else:
+                results[data_source.id] = {
+                    key: value
+                    for key, value in results[data_source.id].items()
+                    if key
+                    in dispatch_context.field_names["external"][data_source.service.id]
+                }
+
+        return results
 
     def dispatch_page_data_sources(
         self,

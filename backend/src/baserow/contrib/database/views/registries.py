@@ -982,7 +982,7 @@ class ViewFilterType(Instance):
 
 class ViewFilterTypeRegistry(Registry):
     """
-    With the view filter type registry is is possible to register new view filter
+    With the view filter type registry it is possible to register new view filter
     types. A view filter type is an abstractions that allows different types of
     filtering for rows in a view. It is possible to add multiple view filters to a view
     and all the rows must match those filters.

@@ -308,6 +308,7 @@ class DatabaseConfig(AppConfig):
             HigherThanOrEqualViewFilterType,
             HigherThanViewFilterType,
             IsEvenAndWholeViewFilterType,
+            IsInRangeFilterType,
             LengthIsLowerThanViewFilterType,
             LinkRowContainsViewFilterType,
             LinkRowHasNotViewFilterType,
@@ -343,6 +344,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(HigherThanOrEqualViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(LowerThanOrEqualViewFilterType())
+        view_filter_type_registry.register(IsInRangeFilterType())
         view_filter_type_registry.register(IsEvenAndWholeViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateBeforeViewFilterType())

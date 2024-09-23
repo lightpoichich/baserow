@@ -67,7 +67,7 @@ from baserow.core.models import WorkspaceUser
 from .registries import ViewFilterType
 
 DATE_FILTER_EMPTY_VALUE = ""
-DATE_FILTER_TIMEZONE_SEPARATOR = "?"
+COMBINED_FILTER_VALUE_SEPARATOR = "?"
 
 
 class NotViewFilterTypeMixin:
@@ -346,8 +346,8 @@ class IsEvenAndWholeViewFilterType(ViewFilterType):
 class NumericComparisonViewFilterType(ViewFilterType):
     """
     Base filter type for basic numeric comparisons. It defines common logic for
-    'lower than', 'lower than or equal', 'higher than' and 'higher than or equal'
-    view filter types.
+    'lower than', 'lower than or equal', 'higher than', 'higher than or equal',
+    and 'is in range' view filter types.
     """
 
     operator = None
@@ -361,8 +361,20 @@ class NumericComparisonViewFilterType(ViewFilterType):
         ),
     ]
 
-    def should_round_value_to_compare(self, value, model_field):
-        return isinstance(model_field, IntegerField) and value.find(".") != -1
+    @classmethod
+    def prepare_filter_value(cls, value, model_field):
+        """
+        Returns a valid value to be used in a filter using the cls.operator field lookup
+        """
+
+        should_round = isinstance(model_field, IntegerField) and value.find(".") != -1
+
+        if should_round:
+            value = cls.rounding_func(Decimal(value))
+
+        # Check if the model_field accepts the value.
+        model_field.get_prep_value(value)
+        return value
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
@@ -371,13 +383,8 @@ class NumericComparisonViewFilterType(ViewFilterType):
         if value == "":
             return Q()
 
-        if self.should_round_value_to_compare(value, model_field):
-            decimal_value = Decimal(value)
-            value = self.rounding_func(decimal_value)
-
-        # Check if the model_field accepts the value.
         try:
-            value = model_field.get_prep_value(value)
+            value = self.prepare_filter_value(value, model_field)
             return Q(**{f"{field_name}__{self.operator}": value})
         except Exception:
             return self.default_filter_on_exception()
@@ -427,6 +434,40 @@ class HigherThanOrEqualViewFilterType(NumericComparisonViewFilterType):
     type = "higher_than_or_equal"
     operator = "gte"
     rounding_func = ceil
+
+
+class IsInRangeFilterType(NumericComparisonViewFilterType):
+    """
+    The is in range filter checks if the field value is within the range specified
+    by the filter value. It only works if the filter value is in number range format.
+    Number range format is two decimals separated by COMBINED_FILTER_VALUE_SEPARATOR.
+    Examples assuming '?' separator: 1?10, .1?.9, -100?-50
+    """
+
+    type = "is_in_range"
+    operator = "range"
+    compatible_field_types = [
+        NumberFieldType.type,
+    ]
+
+    @classmethod
+    def prepare_filter_value(cls, raw_value, model_field):
+        parts = raw_value.split(COMBINED_FILTER_VALUE_SEPARATOR)
+
+        if len(parts) != 2:
+            # If we can't split the raw string into two values, we cannot return
+            # a valid filter value for the __range lookup that will occur later
+            raise ValueError("Invalid number range provided")
+
+        min_value = parts[0].strip()
+        max_value = parts[1].strip()
+
+        return (
+            HigherThanOrEqualViewFilterType.prepare_filter_value(
+                min_value, model_field
+            ),
+            LowerThanOrEqualViewFilterType.prepare_filter_value(max_value, model_field),
+        )
 
 
 class TimezoneAwareDateViewFilterType(ViewFilterType):
@@ -499,7 +540,7 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
             return field.date_force_timezone, filter_value
 
     def split_timezone_and_filter_value(
-        self, field, filter_value, separator=DATE_FILTER_TIMEZONE_SEPARATOR
+        self, field, filter_value, separator=COMBINED_FILTER_VALUE_SEPARATOR
     ) -> Tuple[zoneinfo.ZoneInfo, str]:
         """
         Splits the timezone and the value from the provided value. If the value
@@ -1721,7 +1762,7 @@ class DateMultiStepViewFilterType(ViewFilterType):
         ]
 
     def split_combined_value(
-        self, field, filter_value, separator=DATE_FILTER_TIMEZONE_SEPARATOR
+        self, field, filter_value, separator=COMBINED_FILTER_VALUE_SEPARATOR
     ) -> Tuple[zoneinfo.ZoneInfo, str]:
         """
         Splits the timezone and the value from the provided value. If the value

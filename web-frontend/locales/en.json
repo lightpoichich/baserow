@@ -199,6 +199,7 @@
     "higherThan": "higher than",
     "higherThanOrEqual": "higher than or equal",
     "is": "is",
+    "isInRange": "is in range",
     "isNot": "is not",
     "isEmpty": "is empty",
     "isNotEmpty": "is not empty",
@@ -549,3 +550,4 @@
     "configLink": "Email Configuration Help"
   }
 }
+

@@ -13,6 +13,7 @@ import {
   HigherThanOrEqualViewFilterType,
   LowerThanViewFilterType,
   LowerThanOrEqualViewFilterType,
+  IsInRangeViewFilterType,
   SingleSelectIsAnyOfViewFilterType,
   SingleSelectIsNoneOfViewFilterType,
   DateIsBeforeMultiStepViewFilterType,
@@ -1359,6 +1360,59 @@ const numberValueIsLowerThanOrEqualCases = [
   },
 ]
 
+const numberValueIsInRangeCases = [
+  {
+    rowValue: 2,
+    filterValue: '1?3',
+    expected: true,
+  },
+  {
+    rowValue: 2,
+    filterValue: '1?2',
+    expected: true,
+  },
+  {
+    rowValue: 2,
+    filterValue: '2?3',
+    expected: true,
+  },
+  {
+    rowValue: 2,
+    filterValue: '2?2',
+    expected: true,
+  },
+  {
+    rowValue: 0,
+    filterValue: '-1?1',
+    expected: true,
+  },
+  {
+    rowValue: -5,
+    filterValue: '-10?-1',
+    expected: true,
+  },
+  {
+    rowValue: 10,
+    filterValue: '1?2',
+    expected: false,
+  },
+  {
+    rowValue: 1,
+    filterValue: '10?20',
+    expected: false,
+  },
+  {
+    rowValue: -5,
+    filterValue: '1?-10',
+    expected: false,
+  },
+  {
+    rowValue: null,
+    filterValue: '1?2',
+    expected: false,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -1889,6 +1943,20 @@ describe('All Tests', () => {
         values.filterValue,
         { type: 'formula', formula_type: 'number' },
         new FormulaFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(numberValueIsInRangeCases)(
+    'NumberIsInRangeFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new IsInRangeViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'number' },
+        new NumberFieldType({ app })
       )
       expect(result).toBe(values.expected)
     }

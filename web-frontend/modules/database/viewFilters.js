@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
+import ViewFilterTypeNumberRange from '@baserow/modules/database/components/view/ViewFilterTypeNumberRange'
 import ViewFilterTypeDuration from '@baserow/modules/database/components/view/ViewFilterTypeDuration'
 import ViewFilterTypeRating from '@baserow/modules/database/components/view/ViewFilterTypeRating'
 import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
@@ -13,10 +14,10 @@ import ViewFilterTypeMultiStepDate from '@baserow/modules/database/components/vi
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import ViewFilterTypeMultipleSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeMultipleSelectOptions'
 import { trueValues } from '@baserow/modules/core/utils/constants'
+import { COMBINED_FILTER_VALUE_SEPARATOR } from '@baserow/modules/database/constants'
 import {
   splitTimezoneAndFilterValue,
   prepareMultiStepDateValue,
-  DATE_FILTER_VALUE_SEPARATOR,
   splitMultiStepDateValue,
 } from '@baserow/modules/database/utils/date'
 import { isNumeric } from '@baserow/modules/core/utils/string'
@@ -788,7 +789,7 @@ export class DateMultiStepViewFilterType extends ViewFilterType {
   }
 
   prepareValue(value, field, filterChanged = false) {
-    const sep = DATE_FILTER_VALUE_SEPARATOR
+    const sep = COMBINED_FILTER_VALUE_SEPARATOR
     const [, filterValue, operator] = splitMultiStepDateValue(value, sep)
     const timezone = this.getDefaultTimezone(field)
     return value && !filterChanged
@@ -807,7 +808,7 @@ export class DateMultiStepViewFilterType extends ViewFilterType {
       return false
     }
 
-    const sep = DATE_FILTER_VALUE_SEPARATOR
+    const sep = COMBINED_FILTER_VALUE_SEPARATOR
     const [timezone, value, operatorValue] = splitMultiStepDateValue(
       filterValue,
       sep
@@ -974,7 +975,7 @@ class LocalizedDateViewFilterType extends ViewFilterType {
   }
 
   getSeparator() {
-    return DATE_FILTER_VALUE_SEPARATOR
+    return COMBINED_FILTER_VALUE_SEPARATOR
   }
 
   getDateFormat() {
@@ -2119,6 +2120,47 @@ export class LowerThanOrEqualViewFilterType extends NumericComparisonViewFilterT
     const fltVal = fieldType.parseInputValue(field, filterValue)
     return (
       Number.isFinite(rowVal) && Number.isFinite(fltVal) && rowVal <= fltVal
+    )
+  }
+}
+
+export class IsInRangeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'is_in_range'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isInRange')
+  }
+
+  getExample() {
+    return '1?100'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumberRange
+  }
+
+  getCompatibleFieldTypes() {
+    return ['number']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (filterValue === '') {
+      return true
+    }
+
+    const rowVal = fieldType.parseInputValue(field, rowValue)
+    const parts = filterValue.split(COMBINED_FILTER_VALUE_SEPARATOR)
+    const fltValLow = fieldType.parseInputValue(field, parts[0])
+    const fltValHigh = fieldType.parseInputValue(field, parts[1])
+    return (
+      Number.isFinite(rowVal) &&
+      Number.isFinite(fltValLow) &&
+      Number.isFinite(fltValLow) &&
+      rowVal >= fltValLow &&
+      rowVal <= fltValHigh
     )
   }
 }

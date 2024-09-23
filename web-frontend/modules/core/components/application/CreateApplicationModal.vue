@@ -124,10 +124,6 @@ export default {
       this.loading = true
       this.$refs.applicationForm.submit()
     },
-    handleImportFromAirtableBtn() {
-      this.loading = true
-      this.$refs.applicationForm.submit()
-    },
     handleJobDone(event) {
       this.job.hasSucceeded = true
       this.job.status = event.state

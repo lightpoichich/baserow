@@ -388,15 +388,12 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_list_dataso
         name="Item",
     )
 
-    heading_element_1 = data_fixture.create_builder_heading_element(
+    heading_element = data_fixture.create_builder_heading_element(
         page=page, value=f"get('data_source.{data_source_2.id}.field_{fields_2[1].id}')"
     )
-    # TODO: It shouldn't be necessary to have this element.
-    heading_element_2 = data_fixture.create_builder_heading_element(
-        page=page, value=f"get('data_source.{data_source_1.id}.field_{fields_1[0].id}')"
-    )
+
     mock_service = MagicMock()
-    mock_service.get_elements.return_value = [heading_element_1, heading_element_2]
+    mock_service.get_elements.return_value = [heading_element]
     mock_element_service.return_value = mock_service
 
     data_source_provider = DataSourceDataProviderType()

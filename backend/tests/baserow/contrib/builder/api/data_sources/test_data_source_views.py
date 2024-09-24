@@ -1106,7 +1106,7 @@ def test_get_record_names(api_client, data_fixture):
     assert response.json()["error"] == "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def data_source_fixture(data_fixture):
     """A fixture to help test the DispatchDataSourcesView view."""
 
@@ -1491,7 +1491,7 @@ def test_dispatch_data_sources_get_and_list_rows_with_elements(
     }
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def data_source_element_roles_fixture(data_fixture):
     """
     A fixture to help test the DispatchDataSourcesView view using Elements

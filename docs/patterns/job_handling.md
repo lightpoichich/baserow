@@ -1,40 +1,79 @@
 # Job handling overview
 
-This document is intended for developers who want to work with job subsystem. It's an overview documentation to describe main concepts, components and workflows, and shows possible extension points.
+This document is a technical overview documentation to describe main concepts,
+components
+and workflows behind jobs subsystem in Baserow, and shows possible extension points.
+It's intended for developers who want to work with jobs subsystem.
 
-Job subsystem allows to move costly operations, like exporting data, updating calculated
-values in tables or updating indexing information etc, outside backend process. Jobs are
-created in the backend, but they are scheduled on a task queue and executed in Celery
-worker.
+Jobs subsystem allows to move costly user-triggered operations, like duplicating
+objects or exporting data, outside backend process. When a user requests such
+operation, a job is created in the backend and is scheduled on a task queue, eventually
+is executed in Celery worker. UI shows job's progress and in some cases allows to
+cancel a specific job.
 
-Job subsystem is an internal framework in Baserow. It follows several common patterns
-used in the backend application. The main components are:
+Job subsystem is an internal framework in Baserow that defines specific job types and
+orchestrates the execution. It follows several common patterns used in the backend
+application. The main components used in jobs management are:
 
 * `baserow.core.jobs.handlers:JobHandler` - a handler class that wraps common routines
   for job management
-* `baserow.core.jobs.job_types:JobType` - registry-based hierarchy of specific job
-  types. Using a `JobType`-based subclass registry allows to extend available
-  functionalities/tasks executed as a job using the same management interface.
-* `baserow.core.jobs.models:Job` base model class - each schedule job may need to know
-  extra context to execute properly. `Job` subclasses can store such information for the
-  execution. Base Job model stores basic job information: identification, ownership and
-  a current state.
 
-## Job workflow
+* `baserow.core.jobs.job_types:JobType` - a registry-based hierarchy of specific job
+  types. Each job type represents a specific functionality that is executed as a job.
+  Using a `JobType`-based subclass registry allows to wrap different actions
+  with an unified interface and workflow. It's easy to add new job types without
+  modifying existing code base.
 
-A job workflow contains 3 main workflows:
+* `baserow.core.jobs.models:Job` base job model class - usually each job type has own
+  Job submodel defined. A scheduled job may need to know an extra context to execute
+  properly. For example, a job that duplicates a table needs to know which table to
+  duplicate. `Job` subclasses can store such information for the execution. Base Job
+  model stores basic job information: identification, ownership and current state.
+
+## Job workflows
+
+Jobs subsystem handles 3 main workflows:
 
 * job creation and execution
-* job cancellation
 * job status update
-
-Note: each part (frontend, backend, celery) runs in separate containers and uses
-different communication channels to pass messages/data. The communication may be
-synchronous or asynchronous depending on a specific path.
+* job cancellation
 
 Additionally there's a job cleanup task that is independent but also supplementary.
 
+Because Baserow deployment can run different parts (backend, frontend, celery workers)
+in separate containers. Those containers need to communicate, and thus they use
+different communication channels to pass messages/data. The communication may be
+synchronous or asynchronous depending on a specific path.
+
 ### Job creation and execution
+
+Job creation depends on a job type. There's no generic endpoint to create a job and
+usually a job of a specific type is created with a dedicated endpoint. However, each
+endpoint that is responsible for job creation should return a proper job structure
+enriched with job-specific properties.
+
+Basic workflow of job creation and execution is shown on a graph below:
+
+![Job creation & execution workflow](../assets/diagrams/job-workflows-job_creation_execution.png)
+
+The workflow consists of following steps:
+
+* frontend component calls a job-type specific endpoint to create a job (usually by
+  using a Service class)
+* the endpoint prepares all required inputs and internally calls
+  `baserow.core.jobs.handlers:JobHandler.create_and_start_job()` method to create a job
+  instance and schedules it's execution in Celery. Backend should return job structure
+  immediately after that. The rest of the flow happens in Celery independently from
+  the frontend/backend.
+* Celery worker picks up `baserow.core.jobs.tasks:run_async_job` task, gets job details
+  from the database, sets its state to `started` and calls `JobHandler.run()` in a
+  transaction. See below for details on transaction handling.
+* A job is usually a step-py-step procedure, but a job implementation should
+  also [update it's state and progress](#job-state-update) during execution.
+* Job's state update is also a moment when a check
+  for [job cancellation](#job-cancellation) is performed.
+* If a job has been completed it will be marked as `finished`. In case of an error, the
+  job will be marked as `failed` or `cancelled` if it was requested to cancel.
 
 Celery task queue receives a task to execute a specific job (`run_async_task` with job
 id). Job tasks are scheduled to `export` worker. A worker will attempt to execute the
@@ -43,41 +82,16 @@ task, however:
 * there is no guarantee that a job will be picked and started in any specific time frame
 * there is no guarantee that a job will be executed correctly
 * if a job fails, it won't be resumed
-* a job may not elapse more than a `BASEROW_MAX_TASK_TIME` limit
+* if a job takes more than a `BASEROW_MAX_TASK_TIME` limit, it will be terminated
 * all jobs are cleaned (removed) from the database after specific period.
-  See [Job cleanup](#job-cleanup) for details.
+  See [Job cleanup](#job-cleanup) for details
 * a job can be cancelled by a user during it's execution.
 
-Job creation depends on a job type. There's no one way nor a generic endpoint to create
-a job. Each job type is created with a dedicated endpoint. However, each endpoint that
-is responsible for job creation should return a proper job structure enriched with
-job-specific properties.
-
-Basic workflow of job creation and execution is shown on a graph below:
-
-![Job creation & execution workflow](../assets/diagrams/job-workflows-job_creation_execution.png)
-
-The workflow consists of following steps:
-
-* frontend component calls job-type specific endpoint to create a job
-* job-type specific endpoint internally should internally call
-  `baserow.core.jobs.handlers:JobHandler.create_and_start_job()` method to create job
-  instance and schedule it's execution. This call doesn't have to be in a view. It can
-  happen in lower code layers in a dedicated handler which should prepare all job-type
-  specifics. This is the final step for the backend.
-* Celery worker picks up `baserow.core.jobs.tasks:run_async_job` task, gets a job from
-  the database, sets its state to `started` and calls `JobHandler.run()` in a
-  transaction. See below for details on transaction handling.
-* If a job has been completed it will be marked as `finished`. Otherwise it should be
-  marked as `failed` or `cancelled`. [See "Job cancellation"](#job-cancellation) for
-  details on the latter state.
-
-A job is executed in a transaction with repeatable reads isolation level, which
+A job is executed in a transaction with repeatable reads isolation level which
 guarantees data snapshot consistency in the database. This is an important factor for
 tasks that operates on whole databases, preserving between-tables linkage consistency.
-
-This also blocks other processes to access current job state. To overcome
-this [cache layer is used to proxy state reads](#cache-layer).
+This also makes any immediate change to job table invisible to other processes,
+so [cache is used to communicate job's state](#cache-layer) both ways.
 
 If a job fails or is cancelled, it will raise appropriate exception and the transaction
 ill be aborted. This allows to cleanup any database resources created by a job
@@ -85,20 +99,21 @@ automatically.
 
 ### job state update
 
-
-![Job status update](../assets/diagrams/job-workflows-job_state_update.png)
-
-
 When a job is being executed it should update periodically (in key moments) its
-current [state](#job-state) and [progress value](#progress-tracking) .
+current [state](#job-state) and [progress value](#progress-tracking).
 
-Job status update is a workflow where a job propagates it's current status. The progress
-is usually monitored by frontend's component for the user. Because the task is executed
-in a transaction, other processes cannot see current state from the database and we
+Job status update is a workflow where a job propagates its current status. Job's
+progress is usually monitored by the frontend's component for the user. Because the task
+is executed in a transaction, other processes cannot see current state from the database
+and we
 use [cache as a proxy for state values](#cache-layer).
 
 The workflow of querying for job state update:
 
+![Job status update](../assets/diagrams/job-workflows-job_state_update.png)
+
+* `JobHandler.run()` prepares `Progress` instance with a callback that
+* a Job instance receives `Progress` instance as a part of the `Job.run()` signature.
 * a job updates `Progress` instance in key moments of its processing.
 * In the frontend job store periodically queries the backend for a list of active
   jobs [(see Job store for details)](#job-store)
@@ -110,7 +125,6 @@ The workflow of querying for job state update:
 ### Job cancellation
 
 ![Job cancellation](../assets/diagrams/job-workflows-job_cancellation.png)
-
 
 Job subsystem allows to cancel a job before or during its execution. The cancellation
 should be triggered by a user that is an owner of a job. A cancellation request means
@@ -166,9 +180,11 @@ This is a hook that allows to do any job-type cleanup.
 
 A `JobType` class is a base class for any specific job type. Its main purpose is to
 provide a common interface to run specific job's actions. When implementing a new job
-type only `JobType.run` method is required to be implemented. However, there are other ways such subclass can customize Job-related aspects:
+type only `JobType.run` method is required to be implemented. However, there are other
+ways such subclass can customize Job-related aspects:
 
-* hook into job creation by preprocessing values provided by a user/postprocessing a created job
+* hook into job creation by preprocessing values provided by a user/postprocessing a
+  created job
 * hook for job deletion
 * job error handler
 * custom job serializer fields or a custom serializer for a job model
@@ -177,7 +193,9 @@ type only `JobType.run` method is required to be implemented. However, there are
 
 ### Job sub-models
 
-Each `JobType` subclass should have accompanying `Job` model subclass. A subclass should store input values and results (fields with specific values or file fields for file-based results) if required. 
+Each `JobType` subclass should have accompanying `Job` model subclass. A subclass should
+store input values and results (fields with specific values or file fields for
+file-based results) if required.
 
 #### Job state
 
@@ -267,31 +285,36 @@ can define callbacks to extend behavior on job state's change.
 ### Usage in components
 
 * Vue component that wants to interact with a job of any type should use provided
-`mixin/job` mixin. As written above, this mixin provides a skeleton to handle job state
-management in the frontend.
+  `mixin/job` mixin. As written above, this mixin provides a skeleton to handle job
+  state
+  management in the frontend.
 * the mixin provides:
-  * properties:
-    + `job`
-    + `jobIsRunning`
-    + `jobIsFinished`
-    + `jobHasSucceeded`
-    + `jobHasFailed`
-  * methods:
-    + `createAndMonitorJob(job)` - a method to add a `job` object to the store.
-    + `cancelJob()` - a method to cancel a job. It expects `job` property to be set.
+    * properties:
+        + `job`
+        + `jobIsRunning`
+        + `jobIsFinished`
+        + `jobHasSucceeded`
+        + `jobHasFailed`
+    * methods:
+        + `createAndMonitorJob(job)` - a method to add a `job` object to the store.
+        + `cancelJob()` - a method to cancel a job. It expects `job` property to be set.
 * the mixin expects the component will provide callbacks:
-  * `onJobDone()`
-  * `onJobFailed()`
-  * `onJobCancelled()`
-  * `showError({error,message})`
-* the component should create a job on its own and call `createAndMonitorJob` with a `job` instance.
+    * `onJobDone()`
+    * `onJobFailed()`
+    * `onJobCancelled()`
+    * `showError({error,message})`
+* the component should create a job on its own and call `createAndMonitorJob` with a
+  `job` instance.
 * the component should use `ProgressBar` sub-component to display the progress:
 
 ```vue
+
 <ProgressBar
-            :value="job.progress_percentage"
-            :status="jobHumanReadableState"
-          />
+    :value="job.progress_percentage"
+    :status="jobHumanReadableState"
+/>
 ```
-* buttons for job creation/cancellation are up to the component. Their state can utilize properties above to control visibility.
+
+* buttons for job creation/cancellation are up to the component. Their state can utilize
+  properties above to control visibility.
 

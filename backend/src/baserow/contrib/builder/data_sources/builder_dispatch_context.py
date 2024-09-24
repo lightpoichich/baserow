@@ -10,6 +10,7 @@ from baserow.contrib.builder.data_providers.registries import (
 from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.feature_flag import feature_flag_is_enabled
 
 if TYPE_CHECKING:
     from baserow.core.workflow_actions.models import WorkflowAction
@@ -71,7 +72,7 @@ class BuilderDispatchContext(DispatchContext):
 
         if (
             self.use_field_names
-            and FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS in settings.FEATURE_FLAGS
+            and feature_flag_is_enabled(FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS)
         ):
             return get_formula_field_names(self.request.user, self.page)
 

@@ -55,7 +55,6 @@ job-specific properties.
 
 Basic workflow of job creation and execution is shown on a graph below:
 
-
 ![Job creation & execution workflow](../assets/diagrams/job-workflows-job_creation_execution.png)
 
 The workflow consists of following steps:

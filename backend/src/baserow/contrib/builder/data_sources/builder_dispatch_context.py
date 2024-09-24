@@ -1,9 +1,5 @@
+from functools import cached_property
 from typing import TYPE_CHECKING, Dict, List, Optional
-
-try:
-    from functools import cached_property  # only present in python >= 3.8
-except ImportError:
-    from backports.cached_property import cached_property
 
 from django.conf import settings
 from django.http import HttpRequest

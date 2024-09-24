@@ -913,20 +913,6 @@ def test_public_dispatch_data_source_with_ab_user_using_user_source(
         table=table,
         row_id="2",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
-    )
 
     # Create the user table for the user_source
     user_table, user_fields, user_rows = data_fixture.build_table(
@@ -973,7 +959,7 @@ def test_public_dispatch_data_source_with_ab_user_using_user_source(
     published_data_source = published_page.datasource_set.first()
 
     url = reverse(
-        "api:builder:domains:public_dispatch",
+        "api:builder:data_source:dispatch",
         kwargs={"data_source_id": published_data_source.id},
     )
 

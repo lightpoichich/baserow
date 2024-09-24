@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from django.http import HttpRequest
 
@@ -110,9 +110,14 @@ def test_dispatch_context_sortings():
 @patch(
     "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
 )
-@patch("baserow.contrib.builder.data_sources.builder_dispatch_context.settings")
+@patch(
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.feature_flag_is_enabled"
+)
 def test_builder_dispatch_context_field_names_computed_on_feature_flag(
-    mock_settings, mock_get_formula_field_names, feature_flag_is_set, use_field_names
+    mock_feature_flag_is_enabled,
+    mock_get_formula_field_names,
+    feature_flag_is_set,
+    use_field_names,
 ):
     """
     Test the BuilderDispatchContext::field_names property.
@@ -121,13 +126,7 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     flag is on.
     """
 
-    feature_flags = []
-    if feature_flag_is_set:
-        feature_flags.append(FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS)
-
-    # The override_settings() helper doesn't seem to work in this case, so this
-    # manually mocks out the FEATURE_FLAGS config.
-    type(mock_settings).FEATURE_FLAGS = PropertyMock(return_value=feature_flags)
+    mock_feature_flag_is_enabled.return_value = True if feature_flag_is_set else False
 
     mock_field_names = MagicMock()
     mock_get_formula_field_names.return_value = mock_field_names
@@ -143,6 +142,9 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
         assert dispatch_context.field_names == mock_field_names
         mock_get_formula_field_names.assert_called_once_with(
             mock_request.user, mock_page
+        )
+        mock_feature_flag_is_enabled.assert_called_once_with(
+            FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         )
     else:
         assert dispatch_context.field_names is None

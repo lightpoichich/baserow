@@ -55,7 +55,8 @@ job-specific properties.
 
 Basic workflow of job creation and execution is shown on a graph below:
 
-![Job creation workflow](/home/cezio/Private/projects/baserow/baserow/repos/baserow/docs/assets/diagrams/job-workflow.png)
+
+![Job creation & execution workflow](../assets/diagrams/job-workflows-job_creation_execution.png)
 
 The workflow consists of following steps:
 
@@ -85,6 +86,10 @@ automatically.
 
 ### job status update
 
+
+![Job status update](../assets/diagrams/job-workflows-job_status_update.png)
+
+
 When a job is being executed it should update periodically (in key moments) its
 current [statue](#job-state) and [progress value](#progress-tracking) .
 
@@ -104,6 +109,9 @@ The workflow of querying for job state update:
       values from the cache and then from the db if cache doesn't provide any
 
 ### Job cancellation
+
+![Job cancellation](../assets/diagrams/job-workflows-job_cancellation.png)
+
 
 Job subsystem allows to cancel a job before or during its execution. The cancellation
 should be triggered by a user that is an owner of a job. A cancellation request means

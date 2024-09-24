@@ -1,13 +1,8 @@
 from collections import defaultdict
 from unittest.mock import MagicMock, patch
 
-from django.shortcuts import reverse
-
 import pytest
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -203,38 +198,10 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, view=view, table=table, row_id=f"{rows[1].id}"
     )
-    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
-        user=user,
-        page=page,
-        service=service,
-    )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
-    )
 
     service_type = LocalBaserowGetRowUserServiceType()
 
-    fake_request = MagicMock()
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=page.builder
-    )
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    fake_request.user = user_source_user
-    fake_request.GET.get.return_value = None
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = FakeDispatchContext()
 
     dispatch_values = LocalBaserowUpsertRowServiceType().resolve_service_formulas(
         service, dispatch_context
@@ -253,9 +220,7 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
 
 
 @pytest.mark.django_db
-def test_local_baserow_get_row_service_dispatch_data_with_view_filter(
-    data_fixture, api_request_factory
-):
+def test_local_baserow_get_row_service_dispatch_data_with_view_filter(data_fixture):
     # Demonstrates that you can fetch a specific row (1) and filter for a specific
     # value to exclude it from the `dispatch_data` result.
     user = data_fixture.create_user()
@@ -283,20 +248,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_view_filter(
     )
     service_type = service.get_type()
 
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=page.builder
-    )
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = FakeDispatchContext()
 
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     with pytest.raises(DoesNotExist):
@@ -305,7 +257,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_view_filter(
 
 @pytest.mark.django_db
 def test_local_baserow_get_row_service_dispatch_data_with_service_search(
-    data_fixture, disable_full_text_search, api_request_factory
+    data_fixture, disable_full_text_search
 ):
     # Demonstrates that you can fetch a specific row (1) and search for a specific
     # value to exclude it from the `dispatch_data` result.
@@ -330,20 +282,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_search(
     )
     service_type = service.get_type()
 
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=page.builder
-    )
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = FakeDispatchContext()
 
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     with pytest.raises(DoesNotExist):
@@ -367,35 +306,17 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_integer_search
             ["42"],
         ],
     )
-    view = data_fixture.create_grid_view(user, table=table)
+
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, table=table, row_id=f"", search_query="42"
-    )
-    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
-        user=user,
-        page=page,
-        service=service,
-    )
-    data_fixture.create_builder_heading_element(
-        page=page, value=f"get('data_source.{data_source.id}.field_{fields[0].id}')"
+        integration=integration, table=table, row_id="", search_query="42"
     )
 
     service_type = service.get_type()
-
-    fake_request = MagicMock()
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=page.builder
-    )
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    fake_request.user = user_source_user
-    fake_request.GET.get.return_value = None
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
 
     dispatch_data = service_type.dispatch_data(
@@ -479,9 +400,7 @@ def test_local_baserow_get_row_service_dispatch_validation_error(data_fixture):
 
 
 @pytest.mark.django_db
-def test_local_baserow_get_row_service_dispatch_data_row_not_exist(
-    data_fixture, api_request_factory
-):
+def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table = data_fixture.create_database_table(user=user)
@@ -494,30 +413,14 @@ def test_local_baserow_get_row_service_dispatch_data_row_not_exist(
     )
     service_type = service.get_type()
 
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=page.builder
-    )
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     with pytest.raises(DoesNotExist):
         service_type.dispatch_data(service, dispatch_values, dispatch_context)
 
 
 @pytest.mark.django_db
-def test_local_baserow_get_row_service_dispatch_data_no_row_id(
-    data_fixture, api_request_factory
-):
+def test_local_baserow_get_row_service_dispatch_data_no_row_id(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table, fields, rows = data_fixture.build_table(
@@ -540,21 +443,7 @@ def test_local_baserow_get_row_service_dispatch_data_no_row_id(
     )
     service_type = service.get_type()
 
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=page.builder
-    )
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
@@ -841,7 +730,6 @@ def test_order_by_is_applied_depending_on_views_sorts(
     )
 
     dispatch_context = FakeDispatchContext()
-
     service_type.dispatch_data(service, resolved_values, dispatch_context)
 
     if view_sorts:

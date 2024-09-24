@@ -1,7 +1,6 @@
 from functools import cached_property
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-from django.conf import settings
 from django.http import HttpRequest
 
 from baserow.contrib.builder.data_providers.registries import (
@@ -9,8 +8,8 @@ from baserow.contrib.builder.data_providers.registries import (
 )
 from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.feature_flag import feature_flag_is_enabled
+from baserow.core.services.dispatch_context import DispatchContext
 
 if TYPE_CHECKING:
     from baserow.core.workflow_actions.models import WorkflowAction
@@ -70,9 +69,8 @@ class BuilderDispatchContext(DispatchContext):
         sensitive (required only by the backend).
         """
 
-        if (
-            self.use_field_names
-            and feature_flag_is_enabled(FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS)
+        if self.use_field_names and feature_flag_is_enabled(
+            FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         ):
             return get_formula_field_names(self.request.user, self.page)
 

@@ -126,7 +126,7 @@ def test_form_data_provider_validate_data_chunk(mock_handler):
 
 
 @pytest.mark.django_db
-def test_data_source_data_provider_get_data_chunk(data_fixture, api_request_factory):
+def test_data_source_data_provider_get_data_chunk(data_fixture):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -156,25 +156,11 @@ def test_data_source_data_provider_get_data_chunk(data_fixture, api_request_fact
         row_id="2",
         name="Item",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
-    )
 
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = get_dispatch_context(
-        data_fixture, api_request_factory, builder, page
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, use_field_names=False
     )
 
     assert (
@@ -186,9 +172,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture, api_request_fact
 
 
 @pytest.mark.django_db
-def test_data_source_data_provider_get_data_chunk_with_formula(
-    data_fixture, api_request_factory
-):
+def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -218,33 +202,16 @@ def test_data_source_data_provider_get_data_chunk_with_formula(
         row_id="get('page_parameter.id')",
         name="Item",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
-    )
 
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = get_dispatch_context(
-        data_fixture,
-        api_request_factory,
-        builder,
-        page,
-        data={
-            "data_source": {"page_id": page.id},
-            "page_parameter": {"id": 2},
-        },
-    )
+    fake_request = HttpRequest()
+    fake_request.data = {
+        "data_source": {"page_id": page.id},
+        "page_parameter": {"id": 2},
+    }
+
+    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -257,7 +224,6 @@ def test_data_source_data_provider_get_data_chunk_with_formula(
 @pytest.mark.django_db
 def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
     data_fixture,
-    api_request_factory,
 ):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
@@ -286,37 +252,41 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
             ["3"],
         ],
     )
+    view2 = data_fixture.create_grid_view(user, table=table2)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view2,
+        table=table2,
+        row_id="get('page_parameter.id')",
+        name="Id source",
+    )
+
     data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
         integration=integration,
         view=view,
         table=table,
-        row_id="get('page_parameter.id')",
+        row_id=f"get('data_source.{data_source2.id}.{fields2[0].db_column}')",
         name="Item",
-    )
-
-    data_fixture.create_builder_heading_element(
-        page=page, value=f"get('data_source.{data_source.id}.field_{fields[1].id}')"
     )
 
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = get_dispatch_context(
-        data_fixture,
-        api_request_factory,
-        builder,
-        page,
-        data={
-            "data_source": {"page_id": page.id},
-            "page_parameter": {"id": 2},
-        },
-    )
+    fake_request = HttpRequest()
+    fake_request.data = {
+        "data_source": {"page_id": page.id},
+        "page_parameter": {"id": 2},
+    }
+
+    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -327,34 +297,11 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.builder.elements.service.ElementService")
 def test_data_source_data_provider_get_data_chunk_with_formula_using_list_datasource(
-    mock_element_service,
     data_fixture,
-    api_request_factory,
 ):
     user = data_fixture.create_user()
-    builder = data_fixture.create_builder_application(user=user)
-    integration = data_fixture.create_local_baserow_integration(
-        user=user, application=builder
-    )
-    page = data_fixture.create_builder_page(user=user, builder=builder)
-
-    table_1, fields_1, rows_1 = data_fixture.build_table(
-        user=user,
-        columns=[
-            ("Id", "text"),
-        ],
-        rows=[
-            ["1"],
-            ["2"],
-            ["3"],
-            ["3"],
-        ],
-    )
-    view_1 = data_fixture.create_grid_view(user, table=table_1)
-
-    table_2, fields_2, rows_2 = data_fixture.build_table(
+    table, fields, rows = data_fixture.build_table(
         user=user,
         columns=[
             ("Name", "text"),
@@ -367,44 +314,57 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_list_dataso
             ["Volkswagen", "Green"],
         ],
     )
-    view_2 = data_fixture.create_grid_view(user, table=table_2)
-
-    data_source_1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+    view = data_fixture.create_grid_view(user, table=table)
+    table2, fields2, rows2 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Id", "text"),
+        ],
+        rows=[
+            ["1"],
+            ["2"],
+            ["3"],
+            ["3"],
+        ],
+    )
+    view2 = data_fixture.create_grid_view(user, table=table2)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
         user=user,
         page=page,
         integration=integration,
-        view=view_1,
-        table=table_1,
+        view=view2,
+        table=table2,
         name="List source",
     )
-
-    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
         integration=integration,
-        view=view_2,
-        table=table_2,
-        row_id=f"get('data_source.{data_source_1.id}.2.{fields_1[0].db_column}')",
+        view=view,
+        table=table,
+        row_id=f"get('data_source.{data_source2.id}.2.{fields2[0].db_column}')",
         name="Item",
     )
 
-    heading_element = data_fixture.create_builder_heading_element(
-        page=page, value=f"get('data_source.{data_source_2.id}.field_{fields_2[1].id}')"
-    )
-
-    mock_service = MagicMock()
-    mock_service.get_elements.return_value = [heading_element]
-    mock_element_service.return_value = mock_service
-
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = get_dispatch_context(
-        data_fixture, api_request_factory, builder, page
-    )
+    fake_request = HttpRequest()
+    fake_request.data = {
+        "data_source": {"page_id": page.id},
+        "page_parameter": {"id": 2},
+    }
+    fake_request.GET = {"count": 20}
+
+    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
 
     assert (
         data_source_provider.get_data_chunk(
-            dispatch_context, [data_source_2.id, fields_2[1].db_column]
+            dispatch_context, [data_source.id, fields[1].db_column]
         )
         == "White"
     )
@@ -413,7 +373,6 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_list_dataso
 @pytest.mark.django_db
 def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_datasource(
     data_fixture,
-    api_request_factory,
 ):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
@@ -457,30 +416,16 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
         row_id="get('data_source.99999.Id')",
         name="Item",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {"value": f"get('page_parameter.id')"},
-            }
-        ],
-    )
 
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = get_dispatch_context(
-        data_fixture,
-        api_request_factory,
-        builder,
-        page,
-        data={
-            "data_source": {"page_id": page.id},
-            "page_parameter": {},
-        },
-    )
+    fake_request = HttpRequest()
+    fake_request.data = {
+        "data_source": {"page_id": page.id},
+        "page_parameter": {},
+    }
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
@@ -491,7 +436,6 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
 @pytest.mark.django_db
 def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
     data_fixture,
-    api_request_factory,
 ):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
@@ -535,36 +479,19 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         row_id="",
         name="Item",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
-    )
 
     data_source.row_id = f"get('data_source.{data_source.id}.Id')"
     data_source.save()
 
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = get_dispatch_context(
-        data_fixture,
-        api_request_factory,
-        builder,
-        page,
-        data={
-            "data_source": {"page_id": page.id},
-            "page_parameter": {"id": 2},
-        },
-    )
+    fake_request = HttpRequest()
+    fake_request.data = {
+        "data_source": {"page_id": page.id},
+        "page_parameter": {},
+    }
+
+    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -577,7 +504,6 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
 @pytest.mark.django_db
 def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_calling_each_others(
     data_fixture,
-    api_request_factory,
 ):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
@@ -620,20 +546,6 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         table=table,
         row_id="",
         name="Item",
-    )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
     )
     data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
@@ -650,16 +562,13 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
 
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = get_dispatch_context(
-        data_fixture,
-        api_request_factory,
-        builder,
-        page,
-        data={
-            "data_source": {"page_id": page.id},
-            "page_parameter": {},
-        },
-    )
+    fake_request = HttpRequest()
+    fake_request.data = {
+        "data_source": {"page_id": page.id},
+        "page_parameter": {},
+    }
+
+    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -782,27 +691,13 @@ def test_data_source_context_data_provider_get_data_chunk(data_fixture):
         row_id="",
         name="Item",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
-    )
     data_source_context_provider = DataSourceContextDataProviderType()
 
     fake_request = MagicMock()
     fake_request.data = {
         "page_parameter": {},
     }
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
 
     # For fields that are not single select, `get_data_chunk` returns an empty response
     assert (
@@ -1087,15 +982,14 @@ def test_current_record_provider_get_data_chunk(data_fixture):
     button_element = data_fixture.create_builder_button_element(
         page=page, parent_element=repeat_element
     )
-    data_fixture.create_builder_heading_element(
-        page=page, value=f"get('data_source.{data_source.id}.field_{field.id}')"
-    )
 
     workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
         page=page, element=button_element, event=EventTypes.CLICK, user=user
     )
 
-    dispatch_context = BuilderDispatchContext(fake_request, page, workflow_action)
+    dispatch_context = BuilderDispatchContext(
+        fake_request, page, workflow_action, use_field_names=False
+    )
 
     assert (
         current_record_provider.get_data_chunk(dispatch_context, [field.db_column])
@@ -1151,25 +1045,6 @@ def test_data_source_data_extract_properties_returns_none_if_invalid_data_source
 
     result = DataSourceDataProviderType().extract_properties(path)
     assert result == {}
-
-
-@pytest.mark.parametrize(
-    "path",
-    (
-        ["10"],
-        [20],
-    ),
-)
-@pytest.mark.django_db
-def test_data_source_data_extract_properties_raises_if_data_source_doesnt_exist(path):
-    """
-    Test the DataSourceDataProviderType::extract_properties() method.
-
-    Ensure that DataSourceDoesNotExist is raised if the Data Source doesn't exist.
-    """
-
-    with pytest.raises(DataSourceDoesNotExist):
-        DataSourceDataProviderType().extract_properties(path)
 
 
 @patch.object(DataSourceHandler, "get_data_source")
@@ -1260,33 +1135,12 @@ def test_data_source_context_extract_properties_returns_none_if_invalid_data_sou
     """
     Test the DataSourceContextDataProviderType::extract_properties() method.
 
-    Ensure that None is returned if the data_source_id cannot be inferred or
+    Ensure that {} is returned if the data_source_id cannot be inferred or
     is invalid.
     """
 
     result = DataSourceContextDataProviderType().extract_properties(path)
     assert result == {}
-
-
-@pytest.mark.parametrize(
-    "path",
-    (
-        ["10"],
-        [20],
-    ),
-)
-@pytest.mark.django_db
-def test_data_source_context_extract_properties_raises_if_data_source_doesnt_exist(
-    path,
-):
-    """
-    Test the DataSourceContextDataProviderType::extract_properties() method.
-
-    Ensure that DataSourceDoesNotExist is raised if the Data Source doesn't exist.
-    """
-
-    with pytest.raises(DataSourceDoesNotExist):
-        DataSourceContextDataProviderType().extract_properties(path)
 
 
 @patch.object(DataSourceHandler, "get_data_source")
@@ -1361,7 +1215,7 @@ def test_data_source_context_extract_properties_returns_expected_results(data_fi
         ],
     )
 
-    path = [data_source.id, f"field_{fields[0].id}"]
+    path = [str(data_source.id), f"field_{fields[0].id}"]
 
     result = DataSourceContextDataProviderType().extract_properties(path)
 

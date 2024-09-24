@@ -1448,9 +1448,7 @@ def test_dispatch_data_sources_get_and_list_rows_with_elements(
             {
                 "name": "My Fruits",
                 "type": "text",
-                "config": {
-                    "value": f"get('current_record.field_{fields_2[0].id}')"
-                },
+                "config": {"value": f"get('current_record.field_{fields_2[0].id}')"},
             },
         ],
     )

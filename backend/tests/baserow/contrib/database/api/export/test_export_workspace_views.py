@@ -9,8 +9,8 @@ from django.urls import reverse
 import pytest
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
     HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
 )
 
 from baserow.contrib.database.import_export_handler import ImportExportHandler

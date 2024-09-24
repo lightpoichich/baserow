@@ -260,6 +260,7 @@ class DataSourceService:
         if dispatch_context.field_names is None:
             return results
 
+        # We filter the fields before returning the result
         for data_source in data_sources:
             if isinstance(results[data_source.id], Exception):
                 continue
@@ -272,7 +273,7 @@ class DataSourceService:
                 for row in results[data_source.id]["results"]:
                     new_row = {}
                     for key, value in row.items():
-                        if not key.startswith("field_"):
+                        if key in ["id", "order"]:
                             # Ensure keys like "id" and "order" are included
                             # in new_row
                             new_row[key] = value
@@ -288,7 +289,7 @@ class DataSourceService:
             else:
                 new_result = {}
                 for key, value in results[data_source.id].items():
-                    if not key.startswith("field_"):
+                    if key in ["id", "order"]:
                         # Ensure keys like "id" and "order" are included in new_row
                         new_result[key] = value
                     elif key in field_names:

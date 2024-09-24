@@ -11,6 +11,7 @@ from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.formula_importer import BaserowFormulaImporter
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula import BaserowFormula
+from baserow.core.formula.exceptions import InvalidBaserowFormula
 from baserow.core.utils import merge_dicts_no_duplicates, to_path
 
 
@@ -65,10 +66,15 @@ class FormulaFieldVisitor(BaserowFormulaImporter):
                 data_provider_name
             )
 
-            self.results = merge_dicts_no_duplicates(
-                self.results,
-                data_provider_type.extract_properties(path, **self.extra_context),
-            )
+            try:
+                self.results = merge_dicts_no_duplicates(
+                    self.results,
+                    data_provider_type.extract_properties(path, **self.extra_context),
+                )
+            except InvalidBaserowFormula:
+                # If the property extraction failed because of an Invalid formula
+                # we can ignore it. May be the related data source is gone.
+                pass
 
 
 def get_element_field_names(

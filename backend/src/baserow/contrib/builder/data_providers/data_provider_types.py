@@ -24,7 +24,7 @@ from baserow.contrib.builder.elements.models import FormElement
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
-from baserow.core.formula.exceptions import FormulaRecursion
+from baserow.core.formula.exceptions import FormulaRecursion, InvalidBaserowFormula
 from baserow.core.formula.registries import DataProviderType
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
@@ -196,7 +196,12 @@ class DataSourceDataProviderType(DataProviderType):
         except ValueError:
             return {}
 
-        data_source = DataSourceHandler().get_data_source(data_source_id)
+        try:
+            data_source = DataSourceHandler().get_data_source(data_source_id)
+        except DataSourceDoesNotExist as exc:
+            # The data source have probably been deleted so we raise an invalid formula
+            raise InvalidBaserowFormula() from exc
+
         service_type = data_source.service.specific.get_type()
         return {data_source.service_id: service_type.extract_properties(rest, **kwargs)}
 
@@ -262,7 +267,12 @@ class DataSourceContextDataProviderType(DataProviderType):
         except ValueError:
             return {}
 
-        data_source = DataSourceHandler().get_data_source(data_source_id)
+        try:
+            data_source = DataSourceHandler().get_data_source(data_source_id)
+        except DataSourceDoesNotExist as exc:
+            # The data source have probably been deleted so we raise an invalid formula
+            raise InvalidBaserowFormula() from exc
+
         service_type = data_source.service.specific.get_type()
         return {data_source.service_id: service_type.extract_properties(rest, **kwargs)}
 
@@ -354,10 +364,20 @@ class CurrentRecordDataProviderType(DataProviderType):
         if data_source_id is None:
             return {}
 
-        data_source = DataSourceHandler().get_data_source(data_source_id)
+        try:
+            data_source = DataSourceHandler().get_data_source(data_source_id)
+        except DataSourceDoesNotExist as exc:
+            # The data source is probably not accessible so we raise an invalid formula
+            raise InvalidBaserowFormula() from exc
+
         service_type = data_source.service.specific.get_type()
 
-        return {data_source.service_id: service_type.extract_properties(path, **kwargs)}
+        # Here we add a fake row part to make it match the usual shape for this path
+        return {
+            data_source.service_id: service_type.extract_properties(
+                ["0", *path], **kwargs
+            )
+        }
 
 
 class PreviousActionProviderType(DataProviderType):

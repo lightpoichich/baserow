@@ -1,6 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.http import HttpRequest
 from django.shortcuts import reverse
 from django.test import override_settings
 
@@ -137,12 +138,7 @@ def test_update_data_source_change_type(data_fixture):
 
 
 @pytest.mark.django_db
-@patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
-)
-def test_dispatch_data_source(
-    mock_get_formula_field_names, data_fixture, api_request_factory
-):
+def test_dispatch_data_source(data_fixture):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -171,44 +167,10 @@ def test_dispatch_data_source(
         table=table,
         row_id="2",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[0].id}')"
-                },
-            },
-            {
-                "name": "FieldB",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[1].id}')"
-                },
-            },
-        ],
-    )
 
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, use_field_names=False
     )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
-    mock_get_formula_field_names.return_value = {
-        "external": {data_source.service.id: [f"field_{field.id}" for field in fields]}
-    }
-
     result = DataSourceHandler().dispatch_data_source(data_source, dispatch_context)
 
     assert result == {
@@ -220,12 +182,7 @@ def test_dispatch_data_source(
 
 
 @pytest.mark.django_db
-@patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
-)
-def test_dispatch_data_sources(
-    mock_get_formula_field_names, data_fixture, api_request_factory
-):
+def test_dispatch_data_sources(data_fixture):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -254,27 +211,6 @@ def test_dispatch_data_sources(
         table=table,
         row_id="2",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[0].id}')"
-                },
-            },
-            {
-                "name": "FieldB",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[1].id}')"
-                },
-            },
-        ],
-    )
-
     data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
@@ -283,27 +219,6 @@ def test_dispatch_data_sources(
         table=table,
         row_id="3",
     )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source2,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source2.id}.field_{fields[0].id}')"
-                },
-            },
-            {
-                "name": "FieldB",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source2.id}.field_{fields[1].id}')"
-                },
-            },
-        ],
-    )
-
     data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
@@ -313,26 +228,9 @@ def test_dispatch_data_sources(
         row_id="b",
     )
 
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, use_field_names=False
     )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
-    mock_get_formula_field_names.return_value = {
-        "external": {
-            data_source.service.id: [f"field_{field.id}" for field in fields],
-            data_source2.service.id: [f"field_{field.id}" for field in fields],
-        }
-    }
-
     result = DataSourceHandler().dispatch_data_sources(
         [data_source, data_source2, data_source3], dispatch_context
     )

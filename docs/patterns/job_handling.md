@@ -83,14 +83,14 @@ If a job fails or is cancelled, it will raise appropriate exception and the tran
 ill be aborted. This allows to cleanup any database resources created by a job
 automatically.
 
-### job status update
+### job state update
 
 
-![Job status update](../assets/diagrams/job-workflows-job_status_update.png)
+![Job status update](../assets/diagrams/job-workflows-job_state_update.png)
 
 
 When a job is being executed it should update periodically (in key moments) its
-current [statue](#job-state) and [progress value](#progress-tracking) .
+current [state](#job-state) and [progress value](#progress-tracking) .
 
 Job status update is a workflow where a job propagates it's current status. The progress
 is usually monitored by frontend's component for the user. Because the task is executed

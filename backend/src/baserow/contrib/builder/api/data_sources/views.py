@@ -447,15 +447,15 @@ class DispatchDataSourceView(APIView):
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, data_source_id: int):
+    def post(self, request, data_source_id: str):
         """
         Call the given data_source related service dispatch method.
         """
 
-        data_source = DataSourceHandler().get_data_source(data_source_id)
-
-        dispatch_context = BuilderDispatchContext(request, data_source.page)
-
+        data_source = DataSourceHandler().get_data_source(int(data_source_id))
+        dispatch_context = BuilderDispatchContext(
+            request, data_source.page, use_field_names=False
+        )
         response = DataSourceService().dispatch_data_source(
             request.user, data_source, dispatch_context
         )
@@ -498,15 +498,13 @@ class DispatchDataSourcesView(APIView):
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, page_id: int):
+    def post(self, request, page_id: str):
         """
         Call the given data_source related service dispatch method.
         """
 
-        page = PageHandler().get_page(page_id)
-
-        dispatch_context = BuilderDispatchContext(request, page)
-
+        page = PageHandler().get_page(int(page_id))
+        dispatch_context = BuilderDispatchContext(request, page, use_field_names=False)
         service_contents = DataSourceService().dispatch_page_data_sources(
             request.user, page, dispatch_context
         )

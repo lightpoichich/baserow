@@ -779,9 +779,6 @@ class LocalBaserowListRowsUserServiceType(
         An element that specifies a field and all rows:
         ['*', 'field_5439']
 
-        A collection element (e.g. Table):
-        ['field_5439']
-
         An element that uses a Link Row Field formula
         ['0', 'field_5569', '0', 'value']
         """
@@ -789,9 +786,7 @@ class LocalBaserowListRowsUserServiceType(
         # If the path length is greater or equal to 1, then we have
         # the current data source formula format of row and field.
 
-        if len(path) == 1:
-            field_dbname = path[0]
-        elif len(path) >= 2:
+        if len(path) >= 2:
             row_id, field_dbname, *rest = path
         else:
             # In any other scenario, we have a formula that is not a format we

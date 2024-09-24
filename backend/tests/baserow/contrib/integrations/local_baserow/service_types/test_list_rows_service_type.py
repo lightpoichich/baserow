@@ -1,13 +1,8 @@
 from collections import defaultdict
 from unittest.mock import MagicMock, Mock, patch
 
-from django.shortcuts import reverse
-
 import pytest
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -217,50 +212,20 @@ def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
             ["Audi", "Orange"],
         ],
     )
+    view = data_fixture.create_grid_view(user, table=table)
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
 
     service = data_fixture.create_local_baserow_list_rows_service(
         integration=integration,
+        view=view,
         table=table,
-    )
-    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
-        user=user,
-        page=page,
-        service=service,
-    )
-    data_fixture.create_builder_table_element(
-        page=page,
-        data_source=data_source,
-        fields=[
-            {
-                "name": "FieldA",
-                "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.0.field_{field.id}')"
-                },
-            }
-            for field in fields
-        ],
     )
 
     service_type = LocalBaserowListRowsUserServiceType()
 
-    fake_request = MagicMock()
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=page.builder
-    )
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    fake_request.user = user_source_user
-    fake_request.GET.get.return_value = None
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
-    # To ensure all rows are returned
-    dispatch_context.range = MagicMock(return_value=(0, 10))
-
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
@@ -341,11 +306,10 @@ def test_local_baserow_list_rows_service_before_dispatch_validation_error(data_f
 
 @pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_filters(
-    data_fixture, api_request_factory
+    data_fixture,
 ):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    page = data_fixture.create_builder_page(user=user, builder=builder)
     integration = data_fixture.create_local_baserow_integration(
         application=builder, user=user
     )
@@ -377,19 +341,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
         view=view, table=table, integration=integration
     )
 
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
@@ -415,11 +367,10 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
 
 @pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types(
-    data_fixture, api_request_factory
+    data_fixture,
 ):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    page = data_fixture.create_builder_page(user=user, builder=builder)
     integration = data_fixture.create_local_baserow_integration(
         application=builder, user=user
     )
@@ -450,19 +401,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
         user, table=table, owned_by=user, filter_type="OR"
     )
 
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
+    dispatch_context = FakeDispatchContext()
     service_type = LocalBaserowListRowsUserServiceType()
     service = data_fixture.create_local_baserow_list_rows_service(
         view=view, table=table, integration=integration, filter_type="OR"
@@ -513,11 +452,10 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
 
 @pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sorts(
-    data_fixture, api_request_factory
+    data_fixture,
 ):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    page = data_fixture.create_builder_page(user=user, builder=builder)
     integration = data_fixture.create_local_baserow_integration(
         application=builder, user=user
     )
@@ -548,19 +486,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
         view=view, table=table, integration=integration
     )
 
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
 
     # A `ViewSort` alone.
@@ -610,12 +536,9 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
 
 
 @pytest.mark.django_db
-def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
-    data_fixture, api_request_factory
-):
+def test_local_baserow_list_rows_service_dispatch_data_with_pagination(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    page = data_fixture.create_builder_page(user=user, builder=builder)
     integration = data_fixture.create_local_baserow_integration(
         application=builder, user=user
     )
@@ -651,25 +574,15 @@ def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
         table=table, integration=integration
     )
 
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    dispatch_context = BuilderDispatchContext(fake_request, page)
-
+    dispatch_context = FakeDispatchContext()
     dispatch_data = service_type.dispatch_data(
         service, {"table": table}, dispatch_context
     )
 
     assert len(dispatch_data["results"]) == 10
     assert dispatch_data["has_next_page"] is False
+
+    dispatch_context = FakeDispatchContext()
 
     dispatch_context.range = Mock()
     dispatch_context.range.return_value = [0, 5]
@@ -976,7 +889,6 @@ def test_order_by_is_applied_depending_on_views_sorts(
     )
 
     dispatch_context = FakeDispatchContext()
-
     service_type.dispatch_data(service, resolved_values, dispatch_context)
 
     if view_sorts:

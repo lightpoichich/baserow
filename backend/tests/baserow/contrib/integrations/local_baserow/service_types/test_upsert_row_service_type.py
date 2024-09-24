@@ -228,6 +228,9 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
     service.field_mappings.create(
         field=cost, value=f'get("data_source.{data_source.id}.{cost.db_column}")'
     )
+    service.field_mappings.create(
+        field=name, value=f'get("data_source.{data_source.id}.{name.db_column}")'
+    )
 
     formula_context = {
         "data_source": {
@@ -240,6 +243,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
     }
 
     dispatch_context = FakeDispatchContext(context=formula_context)
+
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     service_type.dispatch_data(service, dispatch_values, dispatch_context)
 

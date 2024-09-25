@@ -34,6 +34,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.core.formula.exceptions import InvalidBaserowFormula
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.user_source_user import UserSourceUser
@@ -1262,12 +1263,12 @@ def test_current_record_extract_properties_raises_if_data_source_doesnt_exist(
     """
     Test the CurrentRecordDataProviderType::extract_properties() method.
 
-    Ensure that DataSourceDoesNotExist is raised if the Data Source doesn't exist.
+    Ensure that InvalidBaserowFormula is raised if the Data Source doesn't exist.
     """
 
     mock_get_data_source.side_effect = DataSourceDoesNotExist()
 
-    with pytest.raises(DataSourceDoesNotExist):
+    with pytest.raises(InvalidBaserowFormula):
         CurrentRecordDataProviderType().extract_properties(path, invalid_data_source_id)
 
     mock_get_data_source.assert_called_once_with(invalid_data_source_id)
@@ -1307,7 +1308,9 @@ def test_current_record_extract_properties_calls_correct_service_type(
 
     assert result == {mocked_data_source.service_id: expected_field}
     mock_get_data_source.assert_called_once_with(fake_element_id)
-    mocked_service_type.extract_properties.assert_called_once_with(path)
+    mocked_service_type.extract_properties.assert_called_once_with(
+        ["0", expected_field]
+    )
 
 
 @pytest.mark.django_db
@@ -1352,11 +1355,10 @@ def test_current_record_extract_properties_returns_expected_results(data_fixture
     )
     builder = data_fixture.create_builder_application(user=user)
     page = data_fixture.create_builder_page(user=user, builder=builder)
-    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
         user=user,
         page=page,
         table=table,
-        row_id=rows[0].id,
     )
 
     data_fixture.create_builder_table_element(

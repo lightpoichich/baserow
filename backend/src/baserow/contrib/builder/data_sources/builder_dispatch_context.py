@@ -7,11 +7,16 @@ from baserow.contrib.builder.data_providers.registries import (
     builder_data_provider_type_registry,
 )
 from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
+from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceRefinementForbidden,
+)
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.feature_flags import feature_flag_is_enabled
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.services.utils import ServiceAdhocRefinements
 
 if TYPE_CHECKING:
+    from baserow.contrib.builder.elements.models import Element
     from baserow.core.workflow_actions.models import WorkflowAction
 
 FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS = "feature-exclude-unused-fields"
@@ -22,6 +27,7 @@ class BuilderDispatchContext(DispatchContext):
         "request",
         "page",
         "workflow_action",
+        "element",
         "offset",
         "count",
         "only_expose_public_formula_fields",
@@ -32,6 +38,7 @@ class BuilderDispatchContext(DispatchContext):
         request: HttpRequest,
         page: Page,
         workflow_action: Optional["WorkflowAction"] = None,
+        element: Optional["Element"] = None,
         offset: Optional[int] = None,
         count: Optional[int] = None,
         only_expose_public_formula_fields: Optional[bool] = True,
@@ -39,6 +46,7 @@ class BuilderDispatchContext(DispatchContext):
         self.request = request
         self.page = page
         self.workflow_action = workflow_action
+        self.element = element
 
         # Overrides the `request` GET offset/count values.
         self.offset = offset
@@ -50,6 +58,57 @@ class BuilderDispatchContext(DispatchContext):
     @property
     def data_provider_registry(self):
         return builder_data_provider_type_registry
+
+    def validate_adhoc_refinements(
+        self, fields: List[str], refinement: ServiceAdhocRefinements
+    ):
+        """
+        Responsible for ensuring that all fields present in `fields`
+        are allowed as a refinement for the given `refinement`. For example,
+        if the `refinement` is `FILTER`, then all fields in `fields` need
+        to be filterable.
+
+        :param fields: The fields to validate.
+        :param refinement: The refinement to validate.
+        :raises DataSourceRefinementForbidden: If a field is not allowed for the given
+            refinement.
+        """
+
+        if not self.element:
+            raise Exception("The element is required to validate adhoc refinements.")
+
+        if self.element.id not in self.cache.setdefault("element_property_options", {}):
+            property_options = {
+                po.schema_property: {
+                    "filterable": po.filterable,
+                    "sortable": po.sortable,
+                    "searchable": po.searchable,
+                }
+                for po in self.element.property_options.all()
+            }
+            self.cache["element_property_options"][self.element.id] = property_options
+
+        # All property options for the given element, set by the page designer.
+        element_property_options = self.cache["element_property_options"][
+            self.element.id
+        ]
+
+        # The filterable/sortable/searchable options for the given fields.
+        property_options = {
+            schema_property: element_property_options.get(
+                schema_property,
+                {"filterable": False, "sortable": False, "searchable": False},
+            )
+            for schema_property in fields
+        }
+
+        for schema_property, options in property_options.items():
+            # If the property is not allowed for the given refinement, raise an error.
+            model_field = ServiceAdhocRefinements.to_model_field(refinement)
+            if not options[model_field]:
+                raise DataSourceRefinementForbidden(
+                    f"{schema_property} is not a {model_field} field."
+                )
 
     @cached_property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:

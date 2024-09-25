@@ -9,6 +9,10 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
+from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceRefinementForbidden,
+)
+from baserow.core.services.utils import ServiceAdhocRefinements
 
 
 def test_dispatch_context_page_range():
@@ -151,3 +155,49 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     else:
         assert dispatch_context.public_formula_fields is None
         mock_get_formula_field_names.assert_not_called()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "property_option_params",
+    [
+        {
+            "schema_property": "name",
+            "filterable": True,
+            "sortable": False,
+            "searchable": False,
+        },
+        {
+            "schema_property": "age",
+            "filterable": False,
+            "sortable": True,
+            "searchable": False,
+        },
+        {
+            "schema_property": "location",
+            "filterable": False,
+            "sortable": False,
+            "searchable": True,
+        },
+    ],
+)
+def test_validate_adhoc_refinements(data_fixture, property_option_params):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_table_element(page=page)
+    element.property_options.create(**property_option_params)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
+    schema_property = property_option_params["schema_property"]
+    for refinement in list(ServiceAdhocRefinements):
+        model_field_name = ServiceAdhocRefinements.to_model_field(refinement)
+        if property_option_params[model_field_name]:
+            dispatch_context.validate_adhoc_refinements([schema_property], refinement)
+        else:
+            with pytest.raises(DataSourceRefinementForbidden) as exc:
+                dispatch_context.validate_adhoc_refinements(
+                    [schema_property], refinement
+                )
+            assert (
+                exc.value.args[0]
+                == f"{schema_property} is not a {model_field_name} field."
+            )

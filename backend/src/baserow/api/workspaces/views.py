@@ -52,7 +52,7 @@ from ...contrib.database.api.export.views import (
     ExportApplicationsJobRequestSerializer,
     ExportApplicationsJobResponseSerializer,
 )
-from ...core.feature_flag import FeatureFlags, is_feature_enabled
+from ...core.feature_flag import feature_flag_is_enabled, FF_EXPORT_WORKSPACE
 from ...core.job_types import ExportApplicationsJobType
 from ...core.jobs.exceptions import MaxJobCountExceeded
 from ...core.jobs.handler import JobHandler
@@ -522,7 +522,7 @@ class AsyncExportWorkspaceApplicationsView(APIView):
         the workspace are exported.
         """
 
-        if not is_feature_enabled(FeatureFlags.export_workspace):
+        if not feature_flag_is_enabled(FF_EXPORT_WORKSPACE):
             raise FeatureDisabled("Workspace export is not available")
 
         job = JobHandler().create_and_start_job(

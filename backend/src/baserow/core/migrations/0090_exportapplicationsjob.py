@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0088_remove_blacklistedtoken_user"),
+        ("core", "0089_alter_snapshot_unique_together"),
     ]
 
     operations = [

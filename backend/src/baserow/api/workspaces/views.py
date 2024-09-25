@@ -52,7 +52,7 @@ from ...contrib.database.api.export.views import (
     ExportApplicationsJobRequestSerializer,
     ExportApplicationsJobResponseSerializer,
 )
-from ...core.feature_flag import feature_flag_is_enabled, FF_EXPORT_WORKSPACE
+from ...core.feature_flag import FF_EXPORT_WORKSPACE, feature_flag_is_enabled
 from ...core.job_types import ExportApplicationsJobType
 from ...core.jobs.exceptions import MaxJobCountExceeded
 from ...core.jobs.handler import JobHandler

@@ -94,16 +94,12 @@ def test_get_formula_field_names_returns_all_field_names(data_fixture):
             {
                 "name": "FieldA",
                 "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[0].id}')"
-                },
+                "config": {"value": f"get('current_record.field_{fields[0].id}')"},
             },
             {
                 "name": "FieldB",
                 "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[1].id}')"
-                },
+                "config": {"value": f"get('current_record.field_{fields[1].id}')"},
             },
         ],
     )
@@ -162,9 +158,7 @@ def test_get_formula_field_names_returns_some_field_names(data_fixture):
             {
                 "name": "FieldA",
                 "type": "text",
-                "config": {
-                    "value": f"get('data_source.{data_source.id}.field_{fields[0].id}')"
-                },
+                "config": {"value": f"get('current_record.field_{fields[0].id}')"},
             },
         ],
     )

@@ -13,22 +13,7 @@ cancel a specific job.
 
 Job subsystem is an internal framework in Baserow that defines specific job types and
 orchestrates the execution. It follows several common patterns used in the backend
-application. The main components used in jobs management are:
-
-* `baserow.core.jobs.handlers:JobHandler` - a handler class that wraps common routines
-  for job management
-
-* `baserow.core.jobs.job_types:JobType` - a registry-based hierarchy of specific job
-  types. Each job type represents a specific functionality that is executed as a job.
-  Using a `JobType`-based subclass registry allows to wrap different actions
-  with an unified interface and workflow. It's easy to add new job types without
-  modifying existing code base.
-
-* `baserow.core.jobs.models:Job` base job model class - usually each job type has own
-  Job submodel defined. A scheduled job may need to know an extra context to execute
-  properly. For example, a job that duplicates a table needs to know which table to
-  duplicate. `Job` subclasses can store such information for the execution. Base Job
-  model stores basic job information: identification, ownership and current state.
+application. See [backend notes](#backend) for details.
 
 ## Job workflows
 
@@ -99,14 +84,14 @@ automatically.
 
 ### job state update
 
-When a job is being executed it should update periodically (in key moments) its
-current [state](#job-state) and [progress value](#progress-tracking).
-
 Job status update is a workflow where a job propagates its current status. Job's
 progress is usually monitored by the frontend's component for the user. Because the task
 is executed in a transaction, other processes cannot see current state from the database
 and we
 use [cache as a proxy for state values](#cache-layer).
+
+When a job is being executed it should update periodically (in key moments) its
+current [state](#job-state) and [progress value](#progress-tracking).
 
 The workflow of querying for job state update:
 
@@ -124,57 +109,91 @@ The workflow of querying for job state update:
 
 ### Job cancellation
 
-![Job cancellation](../assets/diagrams/job-workflows-job_cancellation.png)
+Job subsystem allows to cancel a job. The cancellation can be triggered by an owner of a
+job. A cancellation request means the user is not interested in any continuation of
+job's execution and any result or a product of such execution should be discarded.
 
-Job subsystem allows to cancel a job before or during its execution. The cancellation
-should be triggered by a user that is an owner of a job. A cancellation request means
-the user is not interested in any continuation of job's execution and any result or a
-product of such execution should be discarded.
+Job cancellation request can be issued in any moment, but because of asynchronous nature
+of communication a request can be delivered when job's state is different than at the
+moment when the request was issued from the frontend. Not all states are cancellable and
+if a state is not cancellable it may raise an
+exception. A table below presents which states are cancellable.
 
-Due to asynchronous nature of the communication between components and job execution,
-the cancellation is not immediate and the request may be received after a job has been
-finished. Because a job has been finished already, it cannot be cancelled. In that case,
-a `JobNotCancellable` error will be raised.
+| Job state         | can be cancelled | exception           | notes                               |
+|-------------------|------------------|---------------------|-------------------------------------|
+| `pending`         | yes              |                     |
+| `started`         | yes              |                     |
+| any running state | yes              |                     |                                     |
+| `failed`          | yes              |                     |                                     |
+| `cancelled`       | no               |                     | No error, as it's already cancelled |
+| `finished`        | no               | `JobNotCancellable` |                                     | 
 
-Job cancellation workflow:
-
-* a user that is the owner of the job should have a UI to trigger the cancellation
-* a component should call `cancelJob()` method which will call `/api/job/$id/cancel/`
-  endpoint in the backend.
-* the backend will check ownership of the job
-* the backend will check job's state to ensure it can be cancelled
-* the backend will set `Job.state` to `cancelled` in the model
-  and [in the cache](#cache-layer). This is the final step for the backend.
-* if a job has not been started yet, `run_asyc_job` won't start this job.
-* if a job is being processed, job's handling will check if job's state wasn't set to
-  `cancelled` state in the cache. If the state has been set, the task should stop
-  execution of the task immediately. If not, the state will be updated with current
-  job's state in the worker.
-
-Sending cancellation to a running job is not straightforward, because the job is
-executed synchronously in the worker, so there's no good side channel to inject an
-information that this job has been cancelled from the outside.
-
-A check if a job has been cancelled is performed in certain key moments of the
-execution:
+Because of that asynchronous nature sending cancellation to a running job is not
+straightforward, because the job is executed synchronously in a Celery worker.
+Cancellation requires a side channel to inject a request that a job has been cancelled
+from the outside. This is performed by checking [cache layer](#cache-layer) in key
+moments of job's processing:
 
 * when a job updates its progress. See [Progress notes](#progress-tracking) for details.
 * in `JobHandler.run()` when an actual job has been cancelled, but the execution control
-  wasn't returned to the `run_async_job` task.
+  wasn't yet returned to the `run_async_job` task.
+
+A cancelled job will raise a `JobCancelled` exception which will effectively stop the
+job and cancel db transaction rejecting any pending changes there. Note that filesystem
+resources related to that job won't be cleaned in this workflow. There's a
+separate [cleanup](#job-cleanup) that will remove timed out/finished jobs including any
+outstanding files. Appropriate `JobType.before_delete()` should be implemented for that
+purpose.
+
+If a job has been finished already, it cannot be cancelled. In that case a
+`JobNotCancellable` error will be raised by the backend.
+
+Job cancellation workflow:
+
+![Job cancellation](../assets/diagrams/job-workflows-job_cancellation.png)
+
+* the owner of the job should have a UI to trigger the cancellation
+* when activated (clicked) a component should dispatch `job/cancel` action which will
+  call `/api/job/$id/cancel/` endpoint in the backend.
+* the backend calls `JobHandler.cancel_job()` which effectively sets `Job.state` to
+  `cancelled` in the model and [in the cache](#cache-layer). This is the final step for
+  the backend.
+* if a job is picked by a Celery worker sanity checks will be performed and:
+    * if a job has not been started yet, `run_asyc_job` won't start this job.
+    * if a job is being processed, job's handling will check if job's state wasn't set
+      to
+      `cancelled` state in the cache. If the state has been set, the task should stop
+      execution of the task immediately. If not, the state will be updated with current
+      job's state in the worker.
 
 ### Job cleanup
 
-Job cleanup is an independent task that is executed with Celery periodically. The base
-intention is that all jobs that have been created longer than
-`BASEROW_JOB_EXPIRATION_TIME_LIMIT` (by default: 30 days) and are not running (so they
-are finished, cancelled or failed) should be removed from a permanent store and all jobs
-that were created more than `BASEROW_JOB_SOFT_TIME_LIMIT` (30 minutes) ago should be
-marked as failed due to a timeout.
+Job cleanup is an independent task that is executed periodically in Celery. The base
+intention is that:
+
+* all jobs that have been created longer than `BASEROW_JOB_EXPIRATION_TIME_LIMIT` (by
+  default: 30 days) and are finished, cancelled or failed should be removed permanently
+* all jobs that were created more than `BASEROW_JOB_SOFT_TIME_LIMIT` (30 minutes) ago
+  should be
+  marked as failed due to a timeout.
 
 Note, that when a job is being removed, `JobType.before_delete()` hook will be called.
 This is a hook that allows to do any job-type cleanup.
 
 ## Backend
+
+* `baserow.core.jobs.models:Job` base job model class - usually each job type has own
+  Job submodel defined. A scheduled job may need to know an extra context to execute
+  properly. For example, a job that duplicates a table needs to know which table to
+  duplicate. `Job` subclasses can store such information for the execution. Base Job
+  model stores basic job information: identification, ownership and current state.
+*
+
+### JobHandler
+
+`baserow.core.jobs.handlers:JobHandler` is used to expose high-level interface to manage
+jobs. It contains methods to create, query for, cancel and remove jobs. It's used by
+both web application and tasks in Celery.
 
 ### JobType
 
@@ -191,11 +210,14 @@ ways such subclass can customize Job-related aspects:
 * map exceptions to specific HTTP response codes
 * have [a model class](#job-sub-models)
 
+`JobType` subclasses are registered and managed with a job type registry, so it's easy
+to add new job types without modifying existing code.
+
 ### Job sub-models
 
-Each `JobType` subclass should have accompanying `Job` model subclass. A subclass should
-store input values and results (fields with specific values or file fields for
-file-based results) if required.
+Each `JobType` subclass should have an accompanying `Job` subclass. `Job` model stores
+just basic job information: identification, ownership and  
+[a current state](#job-state). A subclass should store job-type input values.
 
 #### Job state
 
@@ -218,14 +240,12 @@ tell if a job is running or not. Such interpretation happens in the backend (
 `Job.object` has dedicated methods to get pending/running/finished querysets) and in the
 frontend (`mixin/job` provides calculated properties for different states).
 
-### JobHandler
-
 ### Progress tracking
 
-Each job receives an instance of `baserow.core.utils:Progress` class which is a helper
-to track progress of any job. `Progress` class can use child instances to track
-fragmentary progress if a job can have sub-tasks that should be tracked independently
-but within specific boundaries of a parent progress. For example: a job updates its
+`Job.progress_percentage` stores current job progress value in percentage. This value should be updated during the execution. However, a job may be a complex and layered set of tasks, where one task runs several smaller tasks in a sequence. Those smaller tasks may not know anything about their caller to be able to be run in isolation. Upper layers may still want to know how much job was performed and expose this information for others to consume. To establish a communication channel to propagate progress updates from the inside of a job a helper `baserow.core.utils:Progress` class is used.
+ 
+`Progress`'s class interface allows to set or increase a progress.  `Progress` class can spawn child instances to track fragmentary progress of sub-tasks. If a job can have sub-tasks they can be tracked independently
+but within specific boundaries of parent's progress. For example: a job updates its
 `Progress` instance to 40% and then runs a code that internally tracks its progress from
 0% to 100%, but from job's perspective it's an increase from 40% to 50%. A child
 progress will notify parent of it's change and the parent will recalculate its relative
@@ -234,21 +254,21 @@ change.
 `Progress` class can also receive a callback function to be called when its progress
 value changes.
 
-When a `JobHandler.run` creates a `Progress` instance, it adds to progress tracker a
-callback. This callback will:
+When a `JobHandler.run` prepares a job to execute it creates also a `Progress` instance with a callback. This callback will:
 
 * receive current job instance
 * check with cache if the job is cancelled and raise `JobCancelled` exception.
 * update `Job.state` and `Job.progress_percentage` values locally and
   refresh [cached values](#cache-layer).
 
+This instance will be passed to `JobType.run` so the job can consume it.
+
 ## Cache layer
 
-During job's execution cache layer is used to speed up propagating the state of a job
-between the backend and Celery worker. Because a job is executed in a transaction, local
+During job's execution cache layer is used to enable propagation of job's state between the backend and Celery worker. Because a job is executed in a transaction, local
 changes to the job will be invisible to other database sessions. Cache is used (Redis
 store) as a proxy to current `Job.state` and `Job.progress_percentage` values in the
-backend process. Also, this is a channel to propagate cancellation state back to the
+backend process. Also, this is a channel to propagate cancellation state back to a
 worker.
 
 Job's cache key is constructed from `Job.id`. It's a dictionary with `state` and
@@ -258,11 +278,8 @@ Once a job execution is completed, cache entry for that job should be removed.
 
 ## Frontend
 
-Vue application tries to utilize common Vue patterns to manage job state. Any component
-that creates or want to check job's execution state should use those.
+There's a set of patterns used in the frontend to effectively track and manage job's state in a Vue component. Any component that creates or want to check job's execution state should use patterns. 
 
-Each job type can have different initial parameters and usually a job is initialized by
-a different endpoint. This makes job creation a variable.
 
 ### Job store
 
@@ -282,12 +299,15 @@ The main connector between a component and the store is `mixin/job` mixin. This 
 provides helpers to properly expose job's state and act on state's change. A component
 can define callbacks to extend behavior on job state's change.
 
+Each job type can have different initial parameters and usually a job is initialized by
+a different endpoint. This makes job creation a variable that should be provided by 
+a component.
+
 ### Usage in components
 
 * Vue component that wants to interact with a job of any type should use provided
   `mixin/job` mixin. As written above, this mixin provides a skeleton to handle job
-  state
-  management in the frontend.
+  state management in the component.
 * the mixin provides:
     * properties:
         + `job`

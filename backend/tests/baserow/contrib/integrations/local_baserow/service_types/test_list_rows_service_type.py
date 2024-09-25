@@ -1072,7 +1072,7 @@ def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
         ),
         (
             ["field_123"],
-            ["field_123"],
+            [],
         ),
         (
             ["", "field_456"],

@@ -16,10 +16,7 @@ from rest_framework.status import (
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.core.services.models import Service
 from baserow.core.user_sources.user_source_user import UserSourceUser
-from baserow.test_utils.helpers import AnyInt, AnyStr
-from tests.baserow.contrib.builder.api.user_sources.helpers import (
-    create_user_table_and_role,
-)
+from baserow.test_utils.helpers import AnyInt, AnyStr, setup_interesting_test_table
 
 
 @pytest.fixture
@@ -765,6 +762,44 @@ def test_dispatch_data_source(api_client, data_fixture):
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+# pytest -k "test_dispatch_data_source_perf" -s --run-disabled-in-ci
+def test_dispatch_data_source_perf(api_client, data_fixture, profiler):
+    user, token = data_fixture.create_user_and_token()
+    table, _, _, _, _ = setup_interesting_test_table(data_fixture, user)
+
+    view = data_fixture.create_grid_view(user, table=table)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+
+    with profiler(html_report_name="data_source_dispatch_perf"):
+        for _ in range(30):
+            api_client.post(
+                url,
+                {},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
 
 
 @pytest.mark.django_db

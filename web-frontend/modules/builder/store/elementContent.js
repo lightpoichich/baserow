@@ -41,7 +41,7 @@ const mutations = {
 
   CLEAR_CONTENT(state, { element }) {
     element._.content = []
-    element._.hasNextPage = false
+    element._.hasNextPage = true
   },
   TRIGGER_RESET(state, { element }) {
     element._.reset += 1
@@ -94,7 +94,11 @@ const actions = {
      * - Root collection element (with a dataSource):
      *      - Parent collection element (this `element`!) with a schema property.
      */
-    if (dataSource === null) {
+    if (!dataSource) {
+      // We clearly can't have more page for that one
+      commit('SET_HAS_MORE_PAGE', { element, value: false })
+      commit('SET_LOADING', { element, value: false })
+
       if (!element.schema_property) {
         // We have a collection element that supports schema properties, and
         // we have A) no data source and B) no schema property
@@ -104,8 +108,6 @@ const actions = {
         commit('SET_LOADING', { element, value: false })
         return
       }
-
-      commit('SET_LOADING', { element, value: true })
 
       // Collect all collection element ancestors, with a `data_source_id`.
       const collectionAncestors = this.app.store.getters[
@@ -155,6 +157,8 @@ const actions = {
         element,
         value: elementContent,
       })
+      // No more content for sure
+      commit('SET_HAS_MORE_PAGE', { element, value: false })
       commit('SET_LOADING', { element, value: false })
       return
     }
@@ -188,7 +192,7 @@ const actions = {
           ])
 
           // Everything is already loaded we can quit now
-          if (!rangeToFetch) {
+          if (!rangeToFetch || !getters.getHasMorePage(element)) {
             commit('SET_LOADING', { element, value: false })
             return
           }

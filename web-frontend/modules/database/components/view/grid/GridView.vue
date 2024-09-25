@@ -159,7 +159,7 @@
           v-for="(contextItemComponent, index) in getMultiSelectContextItems()"
           :key="index"
           :field="getSelectedField()"
-          :rows="getSelectedRows()"
+          :get-rows="getSelectedRowsFunction"
           :store-prefix="storePrefix"
           :database="database"
           @click=";[$refs.rowContext.hide()]"
@@ -176,6 +176,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.delete_row',
               table,
@@ -207,6 +208,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -226,6 +228,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -245,6 +248,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -285,6 +289,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.delete_row',
               table,
@@ -1562,11 +1567,12 @@ export default {
       ](this.fields)
       return selectedFields.length === 1 ? selectedFields[0] : null
     },
-    /**
-     * Returns the selected rows if any rows are selected, otherwise returns an empty array.
-     */
-    getSelectedRows() {
-      return this.$store.getters[this.storePrefix + 'view/grid/getSelectedRows']
+    async getSelectedRowsFunction() {
+      const fieldsAndRows = await this.$store.dispatch(
+        this.storePrefix + 'view/grid/getCurrentSelection',
+        { fields: this.fields }
+      )
+      return fieldsAndRows[1]
     },
   },
 }

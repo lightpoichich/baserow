@@ -9,7 +9,7 @@ const populateElement = (element, registry) => {
   element._ = {
     contentLoading: true,
     content: [],
-    hasNextPage: false,
+    hasNextPage: true,
     reset: 0,
     shouldBeFocused: false,
     elementNamespacePath: null,

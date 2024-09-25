@@ -106,9 +106,7 @@ class ElementHandler:
 
         try:
             element = (
-                queryset.select_related(
-                    "page", "page__builder", "page__builder__workspace"
-                )
+                queryset.select_related("page__builder__workspace")
                 .get(id=element_id)
                 .specific
             )
@@ -490,7 +488,9 @@ class ElementHandler:
         :return: All the workflow actions associated
         """
 
-        return specific_iterator(element.builderworkflowaction_set.all())
+        return specific_iterator(
+            element.builderworkflowaction_set.select_related("content_type").all()
+        )
 
     def duplicate_element(self, element: Element) -> ElementsAndWorkflowActions:
         """

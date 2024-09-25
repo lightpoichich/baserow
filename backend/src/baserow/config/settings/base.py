@@ -1255,3 +1255,6 @@ BASEROW_OLLAMA_MODELS = os.getenv("BASEROW_OLLAMA_MODELS", "")
 BASEROW_OLLAMA_MODELS = (
     BASEROW_OLLAMA_MODELS.split(",") if BASEROW_OLLAMA_MODELS else []
 )
+
+# Duration of the short living cache used to save queries in many places
+TTL_CACHE_DURATION = 10

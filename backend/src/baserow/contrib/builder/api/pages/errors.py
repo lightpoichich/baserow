@@ -10,7 +10,7 @@ ERROR_PAGE_DOES_NOT_EXIST = (
 ERROR_SHARED_PAGE_READ_ONLY = (
     "ERROR_SHARED_PAGE_READ_ONLY",
     HTTP_400_BAD_REQUEST,
-    "The shared page and can't be affected.",
+    "The shared page is read-only and cannot be affected.",
 )
 
 ERROR_PAGE_NOT_IN_BUILDER = (

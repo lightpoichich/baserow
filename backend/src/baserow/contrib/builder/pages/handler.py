@@ -91,6 +91,8 @@ class PageHandler:
         :param name: The name of the page
         :param path: The path of the page
         :param path_params: The params of the path provided
+        :param shared: If this is the shared page. They should be only one shared page
+          per builder application.
         :return: The newly created page instance
         """
 

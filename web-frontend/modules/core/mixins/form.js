@@ -102,6 +102,7 @@ export default {
       if (this.selectedFieldIsDeactivated) {
         return
       }
+
       this.touch()
 
       if (this.isFormValid()) {
@@ -126,8 +127,7 @@ export default {
       // Some forms might not do any validation themselves. If they don't, then they
       // are by definition valid if their children are valid.
       const thisFormInvalid = '$v' in this && this.$v.$invalid
-      const res = !thisFormInvalid && this.areChildFormsValid()
-      return res
+      return !thisFormInvalid && this.areChildFormsValid()
     },
     /**
      * Returns true if all the child form components are valid.
@@ -145,8 +145,7 @@ export default {
      * calling the submitted event.
      */
     getFormValues() {
-      const result = Object.assign({}, this.values, this.getChildFormsValues())
-      return result
+      return Object.assign({}, this.values, this.getChildFormsValues())
     },
     /**
      * Returns an object containing the values of the child forms.

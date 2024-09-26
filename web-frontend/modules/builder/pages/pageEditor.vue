@@ -40,6 +40,7 @@ export default {
       applicationContext: this.applicationContext,
     }
   },
+
   /**
    * When the route is updated we want to unselect the element
    */
@@ -54,7 +55,14 @@ export default {
       const builder = this.$store.getters['application/get'](
         from.params.builderId
       )
-      this.$store.dispatch('userSourceUser/logoff', { application: builder })
+      if (builder) {
+        // We want to reload once only data for this builder next time
+        this.$store.dispatch('application/forceUpdate', {
+          application: builder,
+          data: { _loadedOnce: false },
+        })
+        this.$store.dispatch('userSourceUser/logoff', { application: builder })
+      }
     }
     next()
   },
@@ -72,7 +80,13 @@ export default {
     const builder = this.$store.getters['application/get'](
       from.params.builderId
     )
+    // We want to reload once only data for this builder next time
+    this.$store.dispatch('application/forceUpdate', {
+      application: builder,
+      data: { _loadedOnce: false },
+    })
     this.$store.dispatch('userSourceUser/logoff', { application: builder })
+
     next()
   },
   layout: 'app',
@@ -87,7 +101,6 @@ export default {
       store.dispatch('userSourceUser/setCurrentApplication', {
         application: builder,
       })
-
       const workspace = await store.dispatch(
         'workspace/selectById',
         builder.workspace.id

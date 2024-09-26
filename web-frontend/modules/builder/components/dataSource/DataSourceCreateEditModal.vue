@@ -97,7 +97,7 @@ export default {
     integrations() {
       return this.$store.getters['integration/getIntegrations'](this.builder)
     },
-    // We don't use the provided page here because it depends on the user source being
+    // We don't use the provided page here because it depends on the data source being
     // edited. Sometimes it's the shared page.
     dataSourcePage() {
       if (!this.dataSource) {

@@ -4,18 +4,14 @@ import { PLACEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   mixins: [element],
-  props: {
-    children: {
-      type: Array,
-      required: false,
-      default: () => [],
-    },
-  },
   computed: {
     ...mapGetters({
       elementSelected: 'element/getSelected',
     }),
     PLACEMENTS: () => PLACEMENTS,
+    children() {
+      return this.$store.getters['element/getChildren'](this.page, this.element)
+    },
     elementSelectedId() {
       return this.elementSelected?.id
     },

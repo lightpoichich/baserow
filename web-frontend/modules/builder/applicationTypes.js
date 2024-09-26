@@ -85,9 +85,10 @@ export class BuilderApplicationType extends ApplicationType {
     }
   }
 
-  async loadExtraData(builder, page, mode) {
+  async loadExtraData(builder, mode) {
     const { store, $registry } = this.app
     if (!builder._loadedOnce) {
+      const sharedPage = store.getters['page/getSharedPage'](builder)
       await Promise.all([
         store.dispatch('userSource/fetch', {
           application: builder,
@@ -97,8 +98,12 @@ export class BuilderApplicationType extends ApplicationType {
         }),
         // Fetch shared data sources
         store.dispatch('dataSource/fetch', {
-          page: store.getters['page/getSharedPage'](builder),
+          page: sharedPage,
         }),
+        store.dispatch('element/fetch', {
+          page: sharedPage,
+        }),
+        store.dispatch('workflowAction/fetch', { page: sharedPage }),
       ])
 
       // Initialize application shared stuff like data sources

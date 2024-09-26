@@ -85,7 +85,7 @@ export default {
     InsertElementButton,
     PageElement,
   },
-  inject: ['workspace', 'builder', 'page', 'mode'],
+  inject: ['workspace', 'builder', 'mode'],
   props: {
     element: {
       type: Object,
@@ -124,6 +124,13 @@ export default {
       getClosestSiblingElement: 'element/getClosestSiblingElement',
       loggedUser: 'userSourceUser/getUser',
     }),
+    page() {
+      // We use the page from the element itself
+      return this.$store.getters['page/getById'](
+        this.builder,
+        this.element.page_id
+      )
+    },
     isVisible() {
       const isAuthenticated = this.$store.getters[
         'userSourceUser/isAuthenticated'

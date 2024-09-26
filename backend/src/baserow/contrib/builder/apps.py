@@ -184,6 +184,7 @@ class BuilderConfig(AppConfig):
             RepeatElementType,
             TableElementType,
             TextElementType,
+            MultiPageContainerType,
         )
         from .elements.registries import element_type_registry
 
@@ -201,6 +202,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(ChoiceElementType())
         element_type_registry.register(CheckboxElementType())
         element_type_registry.register(IFrameElementType())
+        element_type_registry.register(MultiPageContainerType())
 
         from .domains.domain_types import CustomDomainType, SubDomainType
         from .domains.registries import domain_type_registry

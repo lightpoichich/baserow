@@ -115,7 +115,7 @@ export default {
 
       const page = store.getters['page/getById'](builder, pageId)
 
-      await builderApplicationType.loadExtraData(builder, page, mode)
+      await builderApplicationType.loadExtraData(builder, mode)
 
       await Promise.all([
         store.dispatch('dataSource/fetch', {

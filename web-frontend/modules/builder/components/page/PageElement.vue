@@ -18,7 +18,6 @@
       <component
         :is="component"
         :element="element"
-        :children="children"
         :application-context-additions="{
           element,
         }"
@@ -49,7 +48,7 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'PageElement',
   mixins: [applicationContextMixin],
-  inject: ['builder', 'page', 'mode'],
+  inject: ['builder', 'mode'],
   provide() {
     return { mode: this.elementMode }
   },
@@ -78,9 +77,6 @@ export default {
       const componentName =
         this.elementMode === 'editing' ? 'editComponent' : 'component'
       return elementType[componentName]
-    },
-    children() {
-      return this.$store.getters['element/getChildren'](this.page, this.element)
     },
     ...mapGetters({
       loggedUser: 'userSourceUser/getUser',

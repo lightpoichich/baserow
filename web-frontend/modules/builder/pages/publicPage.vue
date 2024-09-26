@@ -6,6 +6,7 @@
       :path="path"
       :params="params"
       :elements="elements"
+      :shared-elements="sharedElements"
     />
   </div>
 </template>
@@ -105,6 +106,12 @@ export default {
       const sharedPage = await store.getters['page/getSharedPage'](builder)
       await Promise.all([
         store.dispatch('dataSource/fetchPublished', {
+          page: sharedPage,
+        }),
+        store.dispatch('element/fetchPublished', {
+          page: sharedPage,
+        }),
+        store.dispatch('workflowAction/fetchPublished', {
           page: sharedPage,
         }),
       ])
@@ -260,6 +267,9 @@ export default {
       return this.$store.getters['dataSource/getPageDataSources'](
         this.sharedPage
       )
+    },
+    sharedElements() {
+      return this.$store.getters['element/getRootElements'](this.sharedPage)
     },
     isAuthenticated() {
       return this.$store.getters['userSourceUser/isAuthenticated'](this.builder)

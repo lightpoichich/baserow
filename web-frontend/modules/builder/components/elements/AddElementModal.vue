@@ -34,6 +34,7 @@ export default {
   name: 'AddElementModal',
   components: { AddElementCard },
   mixins: [modal],
+  inject: ['builder'],
   props: {
     page: {
       type: Object,
@@ -63,6 +64,9 @@ export default {
           this.search
         )
       )
+    },
+    sharedPage() {
+      return this.$store.getters['page/getSharedPage'](this.builder)
     },
     parentElementType() {
       const parentElement = this.$store.getters['element/getElementById'](
@@ -109,11 +113,21 @@ export default {
           }
         : null
 
+      let page = this.page
+      if (elementType.onSharedPage) {
+        page = this.sharedPage
+      }
+
+      /* const beforeElement = this.$store.getters['element/getElementById'](
+        page,
+        beforeId
+      ) */
+
       try {
         await this.actionCreateElement({
-          page: this.page,
+          page,
           elementType: elementType.getType(),
-          beforeId: this.beforeId,
+          beforeId: elementType.onSharedPage ? null : this.beforeId,
           configuration,
         })
 

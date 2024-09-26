@@ -64,7 +64,6 @@ export default {
   props: {
     /**
      * @type {Object}
-     * @property button_color - The submit button's color.
      * @property submit_button_label - The label of the submit button
      * @property reset_initial_values_post_submission - Whether to reset the form
      *  elements to their initial value or not, following a successful submission.

@@ -1,6 +1,15 @@
 <template>
   <ThemeProvider class="page">
     <PageElement
+      v-for="element in sharedElements"
+      :key="element.id"
+      :element="element"
+      :mode="mode"
+      :application-context-additions="{
+        recordIndexPath: [],
+      }"
+    />
+    <PageElement
       v-for="element in elements"
       :key="element.id"
       :element="element"
@@ -36,6 +45,10 @@ export default {
       required: true,
     },
     elements: {
+      type: Array,
+      required: true,
+    },
+    sharedElements: {
       type: Array,
       required: true,
     },

@@ -40,6 +40,7 @@ from baserow.contrib.builder.elements.models import (
     TableElement,
     TextElement,
     VerticalAlignments,
+    MultiPageContainerElement,
     get_default_table_orientation,
 )
 from baserow.contrib.builder.elements.registries import (
@@ -155,6 +156,60 @@ class ColumnElementType(ContainerElementTypeMixin, ElementType):
             raise DRFValidationError(
                 f"place_in_container can at most be {max_place_in_container}, ({place_in_container}, was given)"
             )
+
+    @property
+    def child_types_allowed(self) -> List[str]:
+        """
+        The column container only forbids itself as a child.
+        :return: a list of element types, without the column container type.
+        """
+
+        return [
+            element_type.type
+            for element_type in element_type_registry.get_all()
+            if element_type.type != self.type
+        ]
+
+
+class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
+    """
+    A container element that can be displayed on multiple pages.
+    """
+
+    type = "multi_page"
+    model_class = MultiPageContainerElement
+
+    class SerializedDict(ElementDict):
+        page_position: str
+        behaviour: str
+        share_type: str
+        pages: List[int]
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + [
+            "page_position",
+            "behaviour",
+            "share_type",
+            "pages",
+        ]
+
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + [
+            "page_position",
+            "behaviour",
+            "share_type",
+            "pages",
+        ]
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {
+            "page_position": "header",
+            "behaviour": "fixed",
+            "share_type": "all_pages",
+            "pages": [],
+        }
 
     @property
     def child_types_allowed(self) -> List[str]:

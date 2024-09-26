@@ -43,9 +43,11 @@ import IFrameElementForm from '@baserow/modules/builder/components/elements/comp
 import RepeatElement from '@baserow/modules/builder/components/elements/components/RepeatElement'
 import RepeatElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RepeatElementForm'
 import RecordSelectorElement from '@baserow/modules/builder/components/elements/components/RecordSelectorElement.vue'
+import RecordSelectorElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RecordSelectorElementForm'
+import MultiPageContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/MultiPageContainerElementForm'
+import MultiPageContainerElement from '@baserow/modules/builder/components/elements/components/MultiPageContainerElement'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { isNumeric, isValidEmail } from '@baserow/modules/core/utils/string'
-import RecordSelectorElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RecordSelectorElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -96,6 +98,10 @@ export class ElementType extends Registerable {
       'style_background_mode',
       'style_width',
     ]
+  }
+
+  get onSharedPage() {
+    return false
   }
 
   get styles() {
@@ -1781,5 +1787,83 @@ export class RecordSelectorElementType extends CollectionElementTypeMixin(
         },
       }
     }
+  }
+}
+
+export class MultiPageContainerElementType extends ContainerElementTypeMixin(
+  ElementType
+) {
+  static getType() {
+    return 'multi_page'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.multiPageContainer')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.multiPageContainerDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-layout-left'
+  }
+
+  get component() {
+    return MultiPageContainerElement
+  }
+
+  get generalFormComponent() {
+    return MultiPageContainerElementForm
+  }
+
+  get onSharedPage() {
+    return true
+  }
+
+  /**
+   * Only disallow same type elements nested elements.
+   */
+  childElementTypesForbidden(page, element) {
+    return this.elementTypesAll.filter(
+      (elementType) => elementType.type === this.getType()
+    )
+  }
+
+  get childStylesForbidden() {
+    return ['style_width']
+  }
+
+  getDefaultValues(page, values) {
+    const superValues = super.getDefaultValues(page, values)
+    const builder = this.app.store.getters['application/get'](page.builder_id)
+    const sharedPage = this.app.store.getters['page/getSharedPage'](builder)
+    return {
+      ...superValues,
+      style_padding_left: 0,
+      style_padding_right: 0,
+      page_id: sharedPage.id,
+    }
+  }
+
+  getDefaultChildValues(page, values) {
+    return {}
+  }
+
+  /**
+   * Return an array of placements that are disallowed for the elements to move
+   * in their container.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element for which the placements should
+   *    be calculated.
+   * @returns {Array} An array of placements that are disallowed for the element.
+   */
+  getPlacementsDisabledForChild(page, containerElement, element) {
+    return [
+      PLACEMENTS.LEFT,
+      PLACEMENTS.RIGHT,
+      ...this.getVerticalPlacementsDisabled(page, element),
+    ]
   }
 }

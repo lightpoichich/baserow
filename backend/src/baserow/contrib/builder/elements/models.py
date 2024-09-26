@@ -874,3 +874,46 @@ class RecordSelectorElement(CollectionElement, FormElement):
         blank=True,
         default="",
     )
+
+
+class MultiPageContainerElement(ContainerElement):
+    """
+    A container element that can contain other elements and be can shared across
+    multiple pages.
+    """
+
+    class ELEMENT_POSITION(models.TextChoices):
+        HEADER = "header"
+        FOOTER = "footer"
+        LEFT = "left"
+        RIGHT = "right"
+
+    class POSITIONED_BEHAVIOUR(models.TextChoices):
+        SCROLL = "scroll"
+        FIXED = "fixed"
+        STICKY = "sticky"
+
+    class SHARE_TYPE(models.TextChoices):
+        ALL = "all"
+        ONLY = "only"
+        EXCEPT = "except"
+
+    page_position = models.CharField(
+        choices=ELEMENT_POSITION.choices,
+        max_length=10,
+        default=ELEMENT_POSITION.HEADER,
+    )
+
+    behaviour = models.CharField(
+        choices=POSITIONED_BEHAVIOUR.choices,
+        max_length=10,
+        default=POSITIONED_BEHAVIOUR.SCROLL,
+    )
+
+    share_type = models.CharField(
+        choices=SHARE_TYPE.choices,
+        max_length=10,
+        default=SHARE_TYPE.ALL,
+    )
+
+    pages = models.ManyToManyField("builder.Page", blank=True)

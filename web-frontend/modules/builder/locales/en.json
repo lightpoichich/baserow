@@ -99,7 +99,9 @@
     "repeat": "Repeat",
     "repeatDescription": "A repeatable set of elements",
     "recordSelector": "Record selector",
-    "recordSelectorDescription": "A related record selector"
+    "recordSelectorDescription": "A related record selector",
+    "multiPageContainer": "Multi-page container",
+    "multiPageContainerDescription": "A container shared across pages"
   },
   "addElementButton": {
     "label": "Element"
@@ -131,7 +133,7 @@
     "message": "Click on one of the elements to see more details"
   },
   "pagePreview": {
-    "emptyMessage": "Click to create first element"
+    "emptyMessage": "Click to create an element"
   },
   "elementForms": {
     "textInputPlaceholder": "Enter text...",
@@ -784,5 +786,26 @@
     "noDataSources": "No data sources available",
     "shared": "shared",
     "pageOnly": "this page"
+  },
+  "multiPageContainerElementForm": {
+    "pagePosition": "Position",
+    "behaviour": "Behaviour",
+    "display": "Display on"
+  },
+  "pagePosition": {
+    "header": "Header",
+    "footer": "Footer",
+    "left": "Left",
+    "right": "Right"
+  },
+  "scrollBehaviour": {
+    "scroll": "Scroll",
+    "fixed": "Fixed (stay in place)",
+    "sticky": "Sticky (stop at the edge)"
+  },
+  "pageShareType": {
+    "all": "All pages",
+    "only": "Only selected pages",
+    "except": "Except selected pages"
   }
 }

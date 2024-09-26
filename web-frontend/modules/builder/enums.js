@@ -91,6 +91,25 @@ export const WIDTH_TYPES = {
   FULL_WIDTH: { value: 'full-width', name: 'widthTypes.fullWidth' },
 }
 
+export const PAGE_POSITIONS = {
+  HEADER: 'header',
+  FOOTER: 'footer',
+  LEFT: 'left',
+  RIGHT: 'right',
+}
+
+export const SCROLL_BEHAVIOURS = {
+  SCROLL: 'scroll',
+  FIXED: 'fixed',
+  STICKY: 'sticky',
+}
+
+export const SHARE_TYPES = {
+  ALL: 'all',
+  ONLY: 'only',
+  EXCEPT: 'except',
+}
+
 /**
  * A list of all the data providers that can be used in the formula field on the right
  * sidebar in the application builder.

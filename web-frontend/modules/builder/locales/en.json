@@ -369,7 +369,7 @@
   },
   "dataSourceItemContext": {
     "shareBetweenPages": "Share between pages",
-    "unshareBetweenPages": "For this page only"
+    "unshareBetweenPages": "Unshare from other pages"
   },
   "dataSourceEditModal": {
     "editTitle": "Edit data source",

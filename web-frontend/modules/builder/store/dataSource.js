@@ -247,11 +247,14 @@ const actions = {
         page_id: pageDest.id,
       })
 
-      // Update the order
+      // Update the order and the name if it has been updated to prevent conflicts
       await dispatch('forceUpdate', {
         page: pageDest,
         dataSource: updatedDataSource,
-        values: { order: updatedDataSource.order },
+        values: {
+          order: updatedDataSource.order,
+          name: updatedDataSource.name,
+        },
       })
     } catch (error) {
       await dispatch('forcePageMove', {

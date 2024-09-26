@@ -228,6 +228,57 @@ def test_update_data_source(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_data_source_page(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    page2 = data_fixture.create_builder_page(user=user, builder=page.builder)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page, name="name"
+    )
+
+    url = reverse(
+        "api:builder:data_source:item", kwargs={"data_source_id": data_source1.id}
+    )
+
+    response = api_client.patch(
+        url,
+        {"page_id": page2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["page_id"] == page2.id
+    assert response.json()["name"] == "name"
+
+
+@pytest.mark.django_db
+def test_update_data_source_with_with_name_conflict(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    page2 = data_fixture.create_builder_page(user=user, builder=page.builder)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page, name="Conflict"
+    )
+    data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page2, name="Conflict"
+    )
+
+    url = reverse(
+        "api:builder:data_source:item", kwargs={"data_source_id": data_source1.id}
+    )
+
+    response = api_client.patch(
+        url,
+        {"page_id": page2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["page_id"] == page2.id
+    assert response.json()["name"] == "Conflict 2"
+
+
+@pytest.mark.django_db
 def test_update_data_source_with_filters(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)

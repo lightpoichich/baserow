@@ -347,7 +347,11 @@ class CurrentRecordDataProviderType(DataProviderType):
         return rest
 
     def extract_properties(
-        self, path: List[str], data_source_id: Optional[int] = None, **kwargs
+        self,
+        path: List[str],
+        data_source_id: Optional[int] = None,
+        schema_property: Optional[str] = None,
+        **kwargs,
     ) -> Dict[str, List[str]]:
         """
         Given a list of formula path parts, call the ServiceType's
@@ -372,12 +376,22 @@ class CurrentRecordDataProviderType(DataProviderType):
 
         service_type = data_source.service.specific.get_type()
 
-        # Here we add a fake row part to make it match the usual shape for this path
-        return {
-            data_source.service_id: service_type.extract_properties(
-                ["0", *path], **kwargs
-            )
-        }
+        if service_type.returns_list:
+            # Here we add a fake row part to make it match the usual shape
+            # for this path
+            if schema_property:
+                path = ["0", schema_property, *path]
+            else:
+                path = ["0", *path]
+        else:
+            # Current Record could also use Get Row service type (via Repeat
+            # element), so we need to add the field name if it is available.
+            if not schema_property:
+                return {}
+            else:
+                path = [schema_property, *path]
+
+        return {data_source.service_id: service_type.extract_properties(path, **kwargs)}
 
 
 class PreviousActionProviderType(DataProviderType):

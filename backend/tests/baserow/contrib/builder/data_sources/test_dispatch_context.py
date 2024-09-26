@@ -201,3 +201,12 @@ def test_validate_adhoc_refinements(data_fixture, property_option_params):
                 exc.value.args[0]
                 == f"{schema_property} is not a {model_field_name} field."
             )
+
+
+def test_validate_adhoc_refinements_without_element():
+    dispatch_context = BuilderDispatchContext(HttpRequest(), None)
+    with pytest.raises(DataSourceRefinementForbidden) as exc:
+        dispatch_context.validate_adhoc_refinements(
+            ["name"], ServiceAdhocRefinements.FILTER
+        )
+    assert exc.value.args[0] == "An element is required to validate adhoc refinements."

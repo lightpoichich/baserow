@@ -7,6 +7,7 @@ from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
 )
 from baserow.contrib.database.fields.field_filters import FilterBuilder
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
@@ -28,6 +29,7 @@ from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.services.types import ServiceDict, ServiceSubClass
+from baserow.core.services.utils import ServiceAdhocRefinements
 
 if TYPE_CHECKING:
     from baserow.contrib.database.table.models import GeneratedTableModel, Table
@@ -206,6 +208,16 @@ class LocalBaserowTableServiceFilterableMixin:
             deserialized_filters = AdHocFilters.deserialize_dispatch_filters(
                 dispatch_filters
             )
+            # Next we pluck out the field IDs which the filters point to.
+            field_ids = list(set([f["field"] for f in deserialized_filters["filters"]]))
+            # In bulk fetch the field records.
+            fields = Field.objects.filter(pk__in=field_ids).only("id")
+            # Extract the field db columns names.
+            field_names = [field.db_column for field in fields]
+            # Validate that the fields are filterable.
+            dispatch_context.validate_adhoc_refinements(
+                field_names, ServiceAdhocRefinements.FILTER
+            )
             adhoc_filters = AdHocFilters.from_dict(deserialized_filters)
             queryset = adhoc_filters.apply_to_queryset(model, queryset)
         return queryset
@@ -298,6 +310,10 @@ class LocalBaserowTableServiceSortableMixin:
 
         adhoc_sort = dispatch_context.sortings()
         if adhoc_sort is not None:
+            field_names = [field.strip("-") for field in adhoc_sort.split(",")]
+            dispatch_context.validate_adhoc_refinements(
+                field_names, ServiceAdhocRefinements.SORT
+            )
             queryset = queryset.order_by_fields_string(adhoc_sort, False)
         else:
             view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)

@@ -75,7 +75,9 @@ class BuilderDispatchContext(DispatchContext):
         """
 
         if not self.element:
-            raise Exception("The element is required to validate adhoc refinements.")
+            raise DataSourceRefinementForbidden(
+                "An element is required to validate adhoc refinements."
+            )
 
         if self.element.id not in self.cache.setdefault("element_property_options", {}):
             property_options = {

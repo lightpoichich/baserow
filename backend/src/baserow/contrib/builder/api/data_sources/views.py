@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 
 from django.db import transaction
 
@@ -29,11 +29,13 @@ from baserow.contrib.builder.api.data_sources.errors import (
     ERROR_DATA_SOURCE_DOES_NOT_EXIST,
     ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
     ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE,
+    ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN,
 )
 from baserow.contrib.builder.api.data_sources.serializers import (
     BaseUpdateDataSourceSerializer,
     CreateDataSourceSerializer,
     DataSourceSerializer,
+    DispatchDataSourceRequestSerializer,
     GetRecordIdsSerializer,
     MoveDataSourceSerializer,
     UpdateDataSourceSerializer,
@@ -46,6 +48,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
     DataSourceImproperlyConfigured,
     DataSourceNotInSamePage,
+    DataSourceRefinementForbidden,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
@@ -427,6 +430,7 @@ class DispatchDataSourceView(APIView):
             "Dispatches the service of the related data_source and returns "
             "the result."
         ),
+        request=DispatchDataSourceRequestSerializer,
         responses={
             404: get_error_schema(
                 [
@@ -443,16 +447,25 @@ class DispatchDataSourceView(APIView):
         {
             DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
             DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DataSourceRefinementForbidden: ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN,
             ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, data_source_id: str):
+    @validate_body(DispatchDataSourceRequestSerializer, return_validated=True)
+    def post(self, request, data: Dict[str, Any], data_source_id: str):
         """
         Call the given data_source related service dispatch method.
         """
 
         data_source = DataSourceHandler().get_data_source(int(data_source_id))
+
+        # An `element` will be provided if we're dispatching a collection
+        # element's data source with adhoc refinements.
+        dispatch_context = BuilderDispatchContext(
+            request, data_source.page, element=data["element"]
+        )
+
         dispatch_context = BuilderDispatchContext(
             request, data_source.page, only_expose_public_formula_fields=False
         )

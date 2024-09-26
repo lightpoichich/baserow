@@ -672,9 +672,17 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
         user=user,
         columns=[
             ("Name", "text"),
+            ("SSN", "text"),
         ],
-        rows=[["Peter"], ["Afonso"], ["Tsering"], ["Jérémie"]],
+        rows=[
+            ["Peter", "111"],
+            ["Afonso", "222"],
+            ["Tsering", "333"],
+            ["Jérémie", "444"],
+        ],
     )
+    filterable_field = table.field_set.get(name="Name")
+    private_field = table.field_set.get(name="SSN")
     view = data_fixture.create_grid_view(user, table=table)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
@@ -688,6 +696,15 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
         view=view,
         table=table,
     )
+    element = data_fixture.create_builder_table_element(
+        page=page, data_source=data_source
+    )
+    element.property_options.create(
+        schema_property=filterable_field.db_column, filterable=True
+    )
+    element.property_options.create(
+        schema_property=private_field.db_column, filterable=False
+    )
 
     url = reverse(
         "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
@@ -697,12 +714,12 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
         "filter_type": "OR",
         "filters": [
             {
-                "field": fields[0].id,
+                "field": filterable_field.id,
                 "type": "equal",
                 "value": "Peter",
             },
             {
-                "field": fields[0].id,
+                "field": filterable_field.id,
                 "type": "equal",
                 "value": "Jérémie",
             },
@@ -711,7 +728,7 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
 
     response = api_client.post(
         f"{url}?filters={json.dumps(advanced_filters)}",
-        {},
+        {"element": element.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -719,10 +736,143 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "results": [
-            {"id": 1, "order": AnyStr(), fields[0].db_column: "Peter"},
-            {"id": 4, "order": AnyStr(), fields[0].db_column: "Jérémie"},
+            {
+                "id": 1,
+                "order": AnyStr(),
+                filterable_field.db_column: "Peter",
+                private_field.db_column: "111",
+            },
+            {
+                "id": 4,
+                "order": AnyStr(),
+                filterable_field.db_column: "Jérémie",
+                private_field.db_column: "444",
+            },
         ],
         "has_next_page": False,
+    }
+
+    advanced_filters["filters"] = [
+        {
+            "field": private_field.id,
+            "type": "equal",
+            "value": "123",
+        }
+    ]
+
+    response = api_client.post(
+        f"{url}?filters={json.dumps(advanced_filters)}",
+        {"element": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "error": "ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN",
+        "detail": f"Data source refinement error: {private_field.db_column} is not a filterable field.",
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_with_adhoc_sortings(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("SSN", "text"),
+        ],
+        rows=[
+            ["Peter", "111"],
+            ["Afonso", "222"],
+            ["Tsering", "333"],
+            ["Jérémie", "444"],
+        ],
+    )
+    sortable_field = table.field_set.get(name="Name")
+    private_field = table.field_set.get(name="SSN")
+    view = data_fixture.create_grid_view(user, table=table)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+    )
+    element = data_fixture.create_builder_table_element(
+        page=page, data_source=data_source
+    )
+    element.property_options.create(
+        schema_property=sortable_field.db_column, sortable=True
+    )
+    element.property_options.create(
+        schema_property=private_field.db_column, sortable=False
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [],
+    }
+
+    response = api_client.post(
+        f"{url}?filters={json.dumps(advanced_filters)}&order_by=-{sortable_field.db_column}",
+        {"element": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "results": [
+            {
+                "id": 3,
+                "order": AnyStr(),
+                sortable_field.db_column: "Tsering",
+                private_field.db_column: AnyStr(),
+            },
+            {
+                "id": 1,
+                "order": AnyStr(),
+                sortable_field.db_column: "Peter",
+                private_field.db_column: AnyStr(),
+            },
+            {
+                "id": 4,
+                "order": AnyStr(),
+                sortable_field.db_column: "Jérémie",
+                private_field.db_column: AnyStr(),
+            },
+            {
+                "id": 2,
+                "order": AnyStr(),
+                sortable_field.db_column: "Afonso",
+                private_field.db_column: AnyStr(),
+            },
+        ],
+        "has_next_page": False,
+    }
+
+    response = api_client.post(
+        f"{url}?filters={json.dumps(advanced_filters)}&order_by=-{private_field.db_column}",
+        {"element": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "error": "ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN",
+        "detail": f"Data source refinement error: {private_field.db_column} is not a sortable field.",
     }
 
 

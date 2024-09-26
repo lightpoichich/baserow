@@ -176,6 +176,63 @@ def test_update_data_source_change_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_data_source_change_page(data_fixture):
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        name="No conflict"
+    )
+    page_dest = data_fixture.create_builder_page(builder=data_source.page.builder)
+
+    data_source_updated = DataSourceHandler().update_data_source(
+        data_source, page=page_dest
+    )
+
+    data_source_updated.refresh_from_db()
+
+    assert data_source_updated.page_id == page_dest.id
+    assert data_source_updated.name == "No conflict"
+
+
+@pytest.mark.django_db
+def test_update_data_source_change_page_with_conflict(data_fixture):
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        name="Conflict"
+    )
+    page_dest = data_fixture.create_builder_page(builder=data_source.page.builder)
+    data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page_dest, name="Conflict"
+    )
+
+    data_source_updated = DataSourceHandler().update_data_source(
+        data_source, page=page_dest
+    )
+
+    data_source_updated.refresh_from_db()
+
+    assert data_source_updated.page_id == page_dest.id
+    assert data_source_updated.name == "Conflict 2"
+
+
+@pytest.mark.django_db
+def test_update_data_source_change_page_with_conflict_but_name(data_fixture):
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        name="Conflict"
+    )
+    page_dest = data_fixture.create_builder_page(builder=data_source.page.builder)
+    data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page_dest, name="Conflict"
+    )
+
+    data_source_updated = DataSourceHandler().update_data_source(
+        data_source, page=page_dest, name="Another name"
+    )
+
+    data_source_updated.refresh_from_db()
+
+    assert data_source_updated.page_id == page_dest.id
+    assert data_source_updated.name == "Another name"
+
+
+@pytest.mark.django_db
 def test_dispatch_data_source(data_fixture):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(

@@ -89,6 +89,8 @@ class DataSourceHandler:
 
         :param page: The page that holds the data_sources.
         :param base_queryset: The base queryset to use to build the query.
+        :param with_shared: If True, also returns the data sources from the shared page
+          on the same builder.
         :param specific: If True, return the specific version of the service related
           to the integration
         :return: The data_sources of that page.
@@ -211,9 +213,7 @@ class DataSourceHandler:
         """
 
         existing_pages_names = list(
-            DataSource.objects.filter(page__builder=page.builder).values_list(
-                "name", flat=True
-            )
+            DataSource.objects.filter(page=page).values_list("name", flat=True)
         )
         return find_unused_name([proposed_name], existing_pages_names, max_length=255)
 
@@ -311,13 +311,15 @@ class DataSourceHandler:
             )
             data_source.service = service_to_update
 
-        if name is not None:
-            data_source.name = name
-
         if page is not None and data_source.page_id != page.id:
             data_source.page = page
             # Add the moved data source at the end of the new page
             data_source.order = DataSource.get_last_order(page)
+            # Check for name conflicts
+            data_source.name = self.find_unused_data_source_name(page, data_source.name)
+
+        if name is not None:
+            data_source.name = name
 
         data_source.save()
 

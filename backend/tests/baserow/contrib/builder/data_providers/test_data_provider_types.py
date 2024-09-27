@@ -1382,6 +1382,85 @@ def test_current_record_extract_properties_calls_correct_service_type(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "returns_list,schema_property",
+    [
+        (
+            True,
+            "field_123",
+        ),
+        (
+            True,
+            None,
+        ),
+        (
+            False,
+            "field_123",
+        ),
+        (
+            False,
+            None,
+        ),
+    ]
+)
+@patch.object(DataSourceHandler, "get_data_source")
+def test_current_record_extract_properties_called_with_correct_path(
+    mock_get_data_source, returns_list, schema_property
+):
+    """
+    Test the CurrentRecordDataProviderType::extract_properties() method.
+
+    Ensure that the `path` is generated correctly and passed to the service type.
+    """
+
+    service_id = 100
+    data_source_id = 50
+
+    mock_service_type = MagicMock()
+    mock_service_type.returns_list = returns_list
+    mock_service_type.extract_properties.return_value = ["field_999"]
+
+    mock_data_source = MagicMock()
+    mock_data_source.service_id = service_id
+    mock_data_source.service.specific.get_type.return_value = mock_service_type
+
+    mock_get_data_source.return_value = mock_data_source
+    
+    path = ["*"]
+
+    result = CurrentRecordDataProviderType().extract_properties(
+        path,
+        data_source_id,
+        schema_property,
+    )
+
+    mock_get_data_source.assert_called_once_with(data_source_id)
+    
+    if returns_list:
+        if schema_property:
+            mock_service_type.extract_properties.assert_called_once_with(
+                ["0", schema_property, *path]
+            )
+        else:
+            mock_service_type.extract_properties.assert_called_once_with(
+                ["0", *path]
+            )
+        assert result == {service_id: ["field_999"]}
+    else:
+        if schema_property:
+            mock_service_type.extract_properties.assert_called_once_with(
+                [schema_property, *path]
+            )
+            assert result == {service_id: ["field_999"]}
+        else:
+            # If service type doesn't return a list (e.g. Get Row) and
+            # there is no schema_property, ensure we return early with an
+            # empty dict, since there are no fields to extract.
+            mock_service_type.extract_properties.assert_not_called()
+            assert result == {}
+
+
+@pytest.mark.django_db
 @patch.object(DataSourceHandler, "get_data_source")
 def test_current_record_extract_properties_returns_empty_if_invalid_data_source_id(
     mock_get_data_source,

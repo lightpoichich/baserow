@@ -35,6 +35,7 @@ from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.formula.exceptions import InvalidBaserowFormula
+from baserow.core.formula.registries import DataProviderType
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.user_source_user import UserSourceUser
@@ -1401,7 +1402,7 @@ def test_current_record_extract_properties_calls_correct_service_type(
             False,
             None,
         ),
-    ]
+    ],
 )
 @patch.object(DataSourceHandler, "get_data_source")
 def test_current_record_extract_properties_called_with_correct_path(
@@ -1425,7 +1426,7 @@ def test_current_record_extract_properties_called_with_correct_path(
     mock_data_source.service.specific.get_type.return_value = mock_service_type
 
     mock_get_data_source.return_value = mock_data_source
-    
+
     path = ["*"]
 
     result = CurrentRecordDataProviderType().extract_properties(
@@ -1435,16 +1436,14 @@ def test_current_record_extract_properties_called_with_correct_path(
     )
 
     mock_get_data_source.assert_called_once_with(data_source_id)
-    
+
     if returns_list:
         if schema_property:
             mock_service_type.extract_properties.assert_called_once_with(
                 ["0", schema_property, *path]
             )
         else:
-            mock_service_type.extract_properties.assert_called_once_with(
-                ["0", *path]
-            )
+            mock_service_type.extract_properties.assert_called_once_with(["0", *path])
         assert result == {service_id: ["field_999"]}
     else:
         if schema_property:
@@ -1526,3 +1525,17 @@ def test_current_record_extract_properties_returns_expected_results(data_fixture
 
     expected = {data_source.service_id: [f"field_{fields[0].id}"]}
     assert result == expected
+
+
+def test_data_provider_type_extract_properties_base_method():
+    """Test the DataProviderType::extract_properties() base method."""
+
+    class FakeDataProviderType(DataProviderType):
+        type = "fake_data_provider_type"
+
+        def get_data_chunk(self, *args, **kwargs):
+            return None
+
+    result = FakeDataProviderType().extract_properties([])
+
+    assert result == {}

@@ -16,8 +16,8 @@ from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
     DataSourceImproperlyConfigured,
 )
-from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.exceptions import PermissionException
+from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 
 
 @pytest.mark.django_db
@@ -484,7 +484,7 @@ def test_public_dispatch_data_sources_view(
         (
             DataSourceDoesNotExist,
             "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
-            "The requested data_source does not exist.",   
+            "The requested data_source does not exist.",
         ),
         (
             DataSourceImproperlyConfigured,
@@ -494,7 +494,7 @@ def test_public_dispatch_data_sources_view(
         (
             ServiceImproperlyConfigured,
             "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
-            "The data_source configuration is incorrect: "
+            "The data_source configuration is incorrect: ",
         ),
         (
             DoesNotExist,
@@ -505,8 +505,8 @@ def test_public_dispatch_data_sources_view(
             PermissionException,
             "PERMISSION_DENIED",
             "You don't have the required permission to execute this operation.",
-        )
-    ]
+        ),
+    ],
 )
 @patch(
     "baserow.contrib.builder.api.domains.public_views.DataSourceService.dispatch_page_data_sources"

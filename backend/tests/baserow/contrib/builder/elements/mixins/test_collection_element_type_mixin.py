@@ -16,12 +16,12 @@ MODULE_PATH = "baserow.contrib.builder.elements.collection_field_types"
     [
         "field_123",
         None,
-    ]
+    ],
 )
 def test_import_context_addition_sets_schema_property(schema_property):
     """
     Test the import_context_addition() method.
-     
+
     Ensure that the schema_property is set when the element has a schema property.
     """
 

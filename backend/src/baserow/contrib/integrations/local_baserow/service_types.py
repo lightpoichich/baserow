@@ -1724,6 +1724,7 @@ class LocalBaserowDeleteRowServiceType(
         the data, we can simply return a 204 response.
 
         :param dispatch_data: The `dispatch_data` result.
+        :return: A 204 response.
         """
 
         return Response(status=204)

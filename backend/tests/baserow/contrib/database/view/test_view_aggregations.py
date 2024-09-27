@@ -576,16 +576,16 @@ class TestViewDistributionAggregation:
         # Formula fields that simply mirror the values of some of the previously created fields.
         # That means their distribution results should match those of the fields they mirror.
         text_formula_field = data_fixture.create_formula_field(
-            table=table, formula=f"`{text_field.name}`"
+            table=table, formula=f"field('{text_field.name}')"
         )
         number_formula_field = data_fixture.create_formula_field(
-            table=table, formula=f"`{number_field.name}`"
+            table=table, formula=f"field('{number_field.name}')"
         )
         date_formula_field = data_fixture.create_formula_field(
-            table=table, formula=f"`{date_field.name}`"
+            table=table, formula=f"field('{date_field.name}')"
         )
         boolean_formula_field = data_fixture.create_formula_field(
-            table=table, formula=f"`{boolean_field.name}`"
+            table=table, formula=f"field('{boolean_field.name}')"
         )
 
         # Calculate the distribution aggregation of all fields in self.test_fields and the four formula fields

@@ -163,6 +163,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             model = table.get_model()
 
         queryset = self.get_queryset(service, table, dispatch_context, model)
+
         return queryset
 
     def get_queryset(
@@ -1471,7 +1472,7 @@ class LocalBaserowUpsertRowServiceType(
     def enhance_queryset(self, queryset):
         return super().enhance_queryset(queryset).prefetch_related("field_mappings")
 
-    def dispatch_transform(self, dispatch_data: Dict[str, Any], **kwargs) -> Any:
+    def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Any:
         """
         Responsible for serializing the `dispatch_data` row.
 
@@ -1716,7 +1717,7 @@ class LocalBaserowDeleteRowServiceType(
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
         return self.resolve_row_id(resolved_values, service, dispatch_context)
 
-    def dispatch_transform(self, dispatch_data: Dict[str, Any], **kwargs) -> Response:
+    def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Response:
         """
         The delete row action's `dispatch_data` will contain an empty
         `data` dictionary. When we get to this method and wish to transform

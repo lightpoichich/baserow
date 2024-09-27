@@ -1232,6 +1232,33 @@ def test_data_source_context_extract_properties_returns_expected_results(data_fi
     assert result == expected
 
 
+@pytest.mark.parametrize(
+    "path",
+    (
+        ["10", 999],
+        [20, 888],
+    ),
+)
+@pytest.mark.django_db
+@patch.object(DataSourceHandler, "get_data_source")
+def test_data_source_data_provider_extract_properties_raises_if_data_source_doesnt_exist(
+    mock_get_data_source,
+    path,
+):
+    """
+    Test the DataSourceDataProviderType::extract_properties() method.
+
+    Ensure that InvalidBaserowFormula is raised if the Data Source doesn't exist.
+    """
+
+    mock_get_data_source.side_effect = DataSourceDoesNotExist()
+
+    with pytest.raises(InvalidBaserowFormula):
+        DataSourceDataProviderType().extract_properties(path)
+
+    mock_get_data_source.assert_called_once_with(int(path[0]))
+
+
 @pytest.mark.parametrize("path", ([], [""], ["foo"]))
 @pytest.mark.django_db
 def test_current_record_extract_properties_returns_none_if_data_source_id_missing(path):

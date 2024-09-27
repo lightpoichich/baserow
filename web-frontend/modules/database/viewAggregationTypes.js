@@ -784,7 +784,6 @@ export class MedianViewAggregationType extends ViewAggregationType {
   }
 }
 
-
 export class DistributionViewAggregationType extends ViewAggregationType {
   static getType() {
     return 'distribution'

@@ -12,6 +12,12 @@ from rest_framework.status import (
 )
 
 from baserow.api.user_files.serializers import UserFileSerializer
+from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceDoesNotExist,
+    DataSourceImproperlyConfigured,
+)
+from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
+from baserow.core.exceptions import PermissionException
 
 
 @pytest.mark.django_db
@@ -462,6 +468,88 @@ def test_public_dispatch_data_sources_view(
 
     assert response.status_code == 200
     assert response.json() == mock_service_contents
+    mock_get_page.assert_called_once_with(mock_page_id)
+    mock_builder_dispatch_context.assert_called_once_with(
+        ANY, mock_page, only_expose_public_formula_fields=True
+    )
+    mock_dispatch_page_data_sources.assert_called_once_with(
+        ANY, mock_page, mock_dispatch_context
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "expected_exception,error,detail",
+    [
+        (
+            DataSourceDoesNotExist,
+            "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+            "The requested data_source does not exist.",   
+        ),
+        (
+            DataSourceImproperlyConfigured,
+            "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+            "The data_source configuration is incorrect: ",
+        ),
+        (
+            ServiceImproperlyConfigured,
+            "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+            "The data_source configuration is incorrect: "
+        ),
+        (
+            DoesNotExist,
+            "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+            "The requested data does not exist.",
+        ),
+        (
+            PermissionException,
+            "PERMISSION_DENIED",
+            "You don't have the required permission to execute this operation.",
+        )
+    ]
+)
+@patch(
+    "baserow.contrib.builder.api.domains.public_views.DataSourceService.dispatch_page_data_sources"
+)
+@patch("baserow.contrib.builder.api.domains.public_views.BuilderDispatchContext")
+@patch("baserow.contrib.builder.api.domains.public_views.PageHandler.get_page")
+def test_public_dispatch_data_sources_view_returns_error(
+    mock_get_page,
+    mock_builder_dispatch_context,
+    mock_dispatch_page_data_sources,
+    api_client,
+    expected_exception,
+    error,
+    detail,
+):
+    """
+    Test the PublicDispatchDataSourcesView endpoint.
+
+    Ensure that exceptions are handled and returned correctly.
+    """
+
+    mock_page = MagicMock()
+    mock_get_page.return_value = mock_page
+
+    mock_dispatch_context = MagicMock()
+    mock_builder_dispatch_context.return_value = mock_dispatch_context
+
+    mock_service_contents = {"101": expected_exception()}
+    mock_dispatch_page_data_sources.return_value = mock_service_contents
+
+    mock_page_id = 100
+    url = reverse(
+        "api:builder:domains:public_dispatch_all", kwargs={"page_id": mock_page_id}
+    )
+    response = api_client.post(url)
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "101": {
+            "_error": error,
+            "detail": detail,
+        }
+    }
     mock_get_page.assert_called_once_with(mock_page_id)
     mock_builder_dispatch_context.assert_called_once_with(
         ANY, mock_page, only_expose_public_formula_fields=True

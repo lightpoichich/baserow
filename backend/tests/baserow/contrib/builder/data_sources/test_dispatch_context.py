@@ -135,7 +135,9 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     mock_page = MagicMock()
 
     dispatch_context = BuilderDispatchContext(
-        mock_request, mock_page, only_dispatch_formula_fields=only_dispatch_formula_fields
+        mock_request,
+        mock_page,
+        only_dispatch_formula_fields=only_dispatch_formula_fields,
     )
 
     if feature_flag_is_set and only_dispatch_formula_fields:

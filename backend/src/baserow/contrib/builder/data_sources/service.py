@@ -265,9 +265,9 @@ class DataSourceService:
             if isinstance(results[data_source.id], Exception):
                 continue
 
-            field_names = dispatch_context.public_formula_fields.get("external", {}).get(
-                data_source.service.id, []
-            )
+            field_names = dispatch_context.public_formula_fields.get(
+                "external", {}
+            ).get(data_source.service.id, [])
             if data_source.service.get_type().returns_list:
                 new_result = []
                 for row in results[data_source.id]["results"]:

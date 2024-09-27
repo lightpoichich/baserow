@@ -504,7 +504,9 @@ class DispatchDataSourcesView(APIView):
         """
 
         page = PageHandler().get_page(int(page_id))
-        dispatch_context = BuilderDispatchContext(request, page, only_dispatch_formula_fields=False)
+        dispatch_context = BuilderDispatchContext(
+            request, page, only_dispatch_formula_fields=False
+        )
         service_contents = DataSourceService().dispatch_page_data_sources(
             request.user, page, dispatch_context
         )

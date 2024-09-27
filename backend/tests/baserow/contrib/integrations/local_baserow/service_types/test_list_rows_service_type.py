@@ -994,7 +994,8 @@ def test_only_is_applied_to_queryset_if_field_names(
     dispatch_context = FakeDispatchContext()
 
     with patch(
-        "baserow.test_utils.pytest_conftest.FakeDispatchContext.public_formula_fields", None
+        "baserow.test_utils.pytest_conftest.FakeDispatchContext.public_formula_fields",
+        None,
     ):
         dispatch_context.public_formula_fields = field_names
         service_type.dispatch_data(service, resolved_values, dispatch_context)

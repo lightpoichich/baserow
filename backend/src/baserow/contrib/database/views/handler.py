@@ -2999,9 +2999,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
             if isinstance(aggregation_object, AnnotatedAggregation):
                 # Check if the returned aggregations contain a `AnnotatedAggregation`,
-                # and if so, apply the annotations and only keep the actual aggregation in
-                # the dict. This is needed because some aggregations require annotated values
-                # before they work.
+                # and if so, apply the annotations and only keep the actual aggregation
+                # in the dict. This is needed because some aggregations require
+                # annotated values before they work.
                 queryset = queryset.annotate(**aggregation_object.annotations)
                 aggregation_dict[field_name] = aggregation_object.aggregation
             elif isinstance(aggregation_object, DistributionAggregation):

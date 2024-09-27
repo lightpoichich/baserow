@@ -490,6 +490,7 @@ class TestViewDistributionAggregation:
         Then we determine the expected distribution of those randomly generated
         values in order to assert the aggregation workes correctly later.
         """
+
         field_type = field.get_type()
         first_value = field_type.random_value(field, self.fake, self.cache)
         random_values = [first_value]
@@ -500,13 +501,13 @@ class TestViewDistributionAggregation:
                 next_value = random.choice(random_values)
             random_values.append(next_value)
 
-        # Here we map each value to its expected count of occurrences in the distribution
+        # Map each value to its expected count of occurrences in the distribution
         expected_distribution = {}
         for value in random_values:
             count = random_values.count(value)
             if isinstance(field_type, SingleSelectFieldType):
-                # For SingleSelect fields, the value in the distribution will be the label
-                # of the select option, not the entire select option object itself.
+                # For SingleSelect fields, the value should be the label of the
+                # select option, not the entire select option object itself.
                 key = value.value
             else:
                 key = value
@@ -520,8 +521,9 @@ class TestViewDistributionAggregation:
         user = data_fixture.create_user()
         table = data_fixture.create_database_table(user=user)
 
-        # Create one field for each compatible field type and some random values for each field.
-        # Then build a dict that contains the expected distribution given the random values.
+        # Create one field for each compatible field type and some random values for
+        # each field. Then build a dict that contains the expected distribution given
+        # the random values.
         text_field = data_fixture.create_text_field(table=table)
         self.create_random_values_and_expected_distributions(text_field)
 
@@ -558,7 +560,7 @@ class TestViewDistributionAggregation:
         data_fixture.create_select_option(field=single_select_field)
         self.create_random_values_and_expected_distributions(single_select_field)
 
-        # Create an iterable where every item represents the values for one row of the table
+        # Create an iterable where every item represents the values of a row
         rows_values = zip(*[self.random_values[field] for field in self.test_fields])
         # Create a list of field names to reference them by
         field_names = [f"field_{field.id}" for field in self.test_fields]
@@ -572,9 +574,10 @@ class TestViewDistributionAggregation:
                 }
             )
 
-        # After creating all the regular fields and inserting values for them, we create these
-        # Formula fields that simply mirror the values of some of the previously created fields.
-        # That means their distribution results should match those of the fields they mirror.
+        # After creating all the regular fields and inserting values for them, we
+        # create these Formula fields that simply mirror the values of some of the
+        # previously created fields. That means their distribution results should
+        # match those of the fields they mirror.
         text_formula_field = data_fixture.create_formula_field(
             table=table, formula=f"field('{text_field.name}')"
         )
@@ -588,7 +591,8 @@ class TestViewDistributionAggregation:
             table=table, formula=f"field('{boolean_field.name}')"
         )
 
-        # Calculate the distribution aggregation of all fields in self.test_fields and the four formula fields
+        # Calculate the distribution aggregation of all fields in self.test_fields
+        # and also the four formula fields
         grid_view = data_fixture.create_grid_view(table=table)
         result = ViewHandler().get_field_aggregations(
             user,
@@ -607,18 +611,22 @@ class TestViewDistributionAggregation:
             for value, count in result[f"field_{field.id}"]:
                 assert self.expected_distributions[field].get(value) == count
 
-        # Verify that the text formula field distribution matches the text field distribution:
+        # Verify that the text formula field distribution matches
+        # the text field distribution:
         for value, count in result[f"field_{text_formula_field.id}"]:
             assert self.expected_distributions[text_field].get(value) == count
 
-        # Verify that the number formula field distribution matches the number field distribution:
+        # Verify that the number formula field distribution matches
+        # the number field distribution:
         for value, count in result[f"field_{number_formula_field.id}"]:
             assert self.expected_distributions[number_field].get(value) == count
 
-        # Verify that the date formula field distribution matches the date field distribution:
+        # Verify that the date formula field distribution matches
+        # the date field distribution:
         for value, count in result[f"field_{date_formula_field.id}"]:
             assert self.expected_distributions[date_field].get(value) == count
 
-        # Verify that the boolean formula field distribution matches the boolean field distribution:
+        # Verify that the boolean formula field distribution matches
+        # the boolean field distribution:
         for value, count in result[f"field_{boolean_formula_field.id}"]:
             assert self.expected_distributions[boolean_field].get(value) == count

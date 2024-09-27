@@ -28,8 +28,10 @@ class DistributionAggregation:
 
     def __init__(self, group_by):
         """
-        :param group_by: The name of the queryset field that contains the values to group by
+        :param group_by: The name of the queryset field that contains the values
+            that need to be grouped by
         """
+
         self.group_by = group_by
 
     def calculate(self, queryset, limit=10):
@@ -39,6 +41,7 @@ class DistributionAggregation:
         :param queryset: The queryset to calculate the distribution on
         :param limit: The number of results to return.
         """
+
         # Disable prefetch behaviors for this query
         queryset._multi_field_prefetch_related_funcs = []
         return list(

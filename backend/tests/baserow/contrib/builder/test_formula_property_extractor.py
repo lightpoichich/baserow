@@ -1,9 +1,10 @@
 from typing import List
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from baserow.contrib.builder.formula_property_extractor import (
+    FormulaFieldVisitor,
     get_data_source_field_names,
     get_element_field_names,
     get_formula_field_names,
@@ -20,6 +21,8 @@ from baserow.contrib.builder.workflow_actions.workflow_action_types import (
     OpenPageWorkflowActionType,
     UpdateRowWorkflowActionType,
 )
+from baserow.core.formula import BaserowFormula
+from baserow.core.formula.exceptions import InvalidBaserowFormula
 from baserow.core.formula.parser.exceptions import BaserowFormulaSyntaxError
 from baserow.core.formula.registries import DataProviderType
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
@@ -835,3 +838,36 @@ def test_get_data_source_field_names_skips_if_no_service(mock_parse_tree, data_f
 
     assert results == {"internal": {}}
     mock_parse_tree.assert_not_called()
+
+
+@patch(
+    "baserow.contrib.builder.formula_property_extractor.builder_data_provider_type_registry"
+)
+def test_formula_field_visitor_visit_function_call_handles_formula_error(
+    mock_data_provider_registry,
+):
+    """
+    Test the FormulaFieldVisitor::visitFunctionCall() method.
+
+    Ensure that formula errors are handled and ignored.
+    """
+
+    mock_data_provider_type = MagicMock()
+    mock_data_provider_type.extract_properties.side_effect = InvalidBaserowFormula()
+    mock_data_provider_registry.get.return_value = mock_data_provider_type
+
+    mock_expression = MagicMock(spec=BaserowFormula.StringLiteralContext)
+    mock_expression.accept.return_value = "'current_record.field_999'"
+
+    mock_func = MagicMock()
+    mock_func.accept.return_value = "get"
+
+    context = MagicMock()
+    context.func_name.return_value = mock_func
+    context.expr.return_value = [mock_expression]
+
+    visitor = FormulaFieldVisitor()
+    visitor.visitFunctionCall(context)
+
+    assert visitor.results == {}
+    mock_data_provider_type.extract_properties.assert_called_once_with(["field_999"])

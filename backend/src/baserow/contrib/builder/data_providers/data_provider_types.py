@@ -270,7 +270,7 @@ class DataSourceContextDataProviderType(DataProviderType):
         try:
             data_source = DataSourceHandler().get_data_source(data_source_id)
         except DataSourceDoesNotExist as exc:
-            # The data source have probably been deleted so we raise an invalid formula
+            # The data source has probably been deleted
             raise InvalidBaserowFormula() from exc
 
         service_type = data_source.service.specific.get_type()

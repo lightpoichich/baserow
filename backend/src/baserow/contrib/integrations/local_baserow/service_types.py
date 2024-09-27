@@ -879,8 +879,8 @@ class LocalBaserowListRowsUserServiceType(
 
         field_names = None
 
-        if dispatch_context.field_names is not None:
-            all_field_names = dispatch_context.field_names.get("all", {}).get(
+        if dispatch_context.public_formula_fields is not None:
+            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
                 service.id, None
             )
             if all_field_names is not None:
@@ -1200,8 +1200,8 @@ class LocalBaserowGetRowUserServiceType(
         queryset = self.build_queryset(service, table, dispatch_context, model)
 
         field_names = None
-        if dispatch_context.field_names is not None:
-            all_field_names = dispatch_context.field_names.get("all", {}).get(
+        if dispatch_context.public_formula_fields is not None:
+            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
                 service.id, None
             )
             if all_field_names is not None:

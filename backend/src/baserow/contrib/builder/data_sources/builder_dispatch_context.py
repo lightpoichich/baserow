@@ -24,7 +24,7 @@ class BuilderDispatchContext(DispatchContext):
         "workflow_action",
         "offset",
         "count",
-        "use_field_names",
+        "only_dispatch_formula_fields",
     ]
 
     def __init__(
@@ -34,7 +34,7 @@ class BuilderDispatchContext(DispatchContext):
         workflow_action: Optional["WorkflowAction"] = None,
         offset: Optional[int] = None,
         count: Optional[int] = None,
-        use_field_names: Optional[bool] = True,
+        only_dispatch_formula_fields: Optional[bool] = True,
     ):
         self.request = request
         self.page = page
@@ -43,7 +43,7 @@ class BuilderDispatchContext(DispatchContext):
         # Overrides the `request` GET offset/count values.
         self.offset = offset
         self.count = count
-        self.use_field_names = use_field_names
+        self.only_dispatch_formula_fields = only_dispatch_formula_fields
 
         super().__init__()
 
@@ -52,13 +52,13 @@ class BuilderDispatchContext(DispatchContext):
         return builder_data_provider_type_registry
 
     @cached_property
-    def field_names(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
+    def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
         """
         Return a Dict where keys are ["all", "external", "internal"] and values
         dicts. The internal dicts' keys are Service IDs and values are a list
         of Data Source field names.
 
-        Returns None if field_names shouldn't be included in the dispatch
+        Returns None if field names shouldn't be included in the dispatch
         context. This is mainly to support a feature flag for this new feature.
 
         The field names are used to improve the security of the backend by
@@ -69,7 +69,7 @@ class BuilderDispatchContext(DispatchContext):
         sensitive (required only by the backend).
         """
 
-        if self.use_field_names and feature_flag_is_enabled(
+        if self.only_dispatch_formula_fields and feature_flag_is_enabled(
             FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         ):
             return get_formula_field_names(self.request.user, self.page)

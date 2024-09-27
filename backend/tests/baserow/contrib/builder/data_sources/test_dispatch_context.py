@@ -45,7 +45,7 @@ def test_dispatch_context_page_from_context(mock_get_field_names, data_fixture):
     request.user = user
 
     dispatch_context = BuilderDispatchContext(
-        request, page, offset=0, count=5, use_field_names=True
+        request, page, offset=0, count=5, only_dispatch_formula_fields=True
     )
     dispatch_context.annotated_data = "foobar"
 
@@ -59,7 +59,7 @@ def test_dispatch_context_page_from_context(mock_get_field_names, data_fixture):
     assert new_dispatch_context.page == page
     assert new_dispatch_context.offset == 5
     assert new_dispatch_context.count == 1
-    assert new_dispatch_context.field_names == {
+    assert new_dispatch_context.public_formula_fields == {
         "all": {},
         "external": {},
         "internal": {},
@@ -99,7 +99,7 @@ def test_dispatch_context_sortings():
 
 
 @pytest.mark.parametrize(
-    "feature_flag_is_set,use_field_names",
+    "feature_flag_is_set,only_dispatch_formula_fields",
     (
         [False, True],
         [True, True],
@@ -117,7 +117,7 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     mock_feature_flag_is_enabled,
     mock_get_formula_field_names,
     feature_flag_is_set,
-    use_field_names,
+    only_dispatch_formula_fields,
 ):
     """
     Test the BuilderDispatchContext::field_names property.
@@ -135,11 +135,11 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     mock_page = MagicMock()
 
     dispatch_context = BuilderDispatchContext(
-        mock_request, mock_page, use_field_names=use_field_names
+        mock_request, mock_page, only_dispatch_formula_fields=only_dispatch_formula_fields
     )
 
-    if feature_flag_is_set and use_field_names:
-        assert dispatch_context.field_names == mock_field_names
+    if feature_flag_is_set and only_dispatch_formula_fields:
+        assert dispatch_context.public_formula_fields == mock_field_names
         mock_get_formula_field_names.assert_called_once_with(
             mock_request.user, mock_page
         )
@@ -147,5 +147,5 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
             FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         )
     else:
-        assert dispatch_context.field_names is None
+        assert dispatch_context.public_formula_fields is None
         mock_get_formula_field_names.assert_not_called()

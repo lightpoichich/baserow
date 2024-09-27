@@ -58,7 +58,7 @@ def get_dispatch_context(data_fixture, api_request_factory, builder, page, data=
     if data is not None:
         fake_request.data = data
 
-    return BuilderDispatchContext(fake_request, page, use_field_names=True)
+    return BuilderDispatchContext(fake_request, page, only_dispatch_formula_fields=True)
 
 
 def test_page_parameter_data_provider_get_data_chunk():
@@ -161,7 +161,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
     data_source_provider = DataSourceDataProviderType()
 
     dispatch_context = BuilderDispatchContext(
-        HttpRequest(), page, use_field_names=False
+        HttpRequest(), page, only_dispatch_formula_fields=False
     )
 
     assert (
@@ -212,7 +212,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
         "page_parameter": {"id": 2},
     }
 
-    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
+    dispatch_context = BuilderDispatchContext(fake_request, page, only_dispatch_formula_fields=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -287,7 +287,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         "page_parameter": {"id": 2},
     }
 
-    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
+    dispatch_context = BuilderDispatchContext(fake_request, page, only_dispatch_formula_fields=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -361,7 +361,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_list_dataso
     }
     fake_request.GET = {"count": 20}
 
-    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
+    dispatch_context = BuilderDispatchContext(fake_request, page, only_dispatch_formula_fields=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -492,7 +492,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         "page_parameter": {},
     }
 
-    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
+    dispatch_context = BuilderDispatchContext(fake_request, page, only_dispatch_formula_fields=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -569,7 +569,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         "page_parameter": {},
     }
 
-    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
+    dispatch_context = BuilderDispatchContext(fake_request, page, only_dispatch_formula_fields=False)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -698,7 +698,7 @@ def test_data_source_context_data_provider_get_data_chunk(data_fixture):
     fake_request.data = {
         "page_parameter": {},
     }
-    dispatch_context = BuilderDispatchContext(fake_request, page, use_field_names=False)
+    dispatch_context = BuilderDispatchContext(fake_request, page, only_dispatch_formula_fields=False)
 
     # For fields that are not single select, `get_data_chunk` returns an empty response
     assert (
@@ -997,7 +997,7 @@ def test_current_record_provider_get_data_chunk(data_fixture):
     )
 
     dispatch_context = BuilderDispatchContext(
-        fake_request, page, workflow_action, use_field_names=False
+        fake_request, page, workflow_action, only_dispatch_formula_fields=False
     )
 
     assert (

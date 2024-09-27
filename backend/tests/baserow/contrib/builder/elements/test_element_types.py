@@ -627,7 +627,11 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
 
     # Call is_valid with an option that is not present in the list raises an exception
     dispatch_context = BuilderDispatchContext(
-        HttpRequest(), page, offset=0, count=20, only_dispatch_formula_fields=False
+        HttpRequest(),
+        page,
+        offset=0,
+        count=20,
+        only_dispatch_public_formula_fields=False,
     )
 
     with pytest.raises(FormDataProviderChunkInvalidException):
@@ -635,7 +639,11 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
 
     # Call is_valid with a valid option simply returns its value
     dispatch_context = BuilderDispatchContext(
-        HttpRequest(), page, offset=0, count=20, only_dispatch_formula_fields=False
+        HttpRequest(),
+        page,
+        offset=0,
+        count=20,
+        only_dispatch_public_formula_fields=False,
     )
 
     assert ChoiceElementType().is_valid(choice, "BMW", dispatch_context) == "BMW"
@@ -1253,7 +1261,11 @@ def test_choice_element_integer_option_values(data_fixture):
     expected_choices = [row.id for row in rows]
 
     dispatch_context = BuilderDispatchContext(
-        HttpRequest(), page, offset=0, count=20, only_dispatch_formula_fields=False
+        HttpRequest(),
+        page,
+        offset=0,
+        count=20,
+        only_dispatch_public_formula_fields=False,
     )
 
     for value in expected_choices:

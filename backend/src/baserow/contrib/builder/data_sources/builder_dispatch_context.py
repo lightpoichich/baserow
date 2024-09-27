@@ -24,7 +24,7 @@ class BuilderDispatchContext(DispatchContext):
         "workflow_action",
         "offset",
         "count",
-        "only_dispatch_public_formula_fields",
+        "only_expose_public_formula_fields",
     ]
 
     def __init__(
@@ -34,7 +34,7 @@ class BuilderDispatchContext(DispatchContext):
         workflow_action: Optional["WorkflowAction"] = None,
         offset: Optional[int] = None,
         count: Optional[int] = None,
-        only_dispatch_public_formula_fields: Optional[bool] = True,
+        only_expose_public_formula_fields: Optional[bool] = True,
     ):
         self.request = request
         self.page = page
@@ -43,7 +43,7 @@ class BuilderDispatchContext(DispatchContext):
         # Overrides the `request` GET offset/count values.
         self.offset = offset
         self.count = count
-        self.only_dispatch_public_formula_fields = only_dispatch_public_formula_fields
+        self.only_expose_public_formula_fields = only_expose_public_formula_fields
 
         super().__init__()
 
@@ -69,7 +69,7 @@ class BuilderDispatchContext(DispatchContext):
         sensitive (required only by the backend).
         """
 
-        if self.only_dispatch_public_formula_fields and feature_flag_is_enabled(
+        if self.only_expose_public_formula_fields and feature_flag_is_enabled(
             FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         ):
             return get_formula_field_names(self.request.user, self.page)

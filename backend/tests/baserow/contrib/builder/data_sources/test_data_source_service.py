@@ -401,7 +401,7 @@ def test_dispatch_data_source(data_fixture):
     )
 
     dispatch_context = BuilderDispatchContext(
-        HttpRequest(), page, only_dispatch_public_formula_fields=False
+        HttpRequest(), page, only_expose_public_formula_fields=False
     )
     result = DataSourceService().dispatch_data_source(
         user, data_source, dispatch_context
@@ -463,7 +463,7 @@ def test_dispatch_page_data_sources(data_fixture):
     )
 
     dispatch_context = BuilderDispatchContext(
-        HttpRequest(), page, only_dispatch_public_formula_fields=False
+        HttpRequest(), page, only_expose_public_formula_fields=False
     )
     result = DataSourceService().dispatch_page_data_sources(
         user, page, dispatch_context

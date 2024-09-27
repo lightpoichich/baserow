@@ -771,7 +771,7 @@ class FakeDispatchContext(DispatchContext):
         return get_value_at_path(self.context, key)
 
     @property
-    def field_names(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
+    def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
         return {}
 
 

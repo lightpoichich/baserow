@@ -39,14 +39,6 @@
         </span>
       </template>
     </List>
-    <!-- <SelectSubjectsListFooter
-      class="margin-top-1"
-      subject-type="auth.User"
-      :scope-type="scopeType"
-      :count="usersSelected.length"
-      :show-role-selector="showRoleSelector"
-      @invite="$emit('invite', usersSelected, $event)"
-    /> -->
   </div>
 </template>
 

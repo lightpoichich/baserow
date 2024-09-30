@@ -57,6 +57,7 @@ export default {
       return []
     },
     selectedItemsIds() {
+      console.log('selectedItemsIds', this.selectedItems)
       return this.selectedItems.map((item) => item.id)
     },
     hasRightSlot() {

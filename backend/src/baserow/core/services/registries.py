@@ -168,15 +168,12 @@ class ServiceType(
     def dispatch_transform(
         self,
         data: Any,
-        field_names: List[str] = None,
     ) -> Any:
         """
         Responsible for taking the `dispatch_data` result and transforming its value
         for API consumer's consumption.
 
         :param data: The `dispatch_data` result.
-        :param field_names: List of all valid Field Names representing the
-            fields that are included in the response, e.g. ["field_123"].
         :return: The transformed `dispatch_transform` result if any.
         """
 

@@ -39,14 +39,14 @@
         </span>
       </template>
     </List>
-    <SelectSubjectsListFooter
+    <!-- <SelectSubjectsListFooter
       class="margin-top-1"
       subject-type="auth.User"
       :scope-type="scopeType"
       :count="usersSelected.length"
       :show-role-selector="showRoleSelector"
       @invite="$emit('invite', usersSelected, $event)"
-    />
+    /> -->
   </div>
 </template>
 
@@ -70,11 +70,15 @@ export default {
       type: String,
       required: true,
     },
+    usersSelected: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
   },
   data() {
     return {
       usersFiltered: this.users,
-      usersSelected: [],
       activeSearchTerm: null,
     }
   },

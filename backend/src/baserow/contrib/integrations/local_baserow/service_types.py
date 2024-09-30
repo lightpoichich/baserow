@@ -622,7 +622,7 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         self, field_names: Optional[List[str]]
     ) -> Optional[List[int]]:
         """
-        Given a list of field_names, e.g. ["field_123"], return a list of
+        Given a list of field names, e.g. ["field_123"], return a list of
         IDs, e.g. [123].
 
         None will be returned if field_names is None.
@@ -878,18 +878,18 @@ class LocalBaserowListRowsUserServiceType(
         table = resolved_values["table"]
         queryset = self.build_queryset(service, table, dispatch_context)
 
-        field_names = None
+        public_formula_fields = None
 
         if dispatch_context.public_formula_fields is not None:
             all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
                 service.id, None
             )
             if all_field_names is not None:
-                # Ensure that only the field_names explicitly used in the page are
+                # Ensure that only the public_formula_fields explicitly used in the page are
                 # fetched from the database.
                 queryset = queryset.only(*all_field_names)
 
-            field_names = all_field_names
+            public_formula_fields = all_field_names
 
         offset, count = dispatch_context.range(service)
 
@@ -905,7 +905,7 @@ class LocalBaserowListRowsUserServiceType(
             "results": rows[:-1] if has_next_page else rows,
             "has_next_page": has_next_page,
             "baserow_table_model": table.get_model(),
-            "field_names": field_names,
+            "public_formula_fields": public_formula_fields,
         }
 
     def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Any:
@@ -916,7 +916,7 @@ class LocalBaserowListRowsUserServiceType(
         :return: The list of rows.
         """
 
-        field_ids = self.extract_field_ids(dispatch_data.get("field_names"))
+        field_ids = self.extract_field_ids(dispatch_data.get("public_formula_fields"))
         serializer = get_row_serializer_class(
             dispatch_data["baserow_table_model"],
             RowSerializer,
@@ -1152,7 +1152,7 @@ class LocalBaserowGetRowUserServiceType(
         :return:
         """
 
-        field_ids = self.extract_field_ids(dispatch_data.get("field_names"))
+        field_ids = self.extract_field_ids(dispatch_data.get("public_formula_fields"))
         serializer = get_row_serializer_class(
             dispatch_data["baserow_table_model"],
             RowSerializer,
@@ -1200,17 +1200,17 @@ class LocalBaserowGetRowUserServiceType(
         model = table.get_model()
         queryset = self.build_queryset(service, table, dispatch_context, model)
 
-        field_names = None
+        public_formula_fields = None
         if dispatch_context.public_formula_fields is not None:
             all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
                 service.id, None
             )
             if all_field_names is not None:
-                # Ensure that only the field_names explicitly used in the page are
+                # Ensure that only the public_formula_fields explicitly used in the page are
                 # fetched from the database.
                 queryset = queryset.only(*all_field_names)
 
-            field_names = all_field_names
+            public_formula_fields = all_field_names
 
         # If no row id is provided return the first item from the queryset
         # This is useful when we want to use filters to specifically choose one
@@ -1221,7 +1221,7 @@ class LocalBaserowGetRowUserServiceType(
             return {
                 "data": queryset.first(),
                 "baserow_table_model": model,
-                "field_names": field_names,
+                "public_formula_fields": public_formula_fields,
             }
 
         try:
@@ -1229,7 +1229,7 @@ class LocalBaserowGetRowUserServiceType(
             return {
                 "data": row,
                 "baserow_table_model": model,
-                "field_names": field_names,
+                "public_formula_fields": public_formula_fields,
             }
         except model.DoesNotExist:
             raise DoesNotExist()

@@ -1038,8 +1038,9 @@ def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
         "baserow_table_model": MagicMock(),
         "results": [],
         "has_next_page": False,
-        "field_names": field_names,
     }
+    if field_names:
+        dispatch_data["public_formula_fields"] = field_names
 
     results = service_type.dispatch_transform(dispatch_data)
 

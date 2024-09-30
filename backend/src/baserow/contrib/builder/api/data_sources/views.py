@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict
 
 from django.db import transaction
 
@@ -35,7 +35,6 @@ from baserow.contrib.builder.api.data_sources.serializers import (
     BaseUpdateDataSourceSerializer,
     CreateDataSourceSerializer,
     DataSourceSerializer,
-    DispatchDataSourceRequestSerializer,
     GetRecordIdsSerializer,
     MoveDataSourceSerializer,
     UpdateDataSourceSerializer,
@@ -52,6 +51,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.core.exceptions import PermissionException
@@ -430,7 +430,6 @@ class DispatchDataSourceView(APIView):
             "Dispatches the service of the related data_source and returns "
             "the result."
         ),
-        request=DispatchDataSourceRequestSerializer,
         responses={
             404: get_error_schema(
                 [
@@ -452,23 +451,38 @@ class DispatchDataSourceView(APIView):
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    @validate_body(DispatchDataSourceRequestSerializer, return_validated=True)
-    def post(self, request, data: Dict[str, Any], data_source_id: str):
+    def post(self, request, data_source_id: int):
         """
         Call the given data_source related service dispatch method.
         """
 
-        data_source = DataSourceHandler().get_data_source(int(data_source_id))
+        data_source = DataSourceHandler().get_data_source(data_source_id)
+
+        # If the dispatch context is provided, and the `data_source` points
+        # to an element, fetch it so that it can be used for adhoc refinements.
+        element = None
+        element_id = request.data.get("data_source", {}).get("element", None)
+        if element_id:
+            element = ElementHandler().get_element(element_id)
+            if element.page_id != data_source.page_id:
+                raise DataSourceImproperlyConfigured(
+                    "The dispatched element does not "
+                    "belong to the same page as the data source."
+                )
+
+            element_type = element.get_type()
+            if not getattr(element_type, "is_collection_element", False):
+                raise DataSourceImproperlyConfigured(
+                    "A data source can only dispatched with an element if it is "
+                    "a collection element."
+                )
 
         # An `element` will be provided if we're dispatching a collection
         # element's data source with adhoc refinements.
         dispatch_context = BuilderDispatchContext(
-            request, data_source.page, element=data["element"]
+            request, data_source.page, element=element, only_expose_public_formula_fields=False
         )
 
-        dispatch_context = BuilderDispatchContext(
-            request, data_source.page, only_expose_public_formula_fields=False
-        )
         response = DataSourceService().dispatch_data_source(
             request.user, data_source, dispatch_context
         )
@@ -511,12 +525,12 @@ class DispatchDataSourcesView(APIView):
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, page_id: str):
+    def post(self, request, page_id: int):
         """
         Call the given data_source related service dispatch method.
         """
 
-        page = PageHandler().get_page(int(page_id))
+        page = PageHandler().get_page(page_id)
         dispatch_context = BuilderDispatchContext(
             request, page, only_expose_public_formula_fields=False
         )

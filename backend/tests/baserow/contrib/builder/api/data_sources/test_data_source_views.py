@@ -729,7 +729,7 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
 
     response = api_client.post(
         f"{url}?filters={json.dumps(advanced_filters)}",
-        {"element": element.id},
+        {"data_source": {"element": element.id}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -763,7 +763,7 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
 
     response = api_client.post(
         f"{url}?filters={json.dumps(advanced_filters)}",
-        {"element": element.id},
+        {"data_source": {"element": element.id}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -827,7 +827,7 @@ def test_dispatch_data_source_with_adhoc_sortings(api_client, data_fixture):
 
     response = api_client.post(
         f"{url}?filters={json.dumps(advanced_filters)}&order_by=-{sortable_field.db_column}",
-        {"element": element.id},
+        {"data_source": {"element": element.id}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -865,7 +865,7 @@ def test_dispatch_data_source_with_adhoc_sortings(api_client, data_fixture):
 
     response = api_client.post(
         f"{url}?filters={json.dumps(advanced_filters)}&order_by=-{private_field.db_column}",
-        {"element": element.id},
+        {"data_source": {"element": element.id}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -925,7 +925,7 @@ def test_dispatch_data_source_with_adhoc_search(api_client, data_fixture):
 
     response = api_client.post(
         f"{url}?search_query=Peter",
-        {"element": element.id},
+        {"data_source": {"element": element.id}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -945,7 +945,7 @@ def test_dispatch_data_source_with_adhoc_search(api_client, data_fixture):
 
     response = api_client.post(
         f"{url}?search_query=111",
-        {"element": element.id},
+        {"data_source": {"element": element.id}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -954,6 +954,59 @@ def test_dispatch_data_source_with_adhoc_search(api_client, data_fixture):
     assert response.json() == {
         "results": [],
         "has_next_page": False,
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_with_element_from_different_page(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page_with_element = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_table_element(page=page_with_element)
+    page_with_data_source = data_fixture.create_builder_page(user=user)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page_with_data_source
+    )
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+    response = api_client.post(
+        url,
+        {"data_source": {"element": element.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "error": "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+        "detail": "The data_source configuration is incorrect: The dispatched element "
+        "does not belong to the same page as the data source.",
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_with_non_collection_element(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_heading_element(page=page)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+    response = api_client.post(
+        url,
+        {"data_source": {"element": element.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "error": "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+        "detail": "The data_source configuration is incorrect: A data source can "
+        "only dispatched with an element if it is a collection element.",
     }
 
 

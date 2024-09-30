@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.utils.functional import lazy
 
 from drf_spectacular.types import OpenApiTypes
@@ -13,7 +11,6 @@ from baserow.api.services.serializers import (
     UpdateServiceSerializer,
 )
 from baserow.contrib.builder.data_sources.models import DataSource
-from baserow.contrib.builder.elements.models import Element
 from baserow.core.services.registries import service_type_registry
 
 
@@ -162,29 +159,3 @@ class MoveDataSourceSerializer(serializers.Serializer):
 
 class GetRecordIdsSerializer(serializers.Serializer):
     record_ids = CommaSeparatedIntegerValuesField()
-
-
-class DispatchDataSourceRequestSerializer(serializers.Serializer):
-    element = serializers.PrimaryKeyRelatedField(
-        required=False,
-        default=None,
-        queryset=Element.objects.all(),
-        help_text="Optionally provide the data source dispatch endpoint with a collection"
-        "element ID if you wish to apply element-level filters, sorts and/or search.",
-    )
-
-    def validate_element(self, value: Optional[Element]) -> Optional[Element]:
-        """
-        Ensure that the provided element is a collection element.
-        :raises ValidationError: If the provided element is not a collection element.
-        :return value: The validated element.
-        """
-
-        if value:
-            element_type = value.get_type()
-            if not getattr(element_type, "is_collection_element", False):
-                raise serializers.ValidationError(
-                    "A data source can only dispatched with an element if it is "
-                    "a collection element."
-                )
-        return value

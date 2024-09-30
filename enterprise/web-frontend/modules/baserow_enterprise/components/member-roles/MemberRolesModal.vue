@@ -47,7 +47,7 @@
       </Tabs>
     </template>
     <template #footer-content>
-      <Button type="primary" @click="$refs.modal.hide()">{{
+      <Button type="secondary" @click="$refs.modal.hide()">{{
         $t('action.ok')
       }}</Button>
     </template>

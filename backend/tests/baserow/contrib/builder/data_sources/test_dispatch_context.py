@@ -217,6 +217,29 @@ def test_validate_adhoc_refinements(data_fixture, property_option_params):
             )
 
 
+@pytest.mark.django_db
+def test_validate_adhoc_refinements_caching(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_table_element(page=page)
+    element.property_options.create(
+        schema_property="name", filterable=True, sortable=False, searchable=False
+    )
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
+
+    with django_assert_num_queries(1):
+        dispatch_context.validate_adhoc_refinements(
+            ["name"], ServiceAdhocRefinements.FILTER
+        )
+    assert dispatch_context.cache["element_property_options"][element.id] == {
+        "name": {"filterable": True, "sortable": False, "searchable": False}
+    }
+    with django_assert_num_queries(0):
+        dispatch_context.validate_adhoc_refinements(
+            ["name"], ServiceAdhocRefinements.FILTER
+        )
+
+
 def test_validate_adhoc_refinements_without_element():
     dispatch_context = BuilderDispatchContext(HttpRequest(), None)
     with pytest.raises(DataSourceRefinementForbidden) as exc:

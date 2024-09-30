@@ -1,6 +1,7 @@
 import json
 from unittest.mock import ANY, MagicMock, patch
 
+from django.db import transaction
 from django.urls import reverse
 
 import pytest
@@ -873,6 +874,86 @@ def test_dispatch_data_source_with_adhoc_sortings(api_client, data_fixture):
     assert response.json() == {
         "error": "ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN",
         "detail": f"Data source refinement error: {private_field.db_column} is not a sortable field.",
+    }
+
+
+@pytest.mark.django_db(transaction=True)
+def test_dispatch_data_source_with_adhoc_search(api_client, data_fixture):
+    with transaction.atomic():
+        user, token = data_fixture.create_user_and_token()
+        table, fields, rows = data_fixture.build_table(
+            user=user,
+            columns=[
+                ("Name", "text"),
+                ("SSN", "text"),
+            ],
+            rows=[
+                ["Peter", "111"],
+                ["Afonso", "222"],
+                ["Tsering", "333"],
+                ["Jérémie", "444"],
+            ],
+        )
+    searchable_field = table.field_set.get(name="Name")
+    private_field = table.field_set.get(name="SSN")
+    view = data_fixture.create_grid_view(user, table=table)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+    )
+    element = data_fixture.create_builder_table_element(
+        page=page, data_source=data_source
+    )
+    element.property_options.create(
+        schema_property=searchable_field.db_column, searchable=True
+    )
+    element.property_options.create(
+        schema_property=private_field.db_column, searchable=False
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+
+    response = api_client.post(
+        f"{url}?search_query=Peter",
+        {"element": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "results": [
+            {
+                "id": 1,
+                "order": AnyStr(),
+                searchable_field.db_column: "Peter",
+                private_field.db_column: AnyStr(),
+            }
+        ],
+        "has_next_page": False,
+    }
+
+    response = api_client.post(
+        f"{url}?search_query=111",
+        {"element": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "results": [],
+        "has_next_page": False,
     }
 
 

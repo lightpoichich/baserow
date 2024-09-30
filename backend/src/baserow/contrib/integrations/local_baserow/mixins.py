@@ -6,6 +6,7 @@ from django.db.models import OrderBy, QuerySet
 from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
 )
+from baserow.contrib.database.api.utils import extract_field_ids_from_list
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.search.handler import SearchHandler
@@ -388,8 +389,18 @@ class LocalBaserowTableServiceSearchableMixin:
             )
         adhoc_search_query = dispatch_context.search_query()
         if adhoc_search_query is not None:
+            # This mixin's `get_queryset` method does not validate any adhoc
+            # refinements, as the search query is not a field. We instead
+            # restrict the fields that we search against to only those which
+            # the page designer has marked as searchable.
+            only_search_by_field_names = dispatch_context.searchable_fields()
+            only_search_by_field_ids = extract_field_ids_from_list(
+                only_search_by_field_names
+            )
             queryset = queryset.search_all_fields(
-                adhoc_search_query, search_mode=search_mode
+                adhoc_search_query,
+                only_search_by_field_ids=only_search_by_field_ids,
+                search_mode=search_mode,
             )
         return queryset
 

@@ -77,6 +77,20 @@ def test_dispatch_context_search_query():
     assert dispatch_context.search_query() == "foobar"
 
 
+@pytest.mark.django_db
+def test_dispatch_context_searchable_fields(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    assert dispatch_context.searchable_fields() == []
+    element = data_fixture.create_builder_table_element(page=page)
+    element.property_options.create(schema_property="name", searchable=True)
+    element.property_options.create(schema_property="location", searchable=True)
+    element.property_options.create(schema_property="top_secret", searchable=False)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
+    assert dispatch_context.searchable_fields() == ["name", "location"]
+
+
 def test_dispatch_context_filters():
     request = HttpRequest()
     filter_data = {

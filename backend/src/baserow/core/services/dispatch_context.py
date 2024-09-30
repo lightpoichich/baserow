@@ -51,6 +51,15 @@ class DispatchContext(RuntimeFormulaContext, ABC):
         """
 
     @abstractmethod
+    def searchable_fields(self) -> Optional[List[str]]:
+        """
+        Responsible for returning the on-demand searchable fields, depending
+        on which module the `DispatchContext` is used by.
+        """
+
+        return []
+
+    @abstractmethod
     def filters(self) -> Optional[str]:
         """
         Responsible for returning the on-demand filters, depending

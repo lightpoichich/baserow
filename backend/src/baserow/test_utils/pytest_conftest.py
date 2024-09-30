@@ -750,6 +750,9 @@ class FakeDispatchContext(DispatchContext):
     def search_query(self):
         return None
 
+    def searchable_fields(self):
+        return []
+
     def filters(self):
         return None
 

@@ -336,7 +336,6 @@ class RepeatElementType(
             ),
         }
 
-<<<<<<< HEAD
     def deserialize_property(
         self,
         prop_name: str,
@@ -376,8 +375,6 @@ class RepeatElementType(
     def import_context_addition(self, instance, id_mapping):
         return {"data_source_id": instance.data_source_id}
 
-=======
->>>>>>> da7331de5 (Squash local commits to prepare for rebase)
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
             "data_source_id": None,

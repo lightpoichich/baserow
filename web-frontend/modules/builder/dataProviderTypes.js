@@ -27,10 +27,10 @@ export class DataSourceDataProviderType extends DataProviderType {
 
   getDataSourceDispatchContext(applicationContext) {
     const { element } = applicationContext
-    // If fetch comes from a collection element, we need to pass it into
-    // the backend for validating adhoc refinements.
+    // If the workflow action dispatch comes from a collection element, we
+    // need to pass it to the backend for validating adhoc refinements.
     if (element) {
-      return { element_id: element.id }
+      return { element: element.id }
     }
     return null
   }

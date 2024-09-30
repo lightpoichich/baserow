@@ -885,8 +885,8 @@ class LocalBaserowListRowsUserServiceType(
                 service.id, None
             )
             if all_field_names is not None:
-                # Ensure that only the public_formula_fields explicitly used in the page are
-                # fetched from the database.
+                # Ensure that only the public_formula_fields explicitly used
+                # in the page are fetched from the database.
                 queryset = queryset.only(*all_field_names)
 
             public_formula_fields = all_field_names
@@ -1206,8 +1206,8 @@ class LocalBaserowGetRowUserServiceType(
                 service.id, None
             )
             if all_field_names is not None:
-                # Ensure that only the public_formula_fields explicitly used in the page are
-                # fetched from the database.
+                # Ensure that only the public_formula_fields explicitly used
+                # in the page are fetched from the database.
                 queryset = queryset.only(*all_field_names)
 
             public_formula_fields = all_field_names

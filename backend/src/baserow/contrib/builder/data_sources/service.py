@@ -260,6 +260,8 @@ class DataSourceService:
         if dispatch_context.public_formula_fields is None:
             return results
 
+        data_sources_used = set()
+
         # We filter the fields before returning the result
         for data_source in data_sources:
             if isinstance(results[data_source.id], Exception):
@@ -281,7 +283,13 @@ class DataSourceService:
                             # Only include the field if it is in the
                             # external/safe field_names list
                             new_row[key] = value
+                            data_sources_used.add(data_source.id)
+
+                    if sorted(list(new_row.keys())) == ["id", "order"]:
+                        continue
+
                     new_result.append(new_row)
+
                 results[data_source.id] = {
                     **results[data_source.id],
                     "results": new_result,
@@ -296,7 +304,17 @@ class DataSourceService:
                         # Only include the field if it is in the external/safe
                         # field_names list
                         new_result[key] = value
+                        data_sources_used.add(data_source.id)
+
+                if sorted(list(new_result.keys())) == ["id", "order"]:
+                    continue
+
                 results[data_source.id] = new_result
+
+        # Only return data sources that are actually used
+        results = {
+            key: value for key, value in results.items() if key in data_sources_used
+        }
 
         return results
 

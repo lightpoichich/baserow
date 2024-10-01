@@ -3,12 +3,16 @@
     <h2 class="box__title">
       {{
         create
-          ? $t('dataSourceEditModal.createTitle')
-          : $t('dataSourceEditModal.editTitle')
+          ? $t('dataSourceCreateEditModal.createTitle')
+          : $t('dataSourceCreateEditModal.editTitle')
       }}
     </h2>
     <div>
       <Error :error="error"></Error>
+
+      <Alert v-if="isShared">
+        {{ $t('dataSourceCreateEditModal.sharedWarning') }}
+      </Alert>
 
       <DataSourceForm
         ref="dataSourceForm"
@@ -85,6 +89,9 @@ export default {
     },
     create() {
       return !this.actualDataSourceId
+    },
+    isShared() {
+      return !this.create && this.dataSource?.page_id === this.sharedPage.id
     },
     dataSource() {
       if (this.create) {

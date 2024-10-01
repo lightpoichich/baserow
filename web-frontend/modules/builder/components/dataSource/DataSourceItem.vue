@@ -9,6 +9,7 @@
       :subtitle="subtitle"
       :rounded-icon="false"
       avatar-color="neutral"
+      @click="$emit('edit', dataSource)"
     />
     <div
       v-if="

@@ -371,9 +371,10 @@
     "shareBetweenPages": "Share between pages",
     "unshareBetweenPages": "Unshare from other pages"
   },
-  "dataSourceEditModal": {
+  "dataSourceCreateEditModal": {
     "editTitle": "Edit data source",
-    "createTitle": "Create data source"
+    "createTitle": "Create data source",
+    "sharedWarning": "This data source is shared so your changes can affect multiple pages."
   },
   "defaultStyleForm": {
     "boxTop": "Top",
@@ -780,6 +781,8 @@
   },
   "dataSourceDropdown": {
     "label": "Data source",
-    "noDataSources": "No data sources available"
+    "noDataSources": "No data sources available",
+    "shared": "shared",
+    "pageOnly": "this page"
   }
 }

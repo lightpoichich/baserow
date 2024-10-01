@@ -17,7 +17,7 @@ from baserow.contrib.builder.elements.models import Element
 from baserow.core.services.models import Service
 from baserow.core.user_sources.registries import user_source_type_registry
 from baserow.core.user_sources.user_source_user import UserSourceUser
-from baserow.test_utils.helpers import AnyStr
+from baserow.test_utils.helpers import AnyInt, AnyStr
 
 
 @pytest.mark.django_db
@@ -1712,6 +1712,75 @@ def test_dispatch_data_source_view(
     mock_dispatch_data_source.assert_called_once_with(
         ANY, mock_data_source, mock_dispatch_context
     )
+
+
+@pytest.mark.django_db
+def test_private_dispatch_data_source_view_returns_all_fields(api_client, data_fixture):
+    """
+    Test the DispatchDataSourceView endpoint.
+
+    This integration test ensures that all field_names are returned in the
+    private view, even if it isn't used by a visible element. This is because
+    the editor needs access to all fields.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Spiciness", "number"),
+        ],
+        rows=[
+            ["Paneer Tikka", 5],
+            ["Gobi Manchurian", 8],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    # Create a heading element that only uses the first field
+    data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source.id}.*.field_{fields[0].id}')",
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch",
+        kwargs={"data_source_id": data_source.id},
+    )
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        'has_next_page': False,                                                          
+        'results': [                                                                     
+        {                          
+            'field_1': 'Paneer Tikka',
+            # Although only field_1 is explicitly used by an element in this
+            # page, field_2 is still returned because the Editor page needs
+            # access to all data source fields.
+            'field_2': '5',                                                              
+            'id': AnyInt(),
+            'order': AnyStr(),
+        },                                                                             
+        {                                                                              
+            'field_1': 'Gobi Manchurian',                                                
+            'field_2': '8',                                                              
+            'id': AnyInt(),
+            'order': AnyStr(),
+        },                                                                             
+        ],                                                                               
+    }
 
 
 @pytest.mark.django_db

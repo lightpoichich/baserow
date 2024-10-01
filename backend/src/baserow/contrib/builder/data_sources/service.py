@@ -228,6 +228,37 @@ class DataSourceService:
         data_source_deleted.send(
             self, data_source_id=data_source.id, page=page, user=user
         )
+    
+    def filter_used_formula_fields(
+        self,
+        row: Dict[str, Any],
+        field_names: List[str],
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Given a dispatched row, return the same row only if the field name is
+        in the field_names list. Otherwise, return None to indicate that the
+        row shouldn't be included in the response.
+        """
+
+        new_row = {}
+
+        for key, value in row.items():
+            if key in ("id", "order"):
+                # These keys should always be included in the row
+                new_row[key] = value
+            elif key in field_names:
+                # Only include the field if it is in the external/safe
+                # field_names list
+                new_row[key] = value
+
+        # If the keys only contain "id" and "order", it implies that the
+        # row's field name wasn't in the allowed field_names list. Since it is
+        # not useful to return simply the id and order, the entire row should
+        # be omitted from the response.
+        if sorted(list(new_row.keys())) == ["id", "order"]:
+            return None
+
+        return new_row
 
     def dispatch_data_sources(
         self,
@@ -273,43 +304,22 @@ class DataSourceService:
             if data_source.service.get_type().returns_list:
                 new_result = []
                 for row in results[data_source.id]["results"]:
-                    new_row = {}
-                    for key, value in row.items():
-                        if key in ["id", "order"]:
-                            # Ensure keys like "id" and "order" are included
-                            # in new_row
-                            new_row[key] = value
-                        elif key in field_names:
-                            # Only include the field if it is in the
-                            # external/safe field_names list
-                            new_row[key] = value
-                            data_sources_used.add(data_source.id)
-
-                    if sorted(list(new_row.keys())) == ["id", "order"]:
-                        continue
-
-                    new_result.append(new_row)
+                    new_row = self.filter_used_formula_fields(row, field_names)
+                    if new_row is not None:
+                        new_result.append(new_row)
+                        data_sources_used.add(data_source.id)
 
                 results[data_source.id] = {
                     **results[data_source.id],
                     "results": new_result,
                 }
             else:
-                new_result = {}
-                for key, value in results[data_source.id].items():
-                    if key in ["id", "order"]:
-                        # Ensure keys like "id" and "order" are included in new_row
-                        new_result[key] = value
-                    elif key in field_names:
-                        # Only include the field if it is in the external/safe
-                        # field_names list
-                        new_result[key] = value
-                        data_sources_used.add(data_source.id)
-
-                if sorted(list(new_result.keys())) == ["id", "order"]:
-                    continue
-
-                results[data_source.id] = new_result
+                row = self.filter_used_formula_fields(
+                    results[data_source.id], field_names
+                )
+                if row is not None:
+                    results[data_source.id] = row
+                    data_sources_used.add(data_source.id)
 
         # Only return data sources that are actually used
         results = {

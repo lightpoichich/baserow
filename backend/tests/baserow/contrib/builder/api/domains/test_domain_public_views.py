@@ -18,6 +18,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
+from baserow.test_utils.helpers import AnyInt, AnyStr
 
 
 @pytest.mark.django_db
@@ -385,17 +386,8 @@ def test_ask_public_builder_domain_exists_with_public_backend_and_web_frontend_d
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.builder.api.domains.public_views.BuilderDispatchContext")
-@patch(
-    "baserow.contrib.builder.api.domains.public_views.DataSourceService.dispatch_data_source"
-)
-@patch(
-    "baserow.contrib.builder.api.domains.public_views.DataSourceHandler.get_data_source"
-)
 def test_public_dispatch_data_source_view(
-    mock_get_data_source,
-    mock_dispatch_data_source,
-    mock_builder_dispatch_context,
+    data_fixture,
     api_client,
 ):
     """
@@ -404,33 +396,72 @@ def test_public_dispatch_data_source_view(
     Ensure that the field_names are computed to secure the backend.
     """
 
-    mock_data_source = MagicMock()
-    mock_get_data_source.return_value = mock_data_source
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Spiciness", "number"),
+        ],
+        rows=[
+            ["Paneer Tikka", 5],
+            ["Gobi Manchurian", 8],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    data_fixture.create_builder_table_element(
+        user=user,
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {"value": f"get('current_record.field_{fields[0].id}')"},
+            },
+            {
+                "name": "FieldB",
+                "type": "text",
+                "config": {"value": f"get('current_record.field_{fields[1].id}')"},
+            },
+        ],
+    )
 
-    mock_response = {}
-    mock_dispatch_data_source.return_value = mock_response
-
-    mock_dispatch_context = MagicMock()
-    mock_builder_dispatch_context.return_value = mock_dispatch_context
-
-    mock_data_source_id = 100
     url = reverse(
         "api:builder:domains:public_dispatch",
-        kwargs={"data_source_id": mock_data_source_id},
+        kwargs={"data_source_id": data_source.id},
     )
-    response = api_client.post(url)
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
 
     assert response.status_code == 200
-    assert response.json() == mock_response
-    mock_get_data_source.assert_called_once_with(mock_data_source_id)
-    mock_builder_dispatch_context.assert_called_once_with(
-        ANY,
-        mock_data_source.page,
-        only_expose_public_formula_fields=True,
-    )
-    mock_dispatch_data_source.assert_called_once_with(
-        ANY, mock_data_source, mock_dispatch_context
-    )
+    assert response.json() == {
+        "has_next_page": False,
+        "results": [
+            {
+                "field_1": "Paneer Tikka",
+                "field_2": "5",
+                "id": AnyInt(),
+                "order": AnyStr(),
+            },
+            {
+                "field_1": "Gobi Manchurian",
+                "field_2": "8",
+                "id": AnyInt(),
+                "order": AnyStr(),
+            },
+        ],
+    }
 
 
 @pytest.mark.django_db

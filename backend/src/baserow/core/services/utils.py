@@ -2,6 +2,11 @@ from enum import Enum
 
 
 class ServiceAdhocRefinements(Enum):
+    """
+    Enum class that represents the possible refinements that can be applied to adhoc
+    filtering, sorting and searching of services.
+    """
+
     FILTER = "FILTER"
     SORT = "SORT"
     SEARCH = "SEARCH"

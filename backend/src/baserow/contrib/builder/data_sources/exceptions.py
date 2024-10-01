@@ -15,6 +15,6 @@ class DataSourceNotInSamePage(Exception):
 
 class DataSourceRefinementForbidden(Exception):
     """
-    Raised when a web page visitor trying to apply adhoc filtering, sorting and/or
+    Raised when a web page visitor tries to apply adhoc filtering, sorting and/or
     search against a schema property that the page designer has not allowed.
     """

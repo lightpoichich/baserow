@@ -13,7 +13,6 @@
             fixed-items
             class="dropdown--small data-source-form__type-dropdown"
             :placeholder="$t('dataSourceForm.servicePlaceholder')"
-            :disabled="!create"
           >
             <template
               v-for="[, serviceTypesForDrop] in serviceTypesPerIntegration"

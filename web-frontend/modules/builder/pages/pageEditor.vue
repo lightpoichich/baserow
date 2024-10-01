@@ -53,7 +53,7 @@ export default {
       // When we switch from one application to another we want to logoff the current
       // user
       const builder = this.$store.getters['application/get'](
-        from.params.builderId
+        parseInt(from.params.builderId)
       )
       if (builder) {
         // We want to reload once only data for this builder next time
@@ -78,7 +78,7 @@ export default {
     })
 
     const builder = this.$store.getters['application/get'](
-      from.params.builderId
+      parseInt(from.params.builderId)
     )
     // We want to reload once only data for this builder next time
     this.$store.dispatch('application/forceUpdate', {

@@ -228,7 +228,7 @@ class DataSourceService:
         data_source_deleted.send(
             self, data_source_id=data_source.id, page=page, user=user
         )
-    
+
     def filter_used_formula_fields(
         self,
         row: Dict[str, Any],

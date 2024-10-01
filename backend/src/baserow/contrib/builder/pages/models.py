@@ -38,7 +38,7 @@ class Page(
     # usual for this shared items but we have an easy way to get them.
     # We should have only one shared page per builder. Shared page can't be create
     # directly. They are created on demand when a shared element is created.
-    shared = models.BooleanField(default=False)
+    shared = models.BooleanField(default=False, null=True)
 
     class Meta:
         ordering = (

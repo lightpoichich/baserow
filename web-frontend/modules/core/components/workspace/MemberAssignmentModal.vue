@@ -1,5 +1,5 @@
 <template>
-  <ModalV2 full-height size="small" :header="false">
+  <ModalV2 full-height size="small" :header="false" @show="onShow">
     <template #content>
       <MemberSelectionList
         ref="memberSelectionList"
@@ -9,9 +9,9 @@
         :members-filtered.sync="membersFiltered"
       />
     </template>
-
     <template #footer-content>
       <MemberAssignmentModalFooter
+        :members="members"
         :all-filtered-members-selected="allFilteredMembersSelected"
         :selected-members-count="membersSelected.length"
         :filtered-members-count="membersFiltered.length"
@@ -71,6 +71,9 @@ export default {
         )
         this.membersSelected = this.membersSelected.concat(membersToAdd)
       }
+    },
+    onShow() {
+      this.membersFiltered = this.members
     },
   },
 }

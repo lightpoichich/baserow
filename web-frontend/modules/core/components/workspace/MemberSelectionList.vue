@@ -111,6 +111,8 @@ export default {
         )
         this.membersSelected.splice(index, 1)
       }
+
+      this.$emit('update:membersSelected', this.membersSelected)
     },
   },
 }

@@ -2,6 +2,7 @@
   <div>
     <Button
       v-if="toggleEnabled"
+      class="margin-right-1"
       type="secondary"
       @click="$emit('toggle-select-all')"
       >{{ getToggleLabel }}</Button

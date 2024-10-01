@@ -956,6 +956,23 @@ def test_dispatch_data_source_with_adhoc_search(api_client, data_fixture):
         "has_next_page": False,
     }
 
+    # If there are no property options flagged as searchable,
+    # then we need to ensure that no results are returned.
+    element.property_options.update(searchable=False)
+
+    response = api_client.post(
+        f"{url}?search_query=Peter",
+        {"data_source": {"element": element.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "results": [],
+        "has_next_page": False,
+    }
+
 
 @pytest.mark.django_db
 def test_dispatch_data_source_with_element_from_different_page(

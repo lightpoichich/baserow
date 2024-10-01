@@ -394,6 +394,11 @@ class LocalBaserowTableServiceSearchableMixin:
             # restrict the fields that we search against to only those which
             # the page designer has marked as searchable.
             only_search_by_field_names = dispatch_context.searchable_fields()
+            if not only_search_by_field_names:
+                # We've been given an adhoc search to use, but none of the
+                # properties have been flagged as searchable, so we can't
+                # return anything.
+                return queryset.none()
             only_search_by_field_ids = extract_field_ids_from_list(
                 only_search_by_field_names
             )

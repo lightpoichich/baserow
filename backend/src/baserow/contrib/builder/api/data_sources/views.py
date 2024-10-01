@@ -39,6 +39,7 @@ from baserow.contrib.builder.api.data_sources.serializers import (
     MoveDataSourceSerializer,
     UpdateDataSourceSerializer,
 )
+from baserow.contrib.builder.api.elements.errors import ERROR_ELEMENT_DOES_NOT_EXIST
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
@@ -51,6 +52,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
+from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
@@ -445,6 +447,7 @@ class DispatchDataSourceView(APIView):
     @map_exceptions(
         {
             DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            ElementDoesNotExist: ERROR_ELEMENT_DOES_NOT_EXIST,
             DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
             DataSourceRefinementForbidden: ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN,
             ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,

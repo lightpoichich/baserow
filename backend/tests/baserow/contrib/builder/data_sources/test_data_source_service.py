@@ -550,3 +550,80 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
 
     with pytest.raises(DataSourceImproperlyConfigured):
         DataSourceService().dispatch_data_source(user, data_source, formula_context)
+
+
+@pytest.mark.parametrize(
+    "row,field_names,expect_none",
+    [
+        (
+            {"id": 1, "order": "1.000", "field_100": "foo"},
+            ["field_100"],
+            False,
+        ),
+        (
+            {"id": 1, "order": "1.000", "field_100": "foo"},
+            ["field_99", "field_100", "field_101"],
+            False,
+        ),
+        (
+            {"id": 2, "order": "1.000", "field_200": {
+                "id": 500,
+                    "value": "Delhi",
+                    "color": "dark-blue"
+                }
+            },
+            ["field_200"],
+            False,
+        ),
+        # Expect None because field_names is empty
+        (
+            {"id": 4, "order": "1.000", "field_300": "foo"},
+            [],
+            True,
+        ),
+        # Expect None because field_names doesn't contain "field_400"
+        (
+            {"id": 3, "order": "1.000", "field_400": "foo"},
+            ["field_301"],
+            True,
+        ),
+        # Expect None because field_names doesn't contain "field_500"
+        (
+            # Multiple select will appear as a nested dict
+            {"id": 5, "order": "1.000", "field_500": {
+                "id": 501,
+                    "value": "Delhi",
+                    "color": "dark-blue"
+                }
+            },
+            [],
+            True,
+        ),
+        # Expect None because field_names doesn't contain "field_500"
+        (
+            {"id": 5, "order": "1.000", "field_500": {
+                "id": 501,
+                    "value": "Delhi",
+                    "color": "dark-blue"
+                }
+            },
+            ["field_502"],
+            True,
+        ),
+    ]
+)
+def test_filter_used_formula_fields(row, field_names, expect_none):
+    """
+    Test the filter_used_formula_fields() method.
+
+    Given a dispatched row, it should return the row only if the field name
+    is in the field_names list. Otherwise, None is returned to indicate that
+    the row shouldn't be included in the response.
+    """
+
+    result = DataSourceService().filter_used_formula_fields(row, field_names)
+
+    if expect_none:
+        assert result is None
+    else:
+        assert result == row

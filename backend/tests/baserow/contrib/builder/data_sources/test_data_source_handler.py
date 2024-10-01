@@ -407,7 +407,7 @@ def test_dispatch_data_source_returns_formula_field_names(
     Integration test to ensure get_formula_field_names() is called without errors.
     """
 
-    user = data_fixture.create_user()
+    user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -453,18 +453,12 @@ def test_dispatch_data_source_returns_formula_field_names(
         ],
     )
 
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-
-    token = user_source_user.get_refresh_token().access_token
     fake_request = api_request_factory.post(
         reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
         {},
         HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
     )
-    fake_request.user = user_source_user
+    fake_request.user = user
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
     mock_get_formula_field_names.return_value = {

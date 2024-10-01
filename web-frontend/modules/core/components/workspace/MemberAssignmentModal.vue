@@ -54,6 +54,7 @@ export default {
   methods: {
     storeSelectedMembers() {
       this.$emit('invite', this.membersSelected)
+      this.membersSelected = []
       this.hide()
     },
     toggleSelectAll() {

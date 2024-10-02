@@ -35,13 +35,6 @@
         </span>
       </template>
     </List>
-    <!-- <MemberAssignmentModalFooter
-      :all-filtered-members-selected="allFilteredMembersSelected"
-      :selected-members-count="membersSelected.length"
-      :filtered-members-count="membersFiltered.length"
-      @toggle-select-all="toggleSelectAll"
-      @invite="$emit('invite', membersSelected)"
-    /> -->
   </div>
 </template>
 

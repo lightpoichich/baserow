@@ -3,8 +3,10 @@ import Vue from 'vue'
 import { Registry } from '@baserow/modules/core/registry'
 import { PasswordAuthProviderType } from '@baserow/modules/core/authProviderTypes'
 import {
+  CreateSnapshotJobType,
   DuplicateApplicationJobType,
   InstallTemplateJobType,
+  RestoreSnapshotJobType,
 } from '@baserow/modules/core/jobTypes'
 
 import {
@@ -60,7 +62,6 @@ import authStore from '@baserow/modules/core/store/auth'
 import workspaceStore from '@baserow/modules/core/store/workspace'
 import jobStore from '@baserow/modules/core/store/job'
 import toastStore from '@baserow/modules/core/store/toast'
-import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 import integrationStore from '@baserow/modules/core/store/integration'
 import userSourceStore from '@baserow/modules/core/store/userSource'
@@ -179,7 +180,6 @@ export default (context, inject) => {
   store.registerModule('job', jobStore)
   store.registerModule('workspace', workspaceStore)
   store.registerModule('toast', toastStore)
-  store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
   store.registerModule('integration', integrationStore)
   store.registerModule('userSource', userSourceStore)
@@ -189,6 +189,8 @@ export default (context, inject) => {
   registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))
   registry.register('job', new InstallTemplateJobType(context))
+  registry.register('job', new CreateSnapshotJobType(context))
+  registry.register('job', new RestoreSnapshotJobType(context))
 
   registry.register(
     'workspaceSettingsPage',

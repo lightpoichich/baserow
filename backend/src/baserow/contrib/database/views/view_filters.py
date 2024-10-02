@@ -7,6 +7,7 @@ from enum import Enum
 from math import ceil, floor
 from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
+from django.core.exceptions import ValidationError
 from django.db.models import DateField, DateTimeField, IntegerField, Q, Value
 from django.db.models.expressions import F, Func
 from django.db.models.fields.json import JSONField
@@ -1106,6 +1107,20 @@ class SingleSelectIsAnyOfViewFilterType(ViewFilterType):
 
         return Q(**{f"{field_name}_id__in": option_ids})
 
+    def set_import_serialized_value(self, value, id_mapping):
+        splitted = value.split(",")
+        new_values = []
+        for value in splitted:
+            try:
+                int_value = int(value)
+            except ValueError:
+                return ""
+
+            new_id = str(id_mapping["database_field_select_options"].get(int_value, ""))
+            new_values.append(new_id)
+
+        return ",".join(new_values)
+
 
 class SingleSelectIsNoneOfViewFilterType(
     NotViewFilterTypeMixin, SingleSelectIsAnyOfViewFilterType
@@ -1165,17 +1180,14 @@ class ManyToManyHasBaseViewFilter(ViewFilterType):
     """
 
     def get_filter(self, field_name, value, model_field, field):
-        value = value.strip()
-
         try:
+            val = int(value.strip())
             remote_field = model_field.remote_field
             remote_model = remote_field.model
             return Q(
-                **{
-                    "id__in": remote_model.objects.filter(
-                        **{"id": int(value)}
-                    ).values_list(f"{remote_field.related_name}__id", flat=True)
-                }
+                id__in=remote_model.objects.filter(id=val).values(
+                    f"{remote_field.related_name}__id"
+                )
             )
         except ValueError:
             return Q()
@@ -1220,7 +1232,7 @@ class LinkRowHasViewFilterType(ManyToManyHasBaseViewFilter):
         return {"display_name": name}
 
 
-class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterType):
+class LinkRowHasNotViewFilterType(LinkRowHasViewFilterType):
     """
     The link row has filter accepts the row ID of the related table as value. It
     filters the queryset so that only rows that don't have a relationship with the
@@ -1229,6 +1241,16 @@ class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterTy
     """
 
     type = "link_row_has_not"
+
+    def default_filter_on_exception(self):
+        return Q()
+
+    def get_filter(self, field_name, value, model_field, field):
+        try:
+            val = int(value.strip())
+            return ~Q(**{f"field_{field.id}": val})
+        except ValueError:
+            return Q()
 
 
 class LinkRowContainsViewFilterType(ViewFilterType):
@@ -1245,19 +1267,22 @@ class LinkRowContainsViewFilterType(ViewFilterType):
             related_primary_field
         )
 
-        subquery = (
-            FilterBuilder(FILTER_TYPE_AND)
-            .filter(
-                related_primary_field_type.contains_query(
-                    f"{field_name}__{related_primary_field.db_column}",
-                    value,
-                    related_primary_field_model_field,
-                    related_primary_field,
+        try:
+            subquery = (
+                FilterBuilder(FILTER_TYPE_AND)
+                .filter(
+                    related_primary_field_type.contains_query(
+                        f"{field_name}__{related_primary_field.db_column}",
+                        value,
+                        related_primary_field_model_field,
+                        related_primary_field,
+                    )
                 )
+                .apply_to_queryset(model.objects)
+                .values_list("id", flat=True)
             )
-            .apply_to_queryset(model.objects)
-            .values_list("id", flat=True)
-        )
+        except (ValueError, ValidationError):
+            subquery = []
 
         return Q(
             **{f"id__in": subquery},
@@ -1379,7 +1404,10 @@ class UserIsViewFilterType(ViewFilterType):
         if not value:
             return Q()
         value = value.strip()
-        return Q(**{f"{field_name}__id": int(value)})
+        try:
+            return Q(**{f"{field_name}__id": int(value)})
+        except ValueError:
+            return Q()
 
     def get_export_serialized_value(self, value, id_mapping):
         if self.USER_KEY not in id_mapping:

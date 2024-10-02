@@ -41,6 +41,16 @@ export class JobType extends Registerable {
     return null
   }
 
+  /**
+   * The left sidebar groups the applications. This method can optionally return an
+   * application type. If that's the case, then the job animation will be put in
+   * that application group. If nothing is provided, then the job will be put outside
+   * of the applications.
+   */
+  getSidebarApplicationTypeLocation(job) {
+    return null
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -123,6 +133,10 @@ export class DuplicateApplicationJobType extends JobType {
 
   getSidebarComponent() {
     return SidebarApplicationPendingJob
+  }
+
+  getSidebarApplicationTypeLocation(job) {
+    return job.original_application.type
   }
 
   isJobPartOfWorkspace(job, workspace) {
@@ -218,5 +232,25 @@ export class InstallTemplateJobType extends JobType {
       { root: true }
     )
     await this.app.store.dispatch('job/forceDelete', job)
+  }
+}
+
+export class CreateSnapshotJobType extends JobType {
+  static getType() {
+    return 'create_snapshot'
+  }
+
+  getName() {
+    return 'createSnapshot'
+  }
+}
+
+export class RestoreSnapshotJobType extends JobType {
+  static getType() {
+    return 'restore_snapshot'
+  }
+
+  getName() {
+    return 'restoreSnapshot'
   }
 }

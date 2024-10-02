@@ -1,21 +1,49 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('repeatElementForm.dataSource')">
-      <Dropdown v-model="values.data_source_id" :show-search="false">
-        <DropdownItem
-          v-for="dataSource in availableDataSources"
-          :key="dataSource.id"
-          :name="dataSource.name"
-          :value="dataSource.id"
-        />
-      </Dropdown>
+    <FormGroup
+      v-show="dataSourceDropdownAvailable"
+      :label="$t('dataSourceDropdown.label')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <DataSourceDropdown
+        v-model="values.data_source_id"
+        small
+        :data-sources="dataSources"
+      >
+        <template #chooseValueState>
+          {{ $t('collectionElementForm.noDataSourceMessage') }}
+        </template>
+      </DataSourceDropdown>
     </FormGroup>
-    <FormInput
-      v-model="values.items_per_page"
+    <FormGroup
+      v-show="propertySelectorAvailable"
+      small-label
+      required
+      class="margin-bottom-2"
+      :label="$t('serviceSchemaPropertySelector.label')"
+    >
+      <ServiceSchemaPropertySelector
+        v-model="values.schema_property"
+        small
+        :schema="propertySelectorSchema"
+      >
+        <template #emptyState>
+          {{ $t('repeatElementForm.propertySelectorMissingArrays') }}
+        </template>
+        <template #chooseValueState>
+          {{ $t('collectionElementForm.noSchemaPropertyMessage') }}
+        </template>
+      </ServiceSchemaPropertySelector>
+    </FormGroup>
+    <FormGroup
+      v-show="pagingOptionsAvailable"
       :label="$t('repeatElementForm.itemsPerPage')"
-      :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
-      :to-value="(value) => parseInt(value)"
-      :error="
+      small-label
+      required
+      class="margin-bottom-2"
+      :error-message="
         $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
           ? $t('error.requiredField')
           : !$v.values.items_per_page.integer
@@ -26,51 +54,79 @@
           ? $t('error.maxValueField', { max: maxItemPerPage })
           : ''
       "
-      type="number"
-      @blur="$v.values.items_per_page.$touch()"
-    ></FormInput>
-    <FormGroup :label="$t('repeatElementForm.orientationLabel')">
-      <RadioButton
-        v-model="values.orientation"
-        value="vertical"
-        icon="iconoir-table-rows"
-      >
-        {{ $t('repeatElementForm.orientationVertical') }}
-      </RadioButton>
-      <RadioButton
-        v-model="values.orientation"
-        value="horizontal"
-        icon="iconoir-view-columns-3"
-      >
-        {{ $t('repeatElementForm.orientationHorizontal') }}
-      </RadioButton>
+    >
+      <FormInput
+        v-model="values.items_per_page"
+        :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
+        :to-value="(value) => parseInt(value)"
+        type="number"
+        @blur="$v.values.items_per_page.$touch()"
+      />
+    </FormGroup>
+
+    <CustomStyle
+      v-show="values.data_source_id"
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+    />
+    <FormGroup
+      v-show="pagingOptionsAvailable"
+      small-label
+      :label="$t('repeatElementForm.buttonLoadMoreLabel')"
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.button_load_more_label"
+        :placeholder="$t('elementForms.textInputPlaceholder')"
+      />
     </FormGroup>
     <FormGroup
-      v-if="values.orientation === 'horizontal'"
-      :error="getItemsPerRowError"
+      :label="$t('repeatElementForm.orientationLabel')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.orientation"
+        :options="orientationOptions"
+        type="button"
+      >
+      </RadioGroup>
+    </FormGroup>
+    <FormGroup
+      v-show="values.orientation === 'horizontal'"
+      :error-message="itemsPerRowError"
       :label="$t('repeatElementForm.itemsPerRowLabel')"
-      :description="$t('repeatElementForm.itemsPerRowDescription')"
+      small-label
+      required
+      :helper-text="$t('repeatElementForm.itemsPerRowDescription')"
     >
       <DeviceSelector
         :device-type-selected="deviceTypeSelected"
-        class="repeat-element__device-selector"
+        class="repeat-element__device-selector margin-bottom-2"
         @selected="actionSetDeviceTypeSelected"
       >
         <template #deviceTypeControl="{ deviceType }">
-          <input
+          <FormInput
             :ref="`itemsPerRow-${deviceType.getType()}`"
             v-model="values.items_per_row[deviceType.getType()]"
-            :class="{
-              'input--error':
-                $v.values.items_per_row[deviceType.getType()].$error,
-              'remove-number-input-controls': true,
-            }"
+            remove-number-input-controls
             type="number"
-            class="input"
             @input="handlePerRowInput($event, deviceType.getType())"
           />
         </template>
       </DeviceSelector>
+    </FormGroup>
+    <FormGroup
+      small-label
+      class="margin-bottom-2"
+      :label="$t('repeatElementForm.toggleEditorRepetitionsLabel')"
+    >
+      <Checkbox :checked="isCollapsed" @input="emitToggleRepetitions($event)">
+      </Checkbox>
     </FormGroup>
   </form>
 </template>
@@ -82,33 +138,54 @@ import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
 import { mapActions, mapGetters } from 'vuex'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import ServiceSchemaPropertySelector from '@baserow/modules/core/components/services/ServiceSchemaPropertySelector.vue'
+import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown.vue'
 
 export default {
   name: 'RepeatElementForm',
-  components: { DeviceSelector },
+  components: {
+    DataSourceDropdown,
+    DeviceSelector,
+    CustomStyle,
+    InjectedFormulaInput,
+    ServiceSchemaPropertySelector,
+  },
   mixins: [elementForm, collectionElementForm],
+  inject: ['applicationContext'],
   data() {
     return {
       allowedValues: [
         'data_source_id',
+        'schema_property',
         'items_per_page',
         'items_per_row',
         'orientation',
+        'button_load_more_label',
+        'styles',
       ],
       values: {
         data_source_id: null,
+        schema_property: null,
         items_per_page: 1,
         items_per_row: {},
         orientation: 'vertical',
+        button_load_more_label: '',
+        styles: {},
       },
     }
   },
   computed: {
     ...mapGetters({ deviceTypeSelected: 'page/getDeviceTypeSelected' }),
+    isCollapsed() {
+      const { element } = this.applicationContext
+      return this.$store.getters['element/getRepeatElementCollapsed'](element)
+    },
     deviceTypes() {
       return Object.values(this.$registry.getOrderedList('device'))
     },
-    getItemsPerRowError() {
+    itemsPerRowError() {
       for (const device of this.deviceTypes) {
         const validation = this.$v.values.items_per_row[device.getType()]
         if (validation.$dirty) {
@@ -125,6 +202,20 @@ export default {
       }
       return ''
     },
+    orientationOptions() {
+      return [
+        {
+          label: this.$t('repeatElementForm.orientationVertical'),
+          value: 'vertical',
+          icon: 'iconoir-table-rows',
+        },
+        {
+          label: this.$t('repeatElementForm.orientationHorizontal'),
+          value: 'horizontal',
+          icon: 'iconoir-view-columns-3',
+        },
+      ]
+    },
   },
   mounted() {
     if (_.isEmpty(this.values.items_per_row)) {
@@ -138,21 +229,29 @@ export default {
     ...mapActions({
       actionSetDeviceTypeSelected: 'page/setDeviceTypeSelected',
     }),
+    emitToggleRepetitions(value) {
+      const { element } = this.applicationContext
+      this.$store.dispatch('element/setRepeatElementCollapsed', {
+        element,
+        collapsed: value,
+      })
+    },
     handlePerRowInput(event, deviceTypeType) {
       this.$v.values.items_per_row[deviceTypeType].$touch()
-      this.values.items_per_row[deviceTypeType] = parseInt(event.target.value)
+      this.values.items_per_row[deviceTypeType] = parseInt(event)
       this.$emit('input', this.values)
     },
   },
   validations() {
+    const itemsPerPageRules = { integer }
+    if (this.pagingOptionsAvailable) {
+      itemsPerPageRules.required = required
+      itemsPerPageRules.minValue = minValue(1)
+      itemsPerPageRules.maxValue = maxValue(this.maxItemPerPage)
+    }
     return {
       values: {
-        items_per_page: {
-          required,
-          integer,
-          minValue: minValue(1),
-          maxValue: maxValue(this.maxItemPerPage),
-        },
+        items_per_page: itemsPerPageRules,
         items_per_row: this.deviceTypes.reduce((acc, deviceType) => {
           acc[deviceType.getType()] = {
             integer,

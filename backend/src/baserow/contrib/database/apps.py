@@ -113,6 +113,7 @@ class DatabaseConfig(AppConfig):
             DuplicateViewActionType,
             OrderViewsActionType,
             RotateViewSlugActionType,
+            SubmitFormActionType,
             UpdateDecorationActionType,
             UpdateViewActionType,
             UpdateViewFieldOptionsActionType,
@@ -136,6 +137,7 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(CreateViewGroupByActionType())
         action_type_registry.register(UpdateViewGroupByActionType())
         action_type_registry.register(DeleteViewGroupByActionType())
+        action_type_registry.register(SubmitFormActionType())
         action_type_registry.register(RotateViewSlugActionType())
         action_type_registry.register(UpdateViewFieldOptionsActionType())
         action_type_registry.register(CreateDecorationActionType())
@@ -145,7 +147,16 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(UpdateViewFilterGroupActionType())
         action_type_registry.register(DeleteViewFilterGroupActionType())
 
+        from baserow.contrib.database.data_sync.actions import (
+            CreateDataSyncTableActionType,
+            SyncDataSyncTableActionType,
+        )
+
+        action_type_registry.register(CreateDataSyncTableActionType())
+        action_type_registry.register(SyncDataSyncTableActionType())
+
         from .airtable.registry import airtable_column_type_registry
+        from .data_sync.registries import data_sync_type_registry
         from .export.registries import table_exporter_registry
         from .fields.registries import field_converter_registry, field_type_registry
         from .formula.registries import formula_function_registry
@@ -246,6 +257,7 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(PasswordFieldConverter())
 
         from .fields.actions import (
+            ChangePrimaryFieldActionType,
             CreateFieldActionType,
             DeleteFieldActionType,
             DuplicateFieldActionType,
@@ -256,6 +268,7 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(DeleteFieldActionType())
         action_type_registry.register(UpdateFieldActionType())
         action_type_registry.register(DuplicateFieldActionType())
+        action_type_registry.register(ChangePrimaryFieldActionType())
 
         from .views.view_types import FormViewType, GalleryViewType, GridViewType
 
@@ -385,6 +398,28 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(UserIsViewFilterType())
         view_filter_type_registry.register(UserIsNotViewFilterType())
 
+        from .views.array_view_filters import (
+            HasEmptyValueViewFilterType,
+            HasNotEmptyValueViewFilterType,
+            HasNotValueContainsViewFilterType,
+            HasNotValueContainsWordViewFilterType,
+            HasNotValueEqualViewFilterType,
+            HasValueContainsViewFilterType,
+            HasValueContainsWordViewFilterType,
+            HasValueEqualViewFilterType,
+            HasValueLengthIsLowerThanViewFilterType,
+        )
+
+        view_filter_type_registry.register(HasValueEqualViewFilterType())
+        view_filter_type_registry.register(HasNotValueEqualViewFilterType())
+        view_filter_type_registry.register(HasValueContainsViewFilterType())
+        view_filter_type_registry.register(HasNotValueContainsViewFilterType())
+        view_filter_type_registry.register(HasValueContainsWordViewFilterType())
+        view_filter_type_registry.register(HasNotValueContainsWordViewFilterType())
+        view_filter_type_registry.register(HasValueLengthIsLowerThanViewFilterType())
+        view_filter_type_registry.register(HasEmptyValueViewFilterType())
+        view_filter_type_registry.register(HasNotEmptyValueViewFilterType())
+
         from .views.view_aggregations import (
             AverageViewAggregationType,
             DecileViewAggregationType,
@@ -452,20 +487,34 @@ class DatabaseConfig(AppConfig):
         register_formula_functions(formula_function_registry)
 
         from .rows.webhook_event_types import (
-            RowCreatedEventType,
-            RowDeletedEventType,
             RowsCreatedEventType,
             RowsDeletedEventType,
             RowsUpdatedEventType,
-            RowUpdatedEventType,
         )
 
         webhook_event_type_registry.register(RowsCreatedEventType())
-        webhook_event_type_registry.register(RowCreatedEventType())
         webhook_event_type_registry.register(RowsUpdatedEventType())
-        webhook_event_type_registry.register(RowUpdatedEventType())
         webhook_event_type_registry.register(RowsDeletedEventType())
-        webhook_event_type_registry.register(RowDeletedEventType())
+
+        from .fields.webhook_event_types import (
+            FieldCreatedEventType,
+            FieldDeletedEventType,
+            FieldUpdatedEventType,
+        )
+
+        webhook_event_type_registry.register(FieldCreatedEventType())
+        webhook_event_type_registry.register(FieldUpdatedEventType())
+        webhook_event_type_registry.register(FieldDeletedEventType())
+
+        from .views.webhook_event_types import (
+            ViewCreatedEventType,
+            ViewDeletedEventType,
+            ViewUpdatedEventType,
+        )
+
+        webhook_event_type_registry.register(ViewCreatedEventType())
+        webhook_event_type_registry.register(ViewUpdatedEventType())
+        webhook_event_type_registry.register(ViewDeletedEventType())
 
         from .airtable.airtable_column_types import (
             CheckboxAirtableColumnType,
@@ -499,6 +548,10 @@ class DatabaseConfig(AppConfig):
         airtable_column_type_registry.register(RichTextTextAirtableColumnType())
         airtable_column_type_registry.register(CountAirtableColumnType())
 
+        from .data_sync.data_sync_types import ICalCalendarDataSyncType
+
+        data_sync_type_registry.register(ICalCalendarDataSyncType())
+
         from baserow.contrib.database.table.usage_types import (
             TableWorkspaceStorageUsageItemType,
         )
@@ -518,6 +571,7 @@ class DatabaseConfig(AppConfig):
         from baserow.core.jobs.registries import job_type_registry
 
         from .airtable.job_types import AirtableImportJobType
+        from .data_sync.job_types import SyncDataSyncTableJobType
         from .fields.job_types import DuplicateFieldJobType
         from .file_import.job_types import FileImportJobType
         from .table.job_types import DuplicateTableJobType
@@ -526,6 +580,7 @@ class DatabaseConfig(AppConfig):
         job_type_registry.register(FileImportJobType())
         job_type_registry.register(DuplicateTableJobType())
         job_type_registry.register(DuplicateFieldJobType())
+        job_type_registry.register(SyncDataSyncTableJobType())
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
@@ -559,6 +614,7 @@ class DatabaseConfig(AppConfig):
         )
 
         from .airtable.operations import RunAirtableImportJobOperationType
+        from .data_sync.operations import SyncTableOperationType
         from .export.operations import ExportTableOperationType
         from .fields.operations import (
             CreateFieldOperationType,
@@ -735,6 +791,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(UpdateViewFilterGroupOperationType())
         operation_type_registry.register(DeleteViewFilterGroupOperationType())
         operation_type_registry.register(ReadViewFilterGroupOperationType())
+        operation_type_registry.register(SyncTableOperationType())
 
         from baserow.core.registries import permission_manager_type_registry
 
@@ -787,12 +844,14 @@ class DatabaseConfig(AppConfig):
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
+        import baserow.contrib.database.data_sync.signals  # noqa: F403, F401
         import baserow.contrib.database.search.signals  # noqa: F403, F401
         import baserow.contrib.database.ws.signals  # noqa: F403, F401
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
+        import baserow.contrib.database.fields.receivers  # noqa: F401
         import baserow.contrib.database.fields.tasks  # noqa: F401
         import baserow.contrib.database.rows.history  # noqa: F401
         import baserow.contrib.database.rows.tasks  # noqa: F401

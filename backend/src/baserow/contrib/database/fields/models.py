@@ -125,6 +125,28 @@ class Field(
     description = models.TextField(
         help_text="Field description", default=None, null=True
     )
+    # TODO Remove null=True in a future release.
+    read_only = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field is read-only regardless of the field "
+        "type. If true, then it won't be possible to update the cell value via the "
+        "API.",
+    )
+    # TODO Remove null=True in a future release.
+    immutable_type = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field type is immutable. If true, then it "
+        "won't be possible to change the field type via the API.",
+    )
+    # TODO Remove null=True in a future release.
+    immutable_properties = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field properties are immutable. If true, "
+        "then it won't be possible to change the properties and the type via the API.",
+    )
 
     class Meta:
         ordering = (
@@ -154,6 +176,15 @@ class Field(
     def db_column(self):
         return f"field_{self.id}"
 
+    def get_field_ref(self, user_field_names: bool = False) -> str:
+        """
+        Generates a reference (name or user field name) for a field.
+
+        :param user_field_names: Whether user field names are used.
+        """
+
+        return self.name if user_field_names else self.db_column
+
     @property
     def tsv_db_column(self):
         return get_tsv_vector_field_name(self.id)
@@ -181,22 +212,6 @@ class Field(
 
     def invalidate_table_model_cache(self):
         invalidate_table_in_model_cache(self.table_id)
-
-    def all_dependant_fields_with_types(
-        self,
-        field_cache=None,
-        associated_relation_changed=False,
-    ) -> "FieldDependants":
-        from baserow.contrib.database.fields.dependencies.handler import (
-            FieldDependencyHandler,
-        )
-
-        return FieldDependencyHandler.get_all_dependent_fields_with_type(
-            self.table_id,
-            [self.id],
-            field_cache,
-            associated_relation_changed,
-        )
 
     def dependant_fields_with_types(
         self,
@@ -388,6 +403,15 @@ class LinkRowField(Field):
         blank=True,
     )
     link_row_relation_id = SerialField(null=True, unique=False)
+    link_row_limit_selection_view = models.ForeignKey(
+        "database.View",
+        on_delete=models.SET_NULL,
+        help_text="Visually only select rows that match the view filter. Note that "
+        "this is frontend only, and it will still be possible to make relationship to "
+        "rows that don't match the view.",
+        blank=True,
+        null=True,
+    )
 
     @property
     def through_table_name(self):
@@ -512,6 +536,14 @@ class FormulaField(Field):
     needs_periodic_update = models.BooleanField(
         default=False,
         help_text="Indicates if the field needs to be periodically updated.",
+    )
+    expand_formula_when_referenced = models.BooleanField(
+        default=False,
+        null=True,  # TODO zdm remove me in next release
+        help_text=(
+            "Indicates if the formula should be expanded when referenced (i.e. contains a lookup) "
+            "or if it's possible to use the calculated value directly.",
+        ),
     )
 
     @cached_property

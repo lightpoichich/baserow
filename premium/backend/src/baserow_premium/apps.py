@@ -45,6 +45,7 @@ class BaserowPremiumConfig(AppConfig):
 
         from .export.exporter_types import JSONTableExporter, XMLTableExporter
         from .plugins import PremiumPlugin
+        from .views.actions import RotateCalendarIcalSlugActionType
         from .views.decorator_types import (
             BackgroundColorDecoratorType,
             LeftBorderColorDecoratorType,
@@ -54,7 +55,7 @@ class BaserowPremiumConfig(AppConfig):
             SelectColorValueProviderType,
         )
         from .views.form_view_mode_types import FormViewModeTypeSurvey
-        from .views.view_types import CalendarViewType, KanbanViewType
+        from .views.view_types import CalendarViewType, KanbanViewType, TimelineViewType
 
         plugin_registry.register(PremiumPlugin())
 
@@ -68,6 +69,7 @@ class BaserowPremiumConfig(AppConfig):
 
         view_type_registry.register(KanbanViewType())
         view_type_registry.register(CalendarViewType())
+        view_type_registry.register(TimelineViewType())
 
         form_view_mode_registry.register(FormViewModeTypeSurvey())
 
@@ -97,6 +99,7 @@ class BaserowPremiumConfig(AppConfig):
         action_type_registry.register(CreateRowCommentActionType())
         action_type_registry.register(DeleteRowCommentActionType())
         action_type_registry.register(UpdateRowCommentActionType())
+        action_type_registry.register(RotateCalendarIcalSlugActionType())
 
         from .row_comments.operations import (
             CreateRowCommentsOperationType,

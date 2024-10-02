@@ -230,7 +230,7 @@ class AirtableHandler:
         baserow_field.name = column["name"]
         baserow_field.order = order
         baserow_field.primary = (
-            baserow_field_type.can_be_primary_field
+            baserow_field_type.can_be_primary_field(baserow_field)
             and table["primaryColumnId"] == column["id"]
         )
 
@@ -439,7 +439,7 @@ class AirtableHandler:
                 for value in field_mapping.values():
                     if field_type_registry.get_by_model(
                         value["baserow_field"]
-                    ).can_be_primary_field:
+                    ).can_be_primary_field(value["baserow_field"]):
                         value["baserow_field"].primary = True
                         found_existing_field = True
                         break
@@ -508,6 +508,7 @@ class AirtableHandler:
                 fields=exported_fields,
                 views=exported_views,
                 rows=exported_rows,
+                data_sync=None,
             )
             exported_tables.append(exported_table)
             converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)

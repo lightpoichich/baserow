@@ -1,29 +1,20 @@
 <template>
   <Context
     :class="{ 'context--loading-overlay': view._.loading }"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    overflow-scroll
+    max-height-if-outside-viewport
     @shown="focus"
   >
     <form class="context__form" @submit.prevent="searchIfChanged">
-      <div class="control margin-bottom-2">
-        <div class="control__elements">
-          <div
-            class="input__with-icon input__with-icon--left"
-            :class="{ 'input__with-icon--loading': loading }"
-          >
-            <input
-              ref="activeSearchTermInput"
-              v-model="activeSearchTerm"
-              type="text"
-              :placeholder="$t('viewSearchContext.searchInRows')"
-              class="input"
-              @keyup="searchIfChanged"
-            />
-            <i class="iconoir-search"></i>
-          </div>
-        </div>
-      </div>
+      <FormInput
+        ref="activeSearchTermInput"
+        v-model="activeSearchTerm"
+        size="large"
+        icon-left="iconoir-search"
+        :placeholder="$t('viewSearchContext.searchInRows')"
+        class="margin-bottom-2"
+        @keyup="searchIfChanged"
+      ></FormInput>
       <div
         v-if="!alwaysHideRowsNotMatchingSearch"
         class="control control--align-right margin-bottom-0"

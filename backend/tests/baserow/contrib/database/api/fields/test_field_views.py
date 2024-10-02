@@ -13,7 +13,9 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.fields.models import Field, NumberField, TextField
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.core.db import specific_iterator
 from baserow.test_utils.helpers import (
     independent_test_db_connection,
     setup_interesting_test_table,
@@ -131,7 +133,7 @@ def test_list_fields(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_list_read_only_fields(api_client, data_fixture):
+def test_list_read_only_field_types(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -148,6 +150,27 @@ def test_list_read_only_fields(api_client, data_fixture):
     assert len(response_json) == 1
     assert response_json[0]["id"] == field_1.id
     assert response_json[0]["type"] == "created_on"
+    assert response_json[0]["read_only"] is True
+
+
+@pytest.mark.django_db
+def test_list_read_only_fields(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(table=table_1, order=1, read_only=True)
+
+    response = api_client.get(
+        reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
+        **{"HTTP_AUTHORIZATION": f"JWT {jwt_token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == field_1.id
+    assert response_json[0]["type"] == "text"
     assert response_json[0]["read_only"] is True
 
 
@@ -511,6 +534,162 @@ def test_update_field(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_type=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json()["error"] == "ERROR_IMMUTABLE_FIELD_TYPE"
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_type_change_properties(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_type=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"number_decimal_places": 2},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_properties(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_properties=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"number_decimal_places": 2},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json()["error"] == "ERROR_IMMUTABLE_FIELD_PROPERTIES"
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_properties_all_types_change_only_name(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table, *_ = setup_interesting_test_table(data_fixture, user=user)
+    table.field_set.all().update(immutable_properties=True)
+    all_fields = specific_iterator(table.field_set.all())
+
+    for index, field in enumerate(all_fields):
+        field_type = field_type_registry.get_by_model(field)
+        if field_type.read_only:
+            continue
+
+        url = reverse("api:database:fields:item", kwargs={"field_id": field.id})
+        response = api_client.patch(
+            url,
+            {"name": field.name},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_properties_change_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_properties=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json()["error"] == "ERROR_IMMUTABLE_FIELD_PROPERTIES"
+
+
+@pytest.mark.django_db
+def test_update_field_immutable_properties_change_type_and_properties(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+        immutable_properties=True,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"type": "text", "text_default": "test"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json()["error"] == "ERROR_IMMUTABLE_FIELD_PROPERTIES"
+
+
+@pytest.mark.django_db
+def test_update_field_cannot_change_read_only_and_immutable_properties(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=1,
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {
+            "type": "text",
+            "read_only": True,
+            "immutable_type": True,
+            "immutable_properties": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["read_only"] is False
+    assert response_json["immutable_type"] is False
+    assert response_json["immutable_properties"] is False
 
 
 @pytest.mark.django_db
@@ -953,3 +1132,179 @@ def test_async_duplicate_field(api_client, data_fixture):
     assert field_set.count() == original_field_count + 2
     for row in response_json["results"]:
         assert row[f"{primary_field.name} 3"] == row[primary_field.name]
+
+
+@pytest.mark.django_db
+def test_change_primary_field_different_table(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+    table_b = data_fixture.create_database_table(user)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_b.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_FIELD_NOT_IN_TABLE"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_type_not_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_password_field(
+        user=user, primary=False, table=table_a
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_is_already_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_1.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_FIELD_IS_ALREADY_PRIMARY"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_no_update_permissions(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_2}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_without_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_TABLE_HAS_NO_PRIMARY_FIELD"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_with_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "id": field_2.id,
+        "table_id": table_a.id,
+        "name": field_2.name,
+        "order": 0,
+        "type": "text",
+        "primary": True,
+        "read_only": False,
+        "description": None,
+        "related_fields": [
+            {
+                "id": field_1.id,
+                "table_id": table_a.id,
+                "name": field_1.name,
+                "order": 0,
+                "type": "text",
+                "primary": False,
+                "read_only": False,
+                "description": None,
+                "text_default": "",
+                "immutable_properties": False,
+                "immutable_type": False,
+            }
+        ],
+        "text_default": "",
+        "immutable_properties": False,
+        "immutable_type": False,
+    }
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_and_back(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_1.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    field_1.refresh_from_db()
+    field_2.refresh_from_db()
+    assert field_1.primary is True
+    assert field_2.primary is False

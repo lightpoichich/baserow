@@ -1,5 +1,6 @@
+from datetime import datetime, timedelta, timezone
+
 from django.shortcuts import reverse
-from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
@@ -46,7 +47,6 @@ def test_deleting_a_workspace_moves_it_to_the_trash_and_hides_it(
                 "workspace_id": workspace_to_delete.id,
             },
         ),
-        {"respond_with_workspace_rename": True},
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
@@ -58,7 +58,6 @@ def test_deleting_a_workspace_moves_it_to_the_trash_and_hides_it(
         "results": [
             {
                 "application": None,
-                "group": workspace_to_delete.id,  # GroupDeprecation
                 "workspace": workspace_to_delete.id,
                 "id": TrashEntry.objects.first().id,
                 "parent_trash_item_id": None,
@@ -219,8 +218,8 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
     user, token = data_fixture.create_user_and_token()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    trashed_at = timezone.now()
-    time_when_trash_item_old_enough = trashed_at + timezone.timedelta(
+    trashed_at = datetime.now(tz=timezone.utc)
+    time_when_trash_item_old_enough = trashed_at + timedelta(
         hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
 
@@ -294,28 +293,6 @@ def test_can_get_trash_structure(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "groups": [  # GroupDeprecation
-            {
-                "id": workspace_to_delete.id,
-                "trashed": True,
-                "name": workspace_to_delete.name,
-                "applications": [
-                    {"id": application.id, "name": application.name, "trashed": False}
-                ],
-            },
-            {
-                "id": normal_workspace.id,
-                "trashed": False,
-                "name": normal_workspace.name,
-                "applications": [
-                    {
-                        "id": trashed_application.id,
-                        "name": trashed_application.name,
-                        "trashed": True,
-                    }
-                ],
-            },
-        ],
         "workspaces": [
             {
                 "id": workspace_to_delete.id,
@@ -704,7 +681,6 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
                 "workspace_id": workspace_to_delete.id,
             },
         ),
-        {"respond_with_workspace_rename": True},
         HTTP_AUTHORIZATION=f"JWT {other_token}",
     )
 
@@ -716,7 +692,6 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
         "results": [
             {
                 "application": None,
-                "group": workspace_to_delete.id,  # GroupDeprecation
                 "workspace": workspace_to_delete.id,
                 "id": TrashEntry.objects.first().id,
                 "parent_trash_item_id": None,

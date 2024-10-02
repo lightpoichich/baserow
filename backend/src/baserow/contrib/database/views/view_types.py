@@ -15,6 +15,7 @@ from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.api.views.form.errors import (
     ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST,
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+    ERROR_FORM_VIEW_READ_ONLY_FIELD_IS_NOT_SUPPORTED,
 )
 from baserow.contrib.database.api.views.form.exceptions import (
     FormViewFieldOptionsConditionGroupDoesNotExist,
@@ -33,7 +34,7 @@ from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.fields.models import FileField
+from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
@@ -42,6 +43,7 @@ from baserow.core.user_files.models import UserFile
 
 from .exceptions import (
     FormViewFieldTypeIsNotSupported,
+    FormViewReadOnlyFieldIsNotSupported,
     GridViewAggregationDoesNotSupportField,
 )
 from .handler import ViewHandler
@@ -70,7 +72,7 @@ class GridViewType(ViewType):
     has_public_info = True
     can_group_by = True
     when_shared_publicly_requires_realtime_events = True
-    allowed_fields = ["row_identifier_type"]
+    allowed_fields = ["row_identifier_type", "row_height_size"]
     field_options_allowed_fields = [
         "width",
         "hidden",
@@ -78,7 +80,7 @@ class GridViewType(ViewType):
         "aggregation_type",
         "aggregation_raw_type",
     ]
-    serializer_field_names = ["row_identifier_type"]
+    serializer_field_names = ["row_identifier_type", "row_height_size"]
 
     api_exceptions_map = {
         GridViewAggregationDoesNotSupportField: ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
@@ -104,6 +106,7 @@ class GridViewType(ViewType):
 
         serialized = super().export_serialized(grid, cache, files_zip, storage)
         serialized["row_identifier_type"] = grid.row_identifier_type
+        serialized["row_height_size"] = grid.row_height_size
 
         serialized_field_options = []
         for field_option in grid.get_field_options():
@@ -460,7 +463,7 @@ class GalleryViewType(ViewType):
         """
 
         field_options = view.get_field_options(create_if_missing=True).order_by(
-            "field__id"
+            "-field__primary", "field__id"
         )
         ids_to_update = [f.id for f in field_options[0:3]]
 
@@ -524,6 +527,12 @@ class GalleryViewType(ViewType):
     def enhance_queryset(self, queryset):
         return queryset.prefetch_related("galleryviewfieldoptions_set")
 
+    def after_field_delete(self, field: Field) -> None:
+        if isinstance(field, FileField):
+            GalleryView.objects.filter(card_cover_image_field_id=field.id).update(
+                card_cover_image_field_id=None
+            )
+
 
 class FormViewType(ViewType):
     type = "form"
@@ -582,6 +591,7 @@ class FormViewType(ViewType):
     }
     api_exceptions_map = {
         FormViewFieldTypeIsNotSupported: ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+        FormViewReadOnlyFieldIsNotSupported: ERROR_FORM_VIEW_READ_ONLY_FIELD_IS_NOT_SUPPORTED,
         FormViewFieldOptionsConditionGroupDoesNotExist: ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST,
     }
 
@@ -613,6 +623,8 @@ class FormViewType(ViewType):
             field = fields_dict.get(int(field_id), None)
             if options.get("enabled") and field:
                 field_type = field_type_registry.get_by_model(field.specific_class)
+                if field.read_only:
+                    raise FormViewReadOnlyFieldIsNotSupported(field.name)
                 if not field_type.can_be_in_form_view:
                     raise FormViewFieldTypeIsNotSupported(field_type.type)
 
@@ -1091,8 +1103,8 @@ class FormViewType(ViewType):
                     field_option_id
                 ] = field_option_object.id
 
-        # Create the conditions in bulk to improve performance.
-        FormViewFieldOptionsCondition.objects.bulk_create(condition_objects)
+            # Create the conditions in bulk to improve performance.
+            FormViewFieldOptionsCondition.objects.bulk_create(condition_objects)
 
         return form_view
 

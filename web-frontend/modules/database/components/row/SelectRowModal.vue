@@ -8,8 +8,12 @@
     -->
     <SelectRowContent
       :table-id="tableId"
+      :view-id="viewId"
       :value="value"
+      :multiple="multiple"
+      :new-row-presets="newRowPresets"
       @selected="selected"
+      @unselected="unselected"
       @hide="hide"
     ></SelectRowContent>
   </Modal>
@@ -29,10 +33,25 @@ export default {
       type: Number,
       required: true,
     },
+    viewId: {
+      type: [Number, null],
+      required: false,
+      default: null,
+    },
     value: {
       type: Array,
       required: false,
       default: () => [],
+    },
+    multiple: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    newRowPresets: {
+      type: Object,
+      required: false,
+      default: () => ({}),
     },
   },
   methods: {
@@ -40,8 +59,13 @@ export default {
      * Hide the modal when a row has been selected.
      */
     selected(...args) {
-      this.hide()
+      if (!this.multiple) {
+        this.hide()
+      }
       this.$emit('selected', ...args)
+    },
+    unselected(...args) {
+      this.$emit('unselected', ...args)
     },
   },
 }

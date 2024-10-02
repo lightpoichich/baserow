@@ -4,11 +4,9 @@ from django.core.exceptions import ValidationError
 
 import pytest
 
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
-)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
@@ -283,7 +281,7 @@ def test_import_export_last_modified_by_field(data_fixture):
         field_serialized,
         ImportExportConfig(include_permission_data=True),
         id_mapping,
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
 
     assert field_imported.id != field.id
@@ -293,6 +291,9 @@ def test_import_export_last_modified_by_field(data_fixture):
         "order": field.order,
         "primary": False,
         "type": "last_modified_by",
+        "read_only": False,
+        "immutable_type": False,
+        "immutable_properties": False,
     }
 
 

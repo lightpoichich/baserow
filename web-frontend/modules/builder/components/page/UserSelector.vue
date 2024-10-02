@@ -21,6 +21,7 @@
               : $t('userSelector.anonymous'),
           })
         }}
+        {{ userRole }}
       </span>
     </a>
     <UserSourceUsersContext ref="user_source_users_context" />
@@ -28,7 +29,10 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 import UserSourceUsersContext from '@baserow/modules/builder/components/page/UserSourceUsersContext'
+import { DEFAULT_USER_ROLE_PREFIX } from '@baserow/modules/builder/constants'
 
 export default {
   components: { UserSourceUsersContext },
@@ -41,6 +45,48 @@ export default {
     loggedUser() {
       return this.$store.getters['userSourceUser/getUser'](this.builder)
     },
+    userSource() {
+      return this.$store.getters['userSource/getUserSourceByUId'](
+        this.builder,
+        this.loggedUser.user_source_uid
+      )
+    },
+    userRole() {
+      if (!this.isAuthenticated) {
+        return ''
+      }
+
+      if (
+        this.userSource &&
+        this.loggedUser.role.startsWith(DEFAULT_USER_ROLE_PREFIX)
+      ) {
+        return (
+          '- ' +
+          this.$t('userSelector.member', {
+            prefix: this.userSource.name,
+          })
+        )
+      } else if (!this.loggedUser.role.trim().length) {
+        return `- ${this.$t('visibilityForm.noRole')}`
+      } else {
+        return `- ${this.loggedUser.role}`
+      }
+    },
+  },
+  watch: {
+    /**
+     * When the User Source is deleted, log off the currently selected user.
+     */
+    userSource(newValue, oldValue) {
+      if (!newValue && this.isAuthenticated) {
+        this.actionLogoff({ application: this.builder })
+      }
+    },
+  },
+  methods: {
+    ...mapActions({
+      actionLogoff: 'userSourceUser/logoff',
+    }),
   },
 }
 </script>

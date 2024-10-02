@@ -1,6 +1,6 @@
 from datetime import timezone
 from io import BytesIO
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.test.utils import override_settings
 from django.utils.dateparse import parse_date, parse_datetime
@@ -23,10 +23,13 @@ def _parse_date(date):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_can_export_every_interesting_different_field_to_json(
-    storage_mock, premium_data_fixture
+    get_storage_mock, premium_data_fixture
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
+
     contents = run_export_over_interesting_test_table(
         premium_data_fixture,
         storage_mock,
@@ -105,7 +108,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "duration_rollup_sum": "0:00",
     "duration_rollup_avg": "0:00",
     "lookup": [],
-    "uuid": "00000000-0000-4000-8000-000000000002",
+    "uuid": "00000000-0000-4000-8000-000000000001",
     "autonumber": 1,
     "password": "",
     "ai": ""
@@ -211,8 +214,8 @@ def test_can_export_every_interesting_different_field_to_json(
         "url": "https://google.com"
     },
     "formula_multipleselect": [
-        "D",
         "C",
+        "D",
         "E"
     ],
     "count": 3,
@@ -224,7 +227,7 @@ def test_can_export_every_interesting_different_field_to_json(
         "linked_row_2",
         ""
     ],
-    "uuid": "00000000-0000-4000-8000-000000000003",
+    "uuid": "00000000-0000-4000-8000-000000000002",
     "autonumber": 2,
     "password": true,
     "ai": "I'm an AI."
@@ -236,8 +239,12 @@ def test_can_export_every_interesting_different_field_to_json(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_cannot_export_json_without_premium_license(storage_mock, premium_data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_cannot_export_json_without_premium_license(
+    get_storage_mock, premium_data_fixture
+):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "json"}
@@ -246,10 +253,12 @@ def test_cannot_export_json_without_premium_license(storage_mock, premium_data_f
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_cannot_export_json_without_premium_license_for_group(
-    storage_mock, premium_data_fixture, alternative_per_workspace_license_service
+    get_storage_mock, premium_data_fixture, alternative_per_workspace_license_service
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     # Setting the group id to `0` will make sure that the user doesn't have
     # premium access to the group.
     user = premium_data_fixture.create_user(has_active_premium_license=True)
@@ -262,8 +271,10 @@ def test_cannot_export_json_without_premium_license_for_group(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_if_duplicate_field_names_json_export(storage_mock, premium_data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_if_duplicate_field_names_json_export(get_storage_mock, premium_data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     database = premium_data_fixture.create_database_application(user=user)
     table = premium_data_fixture.create_database_table(database=database)
@@ -295,10 +306,12 @@ def test_if_duplicate_field_names_json_export(storage_mock, premium_data_fixture
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_can_export_every_interesting_different_field_to_xml(
-    storage_mock, premium_data_fixture
+    get_storage_mock, premium_data_fixture
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     xml = run_export_over_interesting_test_table(
         premium_data_fixture,
         storage_mock,
@@ -376,7 +389,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <duration-rollup-sum>0:00</duration-rollup-sum>
       <duration-rollup-avg>0:00</duration-rollup-avg>
       <lookup/>
-      <uuid>00000000-0000-4000-8000-000000000002</uuid>
+      <uuid>00000000-0000-4000-8000-000000000001</uuid>
       <autonumber>1</autonumber>
       <password/>
       <ai/>
@@ -482,8 +495,8 @@ def test_can_export_every_interesting_different_field_to_xml(
          <url>https://google.com</url>
       </formula-link-url-only>
       <formula-multipleselect>
-            <item>D</item>
             <item>C</item>
+            <item>D</item>
             <item>E</item>
       </formula-multipleselect>
       <count>3</count>
@@ -495,7 +508,7 @@ def test_can_export_every_interesting_different_field_to_xml(
          <item>linked_row_2</item>
          <item/>
       </lookup>
-      <uuid>00000000-0000-4000-8000-000000000003</uuid>
+      <uuid>00000000-0000-4000-8000-000000000002</uuid>
       <autonumber>2</autonumber>
       <password>true</password>
       <ai>I'm an AI.</ai>
@@ -507,10 +520,12 @@ def test_can_export_every_interesting_different_field_to_xml(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_if_xml_duplicate_name_and_value_are_escaped(
-    storage_mock, premium_data_fixture
+    get_storage_mock, premium_data_fixture
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     database = premium_data_fixture.create_database_application(user=user)
     table = premium_data_fixture.create_database_table(database=database)
@@ -551,8 +566,12 @@ def test_if_xml_duplicate_name_and_value_are_escaped(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_cannot_export_xml_without_premium_license(storage_mock, premium_data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_cannot_export_xml_without_premium_license(
+    get_storage_mock, premium_data_fixture
+):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "xml"}
@@ -561,10 +580,12 @@ def test_cannot_export_xml_without_premium_license(storage_mock, premium_data_fi
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_cannot_export_xml_without_premium_license_for_group(
-    storage_mock, premium_data_fixture, alternative_per_workspace_license_service
+    get_storage_mock, premium_data_fixture, alternative_per_workspace_license_service
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     # Setting the group id to `0` will make sure that the user doesn't have
     # premium access to the group.
     user = premium_data_fixture.create_user(has_active_premium_license=True)

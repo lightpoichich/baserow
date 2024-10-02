@@ -2,11 +2,13 @@ from collections import defaultdict
 from unittest.mock import MagicMock, Mock, patch
 
 from django.contrib.auth.models import AnonymousUser
+from django.http import HttpRequest
 
 import pytest
 
 from baserow.contrib.builder.data_providers.data_provider_types import (
     CurrentRecordDataProviderType,
+    DataSourceContextDataProviderType,
     DataSourceDataProviderType,
     FormDataProviderType,
     PageParameterDataProviderType,
@@ -23,30 +25,11 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import EventTypes
-from baserow.core.services.dispatch_context import DispatchContext
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
+from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.core.utils import MirrorDict
-
-
-class FakeDispatchContext(DispatchContext):
-    def __init__():
-        super().__init__()
-
-    def range(self, service):
-        return [0, 100]
-
-    def __getitem__(self, key: str):
-        if key == "test":
-            return 2
-        if key == "test1":
-            return 1
-        if key == "test2":
-            return ""
-        if key == "test999":
-            return "999"
-
-        return super().__getitem__(key)
 
 
 def test_page_parameter_data_provider_get_data_chunk():
@@ -75,7 +58,7 @@ def test_form_data_provider_get_data_chunk(mock_validate):
     fake_request.data = {"form_data": {"1": "hello", "2": ["a", "b"]}}
 
     dispatch_context = BuilderDispatchContext(fake_request, None)
-    mock_validate.side_effect = lambda x, y: y
+    mock_validate.side_effect = lambda x, y, z: y
 
     # A single valued form data
     assert form_data_provider.get_data_chunk(dispatch_context, ["1"]) == "hello"
@@ -102,14 +85,14 @@ def test_form_data_provider_validate_data_chunk(mock_handler):
     form_data_provider = FormDataProviderType()
 
     mock_element_type.is_valid.return_value = "something"
-    assert form_data_provider.validate_data_chunk("1", "horse") == "something"
+    assert form_data_provider.validate_data_chunk("1", "horse", {}) == "something"
 
-    def raise_exc(x, y):
+    def raise_exc(x, y, z):
         raise FormDataProviderChunkInvalidException()
 
     mock_element_type.is_valid.side_effect = raise_exc
     with pytest.raises(FormDataProviderChunkInvalidException) as exc:
-        assert form_data_provider.validate_data_chunk("1", 42)
+        assert form_data_provider.validate_data_chunk("1", 42, {})
 
     assert exc.value.args[0].startswith("Provided value for form element with ID")
 
@@ -148,9 +131,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
-
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -194,7 +175,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {"id": 2},
@@ -268,7 +249,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {"id": 2},
@@ -341,7 +322,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_list_dataso
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {"id": 2},
@@ -407,7 +388,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {},
@@ -473,7 +454,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {},
@@ -550,7 +531,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {},
@@ -645,6 +626,86 @@ def test_data_source_formula_import_missing_get_row_datasource(data_fixture):
     result = import_formula(f"get('data_source.42.field_24')", id_mapping)
 
     assert result == f"get('data_source.42.field_24')"
+
+
+@pytest.mark.django_db
+def test_data_source_context_data_provider_get_data_chunk(data_fixture):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user, columns=[("Name", "text")], rows=[]
+    )
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Category",
+        select_options=[
+            {
+                "value": "Bakery",
+                "color": "red",
+            },
+            {
+                "value": "Grocery",
+                "color": "green",
+            },
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        table=table,
+        row_id="",
+        name="Item",
+    )
+    data_source_context_provider = DataSourceContextDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {
+        "page_parameter": {},
+    }
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+
+    # For fields that are not single select, `get_data_chunk` returns an empty response
+    assert (
+        data_source_context_provider.get_data_chunk(
+            dispatch_context, [str(data_source.id), fields[0].db_column]
+        )
+        is None
+    )
+
+    # For single select fields, we should be able to select one/all of the options
+    assert (
+        data_source_context_provider.get_data_chunk(
+            dispatch_context, [str(data_source.id), field.db_column, "0", "value"]
+        )
+        == "Bakery"
+    )
+
+    assert data_source_context_provider.get_data_chunk(
+        dispatch_context, [str(data_source.id), field.db_column, "*", "value"]
+    ) == ["Bakery", "Grocery"]
+
+    assert data_source_context_provider.get_data_chunk(
+        dispatch_context, [str(data_source.id), field.db_column, "*", "color"]
+    ) == ["red", "green"]
+
+
+@pytest.mark.django_db
+def test_data_source_data_context_data_provider_import_path(data_fixture):
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_context_provider = DataSourceContextDataProviderType()
+
+    assert data_source_context_provider.import_path(["1"], {}) == ["1"]
+    assert data_source_context_provider.import_path(
+        ["1"], {"builder_data_sources": {1: 2}}
+    ) == ["2"]
+
+    assert data_source_context_provider.import_path(
+        ["1"], {"builder_data_sources": {1: data_source.id}}
+    ) == [str(data_source.id)]
 
 
 @pytest.mark.django_db
@@ -760,7 +821,7 @@ def test_user_data_provider_get_data_chunk(data_fixture):
     assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 0
 
     fake_request.user_source_user = UserSourceUser(
-        None, None, 42, "username", "e@ma.il"
+        None, None, 42, "username", "e@ma.il", "foo_role"
     )
 
     assert user_data_provider_type.get_data_chunk(
@@ -770,6 +831,71 @@ def test_user_data_provider_get_data_chunk(data_fixture):
         user_data_provider_type.get_data_chunk(dispatch_context, ["email"]) == "e@ma.il"
     )
     assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 42
+    assert (
+        user_data_provider_type.get_data_chunk(dispatch_context, ["role"]) == "foo_role"
+    )
+
+
+@pytest.mark.django_db
+def test_translate_default_user_role_returns_same_role(data_fixture):
+    """
+    Ensure the UserDataProviderType's get_data_chunk() method returns
+    the same User Role.
+
+    When the role is a non-Default User Role, the same role should be returned.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    user_data_provider_type = UserDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {
+        "page_parameter": {},
+    }
+    fake_request.user_source_user = AnonymousUser()
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+
+    user_role = "foo_role"
+    fake_request.user_source_user = UserSourceUser(
+        None, None, 42, "username", "e@ma.il", user_role
+    )
+
+    assert (
+        user_data_provider_type.get_data_chunk(dispatch_context, ["role"]) == user_role
+    )
+
+
+@pytest.mark.django_db
+def test_translate_default_user_role_returns_translated_role(data_fixture):
+    """
+    Ensure the UserDataProviderType's get_data_chunk() method returns
+    the translated Default User Role.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    user_source_name = "FooUserSource"
+    user_source = data_fixture.create_user_source_with_first_type(name=user_source_name)
+    default_user_source_name = f"{DEFAULT_USER_ROLE_PREFIX}{user_source.id}"
+
+    user_data_provider_type = UserDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {
+        "page_parameter": {},
+    }
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    fake_request.user_source_user = UserSourceUser(
+        user_source, None, 42, "username", "e@ma.il", default_user_source_name
+    )
+
+    assert (
+        user_data_provider_type.get_data_chunk(dispatch_context, ["role"])
+        == f"{user_source_name} member"
+    )
 
 
 @pytest.mark.django_db
@@ -778,7 +904,7 @@ def test_current_record_provider_get_data_chunk_without_record_index(data_fixtur
 
     user, token = data_fixture.create_user_and_token()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {}
 
     builder = data_fixture.create_builder_application(user=user)
@@ -791,13 +917,21 @@ def test_current_record_provider_get_data_chunk_without_record_index(data_fixtur
     assert current_record_provider.get_data_chunk(dispatch_context, ["path"]) is None
 
 
+def test_current_record_provider_get_data_chunk_for_idx():
+    current_record_provider = CurrentRecordDataProviderType()
+    fake_request = HttpRequest()
+    fake_request.data = {"current_record": 123}
+    dispatch_context = BuilderDispatchContext(fake_request, None)
+    assert current_record_provider.get_data_chunk(dispatch_context, ["__idx__"]) == 123
+
+
 @pytest.mark.django_db
 def test_current_record_provider_get_data_chunk(data_fixture):
     current_record_provider = CurrentRecordDataProviderType()
 
     user, token = data_fixture.create_user_and_token()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.user = user
     fake_request.data = {"current_record": 0}
 

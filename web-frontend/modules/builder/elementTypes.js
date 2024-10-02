@@ -12,10 +12,17 @@ import InputTextElementForm from '@baserow/modules/builder/components/elements/c
 import TableElement from '@baserow/modules/builder/components/elements/components/TableElement'
 import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm'
 import {
+  ensureArray,
   ensureBoolean,
+  ensureInteger,
   ensureString,
+  ensureStringOrInteger,
 } from '@baserow/modules/core/utils/validator'
-import { ELEMENT_EVENTS, PLACEMENTS } from '@baserow/modules/builder/enums'
+import {
+  CHOICE_OPTION_TYPES,
+  ELEMENT_EVENTS,
+  PLACEMENTS,
+} from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -35,8 +42,10 @@ import IFrameElement from '@baserow/modules/builder/components/elements/componen
 import IFrameElementForm from '@baserow/modules/builder/components/elements/components/forms/general/IFrameElementForm.vue'
 import RepeatElement from '@baserow/modules/builder/components/elements/components/RepeatElement'
 import RepeatElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RepeatElementForm'
+import RecordSelectorElement from '@baserow/modules/builder/components/elements/components/RecordSelectorElement.vue'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { isNumeric, isValidEmail } from '@baserow/modules/core/utils/string'
+import RecordSelectorElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RecordSelectorElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -73,12 +82,18 @@ export class ElementType extends Registerable {
       'style_padding_bottom',
       'style_padding_left',
       'style_padding_right',
+      'style_margin_top',
+      'style_margin_bottom',
+      'style_margin_left',
+      'style_margin_right',
       'style_border_top',
       'style_border_bottom',
       'style_border_left',
       'style_border_right',
       'style_background',
       'style_background_color',
+      'style_background_file',
+      'style_background_mode',
       'style_width',
     ]
   }
@@ -417,6 +432,57 @@ export class ElementType extends Registerable {
   uniqueElementId(element, recordIndexPath) {
     return [element.id, ...(recordIndexPath || [])].join('.')
   }
+
+  /**
+   * Responsible for optionally extending the element store's
+   * `_` object with per-element type specific properties.
+   * @returns {Object} - An object containing the properties to be added.
+   */
+  getPopulateStoreProperties() {
+    return {}
+  }
+
+  /**
+   * Given an element, iterates over the element's ancestors and finds the
+   * first collection element. An optional function can be passed to map over
+   * each ancestor element.
+   *
+   * @param {Object} page - The page the element belongs to.
+   * @param {Object} element - The element to start the search from.
+   * @param {Function} ancestorMapFn - An optional function which will be
+   * called for each ancestor element, after ensuring it's a collection element.
+   */
+  firstCollectionAncestor(page, element, ancestorMapFn = (element) => true) {
+    const elementType = this.app.$registry.get('element', element.type)
+    if (elementType.isCollectionElement && ancestorMapFn(element)) {
+      return element
+    }
+    const ancestors = this.app.store.getters['element/getAncestors'](
+      page,
+      element
+    )
+    for (const ancestor of ancestors) {
+      const ancestorType = this.app.$registry.get('element', ancestor.type)
+      if (ancestorType.isCollectionElement && ancestorMapFn(ancestor)) {
+        return ancestor
+      }
+    }
+  }
+
+  /**
+   * Given a `page` and an `element`, and `ancestorType`, returns whether the
+   * element has an ancestor of a specified element type.
+   *
+   * @param {Object} page - The page the element belongs to.
+   * @param {Object} element - The element to check for ancestors.
+   * @param {String} ancestorType - The ancestor type to check for.
+   * @returns {Boolean} Whether the element has an ancestor of the specified type.
+   */
+  hasAncestorOfType(page, element, ancestorType) {
+    return this.app.store.getters['element/getAncestors'](page, element).some(
+      ({ type }) => type === ancestorType
+    )
+  }
 }
 
 const ContainerElementTypeMixin = (Base) =>
@@ -429,9 +495,12 @@ const ContainerElementTypeMixin = (Base) =>
 
     /**
      * Returns an array of element types that are not allowed as children of this element type.
+     * @param {object} page - The page the element belongs to.
+     * @param {Object} element The element in question, it can be used to
+     *  determine in a more dynamic way if specific children are permitted.
      * @returns {Array} An array of forbidden child element types.
      */
-    get childElementTypesForbidden() {
+    childElementTypesForbidden(page, element) {
       return []
     }
 
@@ -456,10 +525,13 @@ const ContainerElementTypeMixin = (Base) =>
         )
         return _.difference(
           parentElementType.childElementTypes(page, parentElement),
-          this.childElementTypesForbidden
+          this.childElementTypesForbidden(page, element)
         )
       }
-      return _.difference(this.elementTypesAll, this.childElementTypesForbidden)
+      return _.difference(
+        this.elementTypesAll,
+        this.childElementTypesForbidden(page, element)
+      )
     }
 
     /**
@@ -547,11 +619,16 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * Exclude element types which are not a form element.
-   * @returns {Array} An array of non-form element types.
+   * Only disallow form containers as nested elements.
+   * @param {object} page - The page the element belongs to.
+   * @param {Object} element The element in question, it can be used to
+   *  determine in a more dynamic way if specific children are permitted.
+   * @returns {Array} An array containing the `FormContainerElementType`.
    */
-  get childElementTypesForbidden() {
-    return this.elementTypesAll.filter((type) => !type.isFormElement)
+  childElementTypesForbidden(page, element) {
+    return this.elementTypesAll.filter(
+      (elementType) => elementType.type === this.getType()
+    )
   }
 
   get childStylesForbidden() {
@@ -606,12 +683,15 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
   }
 
   /**
-   * Exclude element types which are containers.
-   * @returns {Array} An array of container element types.
+   * Only disallow column elements as nested elements.
+   * @param {object} page - The page the element belongs to.
+   * @param {Object} element The element in question, it can be used to
+   *  determine in a more dynamic way if specific children are permitted.
+   * @returns {Array} An array containing the `ColumnElementType`.
    */
-  get childElementTypesForbidden() {
+  childElementTypesForbidden(page, element) {
     return this.elementTypesAll.filter(
-      (elementType) => elementType.isContainerElement
+      (elementType) => elementType.type === this.getType()
     )
   }
 
@@ -710,18 +790,91 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
 const CollectionElementTypeMixin = (Base) =>
   class extends Base {
     isCollectionElement = true
+
+    /**
+     * By default collection element will load their content at loading time
+     * but if you don't want that you can return false here.
+     */
+    get fetchAtLoad() {
+      return true
+    }
+
+    hasCollectionAncestor(page, element) {
+      return this.app.store.getters['element/getAncestors'](page, element).some(
+        ({ type }) => {
+          const ancestorType = this.app.$registry.get('element', type)
+          return ancestorType.isCollectionElement
+        }
+      )
+    }
+
+    /**
+     * Collection elements by default will have three permutations of display names:
+     *
+     * 1. If no data source exists, on `element` or its ancestors, then:
+     *   - "Repeat" is returned.
+     * 2. If a data source is found, and `element` has no `schema_property`, then:
+     *   - "Repeat {dataSourceName}" is returned.
+     * 3. If a data source is found, `element` has a `schema_property`, and the integration is Baserow, then:
+     *   - "Repeat {schemaPropertyTitle} ({fieldTypeName})" is returned
+     * 4. If a data source is found, `element` has a `schema_property`, and the integration isn't Baserow, then:
+     *   - "Repeat {schemaPropertyTitle}" is returned
+     * @param element - The element we want to get a display name for.
+     * @param page - The page the element belongs to.
+     * @returns {string} - The display name for the element.
+     */
     getDisplayName(element, { page }) {
       let suffix = ''
 
-      if (element.data_source_id) {
+      const collectionAncestors = this.app.store.getters[
+        'element/getAncestors'
+      ](page, element, {
+        predicate: (ancestor) =>
+          this.app.$registry.get('element', ancestor.type)
+            .isCollectionElement && ancestor.data_source_id !== null,
+      })
+
+      // If the collection element has ancestors, pluck out the first one, which
+      // will have a data source. Otherwise, use `element`, as this element is
+      // the root level element.
+      const collectionElement = collectionAncestors.length
+        ? collectionAncestors[0]
+        : element
+
+      // If we find a collection ancestor which has a data source, we'll
+      // use the data source's name as part of the display name.
+      if (collectionElement?.data_source_id) {
         const dataSource = this.app.store.getters[
           'dataSource/getPageDataSourceById'
-        ](page, element.data_source_id)
+        ](page, collectionElement?.data_source_id)
+        suffix = dataSource ? dataSource.name : ''
 
-        suffix = dataSource ? ` - ${dataSource.name}` : ''
+        // If we have a data source, and the element has a schema property,
+        // we'll find the property within the data source's schema and pluck
+        // out the title property.
+        if (element.schema_property) {
+          // Find the schema properties. They'll be in different places,
+          // depending on whether this is a list or single row data source.
+          const schemaProperties =
+            dataSource.schema.type === 'array'
+              ? dataSource.schema?.items?.properties
+              : dataSource.schema.properties
+          const schemaField = schemaProperties[element.schema_property]
+          // Only Local/Remote Baserow table schemas will have `original_type`,
+          // which is the `FieldType`. If we find it, we can use it to display
+          // what kind of field type was used.
+          suffix = schemaField?.title || element.schema_property
+          if (schemaField.original_type) {
+            const fieldType = this.app.$registry.get(
+              'field',
+              schemaField.original_type
+            )
+            suffix = `${suffix} (${fieldType.getName()})`
+          }
+        }
       }
 
-      return `${this.name}${suffix}`
+      return suffix ? `${this.name} - ${suffix}` : this.name
     }
 
     /**
@@ -764,6 +917,58 @@ const CollectionElementTypeMixin = (Base) =>
         }
       }
     }
+
+    /**
+     * A collection element is in error if:
+     *
+     * - No parent (including self) collection elements have a valid data_source_id.
+     * - The parent with the valid data_source_id points to a data_source
+     *   that !returnsList and `schema_property` is blank.
+     * - It is nested in another collection element, and we don't have a `schema_property`.
+     * @param {Object} page - The page the repeat element belongs to.
+     * @param {Object} element - The repeat element
+     * @returns {Boolean} - Whether the element is in error.
+     */
+    isInError({ page, element }) {
+      // We get all parents with a valid data_source_id
+      const collectionAncestorsWithDataSource = this.app.store.getters[
+        'element/getAncestors'
+      ](page, element, {
+        predicate: (ancestor) =>
+          this.app.$registry.get('element', ancestor.type)
+            .isCollectionElement && ancestor.data_source_id,
+        includeSelf: true,
+      })
+
+      // No parent with a data_source_id means we are in error
+      if (collectionAncestorsWithDataSource.length === 0) {
+        return true
+      }
+
+      // We consider the closest parent collection element with a data_source_id
+      // The closest parent might be the current element itself
+      const parentWithDataSource = collectionAncestorsWithDataSource.at(-1)
+
+      // We now check if the parent element configuration is correct.
+      const dataSource = this.app.store.getters[
+        'dataSource/getPageDataSourceById'
+      ](page, parentWithDataSource.data_source_id)
+      const serviceType = this.app.$registry.get('service', dataSource.type)
+
+      // If the data source type doesn't return a list, we should have a schema_property
+      if (!serviceType.returnsList && !parentWithDataSource.schema_property) {
+        return true
+      }
+
+      // If the current element is not the one with the data source it should have
+      // a schema_property
+      if (parentWithDataSource.id !== element.id && !element.schema_property) {
+        return true
+      }
+
+      // Otherwise it's not in error.
+      return false
+    }
   }
 
 export class TableElementType extends CollectionElementTypeMixin(ElementType) {
@@ -793,7 +998,8 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
 
   getEvents(element) {
     return (element.fields || [])
-      .map(({ type, name, uid }) => {
+      .map((field) => {
+        const { type, name, uid } = field
         const collectionFieldType = this.app.$registry.get(
           'collectionField',
           type
@@ -803,24 +1009,31 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
             ...this.app,
             namePrefix: uid,
             labelSuffix: `- ${name}`,
+            applicationContextAdditions: { allowSameElement: true },
           })
         })
       })
       .flat()
   }
 
-  isInError({ element, builder }) {
-    const collectionFieldsInError = element.fields.map((collectionField) => {
-      const collectionFieldType = this.app.$registry.get(
-        'collectionField',
-        collectionField.type
-      )
-      return collectionFieldType.isInError({
-        field: collectionField,
-        builder,
+  /**
+   * The table is in error if the configuration is invalid (see collection element
+   * mixin) or if one of the field is in error.
+   */
+  isInError({ element, page, builder }) {
+    return (
+      super.isInError({ element, page, builder }) ||
+      element.fields.some((collectionField) => {
+        const collectionFieldType = this.app.$registry.get(
+          'collectionField',
+          collectionField.type
+        )
+        return collectionFieldType.isInError({
+          field: collectionField,
+          builder,
+        })
       })
-    })
-    return collectionFieldsInError.includes(true)
+    )
   }
 }
 
@@ -852,15 +1065,6 @@ export class RepeatElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * The repeat elements will disallow collection elements (including itself),
-   * from being added as children.
-   * @returns {Array} An array of disallowed child element types.
-   */
-  get childElementTypesForbidden() {
-    return this.elementTypesAll.filter((type) => type.isCollectionElement)
-  }
-
-  /**
    * Return an array of placements that are disallowed for the elements to move
    * in their container.
    *
@@ -878,15 +1082,15 @@ export class RepeatElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * A repeat element is in error whilst it has no data source.
-   * @param {Object} element - The repeat element
-   * @param {Object} builder - The builder application.
-   * @returns {Boolean} - Whether the element is in error.
+   * Responsible for extending the element store's `populateElement`
+   * `_` object with repeat element specific properties.
+   * @returns {Object} - An object containing the properties to be added.
    */
-  isInError({ element, builder }) {
-    return element.data_source_id === null
+  getPopulateStoreProperties() {
+    return { collapsed: false }
   }
 }
+
 /**
  * This class serves as a parent class for all form element types. Form element types
  * are all elements that can be used as part of a form. So in simple terms, any element
@@ -903,7 +1107,8 @@ export class FormElementType extends ElementType {
    * Given a form element, and a form data value, is responsible for validating
    * this form element type against that value. Returns whether the value is valid.
    * @param element - The form element
-   * @param value
+   * @param value - The value to be validated against
+   * @param applicationContext - The context of the current application
    * @returns {boolean}
    */
   isValid(element, value) {
@@ -917,7 +1122,7 @@ export class FormElementType extends ElementType {
    * @returns {any} - The initial data that's supposed to be stored
    */
   getInitialFormDataValue(element, applicationContext) {
-    throw new Error('.getInitialFormData needs to be implemented')
+    throw new Error('.getInitialFormDataValue needs to be implemented')
   }
 
   /**
@@ -960,7 +1165,7 @@ export class InputTextElementType extends FormElementType {
     return 'input_text'
   }
 
-  isValid(element, value) {
+  isValid(element, value, applicationContext) {
     if (!value) {
       return !element.required
     }
@@ -1265,14 +1470,23 @@ export class ChoiceElementType extends FormElementType {
 
   getInitialFormDataValue(element, applicationContext) {
     try {
-      return ensureString(
-        this.resolveFormula(element.default_value, {
-          element,
-          ...applicationContext,
-        })
-      )
+      if (element.multiple) {
+        return ensureArray(
+          this.resolveFormula(element.default_value, {
+            element,
+            ...applicationContext,
+          })
+        ).map(ensureStringOrInteger)
+      } else {
+        return ensureStringOrInteger(
+          this.resolveFormula(element.default_value, {
+            element,
+            ...applicationContext,
+          })
+        )
+      }
     } catch {
-      return element.multiple ? [] : ''
+      return element.multiple ? [] : null
     }
   }
 
@@ -1290,22 +1504,63 @@ export class ChoiceElementType extends FormElementType {
   }
 
   /**
+   * Given a Choice Element, return an array of all valid option Values.
+   *
+   * When adding a new Option, the Page Designer can choose to only define the
+   * Name and leave the Value undefined. In that case, the AB will assume the
+   * Value to be the same as the Name. In the backend, the Value is stored as
+   * null while the frontend visually displays the Name in its place.
+   *
+   * This means that an option's Value can sometimes be null. This method
+   * gathers all valid Values. When a Value null, the Name is used instead.
+   * Otherwise, the Value itself is used.
+   *
+   * @param element - The choice form element
+   * @returns {Array} - An array of valid Values
+   */
+  choiceOptions(element) {
+    return element.options.map((option) => {
+      return option.value !== null ? option.value : option.name
+    })
+  }
+
+  /**
    * Responsible for validating the choice form element. It behaves slightly
    * differently so that choice options with blank values are valid. We simply
    * test if the value is one of the choice's own values.
    * @param element - The choice form element
    * @param value - The value we are validating.
+   * @param applicationContext - Required when using formula resolution.
    * @returns {boolean}
    */
-  isValid(element, value) {
+  isValid(element, value, applicationContext) {
+    const options =
+      element.option_type === CHOICE_OPTION_TYPES.FORMULAS
+        ? ensureArray(
+            this.resolveFormula(element.formula_value, {
+              element,
+              ...applicationContext,
+            })
+          ).map(ensureStringOrInteger)
+        : this.choiceOptions(element)
+
     const validOption = element.multiple
-      ? element.options.find((option) => value.includes(option.value))
-      : element.options.find((option) => option.value === value)
+      ? options.some((option) => value.includes(option))
+      : options.includes(value)
+
     return !(element.required && !validOption)
   }
 
   isInError({ element, builder }) {
-    return element.options.length === 0
+    switch (element.option_type) {
+      case CHOICE_OPTION_TYPES.MANUAL:
+        return element.options.length === 0
+      case CHOICE_OPTION_TYPES.FORMULAS: {
+        return element.formula_value === ''
+      }
+      default:
+        return true
+    }
   }
 
   getDataSchema(element) {
@@ -1401,5 +1656,113 @@ export class IFrameElementType extends ElementType {
       return resolvedName || this.name
     }
     return this.name
+  }
+}
+
+export class RecordSelectorElementType extends CollectionElementTypeMixin(
+  FormElementType
+) {
+  static getType() {
+    return 'record_selector'
+  }
+
+  get fetchAtLoad() {
+    return false
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.recordSelector')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.recordSelectorDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-select-window'
+  }
+
+  get component() {
+    return RecordSelectorElement
+  }
+
+  get generalFormComponent() {
+    return RecordSelectorElementForm
+  }
+
+  formDataType(element) {
+    return element.multiple ? 'array' : 'number'
+  }
+
+  getInitialFormDataValue(element, applicationContext) {
+    try {
+      const resolvedFormula = this.resolveFormula(element.default_value, {
+        ...applicationContext,
+        element,
+      })
+      if (element.multiple) {
+        return ensureArray(resolvedFormula).map(ensureInteger)
+      } else {
+        return ensureInteger(resolvedFormula)
+      }
+    } catch {
+      return element.multiple ? [] : null
+    }
+  }
+
+  getDisplayName(element, applicationContext) {
+    const displayValue =
+      element.label || element.default_value || element.placeholder
+
+    if (displayValue) {
+      const resolvedName = ensureString(
+        this.resolveFormula(displayValue, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
+  }
+
+  isValid(element, value, applicationContext) {
+    if (!element.data_source_id) {
+      return !element.required
+    }
+
+    if (element.required) {
+      if (element.multiple && value.length === 0) {
+        return false
+      }
+      if (!element.multiple && value === null) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  /**
+   * This element is a special collection element. It's in error if it's data_source_id
+   * is null.
+   * @param {*} param0
+   * @returns
+   */
+  isInError({ element }) {
+    return !element.data_source_id
+  }
+
+  getDataSchema(element) {
+    const type = this.formDataType(element)
+    if (type === 'number') {
+      return {
+        type: 'number',
+      }
+    } else if (type === 'array') {
+      return {
+        type: 'array',
+        items: {
+          type: 'number',
+        },
+      }
+    }
   }
 }

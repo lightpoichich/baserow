@@ -4,7 +4,6 @@
       <div class="data-source-form__header-form">
         <FormInput
           v-model="values.name"
-          small
           class="data-source-form__name-input"
           :placeholder="$t('dataSourceForm.namePlaceholder')"
         />
@@ -61,11 +60,15 @@
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import form from '@baserow/modules/core/mixins/form'
 import { required, maxLength } from 'vuelidate/lib/validators'
+import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'DataSourceContext',
   components: { IntegrationDropdown },
   mixins: [form],
+  provide() {
+    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
+  },
   props: {
     builder: {
       type: Object,

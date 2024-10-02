@@ -1,29 +1,27 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement
-      v-if="creation"
+    <FormGroup
       :error="fieldHasErrors('name')"
-      class="control"
+      required
+      small-label
+      class="margin-bottom-2"
     >
-      <label class="control__label">
-        <i class="iconoir-text"></i>
-        {{ $t('tableForm.name') }}
-      </label>
-      <div class="control__elements">
-        <input
-          ref="name"
-          v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input"
-          @focus.once="$event.target.select()"
-          @blur="$v.values.name.$touch()"
-        />
-        <div v-if="fieldHasErrors('name')" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
+      <template #label>
+        <i class="iconoir-text"></i> {{ $t('tableForm.name') }}</template
+      >
+      <FormInput
+        ref="name"
+        v-model="values.name"
+        size="large"
+        :error="fieldHasErrors('name')"
+        @focus.once="$event.target.select()"
+        @blur="$v.values.name.$touch()"
+      >
+      </FormInput>
+      <template #error>
+        {{ $t('error.requiredField') }}
+      </template>
+    </FormGroup>
     <slot></slot>
   </form>
 </template>
@@ -42,34 +40,24 @@ export default {
       required: false,
       default: '',
     },
-    creation: {
-      type: Boolean,
-      required: false,
-      default: true,
-    },
   },
   data() {
     return {
+      allowedValues: ['name'],
       values: {
         name: this.defaultName,
       },
     }
   },
   mounted() {
-    if (this.creation) {
-      this.$refs.name.focus()
-    }
+    this.$refs.name.focus()
   },
   validations: {
     values: {
       name: {
         // No object-shorthand here to access vm properties
-
         required: function (value) {
-          if (this.creation) {
-            return required(value)
-          }
-          return true
+          return required(value)
         },
       },
     },

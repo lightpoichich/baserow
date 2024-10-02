@@ -1,4 +1,5 @@
 from baserow.contrib.integrations.local_baserow.models import (
+    LocalBaserowDeleteRow,
     LocalBaserowGetRow,
     LocalBaserowListRows,
     LocalBaserowTableServiceFilter,
@@ -22,11 +23,19 @@ class ServiceFixtures:
         service = self.create_service(LocalBaserowUpsertRow, **kwargs)
         return service
 
+    def create_local_baserow_delete_row_service(
+        self, **kwargs
+    ) -> LocalBaserowDeleteRow:
+        service = self.create_service(LocalBaserowDeleteRow, **kwargs)
+        return service
+
     def create_local_baserow_table_service_filter(
         self, **kwargs
     ) -> LocalBaserowTableServiceFilter:
         if "type" not in kwargs:
             kwargs["type"] = "equal"
+        if "order" not in kwargs:
+            kwargs["order"] = 0
         return LocalBaserowTableServiceFilter.objects.create(**kwargs)
 
     def create_local_baserow_table_service_sort(

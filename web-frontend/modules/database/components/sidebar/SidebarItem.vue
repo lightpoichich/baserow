@@ -8,6 +8,13 @@
       @mousedown.prevent
       @click.prevent="selectTable(database, table)"
     >
+      <i
+        v-if="table.data_sync"
+        v-tooltip:[syncTooltipOptions]="
+          `${$t('sidebarItem.lastSynced')}: ${lastSyncedDate}`
+        "
+        class="iconoir-data-transfer-down"
+      ></i>
       <Editable
         ref="rename"
         :value="table.name"
@@ -25,11 +32,7 @@
       <i class="baserow-icon-more-vertical"></i>
     </a>
 
-    <Context
-      ref="context"
-      :overflow-scroll="true"
-      :max-height-if-outside-viewport="true"
-    >
+    <Context ref="context" overflow-scroll max-height-if-outside-viewport>
       <div class="context__menu-title">{{ table.name }} ({{ table.id }})</div>
       <ul class="context__menu">
         <li
@@ -73,6 +76,32 @@
             <i class="context__menu-item-icon iconoir-globe"></i>
             {{ $t('sidebarItem.webhooks') }}
           </a>
+        </li>
+        <li
+          v-if="
+            table.data_sync &&
+            $hasPermission(
+              'database.data_sync.sync_table',
+              table,
+              database.workspace.id
+            )
+          "
+          class="context__menu-item"
+        >
+          <a class="context__menu-item-link" @click="openSyncModal()">
+            <i class="context__menu-item-icon iconoir-data-transfer-down"></i>
+            {{ $t('sidebarItem.sync') }}
+            <div v-if="dataSyncDeactivated" class="deactivated-label">
+              <i class="iconoir-lock"></i>
+            </div>
+          </a>
+          <component
+            :is="dataSyncDeactivatedClickModal"
+            v-if="dataSyncDeactivatedClickModal !== null"
+            ref="deactivatedDataSyncClickModal"
+            :workspace="database.workspace"
+            :name="dataSyncType.getName()"
+          ></component>
         </li>
         <li
           v-if="
@@ -132,22 +161,25 @@
         :table="table"
       />
       <WebhookModal ref="webhookModal" :database="database" :table="table" />
+      <SyncTableModal ref="syncModal" :table="table"></SyncTableModal>
     </Context>
   </li>
 </template>
 
 <script>
-import VueRouter from 'vue-router'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { getHumanPeriodAgoCount } from '@baserow/modules/core/utils/date'
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal'
 import SidebarDuplicateTableContextItem from '@baserow/modules/database/components/sidebar/table/SidebarDuplicateTableContextItem'
+import SyncTableModal from '@baserow/modules/database/components/dataSync/SyncTableModal'
 
 export default {
   name: 'SidebarItem',
   components: {
     ExportTableModal,
     WebhookModal,
+    SyncTableModal,
     SidebarDuplicateTableContextItem,
   },
   props: {
@@ -204,6 +236,29 @@ export default {
         )
         .filter((component) => component !== null)
     },
+    syncTooltipOptions() {
+      return {
+        contentClasses: ['tooltip__content--align-right'],
+      }
+    },
+    lastSyncedDate() {
+      if (!this.table.data_sync || !this.table.data_sync.last_sync) {
+        return this.$t('sidebarItem.notSynced')
+      }
+      const { period, count } = getHumanPeriodAgoCount(
+        this.table.data_sync.last_sync
+      )
+      return this.$tc(`datetime.${period}Ago`, count)
+    },
+    dataSyncType() {
+      return this.$registry.get('dataSync', this.table.data_sync.type)
+    },
+    dataSyncDeactivated() {
+      return this.dataSyncType.isDeactivated(this.database.workspace.id)
+    },
+    dataSyncDeactivatedClickModal() {
+      return this.dataSyncType.getDeactivatedClickModal()
+    },
   },
   methods: {
     setLoading(database, value) {
@@ -223,17 +278,6 @@ export default {
             tableId: table.id,
           },
         })
-      } catch (error) {
-        // When redirecting to the `database-table`, it can happen that it redirects
-        // to another view. For some reason, this is causing the router throw an
-        // error. In our case, it's perfectly fine, so we're suppressing this error
-        // here. More information:
-        // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
-        // error-redirected-from-login-to-via-a
-        const { isNavigationFailure, NavigationFailureType } = VueRouter
-        if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
-          throw error
-        }
       } finally {
         this.setLoading(database, false)
       }
@@ -245,6 +289,14 @@ export default {
     openWebhookModal() {
       this.$refs.context.hide()
       this.$refs.webhookModal.show()
+    },
+    openSyncModal() {
+      if (this.dataSyncDeactivated) {
+        this.$refs.deactivatedDataSyncClickModal.show()
+      } else {
+        this.$refs.context.hide()
+        this.$refs.syncModal.show()
+      }
     },
     enableRename() {
       this.$refs.context.hide()

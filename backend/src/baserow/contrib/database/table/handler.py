@@ -1,15 +1,17 @@
 import traceback
+from datetime import datetime, timezone
 from typing import Any, Dict, List, NewType, Optional, Tuple, cast
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import DatabaseError, transaction
-from django.db.models import F, Q, QuerySet, Sum
+from django.db import DatabaseError, IntegrityError, connection, transaction
+from django.db.models import Q, QuerySet, Sum
 from django.db.models.functions import Coalesce, Now
 from django.utils import translation
 from django.utils.translation import gettext as _
 
 from opentelemetry import trace
+from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
@@ -35,6 +37,7 @@ from baserow.contrib.database.table.expressions import (
     BaserowTableRowCount,
 )
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig, application_type_registry
@@ -86,7 +89,7 @@ class TableUsageHandler:
         ).aggregate(tot_MB=Coalesce(Sum("size"), 0) / USAGE_UNIT_MB)["tot_MB"]
 
     @classmethod
-    def mark_table_for_usage_update(cls, table_id: int, row_count: int = None):
+    def mark_table_for_usage_update(cls, table_id: int, row_count: int = 0):
         """
         Updates or creates a table usage log entry. This function can be called when an
         operation change the table row_count or the storage usage to create or update an
@@ -94,22 +97,38 @@ class TableUsageHandler:
 
         :param table_id: The id of the table that needs to be updated.
         :param row_count: This represents the change in row count for the table
-            identified by 'table_id'. A value of 0 indicates that it might be expensive
-            to calculate the delta and ensure to creates an entry to recount table rows
-            correctly at the first occurrence. relevant task. If None, only the storage
-            usage changed but since we don't have an easy way to store the delta, the
-            entry will ensure the storage usage will be recalculated at next task run.
+            identified by 'table_id'.
         """
 
-        defaults = {"row_count": row_count}
-
-        with transaction.atomic():
-            obj, created = TableUsageUpdate.objects.select_for_update().get_or_create(
-                defaults, table_id=table_id
+        try:
+            query = sql.SQL(
+                """
+            INSERT INTO {table_usage_update_table} (table_id, row_count, timestamp)
+            VALUES ({table_id}, {row_count}, {timestamp})
+            ON CONFLICT ON CONSTRAINT {table_usage_key} DO UPDATE
+            SET row_count = COALESCE({table_usage_update_table}.row_count, 0)
+            + COALESCE(EXCLUDED.row_count, 0), timestamp = EXCLUDED.timestamp;
+            """
+            ).format(
+                table_usage_update_table=sql.Identifier(
+                    TableUsageUpdate._meta.db_table
+                ),
+                table_id=sql.Literal(table_id),
+                row_count=sql.Literal(row_count),
+                timestamp=sql.Literal(datetime.now(tz=timezone.utc)),
+                table_usage_key=sql.SQL(
+                    f"{TableUsageUpdate._meta.db_table}_table_id_key"
+                ),
             )
-            if not created and row_count:
-                obj.row_count = Coalesce(F("row_count"), 0) + row_count
-                obj.save(update_fields=["row_count", "timestamp"])
+
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+
+        except IntegrityError as integrity_exc:
+            if f"violates foreign key constraint" in str(integrity_exc):
+                # we can safely ignore the exception and don't try to
+                # update usage for non existing tables
+                pass
 
     @classmethod
     def create_tables_usage_for_new_database(cls, database_id: int):
@@ -360,7 +379,9 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             base_queryset = Table.objects
 
         try:
-            table = base_queryset.select_related("database__workspace").get(id=table_id)
+            table = base_queryset.select_related(
+                "database__workspace", "data_sync"
+            ).get(id=table_id)
         except Table.DoesNotExist:
             raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 
@@ -835,9 +856,28 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         all_table_dependency_field_ids = {
             field_id: field_id for field_id in all_table_dependency_field_ids
         }
+
+        # It can happen that a field has a reference to another view. We would
+        # therefore need to construct a mapping that contains all the existing views,
+        # and they will remain the same
+        all_database_views_ids = View.objects.filter(
+            table__database_id=table.database_id
+        ).values_list("id")
+        all_database_view_ids = {
+            view_id[0]: view_id[0] for view_id in all_database_views_ids
+        }
+
         id_mapping: Dict[str, Any] = {
             "database_tables": {},
             "database_fields": all_table_dependency_field_ids,
+            "database_views": all_database_view_ids,
+            # The properties below must be kept in sync with
+            # `src/baserow/contrib/database/views/registries.py::import_serialized`
+            "database_view_filters": {},
+            "database_view_filter_groups": {},
+            "database_view_sortings": {},
+            "database_view_group_bys": {},
+            "database_view_decorations": {},
             # We have to create the `database_field_select_options` because that's
             # otherwise not created later on.
             "database_field_select_options": {},

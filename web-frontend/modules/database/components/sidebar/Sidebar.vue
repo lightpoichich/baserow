@@ -28,8 +28,6 @@
           v-sortable="{
             id: table.id,
             update: orderTables,
-            marginLeft: 34,
-            marginRight: 10,
             marginTop: -1.5,
             enabled: $hasPermission(
               'database.order_tables',
@@ -59,12 +57,12 @@
           )
         "
         class="tree__sub-add"
-        @click="$refs.importFileModal.show()"
+        @click="$refs.createTableModal.show()"
       >
-        <i class="iconoir-plus"></i>
+        <i class="tree__sub-add-icon iconoir-plus"></i>
         {{ $t('sidebar.createTable') }}
       </a>
-      <ImportFileModal ref="importFileModal" :database="application" />
+      <CreateTableModal ref="createTableModal" :database="application" />
     </template>
   </SidebarApplication>
 </template>
@@ -73,17 +71,15 @@
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItem from '@baserow/modules/database/components/sidebar/SidebarItem'
-import SidebarItemPendingJob from '@baserow/modules/core/components/sidebar/SidebarItemPendingJob'
-import ImportFileModal from '@baserow/modules/database/components/table/ImportFileModal'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
+import CreateTableModal from '@baserow/modules/database/components/table/CreateTableModal'
 
 export default {
   name: 'Sidebar',
   components: {
+    CreateTableModal,
     SidebarApplication,
     SidebarItem,
-    SidebarItemPendingJob,
-    ImportFileModal,
   },
   props: {
     application: {

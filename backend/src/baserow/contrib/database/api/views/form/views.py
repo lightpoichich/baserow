@@ -14,6 +14,7 @@ from baserow.api.schemas import get_error_schema
 from baserow.api.user_files.errors import ERROR_FILE_SIZE_TOO_LARGE, ERROR_INVALID_FILE
 from baserow.api.user_files.serializers import UserFileSerializer
 from baserow.api.utils import validate_data
+from baserow.contrib.database.api.rows.errors import ERROR_CANNOT_CREATE_ROWS_IN_TABLE
 from baserow.contrib.database.api.rows.serializers import (
     get_example_row_serializer_class,
     get_row_serializer_class,
@@ -24,6 +25,8 @@ from baserow.contrib.database.api.views.errors import (
 )
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.fields.models import FileField, LongTextField
+from baserow.contrib.database.rows.exceptions import CannotCreateRowsInTable
+from baserow.contrib.database.views.actions import SubmitFormActionType
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
@@ -34,6 +37,7 @@ from baserow.contrib.database.views.registries import view_ownership_type_regist
 from baserow.contrib.database.views.validators import (
     no_empty_form_values_when_required_validator,
 )
+from baserow.core.action.registries import action_type_registry
 from baserow.core.user_files.exceptions import (
     FileSizeTooLargeError,
     InvalidFileStreamError,
@@ -120,6 +124,7 @@ class SubmitFormViewView(APIView):
         {
             ViewDoesNotExist: ERROR_FORM_DOES_NOT_EXIST,
             NoAuthorizationToPubliclySharedView: ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM,
+            CannotCreateRowsInTable: ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
         }
     )
     @transaction.atomic
@@ -150,10 +155,14 @@ class SubmitFormViewView(APIView):
         validation_serializer = get_row_serializer_class(
             model, field_ids=field_ids, field_kwargs=field_kwargs
         )
-        data = validate_data(validation_serializer, request.data)
+        values = validate_data(
+            validation_serializer, request.data, return_validated=True
+        )
 
-        instance = handler.submit_form_view(request.user, form, data, model, options)
-        form.row_id = instance.id
+        created_row = action_type_registry.get_by_type(SubmitFormActionType).do(
+            request.user, form, values, model, options
+        )
+        form.row_id = created_row.id
         return Response(FormViewSubmittedSerializer(form).data)
 
 

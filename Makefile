@@ -16,7 +16,7 @@ DOCKER_ALL_IN_ONE_CONF_DEV:=-f deploy/all-in-one/docker-compose.yml -f deploy/al
 DOCKER_ALL_IN_ONE_CONF:=-f deploy/all-in-one/docker-compose.yml
 
 .PHONY: install build .callsubcmd $(SUBDIRS) help package-build test tests\
-		lint lint-fix docker-lint\
+		lint lint-fix docker-lint changelog\
 		docker-status docker-build docker-start docker-clean docker-stop docker-kill \
 		deps deps-upgrade \
 		clean clean-all
@@ -28,6 +28,7 @@ help:
 	@echo " make package-build - build packages locally"
 	@echo " make lint - check code style"
 	@echo " make test - run test suite"
+	@echo " make changelog - add a new changelog entry"
 	@echo " make clean-all - remove docker images, venv and frontend node_modules dir"
 	@echo " "
 	@echo "targets that are executed at top-dir level:"
@@ -77,6 +78,9 @@ test: SUBCMD=test
 test: .subcmd
 
 tests: test
+
+changelog:
+	$(MAKE) -C changelog add
 
 .docker-build: .env
 	$(DOCKERC) $(DOCKER_CONFIG_FILES) build

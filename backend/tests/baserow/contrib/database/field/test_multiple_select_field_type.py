@@ -10,9 +10,6 @@ import pytest
 from faker import Faker
 from pytest_unordered import unordered
 
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
-)
 from baserow.contrib.database.fields.exceptions import (
     AllProvidedMultipleSelectValuesMustBeSelectOption,
     AllProvidedValuesMustBeIntegersOrStrings,
@@ -30,6 +27,7 @@ from baserow.contrib.database.fields.models import (
     SingleSelectField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
@@ -742,7 +740,7 @@ def test_import_export_multiple_select_field(data_fixture):
         field_serialized,
         ImportExportConfig(include_permission_data=True),
         id_mapping,
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
 
     assert field_imported.select_options.all().count() == 4
@@ -787,7 +785,7 @@ def test_import_serialized_value_with_missing_select_options(data_fixture):
         serialized,
         config,
         {},
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
 
     imported_model = imported_database.table_set.all()[0].get_model(

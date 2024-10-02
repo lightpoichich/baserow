@@ -6,6 +6,7 @@
         props: comp.propsFn(row),
       }))
     "
+    first-component-class="grid-view__row-background-wrapper"
   >
     <div
       class="grid-view__row"
@@ -90,9 +91,10 @@
         :workspace-id="workspaceId"
         :field="field"
         :row="row"
+        :all-fields-in-table="allFieldsInTable"
         :state="state"
         :multi-select-position="getMultiSelectPosition(row.id, field)"
-        :read-only="readOnly"
+        :read-only="readOnly || field.read_only"
         :store-prefix="storePrefix"
         :group-end="groupEnd"
         :style="{

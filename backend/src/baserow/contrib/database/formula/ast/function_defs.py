@@ -58,6 +58,7 @@ from django.db.models.functions.datetime import TimezoneMixin
 from baserow.contrib.database.fields.models import NUMBER_MAX_DECIMAL_PLACES
 from baserow.contrib.database.formula.ast.function import (
     BaserowFunctionDefinition,
+    CollapseManyBaserowFunction,
     NumOfArgsBetween,
     NumOfArgsGreaterThan,
     OneArgumentBaserowFunction,
@@ -114,6 +115,7 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaSingleFileType,
     BaserowFormulaSingleSelectType,
     BaserowFormulaTextType,
+    BaserowFormulaURLType,
     BaserowJSONBObjectBaseType,
     calculate_number_type,
     literal,
@@ -254,6 +256,7 @@ def register_formula_functions(registry):
     registry.register(BaserowIsImage())
     registry.register(BaserowArrayAggNoNesting())
     registry.register(BaserowGetFileCount())
+    registry.register(BaserowToURL())
 
 
 class BaserowUpper(OneArgumentBaserowFunction):
@@ -1958,7 +1961,7 @@ class BaserowWhenEmpty(TwoArgumentBaserowFunction):
         arg1: BaserowExpression[BaserowFormulaValidType],
         arg2: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        if arg1.expression_type.type != arg2.expression_type.type:
+        if not isinstance(arg1.expression_type, type(arg2.expression_type)):
             return func_call.with_invalid_type(
                 "both inputs for when_empty must be the same type"
             )
@@ -2048,9 +2051,8 @@ def string_agg_array_of_multiple_select_field(
 
     # We need to enforce that each filtered relation is not null so django generates us
     # inner joins.
-    pre_annotations = expr_with_metadata.pre_annotations
     not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
-        pre_annotations
+        expr_with_metadata.pre_annotations
     )
     aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
@@ -2059,7 +2061,7 @@ def string_agg_array_of_multiple_select_field(
     join_field, _ = expr_with_metadata.join_ids[0]
 
     extract_value_subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(
             id=OuterRef("id"),
             **{join_field: OuterRef(join_field)},
@@ -2081,7 +2083,7 @@ def string_agg_array_of_multiple_select_field(
     orders = _calculate_aggregate_orders(expr_with_metadata.join_ids)
 
     string_agg_values_subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .annotate(
             value=Func(
@@ -2133,9 +2135,9 @@ def aggregate_multiple_selects_options(
 
     # We need to enforce that each filtered relation is not null so django generates us
     # inner joins.
-    pre_annotations = expr_with_metadata.pre_annotations
+
     not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
-        pre_annotations
+        expr_with_metadata.pre_annotations
     )
 
     aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
@@ -2145,7 +2147,7 @@ def aggregate_multiple_selects_options(
     join_field, _ = expr_with_metadata.join_ids[0]
 
     inner_subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(
             id=OuterRef("id"),
             **{join_field: OuterRef(join_field)},
@@ -2160,7 +2162,7 @@ def aggregate_multiple_selects_options(
     orders = _calculate_aggregate_orders(expr_with_metadata.join_ids)
 
     subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .annotate(res=JSONObject(**json_builder_args))
         .values(result=JSONBAgg(F("res"), ordering=orders))[:1],
@@ -2175,7 +2177,7 @@ def aggregate_multiple_selects_options(
     )
 
 
-class BaserowArrayAgg(OneArgumentBaserowFunction):
+class BaserowArrayAgg(OneArgumentBaserowFunction, CollapseManyBaserowFunction):
     type = "array_agg"
     arg_type = [MustBeManyExprChecker(BaserowFormulaValidType)]
     aggregate = True
@@ -2198,7 +2200,7 @@ class BaserowArrayAgg(OneArgumentBaserowFunction):
         return array_agg_expression(args, context, nest_in_value=True)
 
 
-class BaserowArrayAggNoNesting(BaserowArrayAgg):
+class BaserowArrayAggNoNesting(BaserowArrayAgg, CollapseManyBaserowFunction):
     type = "array_agg_no_nesting"
 
     def to_django_expression(self, arg: Expression) -> Expression:
@@ -2212,7 +2214,9 @@ class BaserowArrayAggNoNesting(BaserowArrayAgg):
         return array_agg_expression(args, context, nest_in_value=False)
 
 
-class BaserowMultipleSelectOptionsAgg(OneArgumentBaserowFunction):
+class BaserowMultipleSelectOptionsAgg(
+    OneArgumentBaserowFunction, CollapseManyBaserowFunction
+):
     type = "multiple_select_options_agg"
     arg_type = [MustBeManyExprChecker(BaserowFormulaMultipleSelectType)]
     aggregate = True
@@ -2236,7 +2240,7 @@ class BaserowMultipleSelectOptionsAgg(OneArgumentBaserowFunction):
         return super().to_django_expression_given_args([expr], context)
 
 
-class Baserow2dArrayAgg(OneArgumentBaserowFunction):
+class Baserow2dArrayAgg(OneArgumentBaserowFunction, CollapseManyBaserowFunction):
     type = "array_agg_unnesting"
     arg_type = [MustBeManyExprChecker(BaserowFormulaArrayType)]
     aggregate = True
@@ -3221,3 +3225,19 @@ class BaserowBcToNull(OneArgumentBaserowFunction):
             ),
             default=arg,
         )
+
+
+class BaserowToURL(OneArgumentBaserowFunction):
+    type = "tourl"
+    arg_type = [BaserowFormulaTextType]
+    try_coerce_nullable_args_to_not_null = False
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaURLType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(arg, function="try_cast_to_url", output_field=fields.CharField())

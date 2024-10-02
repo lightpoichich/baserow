@@ -1,5 +1,7 @@
+import hashlib
 import mimetypes
 import pathlib
+import secrets
 from io import BytesIO
 from os.path import join
 from typing import Any, Dict, Optional
@@ -7,9 +9,10 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 
 from django.conf import settings
-from django.core.files.storage import Storage, default_storage
+from django.core.files.storage import Storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
+from django.utils.http import parse_header_parameters
 
 import advocate
 from advocate.exceptions import UnacceptableAddressException
@@ -17,7 +20,7 @@ from PIL import Image, ImageOps
 from requests.exceptions import RequestException
 
 from baserow.core.models import UserFile
-from baserow.core.storage import OverwritingStorageHandler
+from baserow.core.storage import OverwritingStorageHandler, get_default_storage
 from baserow.core.utils import random_string, sha256_hash, stream_size, truncate_middle
 
 from .exceptions import (
@@ -27,6 +30,8 @@ from .exceptions import (
     InvalidFileURLError,
     MaximumUniqueTriesError,
 )
+
+MIME_TYPE_UNKNOWN = "application/octet-stream"
 
 
 class UserFileHandler:
@@ -143,7 +148,7 @@ class UserFileHandler:
         if not user_file.is_image:
             raise ValueError("The provided user file is not an image.")
 
-        storage = storage or default_storage
+        storage = storage or get_default_storage()
         image_width = user_file.image_width
         image_height = user_file.image_height
 
@@ -206,7 +211,7 @@ class UserFileHandler:
                 "The provided file is too large.",
             )
 
-        storage = storage or default_storage
+        storage = storage or get_default_storage()
         stream_hash = sha256_hash(stream)
         file_name = truncate_middle(file_name, 64)
 
@@ -218,7 +223,11 @@ class UserFileHandler:
             return existing_user_file
 
         extension = pathlib.Path(file_name).suffix[1:].lower()
-        mime_type = mimetypes.guess_type(file_name)[0] or ""
+        mime_type = (
+            mimetypes.guess_type(file_name)[0]
+            or getattr(stream, "content_type", None)
+            or MIME_TYPE_UNKNOWN
+        )
         unique = self.generate_unique(stream_hash, extension)
 
         # By default the provided file is not an image.
@@ -296,7 +305,6 @@ class UserFileHandler:
         # Pluck out the parsed URL path (in the event we've been given
         # a URL with a querystring) and then extract the filename.
         file_name = parsed_url.path.rstrip("/").split("/")[-1]
-
         try:
             response = advocate.get(url, stream=True, timeout=10)
 
@@ -324,11 +332,35 @@ class UserFileHandler:
                         settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB,
                         "The provided file is too large.",
                     )
+            content_type = response.headers.get("Content-Type", "")
+
         except (RequestException, UnacceptableAddressException, ConnectionError):
             raise FileURLCouldNotBeReached("The provided URL could not be reached.")
 
-        file = SimpleUploadedFile(file_name, content)
-        return UserFileHandler().upload_user_file(user, file_name, file, storage)
+        # content-type may contain extra params, like charset: text/plain; charset=utf-8
+        if content_type:
+            content_type, content_type_params = parse_header_parameters(content_type)
+
+        # validate content_type value, reset to default if it's invalid
+        if not content_type or (
+            content_type and not mimetypes.guess_extension(content_type)
+        ):
+            content_type = MIME_TYPE_UNKNOWN
+
+        # invalid file names which may be parsed from arbitrary url.
+        # we need a replacement file name
+        if file_name == "":
+            ext = mimetypes.guess_extension(content_type) or ".bin"
+            file_name_generator = hashlib.new("sha256")
+            file_name_generator.update(
+                bytes(f"{url} {secrets.token_urlsafe()}", "utf-8")
+            )
+            # generated file name is just a placeholder, we don't need to have full
+            # hexdigest value
+            file_name = f"{file_name_generator.hexdigest()[:12]}{ext}"
+
+        file = SimpleUploadedFile(file_name, content, content_type=content_type)
+        return self.upload_user_file(user, file_name, file, storage)
 
     def export_user_file(
         self,
@@ -345,7 +377,7 @@ class UserFileHandler:
         if cache is None:
             cache = {}
 
-        storage = storage or default_storage
+        storage = storage or get_default_storage()
 
         if not user_file:
             return None

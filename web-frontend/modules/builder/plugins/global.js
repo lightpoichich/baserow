@@ -9,6 +9,10 @@ import ABDropdown from '@baserow/modules/builder/components/elements/baseCompone
 import ABDropdownItem from '@baserow/modules/builder/components/elements/baseComponents/ABDropdownItem'
 import ABCheckbox from '@baserow/modules/builder/components/elements/baseComponents/ABCheckbox.vue'
 import ABRadio from '@baserow/modules/builder/components/elements/baseComponents/ABRadio.vue'
+import ABImage from '@baserow/modules/builder/components/elements/baseComponents/ABImage.vue'
+import ABParagraph from '@baserow/modules/builder/components/elements/baseComponents/ABParagraph.vue'
+import ABTag from '@baserow/modules/builder/components/elements/baseComponents/ABTag.vue'
+import ABTable from '@baserow/modules/builder/components/elements/baseComponents/ABTable.vue'
 
 function setupVueForAB(Vue) {
   Vue.component('ABButton', ABButton)
@@ -20,6 +24,10 @@ function setupVueForAB(Vue) {
   Vue.component('ABDropdownItem', ABDropdownItem)
   Vue.component('ABCheckbox', ABCheckbox)
   Vue.component('ABRadio', ABRadio)
+  Vue.component('ABImage', ABImage)
+  Vue.component('ABParagraph', ABParagraph)
+  Vue.component('ABTag', ABTag)
+  Vue.component('ABTable', ABTable)
 }
 
 setupVueForAB(Vue)

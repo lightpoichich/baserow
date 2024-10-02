@@ -133,7 +133,7 @@ distro==1.9.0
     # via openai
 dj-database-url==2.1.0
     # via -r base.in
-django==4.2.13
+django==5.0.9
     # via
     #   -r base.in
     #   channels
@@ -232,6 +232,8 @@ hyperlink==21.0.0
     # via
     #   autobahn
     #   twisted
+icalendar==5.0.12
+    # via -r base.in
 idna==3.7
     # via
     #   anyio
@@ -486,6 +488,7 @@ python-dateutil==2.9.0.post0
     #   celery
     #   celery-redbeat
     #   faker
+    #   icalendar
     #   posthog
     #   pysaml2
     #   python-crontab
@@ -494,6 +497,7 @@ python-dotenv==1.0.1
 pytz==2024.1
     # via
     #   flower
+    #   icalendar
     #   pysaml2
 pyyaml==6.0.1
     # via

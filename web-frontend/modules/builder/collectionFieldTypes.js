@@ -9,6 +9,8 @@ import TagsField from '@baserow/modules/builder/components/elements/components/c
 import TextFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TextFieldForm'
 import TagsFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TagsFieldForm.vue'
 import LinkFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/LinkFieldForm'
+import ImageField from '@baserow/modules/builder/components/elements/components/collectionField/ImageField.vue'
+import ImageFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/ImageFieldForm.vue'
 import {
   ensureArray,
   ensureBoolean,
@@ -17,6 +19,8 @@ import {
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { ClickEvent } from '@baserow/modules/builder/eventTypes'
+import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
+import { LINK_VARIANTS } from '@baserow/modules/builder/enums'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -50,6 +54,15 @@ export class CollectionFieldType extends Registerable {
    */
   isInError({ field, builder }) {
     return false
+  }
+
+  getStyleOverride({ colorVariables, field, theme }) {
+    return ThemeConfigBlockType.getAllStyles(
+      this.app.$registry.getOrderedList('themeConfigBlock'),
+      field.styles?.cell || {},
+      colorVariables,
+      theme
+    )
   }
 }
 
@@ -132,6 +145,7 @@ export class LinkCollectionFieldType extends CollectionFieldType {
       navigationType: field.navigation_type || '',
       linkName: ensureString(resolveFormula(field.link_name)),
       target: field.target || 'self',
+      variant: field.variant || LINK_VARIANTS.LINK,
     }
     try {
       return {
@@ -197,7 +211,7 @@ export class ButtonCollectionFieldType extends CollectionFieldType {
   }
 
   get name() {
-    return 'Button'
+    return this.app.i18n.t('collectionFieldType.button')
   }
 
   get component() {
@@ -214,5 +228,33 @@ export class ButtonCollectionFieldType extends CollectionFieldType {
 
   getProps(field, { resolveFormula, applicationContext }) {
     return { label: ensureString(resolveFormula(field.label)) }
+  }
+}
+
+export class ImageCollectionFieldType extends CollectionFieldType {
+  static getType() {
+    return 'image'
+  }
+
+  get name() {
+    return this.app.i18n.t('collectionFieldType.image')
+  }
+
+  get component() {
+    return ImageField
+  }
+
+  get formComponent() {
+    return ImageFieldForm
+  }
+
+  getProps(field, { resolveFormula, applicationContext }) {
+    const srcs = ensureArray(resolveFormula(field.src))
+    const alts = ensureArray(resolveFormula(field.alt))
+    const images = srcs.map((src, index) => ({
+      src,
+      alt: alts[index % alts.length],
+    }))
+    return { images }
   }
 }

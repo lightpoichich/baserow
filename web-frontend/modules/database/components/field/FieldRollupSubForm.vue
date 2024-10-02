@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="context__form-container">
     <FieldSelectThroughFieldSubForm
       :fields="allFieldsInTable"
       :database="database"
@@ -15,29 +15,30 @@
       @input="selectedTargetField = $event"
     ></FieldSelectTargetFieldSubForm>
     <template v-if="selectedTargetField">
-      <div class="control">
-        <label class="control__label control__label--small">{{
-          $t('fieldRollupSubForm.label')
-        }}</label>
-        <div class="control__elements">
-          <Dropdown
-            v-model="values.rollup_function"
-            max-width
-            :class="{ 'dropdown--error': $v.values.rollup_function.$error }"
-            :fixed-items="true"
-            small
-            @hide="$v.values.rollup_function.$touch()"
-          >
-            <DropdownItem
-              v-for="f in rollupFunctions"
-              :key="f.getType()"
-              :name="f.getType()"
-              :value="f.getType()"
-              :description="f.getDescription()"
-            ></DropdownItem>
-          </Dropdown>
-        </div>
-      </div>
+      <FormGroup
+        required
+        small-label
+        :label="$t('fieldRollupSubForm.label')"
+        :error="$v.values.rollup_function.$error"
+      >
+        <Dropdown
+          v-model="values.rollup_function"
+          max-width
+          :class="{ 'dropdown--error': $v.values.rollup_function.$error }"
+          :fixed-items="true"
+          small
+          @hide="$v.values.rollup_function.$touch()"
+        >
+          <DropdownItem
+            v-for="f in rollupFunctions"
+            :key="f.getType()"
+            :name="f.getType()"
+            :value="f.getType()"
+            :description="f.getDescription()"
+          ></DropdownItem>
+        </Dropdown>
+      </FormGroup>
+
       <FormulaTypeSubForms
         :default-values="defaultValues"
         :formula-type="targetFieldFormulaType"

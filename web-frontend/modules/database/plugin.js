@@ -96,15 +96,33 @@ import {
   DateEqualsDayOfMonthViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
+  HasValueEqualViewFilterType,
+  HasEmptyValueViewFilterType,
+  HasNotEmptyValueViewFilterType,
+  HasNotValueEqualViewFilterType,
+  HasValueContainsViewFilterType,
+  HasNotValueContainsViewFilterType,
+  HasValueContainsWordViewFilterType,
+  HasNotValueContainsWordViewFilterType,
+  HasValueLengthIsLowerThanViewFilterType,
+} from '@baserow/modules/database/arrayViewFilters'
+import {
   CSVImporterType,
   PasteImporterType,
   XMLImporterType,
   JSONImporterType,
 } from '@baserow/modules/database/importerTypes'
+import { ICalCalendarDataSyncType } from '@baserow/modules/database/dataSyncTypes'
 import {
   RowsCreatedWebhookEventType,
   RowsUpdatedWebhookEventType,
   RowsDeletedWebhookEventType,
+  FieldCreatedWebhookEventType,
+  FieldUpdatedWebhookEventType,
+  FieldDeletedWebhookEventType,
+  ViewCreatedWebhookEventType,
+  ViewUpdatedWebhookEventType,
+  ViewDeletedWebhookEventType,
 } from '@baserow/modules/database/webhookEventTypes'
 import {
   ImageFilePreview,
@@ -225,6 +243,7 @@ import {
   BaserowGetFileVisibleName,
   BaserowIndex,
   BaserowGetFileCount,
+  BaserowToUrl,
 } from '@baserow/modules/database/formula/functions'
 import {
   BaserowFormulaArrayType,
@@ -242,6 +261,7 @@ import {
   BaserowFormulaSpecialType,
   BaserowFormulaTextType,
   BaserowFormulaFileType,
+  BaserowFormulaURLType,
 } from '@baserow/modules/database/formula/formulaTypes'
 import {
   EmptyCountViewAggregationType,
@@ -278,6 +298,7 @@ import {
   DatabaseOnboardingType,
   DatabaseScratchTrackOnboardingType,
   DatabaseImportOnboardingType,
+  DatabaseScratchTrackFieldsOnboardingType,
 } from '@baserow/modules/database/onboardingTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -287,6 +308,13 @@ import de from '@baserow/modules/database/locales/de.json'
 import es from '@baserow/modules/database/locales/es.json'
 import it from '@baserow/modules/database/locales/it.json'
 import pl from '@baserow/modules/database/locales/pl.json'
+import {
+  DatabaseScratchTrackCampaignFieldsOnboardingType,
+  DatabaseScratchTrackCustomFieldsOnboardingType,
+  DatabaseScratchTrackProjectFieldsOnboardingType,
+  DatabaseScratchTrackTaskFieldsOnboardingType,
+  DatabaseScratchTrackTeamFieldsOnboardingType,
+} from '@baserow/modules/database/databaseScratchTrackFieldsStepType'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -426,6 +454,36 @@ export default (context) => {
     new DateAfterDaysAgoViewFilterType(context)
   )
   // END
+  app.$registry.register('viewFilter', new HasEmptyValueViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new HasNotEmptyValueViewFilterType(context)
+  )
+  app.$registry.register('viewFilter', new HasValueEqualViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new HasNotValueEqualViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasValueContainsViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasNotValueContainsViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasValueContainsWordViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasNotValueContainsWordViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasValueLengthIsLowerThanViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))
@@ -539,6 +597,7 @@ export default (context) => {
   app.$registry.register('importer', new PasteImporterType(context))
   app.$registry.register('importer', new XMLImporterType(context))
   app.$registry.register('importer', new JSONImporterType(context))
+  app.$registry.register('dataSync', new ICalCalendarDataSyncType(context))
   app.$registry.register('settings', new APITokenSettingsType(context))
   app.$registry.register('exporter', new CSVTableExporterType(context))
   app.$registry.register(
@@ -552,6 +611,30 @@ export default (context) => {
   app.$registry.register(
     'webhookEvent',
     new RowsDeletedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new FieldCreatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new FieldUpdatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new FieldDeletedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new ViewCreatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new ViewUpdatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new ViewDeletedWebhookEventType(context)
   )
 
   // Text functions
@@ -684,6 +767,7 @@ export default (context) => {
 
   app.$registry.register('formula_function', new BaserowGetFileCount(context))
   app.$registry.register('formula_function', new BaserowIndex(context))
+  app.$registry.register('formula_function', new BaserowToUrl(context))
 
   // Formula Types
   app.$registry.register('formula_type', new BaserowFormulaTextType(context))
@@ -706,6 +790,7 @@ export default (context) => {
     'formula_type',
     new BaserowFormulaSingleSelectType(context)
   )
+  app.$registry.register('formula_type', new BaserowFormulaURLType(context))
   app.$registry.register(
     'formula_type',
     new BaserowFormulaMultipleSelectType(context)
@@ -818,7 +903,32 @@ export default (context) => {
   )
   app.$registry.register(
     'onboarding',
+    new DatabaseScratchTrackFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboarding',
     new DatabaseImportOnboardingType(context)
+  )
+
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackProjectFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackTeamFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackTaskFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackCampaignFieldsOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboardingTrackFields',
+    new DatabaseScratchTrackCustomFieldsOnboardingType(context)
   )
 
   registerRealtimeEvents(app.$realtime)

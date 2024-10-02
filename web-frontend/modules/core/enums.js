@@ -1,4 +1,13 @@
-export const IMAGE_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
+export const IMAGE_FILE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/apng',
+  'image/gif',
+  'image/tiff',
+  'image/bmp',
+  'image/webp',
+]
 
 export const FAVICON_IMAGE_FILE_TYPES = [...IMAGE_FILE_TYPES, 'image/x-icon']
 
@@ -23,6 +32,7 @@ export const DATA_TYPE_TO_ICON_MAP = {
   string: 'iconoir-text',
   number: 'baserow-icon-hashtag',
   boolean: 'baserow-icon-circle-checked',
+  array: 'iconoir-list',
 }
 
 export const UNKNOWN_DATA_TYPE_ICON = 'iconoir-question-mark'

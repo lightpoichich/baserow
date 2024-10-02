@@ -7,8 +7,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Q, UniqueConstraint
-from django.utils import timezone as django_timezone
+from django.db.models import Q, QuerySet, UniqueConstraint
+from django.db.models.manager import BaseManager
 
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -22,7 +22,6 @@ from .action.models import Action
 from .integrations.models import Integration
 from .mixins import (
     CreatedAndUpdatedOnMixin,
-    GroupToWorkspaceCompatModelMixin,
     HierarchicalModelMixin,
     OrderableMixin,
     ParentWorkspaceTrashableModelMixin,
@@ -53,7 +52,6 @@ __all__ = [
     "Notification",
     "BlacklistedToken",
 ]
-
 
 User = get_user_model()
 
@@ -254,7 +252,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
         return None
 
     def refresh_now(self):
-        self.now = django_timezone.now()
+        self.now = datetime.now(tz=timezone.utc)
         self.save(update_fields=["now"])
 
     def get_now_or_set_if_null(self):
@@ -301,7 +299,6 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 class WorkspaceUser(
     HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
-    GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     models.Model,
@@ -341,7 +338,6 @@ class WorkspaceUser(
 class WorkspaceInvitation(
     HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
-    GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
     models.Model,
 ):
@@ -388,7 +384,6 @@ class Application(
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
-    GroupToWorkspaceCompatModelMixin,
     WithRegistry,
     models.Model,
 ):
@@ -423,13 +418,11 @@ class Application(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_parent(self):
-        # If this application is an application snapshot, then it'll
-        # have a None workspace, so instead we define its parent as
-        # the source snapshot's `snapshot_from`.
-        if self.workspace_id:
-            return self.workspace
-        else:
-            return self.snapshot_from.get()
+        if not self.workspace_id:
+            raise ValueError(
+                "Cannot call get_parent if workspace is None. Please check your hierarchy."
+            )
+        return self.workspace
 
 
 class TemplateCategory(models.Model):
@@ -439,7 +432,7 @@ class TemplateCategory(models.Model):
         ordering = ("name",)
 
 
-class Template(GroupToWorkspaceCompatModelMixin, models.Model):
+class Template(models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(
         help_text="The template slug that is used to match the template with the JSON "
@@ -487,7 +480,7 @@ class UserLogEntry(models.Model):
         ordering = ["-timestamp"]
 
 
-class TrashEntry(GroupToWorkspaceCompatModelMixin, models.Model):
+class TrashEntry(models.Model):
     """
     A TrashEntry is a record indicating that another model in Baserow has a trashed
     row. When a user deletes certain things in Baserow they are not actually deleted
@@ -590,6 +583,31 @@ class DuplicateApplicationJob(
     )
 
 
+class SnapshotManager(BaseManager.from_queryset(QuerySet)):
+    def restorable(self) -> QuerySet:
+        """
+        Returns a queryset with Snapshots that can be restored.
+
+        :return: A queryset with Snapshots that can be restored.
+        """
+
+        return self.get_queryset().filter(
+            snapshot_to_application__isnull=False, mark_for_deletion=False
+        )
+
+    def unusable(self) -> QuerySet:
+        """
+        Returns a queryset with Snapshots that cannot be restored.
+
+        :returns: A queryset with Snapshots that cannot be restored because they are
+            either not associated with an application or are marked for deletion.
+        """
+
+        return self.get_queryset().filter(
+            Q(snapshot_to_application__isnull=True) | Q(mark_for_deletion=True)
+        )
+
+
 class Snapshot(HierarchicalModelMixin, models.Model):
     name = models.CharField(max_length=160)
     snapshot_from_application = models.ForeignKey(
@@ -602,15 +620,13 @@ class Snapshot(HierarchicalModelMixin, models.Model):
     created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ("name", "snapshot_from_application")
-
     def get_parent(self):
         return self.snapshot_from_application
 
+    objects = SnapshotManager()
+
 
 class InstallTemplateJob(
-    GroupToWorkspaceCompatModelMixin,
     JobWithUserIpAddress,
     JobWithWebsocketId,
     JobWithUndoRedoIds,

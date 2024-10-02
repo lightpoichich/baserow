@@ -1,6 +1,17 @@
 <template>
-  <div class="control__elements">
+  <FormGroup :error="touched && !valid">
     <div class="url-input">
+      <FormInput
+        ref="input"
+        v-model="copy"
+        size="large"
+        :error="touched && !valid"
+        :disabled="readOnly"
+        :text-invisible="!editing"
+        @keyup.enter="$refs.input.blur()"
+        @focus="select()"
+        @blur="unselect()"
+      />
       <a
         v-if="!editing"
         :href="getHref(copy)"
@@ -9,25 +20,13 @@
         class="url-input__link"
         >{{ value }}</a
       >
-      <input
-        ref="input"
-        v-model="copy"
-        type="text"
-        class="input"
-        :class="{
-          'input--error': touched && !valid,
-          'input--invisible': !editing,
-        }"
-        :disabled="readOnly"
-        @keyup.enter="$refs.input.blur()"
-        @focus="select()"
-        @blur="unselect()"
-      />
     </div>
-    <div v-show="touched && !valid" class="error">
-      {{ error }}
-    </div>
-  </div>
+    <template #error>
+      <span v-show="touched && !valid">
+        {{ error }}
+      </span>
+    </template>
+  </FormGroup>
 </template>
 
 <script>

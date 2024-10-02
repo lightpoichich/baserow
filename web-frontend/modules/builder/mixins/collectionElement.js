@@ -6,8 +6,7 @@ import _ from 'lodash'
 export default {
   data() {
     return {
-      // The first page has been loaded by the data provider at page load already
-      currentOffset: this.element.items_per_page,
+      currentOffset: 0,
       errorNotified: false,
       resetTimeout: null,
     }
@@ -29,21 +28,20 @@ export default {
       }
       return this.getPageDataSourceById(this.page, this.element.data_source_id)
     },
-    elementContent() {
-      if (
-        !this.element.data_source_id ||
-        !this.getElementContent(this.element)
-      ) {
-        return []
+    dataSourceType() {
+      if (!this.dataSource) {
+        return null
       }
-
-      return this.getElementContent(this.element)
+      return this.$registry.get('service', this.dataSource.type)
+    },
+    elementContent() {
+      return this.getElementContent(this.element, this.applicationContext)
     },
     hasMorePage() {
       return this.getHasMorePage(this.element)
     },
     contentLoading() {
-      return this.getLoading(this.element)
+      return this.getLoading(this.element) && !this.elementIsInError
     },
     dispatchContext() {
       return DataProviderType.getAllDataSourceDispatchContext(
@@ -51,10 +49,22 @@ export default {
         this.applicationContext
       )
     },
+    elementIsInError() {
+      return this.elementType.isInError({
+        page: this.page,
+        element: this.element,
+        builder: this.builder,
+      })
+    },
   },
   watch: {
     reset() {
       this.debouncedReset()
+    },
+    'element.schema_property'(newValue, oldValue) {
+      if (newValue) {
+        this.debouncedReset()
+      }
     },
     'element.data_source_id'() {
       this.debouncedReset()
@@ -69,11 +79,15 @@ export default {
         }
       },
       deep: true,
-      immediate: true,
     },
   },
   async mounted() {
-    if (this.element.data_source_id) {
+    if (!this.elementIsInError && this.elementType.fetchAtLoad) {
+      // This fetch is necessary when we duplicate the collection element as
+      // the initial load from the data provider has already happened.
+      // It won't be executed by the store when the data provider has already loaded
+      // the data because the range is the same in which case only the `currentOffset`
+      // is updated.
       await this.fetchContent([0, this.element.items_per_page])
     }
   },
@@ -91,8 +105,12 @@ export default {
       }, 500)
     },
     async fetchContent(range, replace) {
+      if (!this.canFetch()) {
+        return
+      }
       try {
         await this.fetchElementContent({
+          page: this.page,
           element: this.element,
           dataSource: this.dataSource,
           data: this.dispatchContext,
@@ -115,6 +133,10 @@ export default {
         [this.currentOffset, this.element.items_per_page],
         replace
       )
+    },
+    /** Overrides this if you want to prevent data fetching */
+    canFetch() {
+      return true
     },
   },
 }

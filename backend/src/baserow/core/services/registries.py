@@ -1,26 +1,25 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
-from zipfile import ZipFile
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
-from django.core.files.storage import Storage
 
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
+from baserow.core.integrations.exceptions import IntegrationDoesNotExist
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
     EasyImportExportMixin,
     Instance,
+    InstanceWithFormulaMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
 )
 from baserow.core.services.dispatch_context import DispatchContext
 
-from ..integrations.exceptions import IntegrationDoesNotExist
 from .models import Service
 from .types import ServiceDictSubClass, ServiceSubClass
 
@@ -33,8 +32,9 @@ class DispatchTypes(str, Enum):
 
 
 class ServiceType(
-    ModelInstanceMixin[Service],
+    InstanceWithFormulaMixin,
     EasyImportExportMixin[ServiceSubClass],
+    ModelInstanceMixin[ServiceSubClass],
     CustomFieldsInstanceMixin,
     Instance,
     ABC,
@@ -133,6 +133,21 @@ class ServiceType(
         :param instance: The to be deleted service instance.
         """
 
+    def get_context_data(self, service: ServiceSubClass):
+        """
+        Return the context data for this service.
+
+        This can be overridden by child classes to provide extra context data,
+        to complement this service results.
+        """
+
+        return None
+
+    def get_context_data_schema(self, service: ServiceSubClass):
+        """Return the schema for the context data."""
+
+        return None
+
     def resolve_service_formulas(
         self,
         service: ServiceSubClass,
@@ -226,42 +241,79 @@ class ServiceType(
 
         return queryset
 
-    def deserialize_property(
+    def import_path(self, path, id_mapping, **kwargs):
+        """
+        Allows to hook into the path import resolution.
+
+        If not implemented, returns the path as it is.
+        """
+
+        return path
+
+    def import_context_path(
+        self, path: List[str], id_mapping: Dict[int, int], **kwargs
+    ):
+        """
+        Allows to hook into the context path import resolution.
+
+        If not implemented, returns the path as it is.
+        """
+
+        return path
+
+    def import_serialized(
         self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        files_zip: Optional[ZipFile] = None,
-        storage: Optional[Storage] = None,
-        cache: Optional[Dict] = None,
+        parent: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
         import_formula: Callable[[str, Dict[str, Any]], str] = None,
         **kwargs,
-    ) -> Any:
-        """
-        This hooks allow to customize the deserialization of a property.
-
-        :param prop_name: the name of the property being transformed.
-        :param value: the value of this property.
-        :param id_mapping: the id mapping dict.
-        :param import_formula: the import formula function.
-        :return: the deserialized version for this property.
-        """
-
+    ):
         if import_formula is None:
             raise ValueError("Missing import formula function.")
 
-        return super().deserialize_property(
-            prop_name,
-            value,
+        created_instance = super().import_serialized(
+            parent,
+            serialized_values,
             id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
+            import_formula=import_formula,
             **kwargs,
         )
 
+        updated_models = self.import_formulas(
+            created_instance, id_mapping, import_formula, **kwargs
+        )
+
+        [m.save() for m in updated_models]
+
+        return created_instance
+
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)
+
+
+class ListServiceTypeMixin:
+    """A mixin for services that return lists."""
+
+    returns_list = True
+
+    @abstractmethod
+    def get_record_names(
+        self,
+        service: Service,
+        record_ids: List[int],
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, str]:
+        """
+        Return the record name associated with each one of the provided record ids.
+
+        Implementation is required for any service that uses this mixin.
+
+        :param service: The available service to use.
+        :param record_ids: The list containing the record identifiers.
+        :param dispatch_context: The context used for the dispatch.
+        :return: A dictionary mapping each record to its name.
+        """
 
 
 class ServiceTypeRegistry(

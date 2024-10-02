@@ -1,11 +1,12 @@
 <template>
-  <FormElement
+  <FormGroup
     :error="hasError"
     class="ab-form-group"
     :class="{
       'ab-form-group--horizontal': horizontal,
       'ab-form-group--horizontal-variable': horizontalVariable,
       'ab-form-group--with-label': label,
+      'ab-form-group--error': hasError,
     }"
   >
     <label
@@ -16,17 +17,14 @@
       {{ label }}
       <span v-if="required" :title="$t('error.requiredField')">*</span>
     </label>
-    <div
-      class="ab-form-group__children"
-      :class="{ 'ab-form-group__children--error': hasError }"
-    >
+    <div class="ab-form-group__children">
       <slot />
-      <div v-if="hasError" class="error">
+      <div v-if="hasError" class="ab-form-group__error-message">
         <i class="iconoir-warning-triangle"></i>
         {{ errorMessage }}
       </div>
     </div>
-  </FormElement>
+  </FormGroup>
 </template>
 
 <script>

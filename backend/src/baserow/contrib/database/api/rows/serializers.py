@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import Dict, List
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models.base import ModelBase
 
 from loguru import logger
@@ -9,6 +10,7 @@ from rest_framework import serializers
 
 from baserow.api.search.serializers import SearchQueryParamSerializer
 from baserow.api.utils import get_serializer_class
+from baserow.contrib.database.api.rows.fields import UserFieldNamesField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.models import RowHistory
 from baserow.contrib.database.rows.registries import row_metadata_registry
@@ -30,6 +32,10 @@ def serialize_rows_for_response(rows, model, user_field_names=False, many=True):
         is_response=True,
         user_field_names=user_field_names,
     )(rows, many=many).data
+
+
+def is_read_only(value):
+    raise ValidationError(message="This field is read_only", code="read_only")
 
 
 def get_row_serializer_class(
@@ -96,6 +102,15 @@ def get_row_serializer_class(
         if field_id_matches and field_name_matches:
             name = field["field"].name if user_field_names else field["name"]
             extra_kwargs = field_kwargs.get(field["name"], {})
+            # If the field is configured to be read-only, then we want the API to
+            # respond with an error if the key is provided. It should be possible to
+            # update the cell value via handlers because the value is then managed by
+            # something internally.
+            if field["field"].read_only:
+                if "validators" not in extra_kwargs:
+                    extra_kwargs["validators"] = []
+                extra_kwargs["validators"].append(is_read_only)
+                extra_kwargs.pop("required", None)
 
             if field["name"] != name:
                 # If we are building a serializer with names which do not match the
@@ -241,8 +256,9 @@ def get_example_row_serializer_class(example_type="get", user_field_names=False)
     optional_user_field_names_info = ""
     if user_field_names:
         optional_user_field_names_info = (
-            " If the GET parameter `user_field_names` is provided then the key will "
-            "instead be the actual name of the field."
+            " If the GET parameter user_field_names is provided and its value is "
+            "one of the following: `y`, `yes`, `true`, `t`, `on`, `1`, or empty, "
+            "then the key will instead be the actual name of the field."
         )
 
     for i, field_type in enumerate(field_types):
@@ -334,6 +350,12 @@ def remap_serialized_row_to_user_field_names(
     return new_row
 
 
+class UserFieldNamesSerializer(serializers.Serializer):
+    user_field_names = UserFieldNamesField(
+        required=False, default=False, allow_null=True
+    )
+
+
 class MoveRowQueryParamsSerializer(serializers.Serializer):
     before_id = serializers.IntegerField(required=False)
 
@@ -346,8 +368,9 @@ class BatchCreateRowsQueryParamsSerializer(serializers.Serializer):
     before = serializers.IntegerField(required=False)
 
 
-class ListRowsQueryParamsSerializer(SearchQueryParamSerializer):
-    user_field_names = serializers.BooleanField(required=False, default=False)
+class ListRowsQueryParamsSerializer(
+    SearchQueryParamSerializer, UserFieldNamesSerializer
+):
     order_by = serializers.CharField(required=False)
     include = serializers.CharField(required=False)
     exclude = serializers.CharField(required=False)
@@ -395,8 +418,9 @@ def get_example_batch_rows_serializer_class(example_type="get", user_field_names
     return class_object
 
 
-class GetRowAdjacentSerializer(SearchQueryParamSerializer, serializers.Serializer):
-    user_field_names = serializers.BooleanField(required=False, default=False)
+class GetRowAdjacentSerializer(
+    SearchQueryParamSerializer, UserFieldNamesSerializer, serializers.Serializer
+):
     previous = serializers.BooleanField(required=False, default=False)
     view_id = serializers.IntegerField(required=False)
 

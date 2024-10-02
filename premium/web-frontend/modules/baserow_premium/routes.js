@@ -12,11 +12,6 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/admin/users.vue'),
   },
   {
-    name: 'admin-groups',
-    path: '/admin/groups',
-    component: path.resolve(__dirname, 'pages/admin/workspaces.vue'),
-  }, // GroupDeprecation
-  {
     name: 'admin-workspaces',
     path: '/admin/workspaces',
     component: path.resolve(__dirname, 'pages/admin/workspaces.vue'),
@@ -39,6 +34,11 @@ export const routes = [
   {
     name: 'database-public-calendar-view',
     path: '/public/calendar/:slug',
+    component: '@baserow/modules/database/pages/publicView.vue',
+  },
+  {
+    name: 'database-public-timeline-view',
+    path: '/public/timeline/:slug',
     component: '@baserow/modules/database/pages/publicView.vue',
   },
 ]

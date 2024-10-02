@@ -269,6 +269,7 @@
     "sso": "Single Sign On",
     "rbac": "Role-based access control",
     "auditLogs": "Audit logs",
+    "dataSync": "Data sync",
     "coBranding": "Co-branding logo replacement",
     "support": "Direct support"
   },
@@ -293,7 +294,9 @@
     "emailFieldLabelPlaceholder": "Select a field...",
     "noFields": "No fields",
     "nameFieldLabel": "Select name field",
-    "nameFieldPlaceholder": "Select a field..."
+    "nameFieldPlaceholder": "Select a field...",
+    "roleFieldLabel": "Select role field",
+    "roleFieldPlaceholder": "Select a field..."
   },
   "appAuthProviderType": {
     "localBaserowPassword": "Email/Password"
@@ -317,5 +320,27 @@
     "viewPricing": "View pricing",
     "premium": "Premium",
     "enterprise": "Enterprise"
+  },
+  "authFormElementForm": {
+    "userSource": "User source",
+    "loginButtonLabel": "Login button label",
+    "loginButtonLabelPlaceholder": "Enter the label..."
+  },
+  "authFormElement": {
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "Enter your email...",
+    "passwordPlaceholder": "Enter your password...",
+    "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
+  },
+  "enterpriseDataSyncType": {
+    "localBaserowTable": "Sync Baserow table"
+  },
+  "localBaserowTableDataSync": {
+    "name": "Source table ID",
+    "authorizing": "You're authorizing your account to select the data from the source table.",
+    "workspace": "Workspace",
+    "database": "Database",
+    "table": "Table"
   }
 }

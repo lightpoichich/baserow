@@ -25,6 +25,19 @@
             </a>
           </div>
         </div>
+        <div class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">
+              {{ $t('settings.baserowVersion') }}
+            </div>
+            <div class="admin-settings__description">
+              {{ $t('settings.baserowVersionDescription') }}
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            {{ baserowVersion }}
+          </div>
+        </div>
       </div>
       <div class="admin-settings__group">
         <h2 class="admin-settings__group-title">
@@ -159,23 +172,24 @@
             </div>
           </div>
           <div class="admin-settings__control">
-            <input
-              v-model="account_deletion_grace_delay"
-              :class="{
-                'input--error': $v.account_deletion_grace_delay.$error,
-              }"
-              type="number"
-              class="input"
-              @input="
-                ;[
-                  $v.account_deletion_grace_delay.$touch(),
-                  updateAccountDeletionGraceDelay($event),
-                ]
-              "
-            />
-            <div v-if="$v.account_deletion_grace_delay.$error" class="error">
-              {{ $t('settings.invalidAccountDeletionGraceDelay') }}
-            </div>
+            <FormGroup :error="$v.account_deletion_grace_delay.$error">
+              <FormInput
+                v-model="account_deletion_grace_delay"
+                :error="$v.account_deletion_grace_delay.$error"
+                type="number"
+                size="large"
+                @input="
+                  ;[
+                    $v.account_deletion_grace_delay.$touch(),
+                    updateAccountDeletionGraceDelay($event),
+                  ]
+                "
+              ></FormInput>
+
+              <template #error>
+                {{ $t('settings.invalidAccountDeletionGraceDelay') }}
+              </template>
+            </FormGroup>
           </div>
         </div>
       </div>
@@ -261,6 +275,9 @@ export default {
     }),
     EMAIL_VERIFICATION_OPTIONS() {
       return EMAIL_VERIFICATION_OPTIONS
+    },
+    baserowVersion() {
+      return this.$baserowVersion
     },
   },
   watch: {

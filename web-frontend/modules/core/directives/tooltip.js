@@ -65,19 +65,54 @@ export default {
     el.tooltipOptions = getOptions(el, binding)
     el.onClickOutsideCallback = null
 
-    el.updatePositionEvent = () => {
+    el.updatePositionEvent = (event) => {
       const rect = el.getBoundingClientRect()
       const position = el.getAttribute('tooltip-position') || 'bottom'
+      const rectTooltip = el.tooltipElement.getBoundingClientRect()
 
-      if (position === 'top') {
-        const rectTooltip = el.tooltipElement.getBoundingClientRect()
-        el.tooltipElement.style.top = rect.top - 2 - rectTooltip.height + 'px'
-      } else {
-        el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+      switch (position) {
+        case 'top':
+          el.tooltipElement.style.top = rect.top - 2 - rectTooltip.height + 'px'
+          el.tooltipElement.style.left = rect.left + rect.width / 2 + 'px'
+          break
+        case 'bottom-left':
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left = rect.right - rectTooltip.width + 'px'
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-right',
+            rect.width / 2 - 6 + 'px' // Middle of the main element
+          )
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-left',
+            'auto'
+          )
+          break
+        case 'bottom-right':
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left = rect.left + 'px'
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-left',
+            rect.width / 2 + 'px' // Middle of the main element
+          )
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-right',
+            'auto'
+          )
+          break
+        case 'bottom-cursor':
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left =
+            Math.max(
+              rect.left + 6,
+              Math.min(rect.left + rect.width - 6, event.x)
+            ) -
+            rectTooltip.width / 2 +
+            'px'
+          break
+        default:
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left = rect.left + rect.width / 2 + 'px'
       }
-
-      const width = rect.right - rect.left
-      el.tooltipElement.style.left = rect.left + width / 2 + 'px'
     }
     el.removeTimeout = () => {
       if (el.tooltipTimeout) {
@@ -86,7 +121,14 @@ export default {
       el.tooltipTimeout = null
     }
 
-    el.tooltipMouseEnterEvent = () => {
+    el.tooltipMouseMoveEvent = (event) => {
+      const position = el.getAttribute('tooltip-position') || 'bottom'
+      if (position === 'bottom-cursor') {
+        el.updatePositionEvent(event)
+      }
+    }
+
+    el.tooltipMouseEnterEvent = (event) => {
       switchToTooltip(el)
       const position = el.getAttribute('tooltip-position') || 'bottom'
       const hide = el.getAttribute('hide-tooltip')
@@ -98,9 +140,13 @@ export default {
       if (!el.tooltipElement) {
         el.tooltipElement = document.createElement('div')
 
-        const classes = ['tooltip', 'tooltip--body', 'tooltip--center']
+        const classes = ['tooltip', 'tooltip--body']
         if (position === 'top') {
           classes.push('tooltip--top')
+        }
+
+        if (position === 'top' || position === 'bottom') {
+          classes.push('tooltip--center')
         }
 
         el.tooltipElement.className = classes.join(' ')
@@ -114,16 +160,18 @@ export default {
       if (el.tooltipOptions.contentIsHtml) {
         el.tooltipContentElement.innerHTML = el.tooltipOptions.value
       } else {
-        el.tooltipContentElement.textContent = el.tooltipOptions.value
+        el.tooltipContentElement.appendChild(
+          document.createTextNode(el.tooltipOptions.value)
+        )
       }
-      // additional css classes for content container
-      const contentClass = ['tooltip__content']
-      if (el.tooltipOptions.contentClasses) {
-        contentClass.push(el.tooltipOptions.contentClasses)
-      }
-      el.tooltipContentElement.className = contentClass.join(' ')
 
-      el.updatePositionEvent()
+      let contentClasses = ['tooltip__content']
+      if (el.tooltipOptions.contentClasses) {
+        contentClasses = contentClasses.concat(el.tooltipOptions.contentClasses)
+      }
+      el.tooltipContentElement.className = contentClasses.join(' ')
+
+      el.updatePositionEvent(event)
       // we just entered, so we don't want any previously set timeout to close
       // the tooltip content
       el.removeTimeout()
@@ -134,6 +182,8 @@ export default {
         'mouseleave',
         el.tooltipMoveLeaveEvent
       )
+
+      window.addEventListener('mousemove', el.tooltipMouseMoveEvent)
 
       // When the user scrolls or resizes the window it could be possible that the
       // element where the tooltip is anchored to has moved, so then the position
@@ -187,6 +237,7 @@ export default {
         el.tooltipContentElement = null
       }
 
+      window.removeEventListener('mousemove', el.tooltipMouseMoveEvent)
       window.removeEventListener('scroll', el.updatePositionEvent, true)
       window.removeEventListener('resize', el.updatePositionEvent)
       el.removeTimeout()

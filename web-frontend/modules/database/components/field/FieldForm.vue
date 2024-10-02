@@ -1,56 +1,50 @@
 <template>
-  <form class="context__form" @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <div class="control__elements">
-        <input
+  <div v-auto-overflow-scroll class="context__form context__form--scrollable">
+    <form class="context__form-container" @submit.prevent="submit">
+      <FormGroup :error="fieldHasErrors('name')">
+        <FormInput
           ref="name"
           v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input input--small"
+          :error="fieldHasErrors('name')"
           :placeholder="$t('fieldForm.name')"
           @blur="$v.values.name.$touch()"
           @input="isPrefilledWithSuggestedFieldName = false"
           @keydown.enter="handleKeydownEnter($event)"
-        />
-        <div
-          v-if="$v.values.name.$dirty && !$v.values.name.required"
-          class="error"
-        >
-          {{ $t('error.requiredField') }}
-        </div>
-        <div
-          v-else-if="
-            $v.values.name.$dirty && !$v.values.name.mustHaveUniqueFieldName
-          "
-          class="error"
-        >
-          {{ $t('fieldForm.fieldAlreadyExists') }}
-        </div>
-        <div
-          v-else-if="
-            $v.values.name.$dirty &&
-            !$v.values.name.mustNotClashWithReservedName
-          "
-          class="error"
-        >
-          {{ $t('fieldForm.nameNotAllowed') }}
-        </div>
-        <div
-          v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength"
-          class="error"
-        >
-          {{ $t('fieldForm.nameTooLong') }}
-        </div>
-      </div>
-    </FormElement>
-    <div v-if="forcedType === null" class="control">
-      <div class="control__elements">
+        ></FormInput>
+        <template #error>
+          <span v-if="$v.values.name.$dirty && !$v.values.name.required">
+            {{ $t('error.requiredField') }}
+          </span>
+          <span
+            v-else-if="
+              $v.values.name.$dirty && !$v.values.name.mustHaveUniqueFieldName
+            "
+          >
+            {{ $t('fieldForm.fieldAlreadyExists') }}
+          </span>
+          <span
+            v-else-if="
+              $v.values.name.$dirty &&
+              !$v.values.name.mustNotClashWithReservedName
+            "
+          >
+            {{ $t('error.nameNotAllowed') }}
+          </span>
+          <span v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength">
+            {{ $t('error.nameTooLong') }}
+          </span>
+        </template>
+      </FormGroup>
+
+      <FormGroup v-if="forcedType === null" :error="$v.values.type.$error">
         <Dropdown
           ref="fieldTypesDropdown"
           v-model="values.type"
           :class="{ 'dropdown--error': $v.values.type.$error }"
           :fixed-items="true"
+          :disabled="
+            defaultValues.immutable_type || defaultValues.immutable_properties
+          "
           small
           @hide="$v.values.type.$touch()"
         >
@@ -87,60 +81,56 @@
             ></component>
           </DropdownItem>
         </Dropdown>
-        <div v-if="$v.values.type.$error" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </div>
-    <template v-if="hasFormComponent">
-      <component
-        :is="getFormComponent(values.type)"
-        ref="childForm"
-        :table="table"
-        :field-type="values.type"
-        :view="view"
-        :primary="primary"
-        :all-fields-in-table="allFieldsInTable"
-        :name="values.name"
-        :default-values="defaultValues"
-        :database="database"
-        @validate="$v.$touch"
-        @suggested-field-name="handleSuggestedFieldName($event)"
-      />
-    </template>
 
-    <FormElement
-      v-if="showDescription"
-      :error="fieldHasErrors('description')"
-      class="control"
-    >
-      <label class="control__label control__label--small">{{
-        $t('fieldForm.description')
-      }}</label>
-      <div class="control__elements">
-        <RichTextEditor
-          ref="description"
-          :value="editorValue"
-          class="field-form__editor rich-text-editor rich-text-editor--fixed-size"
-          :editable="true"
-          :enter-stop-edit="false"
-          :thin-scrollbar="true"
-          :enable-rich-text-formatting="false"
-          :placeholder="$t('fieldForm.description')"
-          @blur="onDescriptionBlur"
+        <template #error> {{ $t('error.requiredField') }}</template>
+      </FormGroup>
+
+      <template v-if="hasFormComponent && !defaultValues.immutable_properties">
+        <component
+          :is="getFormComponent(values.type)"
+          ref="childForm"
+          :table="table"
+          :field-type="values.type"
+          :view="view"
+          :primary="primary"
+          :all-fields-in-table="allFieldsInTable"
+          :name="values.name"
+          :default-values="defaultValues"
+          :database="database"
+          @validate="$v.$touch"
+          @suggested-field-name="handleSuggestedFieldName($event)"
         />
-      </div>
-    </FormElement>
-    <slot v-if="!selectedFieldIsDeactivated"></slot>
-  </form>
+      </template>
+
+      <FormGroup
+        v-if="showDescription"
+        :error="fieldHasErrors('description')"
+        :label="$t('fieldForm.description')"
+        :small-label="true"
+        required
+      >
+        <div class="control__elements">
+          <FormTextarea
+            ref="description"
+            v-model="values.description"
+            :min-rows="1"
+            :max-rows="16"
+            auto-expandable
+            :placeholder="$t('fieldForm.description')"
+            size="small"
+          />
+        </div>
+      </FormGroup>
+    </form>
+  </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import { required, maxLength } from 'vuelidate/lib/validators'
+import FormTextarea from '@baserow/modules/core/components/FormTextarea'
 
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
-import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'
 import form from '@baserow/modules/core/mixins/form'
 import {
   RESERVED_BASEROW_FIELD_NAMES,
@@ -150,7 +140,7 @@ import {
 // @TODO focus form on open
 export default {
   name: 'FieldForm',
-  components: { RichTextEditor },
+  components: { FormTextarea },
   mixins: [form],
   props: {
     table: {
@@ -207,20 +197,6 @@ export default {
     },
     existingFieldId() {
       return this.defaultValues ? this.defaultValues.id : null
-    },
-    selectedFieldIsDeactivated() {
-      try {
-        return this.$registry
-          .get('field', this.values.type)
-          .isDeactivated(this.workspace.id)
-      } catch {
-        return false
-      }
-    },
-    editorValue() {
-      // temp fix to have proper line breaks
-      // this will not be needed when RTE will be in minimal mode
-      return (this.values.description || '').replaceAll('\n', '<br/>')
     },
     ...mapGetters({
       fields: 'field/getAll',
@@ -317,6 +293,9 @@ export default {
      */
     showDescriptionField() {
       this.showDescription = true
+      this.$nextTick(() => {
+        this.$refs.description.focus()
+      })
     },
     /**
      * Helper method to get information if description is not empty.
@@ -325,12 +304,6 @@ export default {
     isDescriptionFieldNotEmpty() {
       this.showDescription = !!this.values.description
       return this.showDescription
-    },
-    onDescriptionBlur() {
-      // Handle blur event on field description text editor.
-      // A bit hacky way to get current state of description editor once the
-      // edition finished.
-      this.values.description = this.$refs.description.editor.getText()
     },
   },
 }

@@ -2,85 +2,88 @@
   <Context class="color-picker-context">
     <ColorPicker
       :value="hexColorIncludingAlpha"
-      @input=";[colorUpdated($event), $emit('input', $event)]"
+      :allow-opacity="allowOpacity"
+      @input="setColorFromPicker($event)"
     ></ColorPicker>
     <div class="color-picker-context__color">
       <Dropdown
         v-model="type"
         class="dropdown--floating color-picker-context__color-type"
         :show-search="false"
+        small
       >
         <DropdownItem name="Hex" :value="COLOR_NOTATIONS.HEX"></DropdownItem>
         <DropdownItem name="RGB" :value="COLOR_NOTATIONS.RGB"></DropdownItem>
       </Dropdown>
       <div v-if="type === 'hex'" class="color-picker-context__color-hex">
-        <input
-          class="input"
-          :value="hexColorExcludingAlpha"
-          @input="hexChanged"
-        />
+        <FormInput v-model="fakeHexExcludingAlpha" small @blur="hexChanged" />
       </div>
       <div v-if="type === 'rgb'" class="color-picker-context__color-rgb">
-        <input
+        <FormInput
           type="number"
-          min="0"
-          max="255"
+          small
+          :min="0"
+          :max="255"
           :value="r"
-          class="input remove-number-input-controls"
+          remove-number-input-controls
           @input="rgbaChanged($event, 'r')"
         />
-        <input
+        <FormInput
           type="number"
-          min="0"
-          max="255"
+          small
+          :min="0"
+          :max="255"
           :value="g"
-          class="input remove-number-input-controls"
+          remove-number-input-controls
           @input="rgbaChanged($event, 'g')"
         />
-        <input
+        <FormInput
           type="number"
-          min="0"
-          max="255"
+          small
+          :min="0"
+          :max="255"
           :value="b"
-          class="input remove-number-input-controls"
+          remove-number-input-controls
           @input="rgbaChanged($event, 'b')"
         />
       </div>
-      <div class="color-picker-context__color-opacity">
-        <div
-          class="form-input form-input--with-icon form-input--with-icon-right"
-        >
-          <input
-            type="number"
-            min="0"
-            max="100"
-            class="form-input__input remove-number-input-controls"
-            :value="a"
-            @input="rgbaChanged($event, 'a')"
-          />
-          <i class="form-input__icon iconoir-percentage"></i>
-        </div>
+      <div class="flex-grow-1" />
+      <div v-if="allowOpacity" class="color-picker-context__color-opacity">
+        <FormInput
+          type="number"
+          small
+          :min="0"
+          :max="100"
+          :value="a"
+          icon-right="iconoir-percentage"
+          remove-number-input-controls
+          @input="rgbaChanged($event, 'a')"
+        />
       </div>
     </div>
     <div
       v-if="Object.keys(variables).length > 0"
       class="color-picker-context__variables"
     >
-      <Dropdown :value="isVariable ? value : ''" small @input="setVariable">
+      <Dropdown
+        :value="selectedVariable?.name || ''"
+        small
+        @input="setVariable"
+      >
         <DropdownItem name="Custom" value=""></DropdownItem>
         <DropdownItem
           v-for="variable in variables"
           :key="variable.name"
           :name="variable.name"
-          :value="variable.value"
+          :value="variable.name"
         >
           <div
             class="color-picker-context__variable-color"
             :style="{ 'background-color': variable.color }"
           ></div>
-          <span class="select__item-name-text" :title="variable.name">{{
-            variable.name
-          }}</span>
+          <span class="select__item-name-text" :title="variable.name">
+            {{ variable.name }}
+          </span>
         </DropdownItem>
       </Dropdown>
     </div>
@@ -91,7 +94,6 @@
 import context from '@baserow/modules/core/mixins/context'
 import ColorPicker from '@baserow/modules/core/components/ColorPicker.vue'
 import {
-  isColorVariable,
   isValidHexColor,
   convertHexToRgb,
   convertRgbToHex,
@@ -118,6 +120,11 @@ export default {
       required: false,
       default: () => [],
     },
+    allowOpacity: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   data() {
     return {
@@ -132,9 +139,20 @@ export default {
   },
   computed: {
     COLOR_NOTATIONS: () => COLOR_NOTATIONS,
-    isVariable() {
-      const variableValues = this.variables.map((v) => v.value)
-      return isColorVariable(this.value) && variableValues.includes(this.value)
+    /**
+     * This computed property is used to detect when hexColorExcludingAlpha has
+     * changed, then set its value to the new value.
+     */
+    fakeHexExcludingAlpha: {
+      set(newValue) {
+        this.hexColorExcludingAlpha = newValue
+      },
+      get() {
+        return this.hexColorExcludingAlpha
+      },
+    },
+    selectedVariable() {
+      return this.variables.find(({ value }) => value === this.value)
     },
   },
   watch: {
@@ -143,8 +161,11 @@ export default {
         // Only update the value if it has actually changed because otherwise the user's
         // input can be overwritten from converting to and from hex values.
         if (value !== oldValue) {
-          if (this.isVariable) {
-            this.setVariable(value)
+          const variable = this.variables.find(
+            (variable) => variable.value === value
+          )
+          if (variable !== undefined) {
+            this.colorUpdated(variable.color)
           } else {
             this.colorUpdated(value)
           }
@@ -154,6 +175,22 @@ export default {
     },
   },
   methods: {
+    setColorFromPicker(value) {
+      if (this.selectedVariable) {
+        // If we come from a variable before we reset the alpha channel to 1 otherwise
+        // You could think something doesn't work.
+        const rgba = convertHexToRgb(value)
+        rgba.a = 1
+        value = convertRgbToHex(rgba)
+      }
+      this.colorUpdated(value)
+      this.$emit(
+        'input',
+        this.a === 100
+          ? this.hexColorExcludingAlpha
+          : this.hexColorIncludingAlpha
+      )
+    },
     /**
      * Called whenever the original value is updated. It will make sure that all the
      * variables are updated accordingly if the value is a valid hex color.
@@ -168,7 +205,12 @@ export default {
       this.r = rgba.r * 255
       this.g = rgba.g * 255
       this.b = rgba.b * 255
-      this.a = Math.round(rgba.a * 100)
+
+      if (this.allowOpacity) {
+        this.a = Math.round(rgba.a * 100)
+      } else {
+        this.a = 100
+      }
 
       this.hexColorIncludingAlpha = convertRgbToHex(rgba)
 
@@ -180,7 +222,7 @@ export default {
      * text inputs.
      */
     rgbaChanged(event, channel) {
-      const value = parseInt(event.target.value)
+      const value = parseInt(event)
       if (isNaN(value) && value >= 0 && value <= 255) {
         return
       }
@@ -197,6 +239,7 @@ export default {
      */
     hexChanged(event) {
       const value = event.target.value
+
       if (!isValidHexColor(value)) {
         return
       }
@@ -206,13 +249,12 @@ export default {
       rgba.r = newRgba.r
       rgba.g = newRgba.g
       rgba.b = newRgba.b
+      if (rgba.a === 1) {
+        delete rgba.a
+      }
       const hex = convertRgbToHex(rgba)
 
       this.colorUpdated(hex)
-      // Set the value for `hexColorExcludingAlpha`. That will prevent that the value
-      // suddenly changes to something else while typing, which is annoying to the user.
-      this.hexColorExcludingAlpha = value
-
       this.$emit('input', hex)
     },
     /**
@@ -220,7 +262,7 @@ export default {
      */
     setVariable(value) {
       const variable = this.variables.find(
-        (variable) => variable.value === value
+        (variable) => variable.name === value
       )
       if (variable !== undefined) {
         this.colorUpdated(variable.color)

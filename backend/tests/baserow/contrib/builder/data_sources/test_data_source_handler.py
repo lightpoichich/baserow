@@ -1,8 +1,12 @@
 from decimal import Decimal
-from unittest.mock import MagicMock
+
+from django.http import HttpRequest
 
 import pytest
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.data_sources.exceptions import DataSourceDoesNotExist
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.models import DataSource
@@ -12,6 +16,7 @@ from baserow.contrib.integrations.local_baserow.models import (
 )
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.services.registries import service_type_registry
+from baserow.test_utils.helpers import AnyStr
 
 
 @pytest.mark.django_db
@@ -159,14 +164,12 @@ def test_dispatch_data_source(data_fixture):
         row_id="2",
     )
 
-    formula_context = MagicMock()
-    MagicMock.cache = {}
-
-    result = DataSourceHandler().dispatch_data_source(data_source, formula_context)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    result = DataSourceHandler().dispatch_data_source(data_source, dispatch_context)
 
     assert result == {
         "id": rows[1].id,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
@@ -219,23 +222,21 @@ def test_dispatch_data_sources(data_fixture):
         row_id="b",
     )
 
-    formula_context = MagicMock()
-    MagicMock.cache = {}
-
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
     result = DataSourceHandler().dispatch_data_sources(
-        [data_source, data_source2, data_source3], formula_context
+        [data_source, data_source2, data_source3], dispatch_context
     )
 
     assert result[data_source.id] == {
         "id": rows[1].id,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
 
     assert result[data_source2.id] == {
         "id": rows[2].id,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Volkswagen",
         fields[1].db_column: "White",
     }

@@ -1,19 +1,16 @@
-from datetime import date, timezone
+from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ValidationError
-from django.utils.timezone import datetime, utc
 
 import pytest
 from pytest_unordered import unordered
 
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
-)
 from baserow.contrib.database.fields.field_types import DateFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DateField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.registries import ImportExportConfig
@@ -85,7 +82,6 @@ def test_date_field_type(data_fixture):
     row_handler = RowHandler()
 
     amsterdam = ZoneInfo("Europe/Amsterdam")
-    utc = timezone.utc
 
     date_field_1 = field_handler.create_field(
         user=user, table=table, type_name="date", name="Date", date_format="ISO"
@@ -117,7 +113,7 @@ def test_date_field_type(data_fixture):
     )
     row.refresh_from_db()
     assert row.date == date(2020, 4, 1)
-    assert row.datetime == datetime(2020, 4, 1, 12, 30, 30, tzinfo=utc)
+    assert row.datetime == datetime(2020, 4, 1, 12, 30, 30, tzinfo=timezone.utc)
 
     row = row_handler.create_row(
         user=user,
@@ -549,7 +545,7 @@ def test_import_export_date_field(data_fixture):
         number_serialized,
         ImportExportConfig(include_permission_data=True),
         {},
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
     assert date_field.date_format == number_field_imported.date_format
     assert date_field.date_include_time == number_field_imported.date_include_time
@@ -571,7 +567,9 @@ def test_get_set_export_serialized_value_date_field(data_fixture):
     row_2 = model.objects.create(
         **{
             f"field_{date_field.id}": "2010-02-03",
-            f"field_{datetime_field.id}": datetime(2010, 2, 3, 12, 30, 0, tzinfo=utc),
+            f"field_{datetime_field.id}": datetime(
+                2010, 2, 3, 12, 30, 0, tzinfo=timezone.utc
+            ),
         }
     )
 
@@ -721,19 +719,19 @@ def test_get_group_by_metadata_in_rows_with_date_field(data_fixture):
                 {
                     "count": 2,
                     f"field_{date_field.id}": datetime(
-                        2010, 1, 1, 12, 0, 0, tzinfo=utc
+                        2010, 1, 1, 12, 0, 0, tzinfo=timezone.utc
                     ),
                 },
                 {
                     "count": 1,
                     f"field_{date_field.id}": datetime(
-                        2010, 1, 1, 12, 1, 0, tzinfo=utc
+                        2010, 1, 1, 12, 1, 0, tzinfo=timezone.utc
                     ),
                 },
                 {
                     "count": 1,
                     f"field_{date_field.id}": datetime(
-                        2010, 1, 2, 12, 1, 0, tzinfo=utc
+                        2010, 1, 2, 12, 1, 0, tzinfo=timezone.utc
                     ),
                 },
                 {"count": 1, f"field_{date_field.id}": None},

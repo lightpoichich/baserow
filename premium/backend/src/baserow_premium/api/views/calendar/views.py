@@ -1,3 +1,7 @@
+from django.conf import settings
+from django.db import transaction
+from django.http import HttpResponse
+
 from baserow_premium.api.views.calendar.errors import (
     ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD,
 )
@@ -5,14 +9,17 @@ from baserow_premium.api.views.calendar.serializers import (
     ListCalendarRowsQueryParamsSerializer,
     get_calendar_view_example_response_serializer,
 )
+from baserow_premium.ical_utils import build_calendar
 from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
+from baserow_premium.views.actions import RotateCalendarIcalSlugActionType
 from baserow_premium.views.exceptions import CalendarViewHasNoDateField
 from baserow_premium.views.handler import get_rows_grouped_by_date_field
 from baserow_premium.views.models import CalendarView
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -22,26 +29,53 @@ from baserow.api.decorators import (
     validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.schemas import get_error_schema
-from baserow.contrib.database.api.constants import SEARCH_MODE_API_PARAM
+from baserow.api.schemas import (
+    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+    get_error_schema,
+)
+from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
+from baserow.contrib.database.api.constants import (
+    ADHOC_FILTERS_API_PARAMS,
+    ADHOC_FILTERS_API_PARAMS_NO_COMBINE,
+    SEARCH_MODE_API_PARAM,
+)
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FILTER_FIELD_NOT_FOUND,
+)
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
 from baserow.contrib.database.api.views.errors import (
+    ERROR_CANNOT_SHARE_VIEW_TYPE,
     ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
     ERROR_VIEW_DOES_NOT_EXIST,
+    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
 )
+from baserow.contrib.database.api.views.serializers import ViewSerializer
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
+from baserow.contrib.database.fields.exceptions import (
+    FieldDoesNotExist,
+    FilterFieldNotFound,
+)
 from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.exceptions import (
+    CannotShareViewTypeError,
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
+    ViewFilterTypeDoesNotExist,
+    ViewFilterTypeNotAllowedForField,
 )
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.signals import view_loaded
+from baserow.core.action.registries import action_type_registry
+from baserow.core.db import specific_queryset
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
@@ -75,7 +109,9 @@ class CalendarViewView(APIView):
                 name="limit",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
-                description="Defines how many rows should be returned by default.",
+                description="Defines how many rows per day should be returned by"
+                " default. This value can be overwritten per select"
+                " option.",
             ),
             OpenApiParameter(
                 name="offset",
@@ -118,6 +154,7 @@ class CalendarViewView(APIView):
                 required=False,
             ),
             SEARCH_MODE_API_PARAM,
+            *ADHOC_FILTERS_API_PARAMS_NO_COMBINE,
         ],
         tags=["Database table calendar view"],
         operation_id="list_database_table_calendar_view_rows",
@@ -134,6 +171,10 @@ class CalendarViewView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD",
                     "ERROR_FEATURE_NOT_AVAILABLE",
+                    "ERROR_FILTER_FIELD_NOT_FOUND",
+                    "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
+                    "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
+                    "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
                 ]
             ),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
@@ -144,6 +185,10 @@ class CalendarViewView(APIView):
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             CalendarViewHasNoDateField: (ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD),
+            FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+            ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+            ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         }
     )
     @allowed_includes("field_options", "row_metadata")
@@ -178,6 +223,7 @@ class CalendarViewView(APIView):
             )
 
         model = view.table.get_model()
+        adhoc_filters = AdHocFilters.from_request(request)
 
         grouped_rows = get_rows_grouped_by_date_field(
             view=view,
@@ -188,8 +234,10 @@ class CalendarViewView(APIView):
             limit=query_params.get("limit"),
             offset=query_params.get("offset"),
             model=model,
+            adhoc_filters=adhoc_filters,
             search=query_params.get("search"),
             search_mode=query_params.get("search_mode"),
+            combine_filters=False,
         )
 
         serializer_class = get_row_serializer_class(
@@ -232,7 +280,6 @@ class CalendarViewView(APIView):
             table_model=model,
             user=request.user,
         )
-
         return Response(response)
 
 
@@ -251,8 +298,9 @@ class PublicCalendarViewView(APIView):
                 name="limit",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
-                description="Defines how many rows should be returned by default. "
-                "This value can be overwritten per select option.",
+                description="Defines how many rows per day should be returned by"
+                " default. This value can be overwritten per select"
+                " option.",
             ),
             OpenApiParameter(
                 name="offset",
@@ -286,6 +334,7 @@ class PublicCalendarViewView(APIView):
                 default="UTC",
                 required=False,
             ),
+            *ADHOC_FILTERS_API_PARAMS,
         ],
         tags=["Database table calendar view"],
         operation_id="public_list_database_table_calendar_view_rows",
@@ -301,6 +350,10 @@ class PublicCalendarViewView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD",
+                    "ERROR_FILTER_FIELD_NOT_FOUND",
+                    "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
+                    "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
+                    "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
                 ]
             ),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
@@ -313,6 +366,10 @@ class PublicCalendarViewView(APIView):
             NoAuthorizationToPubliclySharedView: (
                 ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW
             ),
+            FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+            ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+            ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         }
     )
     @allowed_includes("field_options")
@@ -335,9 +392,12 @@ class PublicCalendarViewView(APIView):
             )
 
         model = view.table.get_model()
+
+        adhoc_filters = AdHocFilters.from_request(request)
+
         view_type = view_type_registry.get_by_model(view)
         (
-            queryset,
+            _,  # fields queryset, not used
             field_ids,
             publicly_visible_field_options,
         ) = ViewHandler().get_public_rows_queryset_and_field_ids(
@@ -355,6 +415,8 @@ class PublicCalendarViewView(APIView):
             limit=query_params.get("limit"),
             offset=query_params.get("offset"),
             model=model,
+            adhoc_filters=adhoc_filters,
+            combine_filters=True,
         )
 
         serializer_class = get_row_serializer_class(
@@ -379,3 +441,119 @@ class PublicCalendarViewView(APIView):
             response.update(**serializer_class(view, context=context).data)
 
         return Response(response)
+
+
+class ICalView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="ical_slug",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                required=True,
+                description="ICal feed unique slug.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table views"],
+        operation_id="calendar_ical_feed",
+        description=(
+            "Returns ICal feed for a specific Calendar view "
+            "identified by ical_slug value. "
+            "Calendar View resource contains full url in .ical_feed_url "
+            "field."
+        ),
+        request=None,
+        responses={
+            (200, "text/calendar"): OpenApiTypes.BINARY,
+            400: get_error_schema(["ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD"]),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            CalendarViewHasNoDateField: ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD,
+        }
+    )
+    def get(self, request, ical_slug: str):
+        view_handler = ViewHandler()
+        view: CalendarView = view_handler.get_view(
+            view_id=ical_slug,
+            view_model=CalendarView,
+            base_queryset=specific_queryset(
+                CalendarView.objects.select_related(
+                    "date_field", "date_field__content_type", "table"
+                ).prefetch_related("field_options")
+            ),
+            pk_field="ical_slug",
+        )
+        if not view.ical_public:
+            raise ViewDoesNotExist()
+        qs = view_handler.get_queryset(view)
+        cal = build_calendar(qs, view, limit=settings.BASEROW_ICAL_VIEW_MAX_EVENTS)
+        return HttpResponse(
+            cal.to_ical(),
+            content_type="text/calendar",
+            headers={"Cache-Control": "max-age=1800"},
+        )
+
+
+class RotateIcalFeedSlugView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                required=True,
+                description="Rotates the ical feed slug of the calendar view related to the provided "
+                "id.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table views"],
+        operation_id="rotate_calendar_view_ical_feed_slug",
+        description=(
+            "Rotates the unique slug of the calendar view's ical feed by replacing it "
+            "with a new value. This would mean that the publicly shared URL of the "
+            "view will change. Anyone with the old URL won't be able to access the "
+            "view anymore."
+        ),
+        request=None,
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                view_type_registry,
+                ViewSerializer,
+            ),
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_SHARE_VIEW_TYPE"]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            CannotShareViewTypeError: ERROR_CANNOT_SHARE_VIEW_TYPE,
+        }
+    )
+    @transaction.atomic
+    def post(self, request: Request, view_id: int) -> Response:
+        """Rotates the calendar's ical slug of a view."""
+
+        view = action_type_registry.get_by_type(RotateCalendarIcalSlugActionType).do(
+            request.user,
+            ViewHandler().get_view_for_update(request.user, view_id).specific,
+        )
+
+        serializer = view_type_registry.get_serializer(
+            view, ViewSerializer, context={"user": request.user}
+        )
+        return Response(serializer.data)

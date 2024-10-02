@@ -1,76 +1,199 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
+    <CustomStyle
+      v-model="values.styles"
+      style-key="input"
+      :config-block-types="['input']"
+      :theme="builder.theme"
+    />
+    <FormGroup
+      small-label
       :label="$t('generalForm.labelTitle')"
-      :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.default_value"
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('generalForm.labelPlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
+      small-label
       :label="$t('generalForm.valueTitle')"
-      :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.placeholder"
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.default_value"
+        :placeholder="$t('generalForm.valuePlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
+      small-label
       :label="$t('generalForm.placeholderTitle')"
-      :placeholder="$t('generalForm.placeholderPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-
-    <FormGroup :label="$t('generalForm.requiredTitle')">
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.placeholder"
+        :placeholder="$t('generalForm.placeholderPlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
+      :label="$t('generalForm.requiredTitle')"
+      class="margin-bottom-2"
+      small-label
+      required
+    >
       <Checkbox v-model="values.required"></Checkbox>
     </FormGroup>
 
-    <FormGroup :label="$t('choiceElementForm.multiple')">
+    <FormGroup
+      :label="$t('choiceElementForm.multiple')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Checkbox v-model="values.multiple"></Checkbox>
     </FormGroup>
 
-    <FormGroup :label="$t('choiceElementForm.display')">
-      <RadioButton
+    <FormGroup
+      :label="$t('choiceElementForm.display')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
         v-model="values.show_as_dropdown"
-        icon="iconoir-list"
-        :value="true"
-      >
-        {{ $t('choiceElementForm.dropdown') }}
-      </RadioButton>
-      <RadioButton
-        v-model="values.show_as_dropdown"
-        :icon="
-          values.multiple ? 'baserow-icon-check-square' : 'iconoir-check-circle'
-        "
-        :value="false"
-      >
-        {{
-          values.multiple
-            ? $t('choiceElementForm.checkbox')
-            : $t('choiceElementForm.radio')
-        }}
-      </RadioButton>
+        :options="displayOptions"
+        type="button"
+      />
     </FormGroup>
 
-    <ChoiceOptionsSelector
-      :options="values.options"
-      @update="optionUpdated"
-      @create="createOption"
-      @delete="deleteOption"
-    />
+    <FormGroup
+      :label="$t('choiceOptionSelector.optionType')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioButton
+        v-model="values.option_type"
+        type="chips"
+        :value="CHOICE_OPTION_TYPES.MANUAL"
+        icon="iconoir-open-select-hand-gesture"
+      >
+        {{ $t('choiceOptionSelector.manual') }}
+      </RadioButton>
+      <RadioButton
+        v-model="values.option_type"
+        type="chips"
+        :value="CHOICE_OPTION_TYPES.FORMULAS"
+        icon="iconoir-sigma-function"
+      >
+        {{ $t('choiceOptionSelector.formulas') }}
+      </RadioButton>
+    </FormGroup>
+    <template v-if="values.option_type === CHOICE_OPTION_TYPES.MANUAL">
+      <template v-if="values.options.length">
+        <div class="row" style="--gap: 6px">
+          <label class="col col-5 control__label control__label--small">
+            {{ $t('choiceOptionSelector.name') }}
+          </label>
+          <label class="col col-7 control__label control__label--small">
+            {{ $t('choiceOptionSelector.value') }}
+          </label>
+        </div>
+        <div
+          v-for="option in values.options"
+          :key="option.id"
+          style="--gap: 6px"
+          class="row margin-bottom-1"
+        >
+          <div class="col col-5">
+            <FormInput
+              v-model="option.name"
+              :placeholder="$t('choiceOptionSelector.namePlaceholder')"
+            />
+          </div>
+          <div class="col col-5">
+            <FormInput
+              :value="option.value === null ? option.name : option.value"
+              :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
+              :class="{
+                'choice-element__option-value--fake': option.value === null,
+              }"
+              @input="option.value = $event"
+            />
+          </div>
+          <div class="col col-2">
+            <ButtonIcon icon="iconoir-bin" @click="deleteOption(option)" />
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <div class="row" style="--gap: 6px">
+          <label class="col control__label control__label--small">
+            {{ $t('choiceOptionSelector.addOptionDescription') }}
+          </label>
+        </div>
+      </template>
+      <ButtonText
+        type="secondary"
+        size="small"
+        icon="iconoir-plus"
+        :loading="loading"
+        @click="createOption"
+      >
+        {{ $t('choiceOptionSelector.addOption') }}
+      </ButtonText>
+    </template>
+    <template v-else-if="values.option_type === CHOICE_OPTION_TYPES.FORMULAS">
+      <FormGroup
+        small-label
+        :label="$t('choiceOptionSelector.name')"
+        class="margin-bottom-2"
+      >
+        <InjectedFormulaInput
+          v-model="values.formula_name"
+          :placeholder="$t('choiceOptionSelector.namePlaceholder')"
+        />
+      </FormGroup>
+      <FormGroup
+        small-label
+        :label="$t('choiceOptionSelector.value')"
+        class="margin-bottom-2"
+        required
+      >
+        <InjectedFormulaInput
+          v-model="values.formula_value"
+          :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
+        />
+      </FormGroup>
+    </template>
   </form>
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import { DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS } from '@baserow/modules/builder/enums'
-import form from '@baserow/modules/core/mixins/form'
-import ChoiceOptionsSelector from '@baserow/modules/builder/components/elements/components/forms/general/choice/ChoiceOptionsSelector.vue'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
+import { CHOICE_OPTION_TYPES } from '@baserow/modules/builder/enums'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
+import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
 import { uuid } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'ChoiceElementForm',
-  components: { ChoiceOptionsSelector, ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
-  inject: ['page'],
+  components: {
+    InjectedFormulaInput,
+    CustomStyle,
+  },
+  mixins: [formElementForm],
+  props: {
+    loading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
   data() {
     return {
       allowedValues: [
@@ -81,6 +204,10 @@ export default {
         'options',
         'multiple',
         'show_as_dropdown',
+        'option_type',
+        'formula_name',
+        'formula_value',
+        'styles',
       ],
       values: {
         label: '',
@@ -90,34 +217,52 @@ export default {
         options: [],
         multiple: false,
         show_as_dropdown: true,
+        option_type: CHOICE_OPTION_TYPES.MANUAL,
+        formula_name: '',
+        formula_value: '',
+        styles: {},
       },
     }
   },
   computed: {
-    DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS: () =>
-      DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
+    CHOICE_OPTION_TYPES: () => CHOICE_OPTION_TYPES,
     element() {
       return this.$store.getters['element/getElementById'](
         this.page,
         this.values.id
       )
     },
+    displayOptions() {
+      return [
+        {
+          title: this.$t('choiceElementForm.dropdown'),
+          label: this.$t('choiceElementForm.dropdown'),
+          value: true,
+          icon: 'iconoir-list',
+        },
+        {
+          title: this.values.multiple
+            ? this.$t('choiceElementForm.checkbox')
+            : this.$t('choiceElementForm.radio'),
+          label: this.values.multiple
+            ? this.$t('choiceElementForm.checkbox')
+            : this.$t('choiceElementForm.radio'),
+          value: false,
+          icon: this.values.multiple
+            ? 'baserow-icon-check-square'
+            : 'iconoir-check-circle',
+        },
+      ]
+    },
   },
   watch: {
     'element.options'(options) {
-      this.values.options = options.map((o) => o)
+      this.values.options = { ...options }
     },
   },
   methods: {
-    optionUpdated({ id }, changes) {
-      const index = this.values.options.findIndex((option) => option.id === id)
-      this.$set(this.values.options, index, {
-        ...this.values.options[index],
-        ...changes,
-      })
-    },
     createOption() {
-      this.values.options.push({ name: '', value: '', id: uuid() })
+      this.values.options.push({ name: '', value: null, id: uuid() })
     },
     deleteOption({ id }) {
       this.values.options = this.values.options.filter(

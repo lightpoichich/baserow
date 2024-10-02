@@ -1,17 +1,13 @@
 .data-source-form {
-  &:not(:last-child) {
-    border-bottom: 1px solid $color-neutral-200;
-    margin-bottom: 20px;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 12px;
 
   .tabs__header {
     border-bottom: none;
     padding-left: 0;
   }
-}
-
-.data-source-form__header {
-  margin-bottom: 20px;
 }
 
 .data-source-form__header-form {
@@ -54,17 +50,20 @@
     display: flex;
     align-items: center;
 
-    .filters__value--formula-input {
+    .filters__value--formula-input,
+    .form-input,
+    .filters__multi-value {
       flex: 1;
-      margin-bottom: 0;
+      height: 38px;
+
+      .dropdown {
+        flex: 1;
+        max-width: none;
+      }
 
       .formula-input-field {
-        min-height: 37px;
+        height: 38px;
       }
-    }
-
-    .input--small {
-      height: 37px;
     }
 
     .control__elements--small {

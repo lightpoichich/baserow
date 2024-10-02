@@ -1,5 +1,6 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, Generator, List, Optional, Type
 
+from django.db import IntegrityError
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 
@@ -7,18 +8,25 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.api.exceptions import RequestBodyValidationException
-from baserow.contrib.builder.api.elements.serializers import CollectionFieldSerializer
+from baserow.contrib.builder.api.elements.serializers import (
+    CollectionElementPropertyOptionsSerializer,
+    CollectionFieldSerializer,
+)
 from baserow.contrib.builder.data_providers.exceptions import (
     FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
+from baserow.contrib.builder.elements.exceptions import (
+    CollectionElementPropertyOptionsNotUnique,
+)
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
+    CollectionElement,
+    CollectionElementPropertyOptions,
     CollectionField,
     ContainerElement,
     Element,
     FormElement,
-    TableElement,
 )
 from baserow.contrib.builder.elements.registries import (
     collection_field_type_registry,
@@ -28,6 +36,8 @@ from baserow.contrib.builder.elements.signals import elements_moved
 from baserow.contrib.builder.elements.types import CollectionElementSubClass
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
+from baserow.core.registry import Instance
+from baserow.core.services.dispatch_context import DispatchContext
 
 
 class ContainerElementTypeMixin:
@@ -113,26 +123,93 @@ class ContainerElementTypeMixin:
 
 
 class CollectionElementTypeMixin:
-    allowed_fields = ["data_source", "data_source_id", "items_per_page"]
-    serializer_field_names = ["data_source_id", "items_per_page"]
+    allowed_fields = [
+        "data_source",
+        "data_source_id",
+        "items_per_page",
+        "schema_property",
+        "button_load_more_label",
+    ]
+    serializer_field_names = [
+        "schema_property",
+        "data_source_id",
+        "items_per_page",
+        "button_load_more_label",
+        "property_options",
+    ]
 
     class SerializedDict(ElementDict):
         data_source_id: int
         items_per_page: int
+        button_load_more_label: str
+        schema_property: str
+        property_options: List[Dict]
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("property_options")
+
+    def after_update(self, instance: CollectionElementSubClass, values):
+        """
+        After the element has been updated we need to update the property options.
+
+        :param instance: The instance of the element that has been updated.
+        :param values: The values that have been updated.
+        :return: None
+        """
+
+        if "property_options" in values:
+            instance.property_options.all().delete()
+            try:
+                CollectionElementPropertyOptions.objects.bulk_create(
+                    [
+                        CollectionElementPropertyOptions(
+                            **option,
+                            element=instance,
+                        )
+                        for option in values["property_options"]
+                    ]
+                )
+            except IntegrityError as e:
+                if "unique constraint" in e.args[0]:
+                    raise CollectionElementPropertyOptionsNotUnique()
+                raise e
 
     @property
     def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
         return {
             "data_source_id": serializers.IntegerField(
                 allow_null=True,
                 default=None,
-                help_text=TableElement._meta.get_field("data_source").help_text,
+                help_text=CollectionElement._meta.get_field("data_source").help_text,
+                required=False,
+            ),
+            "schema_property": serializers.CharField(
+                allow_null=True,
+                default=None,
+                help_text=CollectionElement._meta.get_field(
+                    "schema_property"
+                ).help_text,
                 required=False,
             ),
             "items_per_page": serializers.IntegerField(
                 default=20,
-                help_text=TableElement._meta.get_field("items_per_page").help_text,
+                help_text=CollectionElement._meta.get_field("items_per_page").help_text,
                 required=False,
+            ),
+            "button_load_more_label": FormulaSerializerField(
+                help_text=CollectionElement._meta.get_field(
+                    "button_load_more_label"
+                ).help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "property_options": CollectionElementPropertyOptionsSerializer(
+                many=True,
+                required=False,
+                help_text="The schema property options that can be set for the collection element.",
             ),
         }
 
@@ -142,14 +219,19 @@ class CollectionElementTypeMixin:
         if "data_source_id" in values:
             data_source_id = values.pop("data_source_id")
             if data_source_id is not None:
+                schema_property = values.get("schema_property", None)
                 data_source = DataSourceHandler().get_data_source(data_source_id)
-                if (
-                    not data_source.service
-                    or not data_source.service.specific.get_type().returns_list
-                ):
+                if data_source.service:
+                    service_type = data_source.service.specific.get_type()
+                    if service_type.returns_list and schema_property:
+                        raise DRFValidationError(
+                            "Data sources which return multiple rows cannot be "
+                            "used in conjunction with the schema property."
+                        )
+                else:
                     raise DRFValidationError(
-                        f"The data source with ID {data_source_id} doesn't return a "
-                        "list."
+                        f"Data source {data_source_id} is partially "
+                        "configured and not ready for use."
                     )
 
                 if instance:
@@ -174,6 +256,40 @@ class CollectionElementTypeMixin:
                 values["data_source"] = None
 
         return super().prepare_value_for_db(values, instance)
+
+    def serialize_property(
+        self,
+        element: CollectionElementSubClass,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "property_options":
+            return [
+                {
+                    "schema_property": po.schema_property,
+                    "filterable": po.filterable,
+                    "sortable": po.sortable,
+                    "searchable": po.searchable,
+                }
+                for po in element.property_options.all()
+            ]
+
+        return super().serialize_property(
+            element,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def deserialize_property(
         self,
@@ -233,6 +349,46 @@ class CollectionElementTypeMixin:
             **kwargs,
         )
 
+    def create_instance_from_serialized(
+        self,
+        serialized_values: Dict[str, Any],
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ) -> CollectionElementSubClass:
+        """
+        Responsible for creating the property options from the serialized values.
+
+        :param serialized_values: The serialized values of the element.
+        :param id_mapping: A dictionary containing the mapping of the old and new ids.
+        :param files_zip: The zip file containing the files that can be used.
+        :param storage: The storage that can be used to store files.
+        :param cache: A dictionary that can be used to cache data.
+        :param kwargs: Additional keyword arguments.
+        :return: The created instance.
+        """
+
+        property_options = serialized_values.pop("property_options", [])
+
+        instance = super().create_instance_from_serialized(
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+        # Create property options
+        options = [CollectionElementPropertyOptions(**po) for po in property_options]
+        CollectionElementPropertyOptions.objects.bulk_create(options)
+
+        instance.property_options.add(*options)
+
+        return instance
+
 
 class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
     """
@@ -253,6 +409,20 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
 
     class SerializedDict(CollectionElementTypeMixin.SerializedDict):
         fields: List[Dict]
+
+    def formula_generator(
+        self, element: "CollectionElementWithFieldsTypeMixin"
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formula fields for LinkCollectionFieldType.
+
+        Some formula fields are in the config JSON field, e.g. page_parameters.
+        """
+
+        yield from super().formula_generator(element)
+
+        for collection_field in element.fields.all():
+            yield from collection_field.get_type().formula_generator(collection_field)
 
     def serialize_property(
         self,
@@ -313,6 +483,14 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         instance.fields.add(*created_fields)
 
     def after_update(self, instance: CollectionElementSubClass, values):
+        """
+        After the element has been updated we need to update the fields.
+
+        :param instance: The instance of the element that has been updated.
+        :param values: The values that have been updated.
+        :return: None
+        """
+
         if "fields" in values:
             # If the collection element contains fields that are being deleted,
             # we also need to delete the associated workflow actions.
@@ -335,6 +513,8 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
                 ]
             )
             instance.fields.add(*created_fields)
+
+        super().after_update(instance, values)
 
     def before_delete(self, instance: CollectionElementSubClass):
         # Call the before_delete hook of all fields
@@ -392,13 +572,19 @@ class FormElementTypeMixin:
     # Form element types are imported second, after containers.
     import_element_priority = 1
 
-    def is_valid(self, element: Type[FormElement], value: Any) -> bool:
+    def is_valid(
+        self,
+        element: Type[FormElement],
+        value: Any,
+        dispatch_context: DispatchContext,
+    ) -> bool:
         """
         Given an element and form data value, returns whether it's valid.
         Used by `FormDataProviderType` to determine if form data is valid.
 
         :param element: The element we're trying to use form data in.
         :param value: The form data value, which may be invalid.
+        :param dispatch_context: The dispatch context of the request.
         :return: Whether the value is valid or not for this element.
         """
 

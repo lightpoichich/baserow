@@ -9,7 +9,9 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
   }
 
   get name() {
-    return this.app.i18n.t('serviceType.localBaserowGetRow')
+    return this.app.i18n.t('serviceType.localBaserowGetRow', {
+      singleRow: this.app.i18n.t('integrationsCommon.singleRow'),
+    })
   }
 
   get integrationType() {
@@ -20,11 +22,7 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
   }
 
   isValid(service) {
-    return (
-      super.isValid(service) &&
-      Boolean(service.table_id) &&
-      Boolean(service.row_id)
-    )
+    return super.isValid(service) && Boolean(service.table_id)
   }
 
   get formComponent() {
@@ -33,6 +31,10 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
 
   getDataSchema(service) {
     return service.schema
+  }
+
+  getContextDataSchema(service) {
+    return service.context_data_schema
   }
 
   /**
@@ -52,6 +54,11 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
     return newValues
   }
 
+  /** Returns the name of the given record */
+  getRecordName(service, record) {
+    return ''
+  }
+
   getOrder() {
     return 10
   }
@@ -63,7 +70,9 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
   }
 
   get name() {
-    return this.app.i18n.t('serviceType.localBaserowListRows')
+    return this.app.i18n.t('serviceType.localBaserowListRows', {
+      multipleRows: this.app.i18n.t('integrationsCommon.multipleRows'),
+    })
   }
 
   get integrationType() {
@@ -89,6 +98,10 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
     return service.schema
   }
 
+  getContextDataSchema(service) {
+    return service.context_data_schema
+  }
+
   get maxResultLimit() {
     return 100
   }
@@ -98,7 +111,6 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
       .filter(
         (field) =>
           field !== 'id' &&
-          service.schema.items.properties[field].original_type !== 'file' && // we have no way to display files in a table &&
           service.schema.items.properties[field].original_type !== 'formula' // every formula has different properties
       )
       .map((field) => {
@@ -121,6 +133,14 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
             target: 'blank',
             type: 'link',
           }
+        } else if (originalType === 'file') {
+          return {
+            id: uuid(),
+            name: service.schema.items.properties[field].title,
+            type: 'image',
+            src: `get('current_record.${field}.*.url')`,
+            alt: `get('current_record.${field}.*.visible_name')`,
+          }
         } else if (
           originalType === 'last_modified_by' ||
           originalType === 'created_by'
@@ -141,6 +161,12 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
           id: uuid(), // Temporary id
         }
       })
+  }
+
+  getRecordName(service, record) {
+    // We skip row_id and order properties here so we keep only first which should be
+    // the primary field.
+    return Object.values(record)[2]
   }
 
   getOrder() {

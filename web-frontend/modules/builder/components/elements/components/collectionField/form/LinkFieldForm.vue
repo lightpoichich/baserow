@@ -1,55 +1,84 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.link_name"
-      small
+    <FormGroup
+      small-label
       :label="$t('linkFieldForm.fieldLinkNameLabel')"
-      :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
+      required
       horizontal
-    />
+    >
+      <InjectedFormulaInput
+        v-model="values.link_name"
+        :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
+      />
+      <template #after-input>
+        <CustomStyle
+          v-model="values.styles"
+          style-key="cell"
+          :config-block-types="['table', 'button']"
+          :theme="baseTheme"
+          :extra-args="{ onlyCell: true, noAlignment: true }"
+          variant="normal"
+        />
+      </template>
+    </FormGroup>
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
       @values-changed="emitChange($event)"
     />
+    <FormGroup
+      :label="$t('linkElementForm.variant')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.variant"
+        :options="LINK_VARIANTS"
+        type="button"
+      />
+    </FormGroup>
   </form>
 </template>
 
 <script>
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
+import { LINK_VARIANTS } from '@baserow/modules/builder/enums'
 
 export default {
-  name: 'TextField',
+  name: 'LinkField',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
+    CustomStyle,
     LinkNavigationSelectionForm,
   },
-  mixins: [elementForm],
-  inject: ['page', 'builder'],
-  provide() {
-    return {
-      applicationContext: {
-        builder: this.builder,
-        page: this.page,
-        element: this.element,
-      },
-    }
-  },
-  props: {
-    element: {
-      type: Object,
-      required: true,
-    },
-  },
+  mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['link_name'],
+      allowedValues: ['link_name', 'styles', 'variant'],
       values: {
         link_name: '',
+        styles: {},
+        variant: LINK_VARIANTS.LINK,
       },
     }
+  },
+  computed: {
+    LINK_VARIANTS() {
+      return [
+        {
+          value: LINK_VARIANTS.LINK,
+          label: this.$t('linkElementForm.variantLink'),
+        },
+        {
+          value: LINK_VARIANTS.BUTTON,
+          label: this.$t('linkElementForm.variantButton'),
+        },
+      ]
+    },
   },
 }
 </script>

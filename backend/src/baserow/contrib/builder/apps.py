@@ -180,6 +180,7 @@ class BuilderConfig(AppConfig):
             ImageElementType,
             InputTextElementType,
             LinkElementType,
+            RecordSelectorElementType,
             RepeatElementType,
             TableElementType,
             TextElementType,
@@ -195,6 +196,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(ButtonElementType())
         element_type_registry.register(TableElementType())
         element_type_registry.register(RepeatElementType())
+        element_type_registry.register(RecordSelectorElementType())
         element_type_registry.register(FormContainerElementType())
         element_type_registry.register(ChoiceElementType())
         element_type_registry.register(CheckboxElementType())
@@ -216,6 +218,7 @@ class BuilderConfig(AppConfig):
 
         from .data_providers.data_provider_types import (
             CurrentRecordDataProviderType,
+            DataSourceContextDataProviderType,
             DataSourceDataProviderType,
             FormDataProviderType,
             PageParameterDataProviderType,
@@ -224,6 +227,9 @@ class BuilderConfig(AppConfig):
         )
 
         builder_data_provider_type_registry.register(DataSourceDataProviderType())
+        builder_data_provider_type_registry.register(
+            DataSourceContextDataProviderType()
+        )
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
         builder_data_provider_type_registry.register(CurrentRecordDataProviderType())
         builder_data_provider_type_registry.register(FormDataProviderType())
@@ -235,13 +241,30 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateThemeOperationType())
 
         from .theme.registries import theme_config_block_registry
-        from .theme.theme_config_block_types import MainThemeConfigBlockType
+        from .theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+            ColorThemeConfigBlockType,
+            ImageThemeConfigBlockType,
+            InputThemeConfigBlockType,
+            LinkThemeConfigBlockType,
+            PageThemeConfigBlockType,
+            TableThemeConfigBlockType,
+            TypographyThemeConfigBlockType,
+        )
 
-        theme_config_block_registry.register(MainThemeConfigBlockType())
+        theme_config_block_registry.register(ColorThemeConfigBlockType())
+        theme_config_block_registry.register(TypographyThemeConfigBlockType())
+        theme_config_block_registry.register(ButtonThemeConfigBlockType())
+        theme_config_block_registry.register(LinkThemeConfigBlockType())
+        theme_config_block_registry.register(ImageThemeConfigBlockType())
+        theme_config_block_registry.register(PageThemeConfigBlockType())
+        theme_config_block_registry.register(InputThemeConfigBlockType())
+        theme_config_block_registry.register(TableThemeConfigBlockType())
 
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
             CreateRowWorkflowActionType,
+            DeleteRowWorkflowActionType,
             LogoutWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
@@ -253,6 +276,7 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
         builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
         builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
+        builder_workflow_action_type_registry.register(DeleteRowWorkflowActionType())
         builder_workflow_action_type_registry.register(LogoutWorkflowActionType())
         builder_workflow_action_type_registry.register(
             RefreshDataSourceWorkflowAction()
@@ -261,6 +285,7 @@ class BuilderConfig(AppConfig):
         from .elements.collection_field_types import (
             BooleanCollectionFieldType,
             ButtonCollectionFieldType,
+            ImageCollectionFieldType,
             LinkCollectionFieldType,
             TagsCollectionFieldType,
             TextCollectionFieldType,
@@ -272,6 +297,7 @@ class BuilderConfig(AppConfig):
         collection_field_type_registry.register(LinkCollectionFieldType())
         collection_field_type_registry.register(TagsCollectionFieldType())
         collection_field_type_registry.register(ButtonCollectionFieldType())
+        collection_field_type_registry.register(ImageCollectionFieldType())
 
         from .domains.receivers import connect_to_domain_pre_delete_signal
 

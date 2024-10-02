@@ -1,30 +1,60 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
+    <CustomStyle
+      v-model="values.styles"
+      style-key="input"
+      :config-block-types="['input']"
+      :theme="builder.theme"
+    />
+    <FormGroup
       :label="$t('generalForm.labelTitle')"
-      :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.default_value"
+      class="margin-bottom-2"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('generalForm.labelPlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
       :label="$t('generalForm.valueTitle')"
-      :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.placeholder"
+      class="margin-bottom-2"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.default_value"
+        :placeholder="$t('generalForm.valuePlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
       :label="$t('generalForm.placeholderTitle')"
-      :placeholder="$t('generalForm.placeholderPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-
-    <FormGroup :label="$t('generalForm.requiredTitle')">
+      class="margin-bottom-2"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.placeholder"
+        :placeholder="$t('generalForm.placeholderPlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
+      :label="$t('generalForm.requiredTitle')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Checkbox v-model="values.required"></Checkbox>
     </FormGroup>
 
-    <FormGroup :label="$t('generalForm.validationTitle')">
-      <Dropdown v-model="values.validation_type" :show-search="true">
+    <FormGroup
+      :label="$t('generalForm.validationTitle')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <Dropdown v-model="values.validation_type" :show-search="true" small>
         <DropdownItem
           v-for="validationType in validationTypes"
           :key="validationType.name"
@@ -36,41 +66,54 @@
       </Dropdown>
     </FormGroup>
 
-    <FormGroup :label="$t('inputTextElementForm.multilineTitle')">
+    <FormGroup
+      :label="$t('inputTextElementForm.multilineTitle')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Checkbox v-model="values.is_multiline"></Checkbox>
     </FormGroup>
 
-    <FormElement v-if="values.is_multiline">
+    <FormGroup
+      v-if="values.is_multiline"
+      small-label
+      required
+      class="margin-bottom-2"
+      :error-message="
+        $v.values.rows.$dirty && !$v.values.rows.required
+          ? $t('error.requiredField')
+          : !$v.values.rows.integer
+          ? $t('error.integerField')
+          : !$v.values.rows.minValue
+          ? $t('error.minValueField', { min: 1 })
+          : !$v.values.rows.maxValue
+          ? $t('error.maxValueField', { max: 100 })
+          : ''
+      "
+    >
       <FormInput
         v-model="values.rows"
         type="number"
         :label="$t('inputTextElementForm.rowsTitle')"
         :placeholder="$t('inputTextElementForm.rowsPlaceholder')"
         :to-value="(value) => parseInt(value)"
-        :error="
-          $v.values.rows.$dirty && !$v.values.rows.required
-            ? $t('error.requiredField')
-            : !$v.values.rows.integer
-            ? $t('error.integerField')
-            : !$v.values.rows.minValue
-            ? $t('error.minValueField', { min: 1 })
-            : !$v.values.rows.maxValue
-            ? $t('error.maxValueField', { max: 100 })
-            : ''
-        "
       ></FormInput>
-    </FormElement>
+    </FormGroup>
 
     <FormGroup
       v-else
       :label="$t('inputTextElementForm.inputType')"
-      :description="
+      :helper-text="
         values.input_type === 'password'
           ? $t('inputTextElementForm.passwordTypeWarning')
           : null
       "
+      small-label
+      required
+      class="margin-bottom-2"
     >
-      <Dropdown v-model="values.input_type" :show-search="false">
+      <Dropdown v-model="values.input_type" :show-search="false" small>
         <DropdownItem
           v-for="inputType in inputTypes"
           :key="inputType.name"
@@ -86,14 +129,15 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
+import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
 
 export default {
   name: 'InputTextElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [elementForm],
+  components: { InjectedFormulaInput, CustomStyle },
+  mixins: [formElementForm],
   data() {
     return {
       values: {

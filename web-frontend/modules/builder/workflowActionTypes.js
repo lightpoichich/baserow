@@ -8,6 +8,7 @@ import UpdateRowWorkflowActionForm from '@baserow/modules/builder/components/wor
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { ensureString } from '@baserow/modules/core/utils/validator'
+import DeleteRowWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/DeleteRowWorkflowActionForm.vue'
 
 export class NotificationWorkflowActionType extends WorkflowActionType {
   static getType() {
@@ -57,6 +58,12 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
     if (mode === 'editing' || !url) {
       return
     }
+
+    if (url === this.app.router.history.current?.fullPath) {
+      // Return early because the user is already on the page.
+      return
+    }
+
     if (workflowAction.target !== 'blank') {
       if (!url.startsWith('/')) {
         window.location.href = url
@@ -196,5 +203,19 @@ export class UpdateRowWorkflowActionType extends WorkflowActionServiceType {
 
   get label() {
     return this.app.i18n.t('workflowActionTypes.updateRowLabel')
+  }
+}
+
+export class DeleteRowWorkflowActionType extends WorkflowActionServiceType {
+  static getType() {
+    return 'delete_row'
+  }
+
+  get form() {
+    return DeleteRowWorkflowActionForm
+  }
+
+  get label() {
+    return this.app.i18n.t('workflowActionTypes.deleteRowLabel')
   }
 }

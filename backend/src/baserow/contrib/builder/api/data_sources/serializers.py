@@ -4,6 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.serializers import CommaSeparatedIntegerValuesField
 from baserow.api.services.serializers import (
     CreateServiceSerializer,
     ServiceSerializer,
@@ -31,12 +32,19 @@ class DataSourceSerializer(ServiceSerializer):
     )
     type = serializers.SerializerMethodField(help_text="The type of the data source.")
 
+    def _get_service_instance(self, instance):
+        # We generate the service schema using a `Service` instance.
+        # If the `instance` is a `DataSource` instance, traverse its
+        # 1-1 relation to `Service` and serialize it.
+        return instance.service if isinstance(instance, DataSource) else instance
+
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        if isinstance(instance, DataSource):
-            return None
+        service_instance = self._get_service_instance(instance)
+        if service_instance:
+            return super().get_type(service_instance)
         else:
-            return service_type_registry.get_by_model(instance.specific_class).type
+            return None
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_id(self, instance):
@@ -56,15 +64,26 @@ class DataSourceSerializer(ServiceSerializer):
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_schema(self, instance):
-        # We generate the service schema using a `Service` instance.
-        # If the `instance` is a `DataSource` instance, traverse its
-        # 1-1 relation to `Service` and serialize it.
-        service_instance = (
-            instance.service if isinstance(instance, DataSource) else instance
-        )
+        service_instance = self._get_service_instance(instance)
         if service_instance:
             return super().get_schema(service_instance)
         return None
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_context_data(self, instance):
+        service_instance = self._get_service_instance(instance)
+        if service_instance:
+            return super().get_context_data(service_instance)
+        else:
+            return {}
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_context_data_schema(self, instance):
+        service_instance = self._get_service_instance(instance)
+        if service_instance:
+            return super().get_context_data_schema(service_instance)
+        else:
+            return None
 
     class Meta(ServiceSerializer.Meta):
         fields = ServiceSerializer.Meta.fields + ("name", "page_id", "order")
@@ -136,3 +155,7 @@ class MoveDataSourceSerializer(serializers.Serializer):
             "Otherwise the data_source is placed  last for this page."
         ),
     )
+
+
+class GetRecordIdsSerializer(serializers.Serializer):
+    record_ids = CommaSeparatedIntegerValuesField()

@@ -1,55 +1,58 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkNavigationSelection.navigateTo') }}
-      </label>
-      <div class="control__elements">
-        <Dropdown v-model="navigateTo" :show-search="false" small>
-          <template #value>
-            <template v-if="destinationPage">
-              {{ destinationPage.name }}
-              <span
-                class="link-navigation-selection-form__navigate-option-page-path"
-              >
-                {{ destinationPage.path }}
-              </span></template
-            >
-            <span v-else>{{
-              $t('linkNavigationSelection.navigateToCustom')
-            }}</span>
-          </template>
-          <DropdownItem
-            v-for="pageItem in pages"
-            :key="pageItem.id"
-            :value="pageItem.id"
-            :name="pageItem.name"
-          >
-            {{ pageItem.name }}
+    <FormGroup
+      :label="$t('linkNavigationSelection.navigateTo')"
+      small-label
+      class="margin-bottom-2"
+      required
+    >
+      <Dropdown v-model="navigateTo" :show-search="false" small>
+        <template #value>
+          <template v-if="destinationPage">
+            {{ destinationPage.name }}
             <span
               class="link-navigation-selection-form__navigate-option-page-path"
             >
-              {{ pageItem.path }}
-            </span>
-          </DropdownItem>
-          <DropdownItem
-            :name="$t('linkNavigationSelection.navigateToCustom')"
-            value="custom"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-    </FormElement>
-    <FormElement v-if="navigateTo === 'custom'" class="control">
-      <ApplicationBuilderFormulaInputGroup
+              {{ destinationPage.path }}
+            </span></template
+          >
+          <span v-else>{{
+            $t('linkNavigationSelection.navigateToCustom')
+          }}</span>
+        </template>
+        <DropdownItem
+          v-for="pageItem in pages"
+          :key="pageItem.id"
+          :value="pageItem.id"
+          :name="pageItem.name"
+        >
+          {{ pageItem.name }}
+          <span
+            class="link-navigation-selection-form__navigate-option-page-path"
+          >
+            {{ pageItem.path }}
+          </span>
+        </DropdownItem>
+        <DropdownItem
+          :name="$t('linkNavigationSelection.navigateToCustom')"
+          value="custom"
+        ></DropdownItem>
+      </Dropdown>
+    </FormGroup>
+
+    <FormGroup
+      v-if="navigateTo === 'custom'"
+      class="margin-bottom-2"
+      :label="$t('linkNavigationSelection.url')"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
         v-model="values.navigate_to_url"
-        :page="page"
-        :label="$t('linkNavigationSelection.url')"
         :placeholder="$t('linkNavigationSelection.urlPlaceholder')"
-        :data-providers-allowed="dataProvidersAllowed"
-        small
       />
-    </FormElement>
-    <FormElement v-if="destinationPage" class="control">
+    </FormGroup>
+    <FormGroup v-if="destinationPage" class="margin-bottom-2" required>
       <template v-if="parametersInError">
         <Alert type="error">
           <p>
@@ -66,54 +69,48 @@
         </Alert>
       </template>
       <div v-else>
-        <div v-for="param in values.page_parameters" :key="param.name">
-          <ApplicationBuilderFormulaInputGroup
+        <FormGroup
+          v-for="param in values.page_parameters"
+          :key="param.name"
+          small-label
+          :label="param.name"
+          class="margin-bottom-2"
+          required
+          horizontal
+        >
+          <InjectedFormulaInput
             v-model="param.value"
-            :page="page"
-            :label="param.name"
-            horizontal
             :placeholder="$t('linkNavigationSelection.paramPlaceholder')"
-            :data-providers-allowed="dataProvidersAllowed"
-            small
           />
-        </div>
+        </FormGroup>
       </div>
-    </FormElement>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkNavigationSelection.target') }}
-      </label>
-      <div class="control__elements control__elements--flex">
-        <RadioButton v-model="values.target" value="self">
-          {{ $t('linkNavigationSelection.targetSelf') }}
-        </RadioButton>
-        <RadioButton v-model="values.target" value="blank">
-          {{ $t('linkNavigationSelection.targetNewTab') }}
-        </RadioButton>
-      </div>
-    </FormElement>
+    </FormGroup>
+    <FormGroup
+      small-label
+      :label="$t('linkNavigationSelection.target')"
+      class="margin-bottom-2"
+      required
+    >
+      <RadioGroup
+        v-model="values.target"
+        type="button"
+        :options="linkNavigationSelectionTargetOptions"
+      ></RadioGroup>
+    </FormGroup>
   </form>
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'LinkNavigationSelectionForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
   },
   mixins: [elementForm],
-  props: {
-    dataProvidersAllowed: {
-      type: Array,
-      required: false,
-      default: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
-    },
-  },
   data() {
     return {
       parametersInError: false,
@@ -132,6 +129,13 @@ export default {
         page_parameters: [],
         target: 'self',
       },
+      linkNavigationSelectionTargetOptions: [
+        { value: 'self', label: this.$t('linkNavigationSelection.targetSelf') },
+        {
+          value: 'blank',
+          label: this.$t('linkNavigationSelection.targetNewTab'),
+        },
+      ],
     }
   },
   computed: {

@@ -1,22 +1,20 @@
 import { resolveColor } from '@baserow/modules/core/utils/colors'
-import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
+import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
 import form from '@baserow/modules/core/mixins/form'
-import {
-  DATA_PROVIDERS_ALLOWED_ELEMENTS,
-  DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
-} from '@baserow/modules/builder/enums'
 
 export default {
   inject: ['workspace', 'builder', 'page', 'mode'],
   mixins: [form],
   computed: {
-    colorVariables() {
-      return themeToColorVariables(this.builder.theme)
+    themeConfigBlocks() {
+      return this.$registry.getOrderedList('themeConfigBlock')
     },
-
-    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
-    DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS: () =>
-      DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
+    colorVariables() {
+      return ThemeConfigBlockType.getAllColorVariables(
+        this.themeConfigBlocks,
+        this.builder.theme
+      )
+    },
   },
   methods: {
     resolveColor,

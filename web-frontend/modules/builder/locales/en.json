@@ -1,6 +1,7 @@
 {
   "dataProviderType": {
-    "dataSource": "Data",
+    "dataSource": "Data records",
+    "dataSourceContext": "Available options",
     "pageParameter": "Parameter",
     "currentRecord": "Data source",
     "formData": "Form data",
@@ -15,7 +16,7 @@
   },
   "sidebarComponentBuilder": {
     "settings": "Settings",
-    "createPage": "Create page"
+    "createPage": "New page"
   },
   "builderSettingsModal": {
     "title": "Application"
@@ -96,7 +97,9 @@
     "authForm": "Login form",
     "authFormDescription": "A user login form",
     "repeat": "Repeat",
-    "repeatDescription": "A repeatable set of elements"
+    "repeatDescription": "A repeatable set of elements",
+    "recordSelector": "Record selector",
+    "recordSelectorDescription": "A related record selector"
   },
   "addElementButton": {
     "label": "Element"
@@ -159,10 +162,6 @@
   "imageElement": {
     "emptyState": "No alt text defined..."
   },
-  "imageInput": {
-    "labelDescription": "Default description",
-    "labelButton": "Upload"
-  },
   "generalForm": {
     "labelTitle": "Label",
     "labelPlaceholder": "Enter a label (optional)",
@@ -189,24 +188,14 @@
     "passwordTypeWarning": "Passwords are sensitive data. Please be careful how you handle and store passwords in your application."
   },
   "imageElementForm": {
-    "fileLabel": "Image file",
+    "fileLabel": "Image",
     "invalidUrlError": "URL is invalid",
     "altTextTitle": "Alt text",
     "altTextDescription": "Is used by screen readers and displayed if the image can't load",
     "fileSourceTypeUpload": "Upload",
     "fileSourceTypeURL": "URL",
     "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
-    "uploadFileButton": "Upload file",
-    "maxWidthLabel": "Max width",
-    "maxHeightLabel": "Max height",
-    "maxHeightPlaceholder": "Enter a maximum height in pixels.",
-    "maxWidthPlaceholder": "Enter a maximum width as a percentage.",
-    "imageConstraintsLabel": "Constraints",
-    "imageConstraintFullWidth": "Extend to max width",
-    "imageConstraintCover": "Cover",
-    "imageConstraintCoverDisabled": "Unavailable with empty max height.",
-    "imageConstraintContain": "Contain",
-    "imageConstraintContainDisabled": "Unavailable with a max height."
+    "uploadFileButton": "Upload file"
   },
   "iframeElementForm": {
     "empty": "Empty IFrame...",
@@ -221,6 +210,7 @@
   },
   "columnElementForm": {
     "columnAmountTitle": "Layout",
+    "verticalAlignment": "Vertical alignment",
     "columnAmountName": "no columns | 1 column | {columnAmount} columns",
     "columnGapTitle": "Space between columns",
     "columnGapPlaceholder": "Enter space between columns..."
@@ -309,19 +299,18 @@
     "color": "Color"
   },
   "widthTypes": {
-    "full": "Full width",
+    "fullBleed": "Full bleed",
+    "fullWidth": "Full width",
     "normal": "Normal",
     "medium": "Medium",
     "small": "Small"
   },
   "horizontalAlignmentSelector": {
-    "alignment": "Horizontal alignment",
     "alignmentLeft": "Left",
     "alignmentCenter": "Center",
     "alignmentRight": "Right"
   },
   "verticalAlignmentSelector": {
-    "alignment": "Vertical alignment",
     "alignmentTop": "Top",
     "alignmentCenter": "Middle",
     "alignmentBottom": "Bottom"
@@ -375,24 +364,131 @@
     "boxRight": "Right",
     "backgroundLabel": "Background",
     "backgroundColor": "Background color",
-    "widthLabel": "Width"
+    "widthLabel": "Width",
+    "backgroundImage": "Image",
+    "backgroundImageMode": "Fill mode"
   },
   "styleBoxForm": {
-    "borderLabel": "Border",
-    "paddingLabel": "Padding"
+    "borderColor": "Border color",
+    "borderLabel": "Size",
+    "paddingLabel": "Padding",
+    "marginLabel": "Margin"
   },
-  "mainThemeConfigBlock": {
-    "colorsLabel": "Colors",
+  "themeConfigBlockType": {
+    "color": "Colors",
+    "page": "Page",
+    "typography": "Typography",
+    "button": "Button",
+    "link": "Link",
+    "image": "Image",
+    "input": "Input",
+    "table": "Table"
+  },
+  "colorThemeConfigBlock": {
+    "transparent": "Transparent",
     "primaryColor": "Primary",
     "secondaryColor": "Secondary",
-    "typography": "Typography",
+    "borderColor": "Border",
+    "successColor": "Success",
+    "warningColor": "Warning",
+    "errorColor": "Error"
+  },
+  "pageThemeConfigBlock": {
+    "backgroundColor": "Background color",
+    "backgroundImage": "Background image",
+    "backgroundMode": "Background mode"
+  },
+  "colorThemeConfigBlockType": {
+    "transparent": "Transparent",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "border": "Border",
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error"
+  },
+  "typographyThemeConfigBlock": {
     "headingLabel": "Heading {i} (h{i})",
-    "headingValue": "Heading <h{i}>"
+    "headingValue": "Heading <h{i}>",
+    "color": "Color",
+    "size": "Size",
+    "textAlignment": "Alignment",
+    "bodyLabel": "Body",
+    "fontFamily": "Font"
+  },
+  "buttonThemeConfigBlock": {
+    "backgroundColor": "Background color",
+    "button": "Button",
+    "defaultState": "Default state",
+    "hoverState": "Hover state",
+    "textAlignment": "Text alignment",
+    "alignment": "Alignment",
+    "width": "Width",
+    "textColor": "Text color",
+    "borderColor": "Border color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Font size"
+  },
+  "linkThemeConfigBlock": {
+    "color": "Color",
+    "link": "Link",
+    "defaultState": "Default state",
+    "hoverState": "Hover state",
+    "alignment": "Alignment",
+    "fontFamily": "Font"
+  },
+  "inputThemeConfigBlock": {
+    "label": "Label",
+    "input": "Input",
+    "backgroundColor": "Background color",
+    "textColor": "Text color",
+    "borderColor": "Border color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Font size"
+  },
+  "imageThemeConfigBlock": {
+    "alignment": "Alignment",
+    "maxWidthLabel": "Max width",
+    "maxHeightLabel": "Max height",
+    "maxHeightPlaceholder": "Enter a max height",
+    "maxWidthPlaceholder": "Enter a max width",
+    "imageConstraintsLabel": "Constraints",
+    "imageConstraintFullWidth": "Extend to max width",
+    "imageConstraintCover": "Cover",
+    "imageConstraintCoverDisabled": "Unavailable with empty max height.",
+    "imageConstraintContain": "Contain",
+    "imageConstraintContainDisabled": "Unavailable with a max height."
+  },
+  "tableThemeConfigBlock": {
+    "borderColor": "Border color",
+    "backgroundAlternateColor": "Even rows color",
+    "backgroundColor": "Background color",
+    "textColor": "Text color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Size",
+    "fontSize": "Font size",
+    "table": "Table",
+    "header": "Header",
+    "alignment": "Alignment",
+    "cells": "Cells",
+    "separators": "Separators",
+    "verticalSeparatorColor": "Vertical color",
+    "verticalSeparatorSize": "Vertical size",
+    "horizontalSeparatorColor": "Horizontal color",
+    "horizontalSeparatorSize": "Horizontal size"
   },
   "buttonElementForm": {
-    "valueLabel": "Text",
-    "valuePlaceholder": "Enter text...",
-    "buttonColor": "Button color"
+    "valueLabel": "Button text",
+    "valuePlaceholder": "Enter text..."
   },
   "buttonElement": {
     "noValue": "Unnamed..."
@@ -415,6 +511,9 @@
     "checkbox": "Checkbox",
     "radio": "Radio"
   },
+  "dropdown": {
+    "empty": "No options available"
+  },
   "tableElementForm": {
     "dataSource": "Data source",
     "fields": "Fields",
@@ -423,23 +522,34 @@
     "fieldValuePlaceholder": "Enter value...",
     "itemsPerPage": "Items per page",
     "fieldDefaultName": "Column",
+    "name": "Name",
     "fieldType": "Type",
     "itemsPerPagePlaceholder": "Enter value...",
-    "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
+    "selectSourceFirst": "Choose a data source and/or property to begin configuring your fields.",
     "buttonColor": "Button color",
     "refreshFieldsFromDataSource": "refresh fields from data source",
     "orientation": "Orientation",
     "orientationHorizontal": "Horizontal",
-    "orientationVertical": "Vertical"
+    "orientationVertical": "Vertical",
+    "buttonLoadMoreLabel": "Show more label",
+    "propertySelectorMissingArrays": "No multiple valued fields found to use as rows."
   },
   "tableElement": {
-    "empty": "No items have been found.",
     "showMore": "Show more"
+  },
+  "abTable": {
+    "loading": "Loading...",
+    "empty": "No items have been found."
   },
   "repeatElement": {
     "empty": "No items have been found.",
     "showMore": "Show more",
-    "missingDataSourceTooltip": "Choose a data source to begin adding elements."
+    "missingDataSourceTooltip": "Choose a data source to begin adding elements.",
+    "missingSchemaPropertyTooltip": "Choose a property to begin adding elements."
+  },
+  "collectionElementForm": {
+    "noDataSourceMessage": "Choose a data source with multiple rows to list all results, or a single row data source to choose a property inside this row.",
+    "noSchemaPropertyMessage": "Choose a property inside the data source to use as the list data of your element."
   },
   "repeatElementForm": {
     "dataSource": "Data source",
@@ -449,17 +559,33 @@
     "itemsPerRowDescription": "Number of columns per row and device type.",
     "orientationLabel": "Orientation",
     "orientationVertical": "Vertical",
-    "orientationHorizontal": "Horizontal"
+    "orientationHorizontal": "Horizontal",
+    "buttonLoadMoreLabel": "Show more label",
+    "toggleEditorRepetitionsLabel": "Temporarily disable repetitions",
+    "propertySelectorMissingArrays": "No multiple valued fields found to repeat with."
+  },
+  "recordSelectorElementForm": {
+    "selectRecordsFrom": "Select records from",
+    "noDataSourceMessage": "Choose a data source with multiple rows to list all results.",
+    "optionNameSuffix": "Option name suffix",
+    "optionNameSuffixPlaceholder": "Enter a suffix...",
+    "optionNameSuffixHelper": "This suffix is appended to each option name when you open the dropdown and helps to distinguish them.",
+    "itemsPerPage": "Items per page",
+    "itemsPerPagePlaceholder": "Enter value...",
+    "multipleLabel": "Allow multiple values",
+    "record": "Record {id}"
   },
   "currentRecordDataProviderType": {
     "index": "Index",
-    "firstPartName": "Data source: {name}"
+    "firstPartName": "Data source: {name}",
+    "schemaProperty": "{prefixName}: {schemaProperty}"
   },
   "workflowActionTypes": {
     "notificationLabel": "Show Notification",
     "openPageLabel": "Open Page",
     "createRowLabel": "Create Row",
     "updateRowLabel": "Update Row",
+    "deleteRowLabel": "Delete Row",
     "logoutLabel": "Logout",
     "refreshDataSourceLabel": "Refresh data source"
   },
@@ -474,9 +600,11 @@
   },
   "collectionFieldType": {
     "boolean": "Boolean",
+    "button": "Button",
     "text": "Text",
     "link": "Link",
-    "tags": "Tags"
+    "tags": "Tags",
+    "image": "Image"
   },
   "textFieldForm": {
     "fieldValueLabel": "Value",
@@ -497,6 +625,13 @@
   },
   "linkField": {
     "details": "Details"
+  },
+  "imageFieldForm": {
+    "fieldSrcLabel": "Image source",
+    "fieldSrcPlaceholder": "Enter value",
+    "fieldAltLabel": "Alt text",
+    "fieldAltPlaceholder": "Enter value...",
+    "fieldAltHelp": "Is used by screen readers and displayed if the image can't load"
   },
   "createUserSourceForm": {
     "userSourceType": "Type",
@@ -521,9 +656,16 @@
   },
   "choiceOptionSelector": {
     "label": "Options",
-    "value": "Value",
-    "name": "Name",
-    "addOption": "add option"
+    "value": "Option values",
+    "valuePlaceholder": "Enter value",
+    "name": "Option names",
+    "namePlaceholder": "Enter name",
+    "addOption": "add option",
+    "addOptionDescription": "Click 'add option' to add options to your dropdown",
+    "optionType": "Options type",
+    "manual": "Manual",
+    "dataSource": "Data source",
+    "formulas": "Formulas"
   },
   "dispatchWorkflowActionError": {
     "defaultTitle": "Event error",
@@ -535,27 +677,23 @@
     "defaultTitle": "Data loading error",
     "defaultMessage": "An error occurred while loading data for the page."
   },
-  "upsertRowWorkflowActionForm": {
+  "localBaserowServiceForm": {
     "integrationDropdownLabel": "Integration",
     "rowIdLabel": "Row ID",
-    "rowIdPlaceholder": "Select a row ID",
+    "rowIdPlaceholder": "Select a row ID"
+  },
+  "upsertRowWorkflowActionForm": {
     "fieldMappingPlaceholder": "Choose a field value",
     "noTableSelectedMessage": "Choose a table to begin configuring your fields."
   },
+  "fieldMappingContext": {
+    "enableField": "Enable field",
+    "disableField": "Disable field"
+  },
   "checkboxElementForm": {
-    "labelTitle": "Label",
+    "labelTitle": "Option name",
     "valueTitle": "Default value",
     "requiredTitle": "Required"
-  },
-  "authFormElementForm": {
-    "userSource": "User source"
-  },
-  "authFormElement": {
-    "email": "Email",
-    "password": "Password",
-    "emailPlaceholder": "Enter your email...",
-    "passwordPlaceholder": "Enter your password...",
-    "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
   },
   "choiceElement": {
     "addOptions": "Add options to begin using this element..."
@@ -568,20 +706,36 @@
   },
   "userSelector": {
     "viewAs": "View as: {user}",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "member": "{prefix} member"
   },
   "visibilityForm": {
     "allVisitors": "All visitors",
     "loggedInVisitors": "Logged-in visitors",
     "notLoggedInVisitors": "Logged-out visitors",
-    "warningTitle": "We’re constantly enhancing the security",
-    "warningMessage": "At the moment the visibility is only applied in the UI, the underlying data is still accessible from the API. Please check the <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>documentation</a> for more information on data security."
+    "warningTitle": "We're constantly enhancing the security",
+    "warningMessage": "At the moment the visibility is only applied in the UI, the underlying data is still accessible from the API. Please check the <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api' target='_blank'>documentation</a> for more information on data security.",
+    "excludedRolesLabel": "all roles except",
+    "switchAllowLabel": "Allow",
+    "switchDisallowLabel": "Disallow",
+    "rolesSelectAll": "Select all",
+    "rolesDeselectAll": "Deselect all",
+    "rolesSelectHint": "Select one or more roles",
+    "roleTypesHint": "Select a Role Type",
+    "roleTypeAllowAllRoles": "All roles",
+    "roleTypeAllowAllRolesExcept": "Disallow roles...",
+    "roleTypeDisallowAllRolesExcept": "Allow roles...",
+    "rolesAllMembersOf": "All members of {name}",
+    "noRole": "No role",
+    "errorFetchingRolesTitle": "Could not fetch User Roles",
+    "errorFetchingRolesMessage": "There was a problem while fetching User Roles."
   },
   "userDataProviderType": {
     "isAuthenticated": "Is authenticated",
     "id": "Id",
     "email": "Email",
-    "username": "Username"
+    "username": "Username",
+    "role": "Role"
   },
   "buttonField": {
     "noLabel": "Unnamed..."
@@ -589,5 +743,25 @@
   "buttonFieldForm": {
     "infoMessage": "To configure actions for this button, open the \"Events\" tab of the current element.",
     "labelPlaceholder": "Enter a label..."
+  },
+  "resetButton": {
+    "reset": "Reset to default theme value"
+  },
+  "backgroundModes": {
+    "fill": "Fill",
+    "tile": "Tile",
+    "fit": "Fit"
+  },
+  "customStyle": {
+    "themeOverrides": "Theme overrides",
+    "configureThemeOverrides": "Configure theme overrides for this element"
+  },
+  "serviceSchemaPropertySelector": {
+    "label": "Property",
+    "noProperties": "No properties available"
+  },
+  "dataSourceDropdown": {
+    "label": "Data source",
+    "noDataSources": "No data sources available"
   }
 }

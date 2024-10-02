@@ -12,22 +12,22 @@
   <div v-else>
     <EditorContent
       ref="editor"
-      class="input formula-input-field"
+      class="form-input formula-input-field"
       :class="classes"
       :editor="editor"
       @data-component-clicked="dataComponentClicked"
     />
     <DataExplorer
+      v-if="isFocused"
       ref="dataExplorer"
       :nodes="nodes"
       :node-selected="nodeSelected"
       :loading="dataExplorerLoading"
       :application-context="applicationContext"
       @node-selected="dataExplorerItemSelected"
-      @node-toggled="editor.commands.focus()"
-      @focusin="dataExplorerFocused = true"
-      @focusout="dataExplorerFocused = false"
-    ></DataExplorer>
+      @node-unselected="unSelectNode()"
+      @mousedown.native="onDataExplorerMouseDown"
+    />
   </div>
 </template>
 
@@ -44,6 +44,7 @@ import { FromTipTapVisitor } from '@baserow/modules/core/formula/tiptap/fromTipT
 import { mergeAttributes } from '@tiptap/core'
 import DataExplorer from '@baserow/modules/core/components/dataExplorer/DataExplorer'
 import { RuntimeGet } from '@baserow/modules/core/runtimeFormulaTypes'
+import { isElement, onClickOutside } from '@baserow/modules/core/utils/dom'
 
 export default {
   name: 'FormulaInputField',
@@ -62,6 +63,11 @@ export default {
     value: {
       type: String,
       default: '',
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     placeholder: {
       type: String,
@@ -93,19 +99,17 @@ export default {
       content: null,
       isFormulaInvalid: false,
       dataNodeSelected: null,
-      dataExplorerFocused: false,
-      formulaInputFocused: false,
-      valueUpdateTimeout: null,
+      isFocused: false,
+      ignoreNextBlur: false,
     }
   },
   computed: {
-    isFocused() {
-      return this.dataExplorerFocused || this.formulaInputFocused
-    },
     classes() {
       return {
+        'form-input--disabled': this.disabled,
         'formula-input-field--small': this.small,
-        'formula-input-field--focused': this.isFocused,
+        'formula-input-field--focused': !this.disabled && this.isFocused,
+        'formula-input-field--disabled': this.disabled,
       }
     },
     placeHolderExt() {
@@ -150,26 +154,55 @@ export default {
       return this.editor.getJSON()
     },
     nodes() {
-      return this.dataProviders
+      const nodes = this.dataProviders
         .map((dataProvider) => dataProvider.getNodes(this.applicationContext))
         .filter((dataProviderNodes) => dataProviderNodes.nodes?.length > 0)
+      return nodes
     },
     nodeSelected() {
       return this.dataNodeSelected?.attrs?.path || null
     },
   },
   watch: {
-    isFocused(value) {
+    disabled(newValue) {
+      this.editor.setOptions({ editable: !newValue })
+    },
+    async isFocused(value) {
       if (!value) {
         this.$refs.dataExplorer.hide()
         this.unSelectNode()
       } else {
+        // Wait for the data explorer to appear in the DOM.
+        await this.$nextTick()
+
         this.unSelectNode()
+
+        /**
+         * The Context.vue calculates where to display the Context menu
+         * relative to the input field that triggered it. When the Context
+         * decides that the Context menu should be top-adjusted, it will set
+         * its bottom coordinate to match the input field's top coordinate,
+         * plus a "margin". This "margin" is the verticalOffset and is a
+         * negative number; it is negative because the Context menu should not
+         * appear below the input field.
+         *
+         * When the Context menu's bottom coordinate is less than zero, it
+         * is hidden.
+         *
+         * By setting the verticalOffset to the negative value of the input
+         * field's height, we ensure that as long as the input field is within
+         * the viewport, the bottom coordinate of the Context menu is always
+         * >= the bottom coordinate of the input field that triggered it.
+         */
+        const verticalOffset = -Math.abs(
+          this.$el.getBoundingClientRect().height
+        )
+
         this.$refs.dataExplorer.show(
           this.$refs.editor.$el,
           'bottom',
           'left',
-          -100,
+          verticalOffset,
           -330
         )
       }
@@ -198,7 +231,7 @@ export default {
     this.content = this.toContent(this.value)
     this.editor = new Editor({
       content: this.htmlContent,
-      editable: true,
+      editable: !this.disabled,
       onUpdate: this.onUpdate,
       onFocus: this.onFocus,
       onBlur: this.onBlur,
@@ -228,18 +261,40 @@ export default {
       this.unSelectNode()
       this.emitChange()
     },
-    onFocus() {
-      this.formulaInputFocused = true
+    onFocus(event) {
+      // If the input is disabled, we don't want users to be
+      // able to open the data explorer and select nodes.
+      if (this.disabled) {
+        return
+      }
+      this.isFocused = true
+
+      this.$el.clickOutsideEventCancel = onClickOutside(
+        this.$el,
+        (target, event) => {
+          if (
+            this.$refs.dataExplorer &&
+            // We ignore clicks inside data explorer
+            !isElement(this.$refs.dataExplorer.$el, target)
+          ) {
+            this.isFocused = false
+            this.editor.commands.blur()
+            this.$el.clickOutsideEventCancel()
+          }
+        }
+      )
+    },
+    onDataExplorerMouseDown() {
+      // If we click in the data explorer we don't want to close it.
+      this.ignoreNextBlur = true
     },
     onBlur() {
-      // We have to delay the browser here by just a bit, running the below will make
-      // sure the browser will execute all other events first, and then trigger this
-      // function. If we don't do this, the data explorer will be closed before the
-      // focus event can be fired which results in a closed data explorer once you lose
-      // focus on the input.
-      setTimeout(() => {
-        this.formulaInputFocused = false
-      }, 0)
+      if (this.ignoreNextBlur) {
+        // Last click was in the data explorer context, we keep the focus.
+        this.ignoreNextBlur = false
+      } else {
+        this.isFocused = false
+      }
     },
     toContent(formula) {
       if (!formula) {

@@ -40,7 +40,7 @@ from baserow.contrib.database.table.exceptions import (
 )
 from baserow.contrib.database.table.handler import TableHandler, TableUsageHandler
 from baserow.contrib.database.table.models import Table, TableUsage, TableUsageUpdate
-from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.contrib.database.views.models import GridView, GridViewFieldOptions, View
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
@@ -657,6 +657,67 @@ def test_duplicate_interesting_table(data_fixture):
             )
 
 
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_duplicate_table_with_limit_view_link_row_field(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    related_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    related_view = data_fixture.create_grid_view(table=related_table)
+
+    field_handler = FieldHandler()
+    table_1_link_row_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Link Row 1",
+        type_name="link_row",
+        link_row_table=related_table,
+        link_row_limit_selection_view=related_view,
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+
+    duplicated_link_row = LinkRowField.objects.get(table=duplicated_table)
+
+    assert duplicated_link_row.id != table_1_link_row_field_1.id
+    assert duplicated_link_row.link_row_table_id == related_table.id
+    assert duplicated_link_row.link_row_limit_selection_view_id == related_view.id
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_duplicate_table_with_limit_view_link_row_field_same_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    table_1_link_row_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Link Row 1",
+        type_name="link_row",
+        link_row_table=table,
+        link_row_limit_selection_view=view,
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+    duplicated_link_row = LinkRowField.objects.get(table=duplicated_table)
+    duplicated_view = View.objects.get(table=duplicated_table)
+
+    assert duplicated_link_row.id != table_1_link_row_field_1.id
+    assert duplicated_link_row.link_row_table_id == duplicated_table.id
+    assert duplicated_link_row.link_row_limit_selection_view_id == duplicated_view.id
+
+
 @pytest.mark.django_db()
 def test_duplicate_table_after_link_row_field_moved_to_another_table(data_fixture):
     user = data_fixture.create_user()
@@ -769,6 +830,27 @@ def test_list_workspace_tables_in_trashed_workspace(data_fixture):
 
 
 @pytest.mark.django_db
+def test_table_usage_handler_mark_table_for_usage_update_row_count_default_zero(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user, database=database)
+
+    TableUsageHandler.mark_table_for_usage_update(table_id=table.id)
+
+    assert TableUsageUpdate.objects.count() == 1
+    table_usage = TableUsageUpdate.objects.get(table_id=table.id)
+    assert table_usage.row_count == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_table_usage_handler_mark_table_for_usage_update_table_doesnt_exist():
+    TableUsageHandler.mark_table_for_usage_update(table_id=999, row_count=1)
+
+
+@pytest.mark.django_db
 def test_table_usage_handler_mark_table_for_usage_update(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -805,14 +887,14 @@ def test_table_usage_handler_mark_table_for_usage_update(data_fixture):
     assert usage_entry.row_count == 7
     assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 24, tzinfo=timezone.utc)
 
-    # If row_count is 0, then 0 should be the stored value
+    # If row_count is 0, then row_count is not changed
     with freeze_time("2020-02-01 01:25"):
         TableUsageHandler.mark_table_for_usage_update(table.id, 0)
 
     assert TableUsageUpdate.objects.all().count() == 1
     usage_entry = TableUsageUpdate.objects.get(table_id=table.id)
     assert usage_entry.row_count == 7
-    assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 24, tzinfo=timezone.utc)
+    assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 25, tzinfo=timezone.utc)
 
     # An update to a second table, should create a second entry
     with freeze_time("2020-02-01 01:26"):

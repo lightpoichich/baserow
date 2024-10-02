@@ -19,9 +19,11 @@ from baserow.contrib.builder.workflow_actions.handler import (
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.builder.workflow_actions.workflow_action_types import (
     CreateRowWorkflowActionType,
+    DeleteRowWorkflowActionType,
     NotificationWorkflowActionType,
     UpdateRowWorkflowActionType,
 )
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowUpsertRowServiceType,
 )
@@ -114,7 +116,6 @@ def test_get_workflow_actions(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 2
@@ -355,6 +356,8 @@ def test_create_create_row_workflow_action(api_client, data_fixture):
         "schema": None,
         "table_id": None,
         "field_mappings": [],
+        "context_data": None,
+        "context_data_schema": None,
     }
 
 
@@ -389,7 +392,9 @@ def test_update_create_row_workflow_action(api_client, data_fixture):
                 "table_id": table.id,
                 "type": service_type.type,
                 "integration_id": workflow_action.service.integration_id,
-                "field_mappings": [{"field_id": field.id, "value": "'Pony'"}],
+                "field_mappings": [
+                    {"field_id": field.id, "value": "'Pony'", "enabled": True}
+                ],
             }
         },
         format="json",
@@ -405,7 +410,7 @@ def test_update_create_row_workflow_action(api_client, data_fixture):
     assert response_json["service"]["table_id"] == service.table_id
     assert response_json["service"]["integration_id"] == service.integration_id
     assert response_json["service"]["field_mappings"] == [
-        {"field_id": field.id, "value": "'Pony'"}
+        {"field_id": field.id, "value": "'Pony'", "enabled": True}
     ]
 
 
@@ -444,6 +449,8 @@ def test_create_update_row_workflow_action(api_client, data_fixture):
         "row_id": "",
         "table_id": None,
         "field_mappings": [],
+        "context_data": None,
+        "context_data_schema": None,
     }
 
 
@@ -484,7 +491,9 @@ def test_update_update_row_workflow_action(api_client, data_fixture):
                 "row_id": first_row.id,
                 "type": service_type.type,
                 "integration_id": workflow_action.service.integration_id,
-                "field_mappings": [{"field_id": field.id, "value": "'Pony'"}],
+                "field_mappings": [
+                    {"field_id": field.id, "value": "'Pony'", "enabled": True}
+                ],
             },
         },
         format="json",
@@ -505,7 +514,7 @@ def test_update_update_row_workflow_action(api_client, data_fixture):
         == workflow_action.service.integration_id
     )
     assert response_json["service"]["field_mappings"] == [
-        {"field_id": field.id, "value": "'Pony'"}
+        {"field_id": field.id, "value": "'Pony'", "enabled": True}
     ]
 
 
@@ -603,6 +612,56 @@ def test_dispatch_local_baserow_update_row_workflow_action(api_client, data_fixt
 
 
 @pytest.mark.django_db
+def test_dispatch_local_baserow_upsert_row_workflow_action_with_current_record(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Index", "text", {}),
+        ],
+    )
+    index = table.field_set.get(name="Index")
+    page = data_fixture.create_builder_page(builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user, authorized_user=user
+    )
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        integration=integration,
+    )
+    service.field_mappings.create(
+        field=index, value='concat("Index ", get("current_record.__idx__"))'
+    )
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, service=service, element=element, event=EventTypes.CLICK
+    )
+
+    url = reverse(
+        "api:builder:workflow_action:dispatch",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+
+    response = api_client.post(
+        url,
+        {"current_record": 123},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json[index.db_column] == "Index 123"
+
+
+@pytest.mark.django_db
 @patch(
     "baserow.contrib.builder.data_providers.data_provider_types.FormDataProviderType.validate_data_chunk",
     side_effect=FormDataProviderChunkInvalidException,
@@ -649,3 +708,86 @@ def test_dispatch_workflow_action_with_invalid_form_data(
         "detail": "The workflow_action configuration is incorrect: "
         f"Path error in formula for field {field.name}({field.id})",
     }
+
+
+@pytest.mark.django_db
+def test_create_delete_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_type = DeleteRowWorkflowActionType.type
+
+    url = reverse("api:builder:workflow_action:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {
+            "type": workflow_action_type,
+            "event": "click",
+            "element_id": element.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == workflow_action_type
+    assert response_json["element_id"] == element.id
+
+    workflow_action = DeleteRowWorkflowActionType.model_class.objects.get(
+        pk=response_json["id"]
+    )
+    assert response_json["service"] == {
+        "id": workflow_action.service_id,
+        "integration_id": None,
+        "row_id": "",
+        "type": DeleteRowWorkflowActionType.service_type,
+        "schema": None,
+        "table_id": None,
+        "context_data": None,
+        "context_data_schema": None,
+    }
+
+
+@pytest.mark.django_db
+def test_update_delete_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    page = data_fixture.create_builder_page(builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_delete_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK
+    )
+    service = workflow_action.service
+    service_type = service.get_type()
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.patch(
+        url,
+        {
+            "service": {
+                "row_id": "123",
+                "table_id": table.id,
+                "type": service_type.type,
+                "integration_id": workflow_action.service.integration_id,
+            },
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    service.refresh_from_db()
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == workflow_action.id
+    assert response_json["element_id"] == workflow_action.element_id
+    assert response_json["service"]["row_id"] == service.row_id
+    assert response_json["service"]["table_id"] == service.table_id
+    assert response_json["service"]["integration_id"] == service.integration_id

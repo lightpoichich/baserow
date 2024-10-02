@@ -17,15 +17,16 @@
       class="grid-view__group-by-divider"
       :style="{ left: left + 'px' }"
     ></div>
-    <GridViewWidthHandle
+    <HorizontalResize
       v-for="({ groupBy, left }, index) in groupByDividers"
       :key="'group-by-width-' + index"
       class="grid-view__head-group-width-handle"
       :style="{ left: left + 'px' }"
       :width="groupBy.width"
+      :min="100"
       @move="moveGroupWidth(groupBy, view, $event)"
       @update="updateGroupWidth(groupBy, view, database, readOnly, $event)"
-    ></GridViewWidthHandle>
+    ></HorizontalResize>
     <div class="grid-view__inner" :style="{ 'min-width': width + 'px' }">
       <GridViewHead
         :database="database"
@@ -98,6 +99,7 @@
           <GridViewRowAdd
             v-if="
               !readOnly &&
+              !table.data_sync &&
               (includeRowDetails || visibleFields.length > 0) &&
               $hasPermission(
                 'database.table.create_row',
@@ -157,12 +159,13 @@ import GridViewRowAdd from '@baserow/modules/database/components/view/grid/GridV
 import GridViewFieldDragging from '@baserow/modules/database/components/view/grid/GridViewFieldDragging'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import GridViewFieldFooter from '@baserow/modules/database/components/view/grid/GridViewFieldFooter'
-import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
+import HorizontalResize from '@baserow/modules/core/components/HorizontalResize'
 import { fieldValuesAreEqualInObjects } from '@baserow/modules/database/utils/groupBy'
 
 export default {
   name: 'GridViewSection',
   components: {
+    HorizontalResize,
     GridViewHead,
     GridViewPlaceholder,
     GridViewGroups,
@@ -170,7 +173,6 @@ export default {
     GridViewRowAdd,
     GridViewFieldDragging,
     GridViewFieldFooter,
-    GridViewWidthHandle,
   },
   mixins: [gridViewHelpers],
   props: {

@@ -60,6 +60,7 @@ from baserow.contrib.builder.workflow_actions.operations import (
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
+from baserow.contrib.database.data_sync.operations import SyncTableOperationType
 from baserow.contrib.database.export.operations import ExportTableOperationType
 from baserow.contrib.database.fields.operations import (
     CreateFieldOperationType,
@@ -264,11 +265,6 @@ default_roles[settings.BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED].append(
 default_roles[VIEWER_ROLE_UID].extend(
     default_roles[NO_ACCESS_ROLE_UID]
     + [
-        ReadPageOperationType,
-        ListPagesBuilderOperationType,
-        OrderPagesBuilderOperationType,
-        ListDomainsBuilderOperationType,
-        OrderDomainsBuilderOperationType,
         ReadWorkspaceOperationType,
         ReadTeamOperationType,
         ListTeamsOperationType,
@@ -326,8 +322,6 @@ default_roles[EDITOR_ROLE_UID].extend(
         RestoreDatabaseRowOperationType,
         ListTeamSubjectsOperationType,
         ReadTeamSubjectOperationType,
-        UpdateBuilderWorkflowActionOperationType,
-        OrderBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[BUILDER_ROLE_UID].extend(
@@ -431,6 +425,14 @@ default_roles[BUILDER_ROLE_UID].extend(
         OrderUserSourcesOperationType,
         AuthenticateUserSourceOperationType,
         LoginUserSourceOperationType,
+        ReadPageOperationType,
+        ListPagesBuilderOperationType,
+        OrderPagesBuilderOperationType,
+        ListDomainsBuilderOperationType,
+        OrderDomainsBuilderOperationType,
+        UpdateBuilderWorkflowActionOperationType,
+        OrderBuilderWorkflowActionOperationType,
+        SyncTableOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

@@ -1,19 +1,15 @@
 <template>
   <form @submit.prevent="doSearch(headerSearchTerm, true)">
-    <div
-      class="input__with-icon input__with-icon--left"
-      :class="{ 'input__with-icon--loading': loading }"
+    <FormInput
+      ref="searchInput"
+      v-model="headerSearchTerm"
+      size="large"
+      :placeholder="$t('crudTableSearch.search')"
+      icon-left="iconoir-search"
+      :loading="loading"
+      @input="doSearch($event, false)"
     >
-      <input
-        ref="searchInput"
-        v-model="headerSearchTerm"
-        type="text"
-        :placeholder="$t('crudTableSearch.search')"
-        class="input"
-        @keyup="searchIfChanged(headerSearchTerm, false)"
-      />
-      <i class="iconoir-search"></i>
-    </div>
+    </FormInput>
   </form>
 </template>
 
@@ -40,7 +36,6 @@ export default {
   },
   data: () => {
     return {
-      lastSearch: '',
       headerSearchTerm: '',
       searchDebounce: null,
     }
@@ -56,6 +51,11 @@ export default {
     this.$priorityBus.$off('start-search', this.searchStarted)
   },
   methods: {
+    keydown(event) {
+      if (event.key !== 'Enter') {
+        this.doSearch(this.headerSearchTerm, false)
+      }
+    },
     searchStarted({ event }) {
       event.preventDefault()
       this.$bus.$emit('close-modals')
@@ -74,14 +74,6 @@ export default {
         this.searchDebounce = debounce(search, 400)
         this.searchDebounce()
       }
-    },
-    searchIfChanged(query, immediate = false) {
-      if (this.lastSearch === query) {
-        return
-      }
-
-      this.lastSearch = query
-      this.doSearch(query, immediate)
     },
   },
 }

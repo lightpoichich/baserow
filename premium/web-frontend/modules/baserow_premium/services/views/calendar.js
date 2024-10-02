@@ -15,6 +15,7 @@ export default (client) => {
       publicAuthToken = null,
       search = '',
       searchMode = '',
+      filters = {},
     }) {
       const include = []
       const params = new URLSearchParams()
@@ -48,6 +49,11 @@ export default (client) => {
           params.append('search_mode', searchMode)
         }
       }
+      Object.keys(filters).forEach((key) => {
+        filters[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
 
       const config = { params }
 
@@ -58,6 +64,10 @@ export default (client) => {
       const url = publicUrl ? 'public/rows/' : ''
 
       return client.get(`/database/views/calendar/${calendarId}/${url}`, config)
+    },
+
+    rotateSlug(viewId) {
+      return client.post(`/database/views/calendar/${viewId}/ical_slug_rotate/`)
     },
   }
 }

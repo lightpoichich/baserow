@@ -18,9 +18,19 @@
       class="grid-view__description"
       :class="{ 'grid-view__description--loading': field._.loading }"
     >
-      <i :class="`grid-view__description-icon ${field._.type.iconClass}`"></i>
+      <div class="grid-view__description-icon-container">
+        <i :class="`grid-view__description-icon ${field._.type.iconClass}`"></i>
+        <i
+          v-if="synced"
+          v-tooltip="$t('gridViewFieldType.dataSyncField')"
+          class="grid-view__description-icon-synced iconoir-data-transfer-down"
+        ></i>
+      </div>
 
-      <div class="grid-view__description-name" :title="field.name">
+      <div
+        class="grid-view__description-name"
+        :title="field.name + (synced ? ' (synced)' : '')"
+      >
         <span ref="quickEditLink" @dblclick="handleQuickEdit()">
           {{ field.name }}
         </span>
@@ -31,9 +41,12 @@
       <span class="grid-view__description-options">
         <HelpIcon
           v-if="field.description"
-          :tooltip="descriptionText"
-          :tooltip-content-type="'html'"
-          :tooltip-content-classes="'tooltip__content--expandable'"
+          :tooltip="field.description || ''"
+          :tooltip-content-type="'plain'"
+          :tooltip-content-classes="[
+            'tooltip__content--expandable',
+            'tooltip__content--expandable-plain-text',
+          ]"
           :icon="'info-empty'"
         />
 
@@ -247,13 +260,14 @@
           </a>
         </li>
       </FieldContext>
-      <GridViewWidthHandle
+      <HorizontalResize
         v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
         :width="width"
+        :min="100"
         @move="moveFieldWidth(field, $event)"
         @update="updateFieldWidth(field, view, database, readOnly, $event)"
-      ></GridViewWidthHandle>
+      ></HorizontalResize>
     </div>
   </div>
 </template>
@@ -265,14 +279,14 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
 import DuplicateFieldModal from '@baserow/modules/database/components/field/DuplicateFieldModal'
-import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
+import HorizontalResize from '@baserow/modules/core/components/HorizontalResize'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
   components: {
+    HorizontalResize,
     FieldContext,
-    GridViewWidthHandle,
     InsertFieldContext,
     DuplicateFieldModal,
   },
@@ -313,9 +327,6 @@ export default {
     }
   },
   computed: {
-    descriptionText() {
-      return (this.field.description || '').replaceAll('\n', '<br/>')
-    },
     width() {
       return this.getFieldWidth(this.field.id)
     },
@@ -366,6 +377,14 @@ export default {
           this.database.workspace.id
         )
       )
+    },
+    synced() {
+      if (!this.table.data_sync) {
+        return false
+      }
+      return this.table.data_sync.synced_properties.some((p) => {
+        return p.field_id === this.field.id
+      })
     },
   },
   beforeCreate() {

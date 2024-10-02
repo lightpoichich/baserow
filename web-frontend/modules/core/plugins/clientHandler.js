@@ -172,6 +172,18 @@ export class ClientErrorMap {
             'clientHandler.maxNumberOfPendingWorkspaceInvitesReachedDescription'
           )
         ),
+      ERROR_FIELD_IS_ALREADY_PRIMARY: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.fieldIsAlreadyPrimaryTitle'),
+        app.i18n.t('clientHandler.fieldIsAlreadyPrimaryDescription')
+      ),
+      ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeTitle'),
+        app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeDescription')
+      ),
+      ERROR_CANNOT_CREATE_ROWS_IN_TABLE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.cannotCreateRowsInTableTitle'),
+        app.i18n.t('clientHandler.cannotCreateRowsInTableDescription')
+      ),
     }
   }
 
@@ -479,6 +491,8 @@ export function makeErrorResponseInterceptor(
       'detail' in rspData
     ) {
       error.handler.setError(rspData.error, rspData.detail)
+    } else if (typeof rspData !== 'object') {
+      error.handler.setError(500, null)
     }
 
     return Promise.reject(error)
@@ -510,7 +524,11 @@ const prepareRequestHeaders = (store) => (config) => {
     // Here we are logged as a user source user
     const userSourceToken =
       store.getters['userSourceUser/accessToken'](application)
-    config.headers.Authorization = `JWT ${userSourceToken}`
+    // We don't want to add the user source token if we are refreshing as the token
+    // won't be accepted.
+    if (!store.getters['userSourceUser/isRefreshing'](application)) {
+      config.headers.Authorization = `JWT ${userSourceToken}`
+    }
   }
   if (store.getters['auth/webSocketId'] !== null) {
     const webSocketId = store.getters['auth/webSocketId']

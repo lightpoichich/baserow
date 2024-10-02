@@ -6,6 +6,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import SET_NULL, QuerySet
 
+from baserow.contrib.builder.constants import BACKGROUND_IMAGE_MODES, VerticalAlignments
 from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
@@ -21,30 +22,15 @@ if TYPE_CHECKING:
     from baserow.contrib.builder.pages.models import Page
 
 
-class HorizontalAlignments(models.TextChoices):
-    LEFT = "left"
-    CENTER = "center"
-    RIGHT = "right"
-
-
-class VerticalAlignments(models.TextChoices):
-    TOP = "top"
-    CENTER = "center"
-    BOTTOM = "bottom"
-
-
-class WIDTHS(models.TextChoices):
-    AUTO = "auto"
-    FULL = "full"
-
-
 class BackgroundTypes(models.TextChoices):
     NONE = "none"
     COLOR = "color"
+    IMAGE = "image"
 
 
 class WidthTypes(models.TextChoices):
     FULL = "full"
+    FULL_WIDTH = "full-width"
     NORMAL = "normal"
     MEDIUM = "medium"
     SMALL = "small"
@@ -86,6 +72,11 @@ class Element(
         LOGGED_IN = "logged-in"
         NOT_LOGGED = "not-logged"
 
+    class ROLE_TYPES(models.TextChoices):
+        ALLOW_ALL = "allow_all"
+        ALLOW_ALL_EXCEPT = "allow_all_except"
+        DISALLOW_ALL_EXCEPT = "disallow_all_except"
+
     page = models.ForeignKey("builder.Page", on_delete=models.CASCADE)
     order = models.DecimalField(
         help_text="Lowest first.",
@@ -110,6 +101,17 @@ class Element(
         related_name="children",
     )
 
+    role_type = models.CharField(
+        choices=ROLE_TYPES.choices,
+        max_length=19,
+        default=ROLE_TYPES.ALLOW_ALL,
+        db_index=True,
+    )
+    roles = models.JSONField(
+        default=list,
+        help_text="User roles associated with this element, used in conjunction with role_type.",
+    )
+
     # The following fields are used to store the position of the element in the
     # container. If the element is a root element then this is null.
     place_in_container = models.CharField(
@@ -127,6 +129,11 @@ class Element(
         db_index=True,
     )
 
+    styles = models.JSONField(
+        default=dict,
+        help_text="The theme overrides for this element",
+    )
+
     style_border_top_color = models.CharField(
         max_length=20,
         default="border",
@@ -138,6 +145,10 @@ class Element(
     )
     style_padding_top = models.PositiveIntegerField(
         default=10, help_text="Padding size of the top border."
+    )
+    style_margin_top = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the top border.",
     )
 
     style_border_bottom_color = models.CharField(
@@ -152,6 +163,10 @@ class Element(
     style_padding_bottom = models.PositiveIntegerField(
         default=10, help_text="Padding size of the bottom border."
     )
+    style_margin_bottom = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the bottom border.",
+    )
 
     style_border_left_color = models.CharField(
         max_length=20,
@@ -164,6 +179,10 @@ class Element(
     )
     style_padding_left = models.PositiveIntegerField(
         default=20, help_text="Padding size of the left border."
+    )
+    style_margin_left = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the left border.",
     )
 
     style_border_right_color = models.CharField(
@@ -178,6 +197,10 @@ class Element(
     style_padding_right = models.PositiveIntegerField(
         default=20, help_text="Padding size of the right border."
     )
+    style_margin_right = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the right border.",
+    )
 
     style_background = models.CharField(
         choices=BackgroundTypes.choices,
@@ -190,6 +213,21 @@ class Element(
         default="#ffffffff",
         blank=True,
         help_text="The background color if `style_background` is color.",
+    )
+
+    style_background_file = models.ForeignKey(
+        UserFile,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="element_background_image_file",
+        help_text="An image file uploaded by the user to be used as element background",
+    )
+
+    style_background_mode = models.CharField(
+        help_text="The mode of the background image",
+        choices=BACKGROUND_IMAGE_MODES.choices,
+        max_length=32,
+        default=BACKGROUND_IMAGE_MODES.FILL,
     )
 
     style_width = models.CharField(
@@ -365,17 +403,6 @@ class HeadingElement(Element):
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
-    font_color = models.CharField(
-        max_length=20,
-        default="default",
-        blank=True,
-        help_text="The font color of the heading",
-    )
-    alignment = models.CharField(
-        choices=HorizontalAlignments.choices,
-        max_length=10,
-        default=HorizontalAlignments.LEFT,
-    )
 
 
 class TextElement(Element):
@@ -388,11 +415,6 @@ class TextElement(Element):
         MARKDOWN = "markdown"
 
     value = FormulaField(default="")
-    alignment = models.CharField(
-        choices=HorizontalAlignments.choices,
-        max_length=10,
-        default=HorizontalAlignments.LEFT,
-    )
     format = models.CharField(
         choices=TEXT_FORMATS.choices,
         help_text="The format of the text",
@@ -468,22 +490,6 @@ class LinkElement(Element, NavigationElementMixin):
         max_length=10,
         default=VARIANTS.LINK,
     )
-    width = models.CharField(
-        choices=WIDTHS.choices,
-        max_length=10,
-        default=WIDTHS.AUTO,
-    )
-    alignment = models.CharField(
-        choices=HorizontalAlignments.choices,
-        max_length=10,
-        default=HorizontalAlignments.LEFT,
-    )
-    button_color = models.CharField(
-        max_length=20,
-        default="primary",
-        blank=True,
-        help_text="The color of the button",
-    )
 
 
 class ImageElement(Element):
@@ -521,34 +527,6 @@ class ImageElement(Element):
         default="",
         blank=True,
     )
-    alignment = models.CharField(
-        choices=HorizontalAlignments.choices,
-        max_length=10,
-        default=HorizontalAlignments.LEFT,
-    )
-    style_max_width = models.PositiveIntegerField(
-        null=True,
-        help_text="The max-width for this image element.",
-        default=100,
-        validators=[
-            MinValueValidator(0, message="Value cannot be less than 0."),
-            MaxValueValidator(100, message="Value cannot be greater than 100."),
-        ],
-    )
-    style_max_height = models.PositiveIntegerField(
-        null=True,
-        help_text="The max-height for this image element.",
-        validators=[
-            MinValueValidator(5, message="Value cannot be less than 5."),
-            MaxValueValidator(3000, message="Value cannot be greater than 3000."),
-        ],
-    )
-    style_image_constraint = models.CharField(
-        help_text="The image constraint to apply to this image",
-        choices=IMAGE_CONSTRAINT_TYPES.choices,
-        max_length=32,
-        default=IMAGE_CONSTRAINT_TYPES.CONTAIN,
-    )
 
 
 class FormContainerElement(ContainerElement):
@@ -561,13 +539,6 @@ class FormContainerElement(ContainerElement):
         default=False,
         help_text="Whether to reset the form to using its initial "
         "values after a successful form submission.",
-    )
-
-    button_color = models.CharField(
-        max_length=20,
-        default="primary",
-        blank=True,
-        help_text="The color of the button",
     )
 
 
@@ -625,11 +596,14 @@ class InputTextElement(FormElement):
         choices=INPUT_TEXT_TYPES.choices,
         default=INPUT_TEXT_TYPES.TEXT,
         help_text="The type of the input, not applicable for multiline inputs.",
-        null=True,  # TODO zdm remove me in next release
     )
 
 
 class ChoiceElement(FormElement):
+    class OPTION_TYPE(models.TextChoices):
+        MANUAL = "manual"
+        FORMULAS = "formulas"
+
     label = FormulaField(
         default="",
         help_text="The text label for this choice",
@@ -645,20 +619,36 @@ class ChoiceElement(FormElement):
     multiple = models.BooleanField(
         default=False,
         help_text="Whether this choice allows users to choose multiple values.",
-        null=True,  # TODO zdm remove me in next release
     )
     show_as_dropdown = models.BooleanField(
         default=True,
         help_text="Whether to show the choices as a dropdown.",
-        null=True,  # TODO zdm remove me in next release
+    )
+    option_type = models.CharField(
+        choices=OPTION_TYPE.choices,
+        max_length=32,
+        default=OPTION_TYPE.MANUAL,
+    )
+    formula_value = FormulaField(
+        default="",
+        help_text="The value of the option if it is a formula",
+    )
+    formula_name = FormulaField(
+        default="",
+        help_text="The display name of the option if it is a formula",
     )
 
 
 class ChoiceElementOption(models.Model):
     value = models.TextField(
+        null=True,
         blank=True,
         default="",
-        help_text="The value of the option",
+        help_text=(
+            "The value of the option. An empty string is a valid value. When "
+            "the value field is null, the frontend will auto-populate the "
+            "value using the name field."
+        ),
     )
     name = models.TextField(
         blank=True,
@@ -689,22 +679,6 @@ class ButtonElement(Element):
     """
 
     value = FormulaField(default="", help_text="The caption of the button.")
-    width = models.CharField(
-        choices=WIDTHS.choices,
-        max_length=10,
-        default=WIDTHS.AUTO,
-    )
-    alignment = models.CharField(
-        choices=HorizontalAlignments.choices,
-        max_length=10,
-        default=HorizontalAlignments.LEFT,
-    )
-    button_color = models.CharField(
-        max_length=20,
-        default="primary",
-        blank=True,
-        help_text="The color of the button",
-    )
 
 
 class CollectionField(models.Model):
@@ -729,6 +703,12 @@ class CollectionField(models.Model):
         help_text="The configuration of the field.",
     )
 
+    styles = models.JSONField(
+        default=dict,
+        help_text="The theme overrides for this field",
+        null=True,  # TODO zdm remove me after 1.27
+    )
+
     def get_type(self):
         """Returns the type for this model instance"""
 
@@ -749,6 +729,12 @@ class CollectionElement(Element):
         "Only data_sources that return list are allowed.",
     )
 
+    schema_property = models.CharField(
+        max_length=225,
+        null=True,
+        help_text="A multiple valued schema property to use for the data source.",
+    )
+
     items_per_page = models.PositiveIntegerField(
         default=20,
         help_text="The amount item loaded with each page.",
@@ -758,8 +744,48 @@ class CollectionElement(Element):
         ],
     )
 
+    button_load_more_label = FormulaField(
+        help_text="The label of the show more button",
+        blank=True,
+        default="",
+    )
+
     class Meta:
         abstract = True
+
+
+class CollectionElementPropertyOptions(models.Model):
+    """
+    This model represents the options that can be set for a property of a
+    collection element. These options can be used to determine if the
+    property should be searchable, filterable or sortable.
+    """
+
+    element = models.ForeignKey(
+        Element,
+        related_name="property_options",
+        help_text="The element this property option belongs to.",
+        on_delete=models.CASCADE,
+    )
+    schema_property = models.CharField(
+        max_length=225,
+        help_text="The name of the property in the schema this option belongs to.",
+    )
+    searchable = models.BooleanField(
+        default=False,
+        help_text="Whether this element is searchable or not by visitors.",
+    )
+    filterable = models.BooleanField(
+        default=False,
+        help_text="Whether this element is filterable or not by visitors.",
+    )
+    sortable = models.BooleanField(
+        default=False,
+        help_text="Whether this element is sortable or not by visitors.",
+    )
+
+    class Meta:
+        unique_together = ("element", "schema_property")
 
 
 class TableElement(CollectionElement):
@@ -767,12 +793,6 @@ class TableElement(CollectionElement):
     A table element
     """
 
-    button_color = models.CharField(
-        max_length=20,
-        default="primary",
-        blank=True,
-        help_text="The color of the button",
-    )
     orientation = models.JSONField(
         blank=True,
         null=True,
@@ -827,4 +847,30 @@ class RepeatElement(CollectionElement, ContainerElement):
         default=dict,
         help_text="The amount repetitions per row, per device type. "
         "Only applicable when the orientation is horizontal.",
+    )
+
+
+class RecordSelectorElement(CollectionElement, FormElement):
+    """A collection element that displays a list of records for the user to select."""
+
+    label = FormulaField(
+        default="",
+        help_text="The text label for this record selector",
+    )
+    default_value = FormulaField(
+        default="",
+        help_text="This record selector default value.",
+    )
+    placeholder = FormulaField(
+        default="",
+        help_text="The placeholder text which should be applied to the element.",
+    )
+    multiple = models.BooleanField(
+        default=False,
+        help_text="Whether this record selector allows users to choose multiple values.",
+    )
+    option_name_suffix = FormulaField(
+        help_text="The formula to generate the displayed option name suffix",
+        blank=True,
+        default="",
     )

@@ -1,9 +1,5 @@
 <template>
-  <Context
-    ref="context"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
-  >
+  <Context ref="context" overflow-scroll max-height-if-outside-viewport>
     <div class="context__menu-title">{{ field.name }} ({{ field.id }})</div>
     <ul class="context__menu">
       <li
@@ -42,10 +38,36 @@
           @updated="$refs.context.hide()"
         ></UpdateFieldContext>
       </li>
+      <li
+        v-if="
+          field.primary &&
+          $hasPermission(
+            'database.table.field.update',
+            field,
+            database.workspace.id
+          )
+        "
+        class="context__menu-item"
+      >
+        <a
+          class="context__menu-item-link"
+          @click="$refs.changePrimaryFieldModal.show()"
+        >
+          <i class="context__menu-item-icon iconoir-coins-swap"></i>
+          {{ $t('fieldContext.changePrimaryField') }}
+        </a>
+        <ChangePrimaryFieldModal
+          ref="changePrimaryFieldModal"
+          :all-fields-in-table="allFieldsInTable"
+          :from-field="field"
+          :table="table"
+        ></ChangePrimaryFieldModal>
+      </li>
       <slot></slot>
       <li
         v-if="
           !field.primary &&
+          !syncedUniquePrimary &&
           $hasPermission(
             'database.table.field.delete',
             field,
@@ -71,10 +93,12 @@
 import context from '@baserow/modules/core/mixins/context'
 import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import ChangePrimaryFieldModal from '@baserow/modules/database/components/field/ChangePrimaryFieldModal.vue'
 
 export default {
   name: 'FieldContext',
   components: {
+    ChangePrimaryFieldModal,
     UpdateFieldContext,
   },
   mixins: [context],
@@ -105,6 +129,16 @@ export default {
     return {
       deleteLoading: false,
     }
+  },
+  computed: {
+    syncedUniquePrimary() {
+      if (!this.table.data_sync) {
+        return false
+      }
+      return this.table.data_sync.synced_properties.some((p) => {
+        return p.field_id === this.field.id && p.unique_primary
+      })
+    },
   },
   methods: {
     // Allows other components to toggle the `FieldContext`

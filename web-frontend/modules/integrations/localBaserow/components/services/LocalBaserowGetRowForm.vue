@@ -13,13 +13,19 @@
       </div>
       <div class="row">
         <div class="col col-6">
-          <InjectedFormulaInputGroup
-            v-model="values.row_id"
-            small
+          <FormGroup
+            small-label
             :label="$t('localBaserowGetRowForm.rowFieldLabel')"
-            :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
-            :help-text="$t('localBaserowGetRowForm.rowFieldHelpText')"
-          />
+            required
+          >
+            <InjectedFormulaInput
+              v-model="values.row_id"
+              :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
+            />
+            <template #helper>
+              {{ $t('localBaserowGetRowForm.rowFieldHelpText') }}
+            </template>
+          </FormGroup>
         </div>
       </div>
       <div class="row">
@@ -31,7 +37,7 @@
             >
               <LocalBaserowTableServiceConditionalForm
                 v-if="values.table_id && dataSource.schema"
-                v-model="values.filters"
+                v-model="dataSourceFilters"
                 :schema="dataSource.schema"
                 :table-loading="tableLoading"
                 :filter-type.sync="values.filter_type"
@@ -43,15 +49,16 @@
             </Tab>
             <Tab
               :title="$t('localBaserowGetRowForm.searchTabTitle')"
-              class="data-source-form__condition-search-tab"
+              class="data-source-form__search-form-tab"
             >
-              <InjectedFormulaInputGroup
-                v-model="values.search_query"
-                small
-                :placeholder="
-                  $t('localBaserowGetRowForm.searchFieldPlaceHolder')
-                "
-              />
+              <FormGroup>
+                <InjectedFormulaInput
+                  v-model="values.search_query"
+                  :placeholder="
+                    $t('localBaserowGetRowForm.searchFieldPlaceHolder')
+                  "
+                />
+              </FormGroup>
             </Tab>
           </Tabs>
         </div>
@@ -62,22 +69,18 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
 import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
 import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm'
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   components: {
-    InjectedFormulaInputGroup,
+    InjectedFormulaInput,
     LocalBaserowTableSelector,
     LocalBaserowTableServiceConditionalForm,
   },
   mixins: [form],
   inject: ['page'],
-  provide() {
-    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
-  },
   props: {
     builder: {
       type: Object,
@@ -117,6 +120,14 @@ export default {
     }
   },
   computed: {
+    dataSourceFilters: {
+      get() {
+        return this.excludeTrashedFields(this.values.filters)
+      },
+      set(newValue) {
+        this.values.filters = newValue
+      },
+    },
     dataSourceLoading() {
       return this.$store.getters['dataSource/getLoading'](this.page)
     },
@@ -150,6 +161,26 @@ export default {
         this.tableLoading = false
       },
       immediate: true,
+    },
+  },
+  methods: {
+    /**
+     * Given an array of objects containing a `field` property (e.g. the data
+     * source filters array), this method will return a new array
+     * containing only the objects where the field is part of the schema, so,
+     * untrashed.
+     *
+     * @param {Array} value - The array of objects to filter.
+     * @returns {Array} - The filtered array.
+     */
+    excludeTrashedFields(value) {
+      const schema = this.dataSource.schema
+      const schemaProperties =
+        schema.type === 'array' ? schema.items.properties : schema.properties
+      const localBaserowFieldIds = Object.values(schemaProperties)
+        .filter(({ metadata }) => metadata)
+        .map((prop) => prop.metadata.id)
+      return value.filter(({ field }) => localBaserowFieldIds.includes(field))
     },
   },
 }

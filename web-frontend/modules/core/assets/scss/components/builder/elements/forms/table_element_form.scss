@@ -48,12 +48,12 @@
     margin-bottom: 4px;
   }
 
-  .control {
-    margin-bottom: 12px;
-  }
-
   .control__elements--small {
     margin-bottom: 0;
+  }
+
+  .control--horizontal.control--after-input .control__wrapper {
+    flex-basis: 100%;
   }
 }
 

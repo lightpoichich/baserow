@@ -2,7 +2,6 @@
 %context {
   position: absolute;
   z-index: $z-index-context;
-  white-space: nowrap;
   background-color: $white;
   border: 1px solid $palette-neutral-400;
 
@@ -74,13 +73,17 @@
   font-weight: 400;
 }
 
+.context__menu-item-description--offset {
+  padding-left: 27px;
+}
+
 .context__menu-item-link {
   position: relative;
   color: $palette-neutral-1300;
   padding: 8px 10px;
   user-select: none;
 
-  @include rounded($rounded);
+  @include rounded($rounded-md);
   @include flex-align-items(6px);
 
   &.disabled {
@@ -94,7 +97,7 @@
   }
 
   &:hover {
-    background-color: rgba($palette-neutral-1300, 0.04);
+    background-color: $palette-neutral-100;
     text-decoration: none;
 
     &.disabled {
@@ -134,6 +137,10 @@
   }
 }
 
+.context__menu-wrapper {
+  z-index: $z-index-highlight-overlay;
+}
+
 .context__menu {
   list-style: none;
   padding: 0;
@@ -159,15 +166,28 @@
 }
 
 .context__menu-item-title {
-  @include flex-align-items(4px);
+  @include flex-align-items(10px);
 }
 
 .context__form {
   min-width: 260px;
   padding: 16px;
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
+
+  &--scrollable {
+    overflow-y: scroll;
+  }
 }
 
-.context__form-actions {
+.context__form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.context__form-footer-actions {
   display: flex;
   align-items: center;
   justify-content: right;
@@ -240,4 +260,14 @@
     @include loading(14px);
     @include absolute(8px, auto, auto, 10px);
   }
+}
+
+.context__footer {
+  padding: 0 14px;
+  height: 52px;
+  display: flex;
+  border-top: 1px solid $palette-neutral-200;
+  flex-shrink: 0;
+
+  @include flex-align-items(8px);
 }

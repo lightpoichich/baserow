@@ -1,16 +1,27 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
-      small
+    <FormGroup
+      small-label
       :label="$t('generalForm.labelTitle')"
-      :placeholder="$t('buttonFieldForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-      :application-context-additions="{
-        element,
-      }"
+      class="margin-bottom-2"
       horizontal
-    />
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('buttonFieldForm.labelPlaceholder')"
+      />
+      <template #after-input>
+        <CustomStyle
+          v-model="values.styles"
+          style-key="cell"
+          :config-block-types="['table', 'button']"
+          :theme="baseTheme"
+          :extra-args="{ onlyCell: true, noAlignment: true }"
+          variant="normal"
+        />
+      </template>
+    </FormGroup>
     <Alert>
       {{ $t('buttonFieldForm.infoMessage') }}
     </Alert>
@@ -18,32 +29,22 @@
 </template>
 
 <script>
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
-import form from '@baserow/modules/core/mixins/form'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'ButtonFieldForm',
-  components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
-  props: {
-    element: {
-      type: Object,
-      required: true,
-    },
-  },
+  components: { InjectedFormulaInput, CustomStyle },
+  mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['label'],
+      allowedValues: ['label', 'styles'],
       values: {
         label: '',
+        styles: {},
       },
     }
-  },
-  computed: {
-    DATA_PROVIDERS_ALLOWED_ELEMENTS() {
-      return DATA_PROVIDERS_ALLOWED_ELEMENTS
-    },
   },
 }
 </script>

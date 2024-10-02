@@ -1,18 +1,20 @@
 <template>
   <div class="control">
-    <label class="control__label">
+    <label class="control__label control__label--small">
       <a
         :class="{ 'row-modal__field-item-handle': sortable }"
         data-field-handle
       ></a>
-      <i class="control__label-icon" :class="field._.type.iconClass"></i>
+      <i :class="field._.type.iconClass"></i>
       {{ field.name }}
       <span v-if="field.description" class="margin-left-1">
         <HelpIcon
-          :tooltip="descriptionText"
-          :tooltip-duration="3"
-          :tooltip-content-type="'html'"
-          :tooltip-content-classes="'tooltip__content--expandable'"
+          :tooltip="field.description || ''"
+          :tooltip-content-type="'plain'"
+          :tooltip-content-classes="[
+            'tooltip__content--expandable',
+            'tooltip__content--expandable-plain-text',
+          ]"
           :icon="'info-empty'"
         />
       </span>
@@ -52,8 +54,10 @@
       :workspace-id="database.workspace.id"
       :field="field"
       :value="row['field_' + field.id]"
-      :read-only="readOnly"
+      :read-only="readOnly || field.read_only"
       :row-is-created="!!row.id"
+      :row="row"
+      :all-fields-in-table="allFieldsInTable"
       @update="update"
       @refresh-row="$emit('refresh-row', row)"
     />
@@ -119,11 +123,6 @@ export default {
       type: Boolean,
       required: false,
       default: () => true,
-    },
-  },
-  computed: {
-    descriptionText() {
-      return (this.field.description || '').replaceAll('\n', '<br/>')
     },
   },
   methods: {

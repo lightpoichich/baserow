@@ -17,6 +17,60 @@ from baserow.contrib.builder.elements.models import (
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "roles,role_type",
+    [
+        (
+            ["a_role"],
+            Element.ROLE_TYPES.ALLOW_ALL,
+        ),
+        (
+            ["a_role", "b_role"],
+            Element.ROLE_TYPES.ALLOW_ALL,
+        ),
+        (
+            ["a_role"],
+            Element.ROLE_TYPES.ALLOW_ALL_EXCEPT,
+        ),
+        (
+            ["a_role"],
+            Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT,
+        ),
+    ],
+)
+def test_elements_list_endpoint_returns_expected_roles(
+    api_client,
+    data_fixture,
+    roles,
+    role_type,
+):
+    """
+    Ensure the element:list endpoint returns expected values for the
+    roles and role_type fields.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_heading_element(page=page)
+
+    element.roles = roles
+    element.role_type = role_type
+    element.save()
+
+    url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    data = response.json()[0]
+
+    assert data["roles"] == roles
+    assert data["role_type"] == role_type
+
+
+@pytest.mark.django_db
 def test_get_elements(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
@@ -171,6 +225,25 @@ def test_update_element(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_element_styles(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+
+    url = reverse("api:builder:element:item", kwargs={"element_id": element1.id})
+    response = api_client.patch(
+        url,
+        {"styles": {"typography": {"heading_1_text_color": "#CCCCCCCC"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["styles"] == {
+        "typography": {"heading_1_text_color": "#CCCCCCCC"}
+    }
+
+
+@pytest.mark.django_db
 def test_update_element_bad_request(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
@@ -200,6 +273,35 @@ def test_update_element_does_not_exist(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_ELEMENT_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_update_element_bad_style_property(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+
+    url = reverse("api:builder:element:item", kwargs={"element_id": element1.id})
+
+    # Bad root property
+    response = api_client.patch(
+        url,
+        {"styles": {"typpography": {"heading_1_text_color": "#CCCCCCCC"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["styles"] == {}
+
+    # Bad theme property
+    response = api_client.patch(
+        url,
+        {"styles": {"typography": {"heading_25_text_color": "#CCCCCCCC"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["styles"] == {"typography": {}}
 
 
 @pytest.mark.django_db
@@ -457,7 +559,7 @@ def test_child_type_not_allowed_validation(api_client, data_fixture):
     url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
     response = api_client.post(
         url,
-        {"type": "button", "parent_element_id": parent.id},
+        {"type": "form_container", "parent_element_id": parent.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -548,3 +650,95 @@ def test_create_collection_element_type_with_invalid_data_source_id(
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_DATA_SOURCE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_create_collection_element_with_property_option(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_repeat_element(user=user, page=page)
+    url = reverse("api:builder:element:item", kwargs={"element_id": element.id})
+    response = api_client.patch(
+        url,
+        {
+            "property_options": [
+                {
+                    "schema_property": "foo",
+                    "searchable": False,
+                    "filterable": True,
+                    "sortable": True,
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["property_options"] == [
+        {
+            "schema_property": "foo",
+            "searchable": False,
+            "filterable": True,
+            "sortable": True,
+        }
+    ]
+
+    response = api_client.patch(
+        url,
+        {
+            "property_options": [
+                {
+                    "schema_property": "bar",
+                    "searchable": False,
+                    "filterable": False,
+                    "sortable": False,
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["property_options"] == [
+        {
+            "schema_property": "bar",
+            "searchable": False,
+            "filterable": False,
+            "sortable": False,
+        }
+    ]
+
+
+@pytest.mark.django_db
+def test_create_collection_element_with_non_unique_schema_properties(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_repeat_element(user=user, page=page)
+    url = reverse("api:builder:element:item", kwargs={"element_id": element.id})
+    response = api_client.patch(
+        url,
+        {
+            "property_options": [
+                {
+                    "schema_property": "foo",
+                    "searchable": False,
+                    "filterable": True,
+                    "sortable": True,
+                },
+                {
+                    "schema_property": "foo",
+                    "searchable": True,
+                    "filterable": True,
+                    "sortable": True,
+                },
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_ELEMENT_PROPERTY_OPTIONS_NOT_UNIQUE"

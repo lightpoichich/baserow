@@ -2,6 +2,7 @@
   <form
     v-if="hasAtLeastOneLoginOption"
     class="auth-form-element"
+    :style="getStyleOverride('input')"
     @submit.prevent="onLogin"
   >
     <Error :error="error"></Error>
@@ -44,9 +45,11 @@
         @blur="$v.values.password.$touch()"
       />
     </ABFormGroup>
-    <ABButton :disabled="$v.$error" full-width :loading="loading" size="large">
-      {{ $t('action.login') }}
-    </ABButton>
+    <div :style="getStyleOverride('login_button')" class="auth-form__footer">
+      <ABButton :disabled="$v.$error" :loading="loading" size="large">
+        {{ resolvedLoginButtonLabel }}
+      </ABButton>
+    </div>
   </form>
   <p v-else>{{ $t('authFormElement.selectOrConfigureUserSourceFirst') }}</p>
 </template>
@@ -56,6 +59,7 @@ import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
 import element from '@baserow/modules/builder/mixins/element'
 import { required, email } from 'vuelidate/lib/validators'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 import { mapActions } from 'vuex'
 
 export default {
@@ -66,6 +70,8 @@ export default {
     /**
      * @type {Object}
      * @property {number} user_source_id - The id of the user_source.
+     * @property {string} login_button_label - The formula for the label of the login
+     *   button
      */
     element: {
       type: Object,
@@ -104,6 +110,12 @@ export default {
     },
     hasAtLeastOneLoginOption() {
       return Object.keys(this.loginOptions).length > 0
+    },
+    resolvedLoginButtonLabel() {
+      return (
+        ensureString(this.resolveFormula(this.element.login_button_label)) ||
+        this.$t('action.login')
+      )
     },
   },
   watch: {

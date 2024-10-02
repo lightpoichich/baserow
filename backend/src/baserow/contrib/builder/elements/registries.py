@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Type, TypedDict, TypeVar, Union
+from typing import Any, Dict, Generator, List, Optional, Type, TypedDict, TypeVar, Union
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -8,33 +8,43 @@ from django.db import models
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
     EasyImportExportMixin,
     Instance,
+    InstanceWithFormulaMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
+from baserow.core.user_sources.handler import UserSourceHandler
 
 from .models import CollectionField, Element
 from .types import ElementDictSubClass, ElementSubClass
 
+BUILDER_PAGE_ELEMENTS = "builder_page_elements"
+ELEMENT_IDS_PROCESSED_FOR_ROLES = "_element_ids_processed_for_roles"
+EXISTING_USER_SOURCE_ROLES = "_existing_user_source_roles"
+
 
 class ElementType(
-    Instance,
-    ModelInstanceMixin[ElementSubClass],
+    InstanceWithFormulaMixin,
     EasyImportExportMixin[ElementSubClass],
     CustomFieldsInstanceMixin,
+    ModelInstanceMixin[ElementSubClass],
+    Instance,
     ABC,
 ):
     """Element type"""
 
     SerializedDict: Type[ElementDictSubClass]
     parent_property_name = "page"
-    id_mapping_name = "builder_page_elements"
+    id_mapping_name = BUILDER_PAGE_ELEMENTS
 
     # The order in which this element type is imported in `import_elements`.
     # By default, the priority is `0`, the lowest value. If this property is
@@ -127,16 +137,16 @@ class ElementType(
         cache: Dict[str, Any] | None = None,
         **kwargs,
     ) -> ElementSubClass:
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
         if cache is None:
             cache = {}
-
-        from baserow.contrib.builder.elements.handler import ElementHandler
 
         import_context = {}
 
         parent_element_id = serialized_values["parent_element_id"]
 
-        # If we have a parent elementthen we want to add used its import context
+        # If we have a parent element then we want to add used its import context
         if parent_element_id:
             imported_parent_element_id = id_mapping["builder_page_elements"][
                 parent_element_id
@@ -146,6 +156,19 @@ class ElementType(
                 id_mapping,
                 element_map=cache.get("imported_element_map", None),
             )
+
+        existing_roles = cache.get("existing_roles", {}).get(page.builder.id)
+        if not existing_roles:
+            existing_roles = UserSourceHandler().get_all_roles_for_application(
+                page.builder
+            )
+            cache.setdefault("existing_roles", {})[page.builder.id] = existing_roles
+
+        serialized_values["roles"] = self.sanitize_element_roles(
+            serialized_values.get("roles", []),
+            existing_roles,
+            id_mapping.get("user_sources", {}),
+        )
 
         created_instance = super().import_serialized(
             page,
@@ -157,12 +180,50 @@ class ElementType(
             **(kwargs | import_context),
         )
 
+        updated_models = self.import_formulas(
+            created_instance, id_mapping, import_formula, **(kwargs | import_context)
+        )
+
+        [m.save() for m in updated_models]
+
         # Add created instance to an element cache
         cache.setdefault("imported_element_map", {})[
             created_instance.id
         ] = created_instance
 
         return created_instance
+
+    def sanitize_element_roles(
+        self,
+        roles: List[str],
+        existing_roles: List[str],
+        user_sources_mapping: Dict[int, int],
+    ) -> List[str]:
+        """
+        Given a list of roles, return a sanitized version of it. The sanitized
+        version should not contain any invalid roles.
+
+        An invalid role is a role name that doesn't exist (e.g. due to renaming
+        or deletion). Also, Default User Roles are updated to ensure they contain
+        the new User Source's ID.
+        """
+
+        sanitized_roles = []
+        for role in roles:
+            if role in existing_roles:
+                sanitized_roles.append(role)
+                continue
+
+            # Ensure the default role is using the newly published UserSource ID
+            prefix = str(DEFAULT_USER_ROLE_PREFIX)
+            if role.startswith(prefix) and user_sources_mapping:
+                old_user_source_id = int(role[len(prefix) :])
+                new_user_source_id = user_sources_mapping[old_user_source_id]
+                new_role_name = f"{prefix}{new_user_source_id}"
+                if new_role_name in existing_roles:
+                    sanitized_roles.append(new_role_name)
+
+        return sanitized_roles
 
     def serialize_property(
         self,
@@ -179,6 +240,14 @@ class ElementType(
 
         if prop_name == "order":
             return str(element.order)
+
+        if prop_name == "style_background_file_id":
+            return UserFileHandler().export_user_file(
+                element.style_background_file,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
+            )
 
         return super().serialize_property(
             element, prop_name, files_zip=files_zip, storage=storage, cache=cache
@@ -206,11 +275,37 @@ class ElementType(
         :return: the deserialized version for this property.
         """
 
+        if cache is None:
+            cache = {}
+
         if prop_name == "parent_element_id":
-            return id_mapping["builder_page_elements"].get(
+            return id_mapping[BUILDER_PAGE_ELEMENTS].get(
                 value,
                 value,
             )
+
+        if prop_name == "style_background_file_id":
+            user_file = UserFileHandler().import_user_file(
+                value, files_zip=files_zip, storage=storage
+            )
+            if user_file:
+                return user_file.id
+            return None
+
+        # Compat with old exported JSONs
+        # Can be removed in January 2025
+        if prop_name == "style_background_mode":
+            return value or "fill"
+
+        # Compat with old exported JSONs
+        # Can be removed in January 2025
+        if prop_name in [
+            "style_margin_bottom",
+            "style_margin_top",
+            "style_margin_left",
+            "style_margin_right",
+        ]:
+            return value or 0
 
         return value
 
@@ -244,8 +339,9 @@ element_type_registry = ElementTypeRegistry()
 
 
 class CollectionFieldType(
-    Instance,
+    InstanceWithFormulaMixin,
     CustomFieldsInstanceMixin,
+    Instance,
     ABC,
 ):
     """Collection element field type"""
@@ -272,6 +368,7 @@ class CollectionFieldType(
             "uid": str(instance.uid),
             "name": instance.name,
             "type": instance.type,
+            "styles": instance.styles,
             "config": serialized_config,
         }
 
@@ -316,7 +413,7 @@ class CollectionFieldType(
         self,
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        **kwargs,
     ) -> CollectionField:
         """
         Imports the previously exported dict generated by the `export_serialized`
@@ -327,24 +424,30 @@ class CollectionFieldType(
         :param serialized_values: The dict containing the serialized values.
         :param id_mapping: Used to mapped object ids from export to newly
             created instances.
-        :param data_source_id: The data source id.
         :return: The created instance.
         """
 
         deserialized_config = {}
         for name in self.SerializedDict.__annotations__.keys():
+            # If any field declared in the `SerializedDict` is not present in
+            # `serialized_values`, try to use a default value instead.
+            # The default value is retrieved from the `serialized_field_overrides`
+            # method, if present.
+            serializer_field_override = self.serializer_field_overrides.get(name)
+            default = getattr(serializer_field_override, "default", None)
             deserialized_config[name] = self.deserialize_property(
                 name,
-                serialized_values["config"][name],
+                serialized_values["config"].get(name, default),
                 id_mapping,
                 serialized_values,
-                data_source_id=data_source_id,
+                **kwargs,
             )
 
         deserialized_values = {
             "uid": serialized_values.get("uid", RandomUUID()),
             "config": deserialized_config,
             "type": serialized_values["type"],
+            "styles": serialized_values.get("styles", {}),
             "name": serialized_values["name"],
         }
 
@@ -388,6 +491,22 @@ class CollectionFieldType(
         This hooks is called before we delete a collection field and gives the
         opportunity to clean up things.
         """
+
+    def formula_generator(
+        self, collection_field: CollectionField
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formula fields for CollectionField.
+
+        Some formula fields are in the config JSON field, e.g. page_parameters.
+        """
+
+        for formula_field in self.simple_formula_fields:
+            formula = collection_field.config.get(formula_field, "")
+            new_formula = yield formula
+            if new_formula is not None:
+                collection_field.config[formula_field] = new_formula
+                yield collection_field
 
 
 CollectionFieldTypeSubClass = TypeVar(

@@ -7,7 +7,6 @@ from decimal import Decimal
 from ipaddress import ip_network
 from socket import AF_INET, AF_INET6, IPPROTO_TCP, SOCK_STREAM
 from typing import Any, Dict, List, Optional, Type, Union
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -64,10 +63,14 @@ def uuid4_generator():
     """
 
     base_uuid = uuid.UUID("00000000-0000-4000-8000-000000000000")
-    counter = 1
-    while True:
-        yield uuid.UUID(int=base_uuid.int + counter)
+    counter = 0
+
+    def mocked_uuid4():
+        nonlocal counter
         counter += 1
+        return uuid.UUID(int=base_uuid.int + counter)
+
+    return mocked_uuid4
 
 
 def setup_interesting_test_table(
@@ -148,6 +151,7 @@ def setup_interesting_test_table(
         primary=True,
     )
     handler = FieldHandler()
+    fields = {}
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
         for kwargs in all_possible_kwargs:
             field = handler.create_field(
@@ -159,6 +163,7 @@ def setup_interesting_test_table(
             )
             i += 1
             name_to_field_id[kwargs["name"]] = field.id
+            fields[field.id] = field
     row_handler = RowHandler()
 
     datetime = _parse_datetime("2020-02-01 01:23")
@@ -288,55 +293,48 @@ def setup_interesting_test_table(
     # We freeze time here so that we know what the values of the last_modified and
     # created_on field types are going to be. Freezing the datetime will also freeze
     # the current daylight savings time information.
-    with freeze_time("2021-01-02 12:00"), patch(
-        "uuid.uuid4", side_effect=uuid4_generator()
-    ):
-        blank_row, row = row_handler.create_rows(user, table, [{}, row_values])
+    with freeze_time("2021-01-02 12:00"):
+        model = table.get_model()
+
+        uuid_field = getattr(model, f"field_{name_to_field_id['uuid']}")
+        uuid_field.field.default = uuid4_generator()
+
+        blank_row, row = row_handler.create_rows(
+            user, table, [{}, row_values], model=model
+        )
 
     # Setup the link rows
-    linked_row_1 = row_handler.create_row(
+    linked_row_1, linked_row_2, linked_row_3 = row_handler.create_rows(
         user=user,
         table=link_table,
-        values={
-            link_table_primary_text_field.id: "linked_row_1",
-            link_table_duration_field.id: timedelta(minutes=1),
-        },
+        rows_values=[
+            {
+                link_table_primary_text_field.db_column: "linked_row_1",
+                link_table_duration_field.db_column: timedelta(minutes=1),
+            },
+            {
+                link_table_primary_text_field.db_column: "linked_row_2",
+                link_table_duration_field.db_column: timedelta(minutes=3),
+            },
+            {
+                link_table_primary_text_field.db_column: "",
+            },
+        ],
     )
-    linked_row_2 = row_handler.create_row(
-        user=user,
-        table=link_table,
-        values={
-            link_table_primary_text_field.id: "linked_row_2",
-            link_table_duration_field.id: timedelta(minutes=3),
-        },
-    )
-    linked_row_3 = row_handler.create_row(
-        user=user,
-        table=link_table,
-        values={
-            link_table_primary_text_field.id: "",
-        },
-    )
-    linked_row_4 = row_handler.create_row(
+    linked_row_4, linked_row_5, linked_row_6 = row_handler.create_rows(
         user=user,
         table=decimal_link_table,
-        values={
-            decimal_table_primary_decimal_field.id: "1.234",
-        },
-    )
-    linked_row_5 = row_handler.create_row(
-        user=user,
-        table=decimal_link_table,
-        values={
-            decimal_table_primary_decimal_field.id: "-123.456",
-        },
-    )
-    linked_row_6 = row_handler.create_row(
-        user=user,
-        table=decimal_link_table,
-        values={
-            decimal_table_primary_decimal_field.id: None,
-        },
+        rows_values=[
+            {
+                decimal_table_primary_decimal_field.db_column: "1.234",
+            },
+            {
+                decimal_table_primary_decimal_field.db_column: "-123.456",
+            },
+            {
+                decimal_table_primary_decimal_field.db_column: None,
+            },
+        ],
     )
     with freeze_time("2020-01-01 12:00"):
         user_file_1 = data_fixture.create_user_file(
@@ -390,7 +388,7 @@ def setup_interesting_test_table(
             },
         )
 
-    context = {"user2": user2, "user3": user3}
+    context = {"user2": user2, "user3": user3, "fields": fields}
 
     return table, user, row, blank_row, context
 

@@ -32,11 +32,13 @@ import Chips from '@baserow/modules/core/components/Chips'
 import Presentation from '@baserow/modules/core/components/Presentation'
 import FormInput from '@baserow/modules/core/components/FormInput'
 import ImageInput from '@baserow/modules/core/components/ImageInput'
+import FormTextarea from '@baserow/modules/core/components/FormTextarea'
 import CallToAction from '@baserow/modules/core/components/CallToAction.vue'
 import FormGroup from '@baserow/modules/core/components/FormGroup'
 import FormRow from '@baserow/modules/core/components/FormRow'
 import Logo from '@baserow/modules/core/components/Logo'
 import ReadOnlyForm from '@baserow/modules/core/components/ReadOnlyForm'
+import FormSection from '@baserow/modules/core/components/FormSection'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -55,7 +57,6 @@ import Expandable from '@baserow/modules/core/components/Expandable.vue'
 import RadioButton from '@baserow/modules/core/components/RadioButton'
 import Thumbnail from '@baserow/modules/core/components/Thumbnail'
 import ColorInput from '@baserow/modules/core/components/ColorInput'
-import ColorInputGroup from '@baserow/modules/core/components/ColorInputGroup'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
 
 function setupVue(Vue) {
@@ -94,15 +95,16 @@ function setupVue(Vue) {
   Vue.component('Avatar', Avatar)
   Vue.component('Presentation', Presentation)
   Vue.component('FormInput', FormInput)
+  Vue.component('FormTextarea', FormTextarea)
   Vue.component('CallToAction', CallToAction)
   Vue.component('FormGroup', FormGroup)
   Vue.component('FormRow', FormRow)
   Vue.component('ColorInput', ColorInput)
-  Vue.component('ColorInputGroup', ColorInputGroup)
   Vue.component('ImageInput', ImageInput)
   Vue.component('SelectSearch', SelectSearch)
   Vue.component('Logo', Logo)
   Vue.component('ReadOnlyForm', ReadOnlyForm)
+  Vue.component('FormSection', FormSection)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

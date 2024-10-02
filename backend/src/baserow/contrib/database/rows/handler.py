@@ -33,7 +33,7 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.operations import (
@@ -51,6 +51,7 @@ from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
 from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.trash.registries import trash_item_type_registry
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from ..search.handler import SearchHandler
@@ -781,41 +782,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             )
             getattr(instance, field_name).through.objects.bulk_create(m2m_objects)
 
-        fields = []
-        update_collector = FieldUpdateCollector(table, starting_row_ids=[instance.id])
-        field_cache = FieldCache()
-        field_cache.cache_model(model)
-        field_ids = []
-        for field_object in model._field_objects.values():
-            field_type: FieldType = field_object["type"]
-            field = field_object["field"]
-            fields.append(field)
-            field_ids.append(field.id)
-
-            field_type.after_rows_created(
-                field, [instance], update_collector, field_cache
-            )
-
-        dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id,
-            field_ids,
-            field_cache,
-            associated_relations_changed=True,
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_created(
-                dependant_field,
-                instance,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
+        fields, dependant_fields = self.update_dependencies_of_rows_created(
+            model, [instance]
+        )
 
         if model.fields_requiring_refresh_after_insert():
             instance.refresh_from_db(
@@ -973,8 +942,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         row_values, manytomany_values = self.extract_manytomany_values(
             prepared_values, model
         )
+        update_row_fields = []
         for name, value in row_values.items():
             setattr(row, name, value)
+            update_row_fields.append(name)
 
         # This update can remove link row connections with other rows. We need to keep
         # track of these so we can later update any dependant cells in those rows that
@@ -991,39 +962,19 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             )
             getattr(row, name).set(value)
 
+        always_updated_fields = ["updated_on"] + [
+            fo["field"].db_column for fo in model.get_field_objects_to_always_update()
+        ]
         if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
             setattr(row, LAST_MODIFIED_BY_COLUMN_NAME, user if user.id else None)
+            always_updated_fields.append(LAST_MODIFIED_BY_COLUMN_NAME)
 
-        row.save()
+        row.save(update_fields=update_row_fields + always_updated_fields)
         rows_updated_counter.add(1)
 
-        update_collector = FieldUpdateCollector(
-            table,
-            starting_row_ids=[row.id],
-            deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
+        dependant_fields = self.update_dependencies_of_rows_updated(
+            table, [row], model, updated_field_ids, m2m_change_tracker
         )
-        field_cache = FieldCache()
-        field_cache.cache_model(model)
-        dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id,
-            updated_field_ids,
-            field_cache,
-            associated_relations_changed=True,
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_updated(
-                dependant_field,
-                row,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
         # We need to refresh here as ExpressionFields might have had their values
         # updated. Django does not support UPDATE .... RETURNING and so we need to
         # query for the rows updated values instead.
@@ -1047,7 +998,70 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         return row
 
-    def create_rows(
+    def update_dependencies_of_rows_updated(
+        self,
+        table: Table,
+        updated_rows: List[GeneratedTableModel],
+        model: Type[GeneratedTableModel],
+        updated_field_ids: Set[int],
+        m2m_change_tracker: Optional[RowM2MChangeTracker] = None,
+        skip_search_updates: bool = False,
+    ) -> List["Field"]:
+        """
+        Prepares a list of fields that are dependent on the updated fields and updates
+        them.
+
+        :param table: The table where the rows are updated.
+        :param updated_rows: The rows that are updated.
+        :param model: The model of the table.
+        :param updated_field_ids: The field ids that are updated.
+        :param m2m_change_tracker: The tracker that keeps track of the many to many
+            changes.
+        :param skip_search_updates: Set to True to skip search updates.
+        :return: The dependant fields that are updated.
+        """
+
+        field_cache = FieldCache()
+        field_cache.cache_model(model)
+        all_dependent_fields_grouped_by_depth = (
+            FieldDependencyHandler.group_all_dependent_fields_by_level(
+                table.id,
+                updated_field_ids,
+                field_cache,
+                associated_relations_changed=True,
+            )
+        )
+        deleted_m2m_rels_per_link_field = None
+        if m2m_change_tracker is not None:
+            deleted_m2m_rels_per_link_field = (
+                m2m_change_tracker.get_deleted_link_row_rels_for_update_collector()
+            )
+        update_collector = FieldUpdateCollector(
+            table,
+            starting_row_ids=[row.id for row in updated_rows],
+            deleted_m2m_rels_per_link_field=deleted_m2m_rels_per_link_field,
+        )
+        updated_fields = []
+        for dependant_fields_group in all_dependent_fields_grouped_by_depth:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in dependant_fields_group:
+                updated_fields.append(dependant_field)
+                dependant_field_type.row_of_dependency_updated(
+                    dependant_field,
+                    updated_rows,
+                    update_collector,
+                    field_cache,
+                    path_to_starting_table,
+                )
+            update_collector.apply_updates_and_get_updated_fields(
+                field_cache, skip_search_updates
+            )
+        return updated_fields
+
+    def force_create_rows(
         self,
         user: AbstractUser,
         table: Table,
@@ -1060,35 +1074,32 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         skip_search_update: bool = False,
     ) -> List[GeneratedTableModel]:
         """
-        Creates new rows for a given table if the user
-        belongs to the related workspace. It also calls the rows_created signal.
+        Creates new rows for a given table without checking permissions. It also calls
+        the rows_created signal.
 
         :param user: The user of whose behalf the rows are created.
         :param table: The table for which the rows should be created.
         :param rows_values: List of rows values for rows that need to be created.
-        :param before_row: If provided the new rows will be placed right before
-            the before_row.
-        :param model: If the correct model has already been generated it can be
-            provided so that it does not have to be generated for a second time.
-        :param send_signal: If set to false then it is up to the caller to send the
-            rows_created or similar signal. Defaults to True.
+        :param before_row: If provided the new rows will be placed right before the
+            before_row.
+        :param model: If the correct model has already been generated it can be provided
+            so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
         :param generate_error_report: When set to True the return
-        :param skip_search_update: If you want to to instead
-            trigger the search handler cells update later on after many create_rows
-            calls then set this to True but make sure you trigger it eventually.
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
         :return: The created row instances.
-        """
 
-        workspace = table.database.workspace
-        CoreHandler().check_permissions(
-            user,
-            CreateRowDatabaseTableOperationType.type,
-            workspace=workspace,
-            context=table,
-        )
+        """
 
         if model is None:
             model = table.get_model()
+
+        user_id = user and user.id
 
         unique_orders = self.get_unique_orders_before_row(
             before_row, model, amount=len(rows_values)
@@ -1110,10 +1121,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             row_values["order"] = unique_orders[index]
 
             if getattr(model, CREATED_BY_COLUMN_NAME, None):
-                row_values[CREATED_BY_COLUMN_NAME] = user if user.id else None
+                row_values[CREATED_BY_COLUMN_NAME] = user if user_id else None
 
             if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
-                row_values[LAST_MODIFIED_BY_COLUMN_NAME] = user if user.id else None
+                row_values[LAST_MODIFIED_BY_COLUMN_NAME] = user if user_id else None
 
             instance = model(**row_values)
 
@@ -1155,41 +1166,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             through = getattr(model, field_name).through
             through.objects.bulk_create(values)
 
-        update_collector = FieldUpdateCollector(
-            table, starting_row_ids=[row.id for row in inserted_rows]
+        _, dependant_fields = self.update_dependencies_of_rows_created(
+            model,
+            inserted_rows,
         )
-        field_cache = FieldCache()
-        field_cache.cache_model(model)
-        field_ids = []
-        for field_object in model._field_objects.values():
-            field_type = field_object["type"]
-            field = field_object["field"]
-            field_ids.append(field.id)
-
-            field_type.after_rows_created(
-                field, inserted_rows, update_collector, field_cache
-            )
-
-        dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id,
-            field_ids,
-            field_cache,
-            associated_relations_changed=True,
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_created(
-                dependant_field,
-                inserted_rows,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         from baserow.contrib.database.views.handler import ViewHandler
 
@@ -1228,6 +1208,121 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         if generate_error_report:
             return inserted_rows, report
         return rows_to_return
+
+    def create_rows(
+        self,
+        user: AbstractUser,
+        table: Table,
+        rows_values: List[Dict[str, Any]],
+        before_row: Optional[GeneratedTableModel] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
+        generate_error_report: bool = False,
+        skip_search_update: bool = False,
+    ) -> List[GeneratedTableModel]:
+        """
+        Creates new rows for a given table if the user
+        belongs to the related workspace. It also calls the rows_created signal.
+
+        :param user: The user of whose behalf the rows are created.
+        :param table: The table for which the rows should be created.
+        :param rows_values: List of rows values for rows that need to be created.
+        :param before_row: If provided the new rows will be placed right before
+            the before_row.
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
+        :param generate_error_report: When set to True the return
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
+        :return: The created row instances.
+
+        """
+
+        workspace = table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            CreateRowDatabaseTableOperationType.type,
+            workspace=workspace,
+            context=table,
+        )
+
+        return self.force_create_rows(
+            user,
+            table,
+            rows_values,
+            before_row,
+            model,
+            send_realtime_update,
+            send_webhook_events,
+            generate_error_report,
+            skip_search_update,
+        )
+
+    def update_dependencies_of_rows_created(
+        self,
+        model: Type[GeneratedTableModel],
+        created_rows: List[GeneratedTableModel],
+    ) -> List["Field"]:
+        """
+        Generates a list of dependant fields that need to be updated after the rows have
+        been created and updates them.
+
+        :param model: The model of the table.
+        :param rows: The rows that have been created.
+        :return: The dependant fields that are updated.
+        """
+
+        row_ids = [row.id for row in created_rows]
+        table = model.baserow_table
+        update_collector = FieldUpdateCollector(table, starting_row_ids=row_ids)
+
+        field_cache = FieldCache()
+        field_cache.cache_model(model)
+        field_ids = []
+        fields = []
+        for field_object in model._field_objects.values():
+            field_type = field_object["type"]
+            field = field_object["field"]
+            field_ids.append(field.id)
+            fields.append(field)
+
+            field_type.after_rows_created(
+                field, created_rows, update_collector, field_cache
+            )
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
+
+        dependant_fields = []
+        all_dependent_fields_grouped_by_depth = (
+            FieldDependencyHandler.group_all_dependent_fields_by_level(
+                table.id,
+                field_ids,
+                field_cache,
+                associated_relations_changed=True,
+            )
+        )
+
+        for dependant_fields_group in all_dependent_fields_grouped_by_depth:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in dependant_fields_group:
+                dependant_fields.append(dependant_field)
+                dependant_field_type.row_of_dependency_created(
+                    dependant_field,
+                    created_rows,
+                    update_collector,
+                    field_cache,
+                    path_to_starting_table,
+                )
+            update_collector.apply_updates_and_get_updated_fields(field_cache)
+        return fields, dependant_fields
 
     def _prepare_m2m_field_related_objects(
         self, row: GeneratedTableModel, field_name: str, value: List[Any]
@@ -1431,6 +1526,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             field_object["field"]
             for field_object in model._field_objects.values()
             if not field_object["type"].read_only
+            and not field_object["field"].read_only
         ]
 
         # Sort by order then by id
@@ -1556,13 +1652,16 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         return fields_metadata_by_row_id
 
-    def update_rows(
+    def force_update_rows(
         self,
         user: AbstractUser,
         table: Table,
         rows_values: List[Dict[str, Any]],
         model: Optional[Type[GeneratedTableModel]] = None,
         rows_to_update: Optional[RowsForUpdate] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
+        skip_search_update: bool = False,
     ) -> UpdatedRowsWithOldValuesAndMetadata:
         """
         Updates field values in batch based on provided rows with the new
@@ -1573,6 +1672,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param rows_values: The list of rows with new values that should be set.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
+
         :param rows_to_update: If the rows to update have already been generated
             it can be provided so that it does not have to be generated for a
             second time.
@@ -1583,15 +1690,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             instances, the original row values and the updated fields metadata.
         """
 
-        CoreHandler().check_permissions(
-            user,
-            UpdateDatabaseRowOperationType.type,
-            workspace=table.database.workspace,
-            context=table,
-        )
-
         if model is None:
             model = table.get_model()
+
+        user_id = user and user.id
 
         prepared_rows_values, _ = self.prepare_rows_in_bulk(
             model._field_objects, rows_values
@@ -1623,9 +1725,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         field_name_to_field = dict()
         for obj in rows_to_update:
             row_values = prepared_rows_values_by_id[obj.id]
-            for field_id, field in model._field_objects.items():
-                field_name_to_field[field["name"]] = field["field"]
-                if field_id in row_values or field["name"] in row_values:
+            for field_id, field_obj in model._field_objects.items():
+                field_name_to_field[field_obj["name"]] = field_obj["field"]
+                if field_id in row_values or field_obj["name"] in row_values:
                     updated_field_ids.add(field_id)
 
         original_row_values_by_id = {}
@@ -1669,7 +1771,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 setattr(obj, name, value)
 
             if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
-                setattr(obj, LAST_MODIFIED_BY_COLUMN_NAME, user if user.id else None)
+                setattr(obj, LAST_MODIFIED_BY_COLUMN_NAME, user if user_id else None)
 
             relations = {
                 field_name: value
@@ -1711,9 +1813,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 # which will be removed by this update. This is so we can update
                 # rows which previously were connected to an updated row, but no
                 # longer are.
-                field = field_name_to_field[field_name]
+                field_obj = field_name_to_field[field_name]
                 m2m_change_tracker.track_m2m_update_for_field_and_row(
-                    field, field_name, row, value
+                    field_obj, field_name, row, value
                 )
 
                 m2m_objects, row_column_name = self._prepare_m2m_field_related_objects(
@@ -1750,54 +1852,33 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         if table.needs_background_update_column_added:
             bulk_update_fields.append(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME)
-        for field in model._field_objects.values():
-            field_name = field["name"]
+        for field_obj in model._field_objects.values():
+            field_id = field_obj["field"].id
+            field_name = field_obj["name"]
+            field_type = field_obj["type"]
             model_field = model._meta.get_field(field_name)
-            # For now all valid fields that don't represent a relationship will be
-            # used in the bulk_update() call. This could be optimized in the future
-            # if we can select just fields that need to be updated (fields that are
-            # passed in + read only fields that need updating too)
-            not_m2m = not isinstance(model_field, ManyToManyField)
-            if not_m2m and getattr(model_field, "valid_for_bulk_update", True):
+            if (
+                not isinstance(model_field, ManyToManyField)
+                and field_id in updated_field_ids
+                and field_type.valid_for_bulk_update(model_field)
+            ):
                 bulk_update_fields.append(field_name)
 
         if len(bulk_update_fields) > 0:
-            model.objects.bulk_update(rows_to_update, bulk_update_fields)
+            model.objects.bulk_update(
+                rows_to_update, bulk_update_fields, batch_size=2000
+            )
             rows_updated_counter.add(len(rows_to_update))
 
-        update_collector = FieldUpdateCollector(
-            table,
-            starting_row_ids=row_ids,
-            deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
+        dependant_fields = self.update_dependencies_of_rows_updated(
+            table, rows_to_update, model, updated_field_ids, m2m_change_tracker
         )
-        field_cache = FieldCache()
-        field_cache.cache_model(model)
-
-        dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id,
-            updated_field_ids,
-            field_cache,
-            associated_relations_changed=True,
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_updated(
-                dependant_field,
-                rows_to_update,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         from baserow.contrib.database.views.handler import ViewHandler
 
         ViewHandler().field_value_updated(updated_fields + dependant_fields)
-        SearchHandler.field_value_updated_or_created(table)
+        if not skip_search_update:
+            SearchHandler.field_value_updated_or_created(table)
 
         updated_rows_to_return = list(
             model.objects.all().enhance_by_fields().filter(id__in=row_ids)
@@ -1812,6 +1893,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             before_return=before_return,
             updated_field_ids=updated_field_ids,
             m2m_change_tracker=m2m_change_tracker,
+            send_realtime_update=send_realtime_update,
+            send_webhook_events=send_webhook_events,
         )
 
         fields_metadata_by_row_id = self.get_fields_metadata_for_rows(
@@ -1822,6 +1905,61 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             updated_rows_to_return,
             original_row_values_by_id,
             fields_metadata_by_row_id,
+        )
+
+    def update_rows(
+        self,
+        user: AbstractUser,
+        table: Table,
+        rows_values: List[Dict[str, Any]],
+        model: Optional[Type[GeneratedTableModel]] = None,
+        rows_to_update: Optional[RowsForUpdate] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
+        skip_search_update: bool = False,
+    ) -> UpdatedRowsWithOldValuesAndMetadata:
+        """
+        Updates field values in batch based on provided rows with the new
+        values.
+
+        :param user: The user of whose behalf the change is made.
+        :param table: The table for which the row must be updated.
+        :param rows_values: The list of rows with new values that should be set.
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :param rows_to_update: If the rows to update have already been generated
+            it can be provided so that it does not have to be generated for a
+            second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
+        :raises RowIdsNotUnique: When trying to update the same row multiple
+            times.
+        :raises RowDoesNotExist: When any of the rows don't exist.
+        :return: An UpdatedRow named tuple containing the updated rows
+            instances, the original row values and the updated fields metadata.
+        """
+
+        CoreHandler().check_permissions(
+            user,
+            UpdateDatabaseRowOperationType.type,
+            workspace=table.database.workspace,
+            context=table,
+        )
+
+        return self.force_update_rows(
+            user,
+            table,
+            rows_values,
+            model,
+            rows_to_update,
+            send_realtime_update,
+            send_webhook_events,
+            skip_search_update,
         )
 
     def get_rows(
@@ -1915,36 +2053,23 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         row.order = self.get_unique_orders_before_row(before_row, model)[0]
         row.save()
 
-        update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
-        field_cache = FieldCache()
-        field_cache.cache_model(model)
+        # All fields must be marked as updated because the lookup fields can depend
+        # on the row order. Only fields that are specifically marked as
+        # `not include_in_row_move_updated_fields` are excluded. This is for example
+        # the case with the formula because that value can depend on other values and
+        # must be updated in the right grouped order in
+        # `update_dependencies_of_rows_updated`.
         updated_field_ids = []
         updated_fields = []
         for field_id, field_object in model._field_objects.items():
-            updated_field_ids.append(field_id)
-            field = field_object["field"]
-            updated_fields.append(field)
+            if field_object["type"].include_in_row_move_updated_fields:
+                updated_field_ids.append(field_id)
+                field = field_object["field"]
+                updated_fields.append(field)
 
-        dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id,
-            updated_field_ids,
-            field_cache,
-            associated_relations_changed=True,
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_moved(
-                dependant_field,
-                row,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
+        dependant_fields = self.update_dependencies_of_rows_updated(
+            table, [row], model, updated_field_ids
+        )
 
         from baserow.contrib.database.views.handler import ViewHandler
 
@@ -1969,6 +2094,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         table: Table,
         row_id: int,
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
     ):
         """
         Deletes an existing row of the given table and with row_id.
@@ -1978,6 +2105,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param row_id: The id of the row that must be deleted.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_deleted or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
@@ -1986,7 +2117,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         with transaction.atomic():
             row = self.get_row(user, table, row_id, model=model)
-            self.delete_row(user, table, row, model=model)
+            self.delete_row(
+                user,
+                table,
+                row,
+                model=model,
+                send_realtime_update=send_realtime_update,
+                send_webhook_events=send_webhook_events,
+            )
 
     def delete_row(
         self,
@@ -1994,6 +2132,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         table: Table,
         row: GeneratedTableModelForUpdate,
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
     ):
         """
         Deletes an existing row of the given table and with row_id.
@@ -2003,6 +2143,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param row: The row that must be deleted.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_deleted or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
         """
 
         workspace = table.database.workspace
@@ -2021,10 +2165,29 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         TrashHandler.trash(user, workspace, table.database, row)
-        rows_deleted_counter.add(
-            1,
+        rows_deleted_counter.add(1)
+
+        (
+            updated_fields,
+            dependant_fields,
+        ) = self.update_dependencies_of_rows_deleted(table, row, model)
+
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
+
+        rows_deleted.send(
+            self,
+            rows=[row],
+            user=user,
+            table=table,
+            model=model,
+            before_return=before_return,
+            send_realtime_update=send_realtime_update,
+            send_webhook_events=send_webhook_events,
         )
 
+    def update_dependencies_of_rows_deleted(self, table, row, model):
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
         field_cache = FieldCache()
         field_cache.cache_model(model)
@@ -2056,19 +2219,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 path_to_starting_table,
             )
         update_collector.apply_updates_and_get_updated_fields(field_cache)
-
-        from baserow.contrib.database.views.handler import ViewHandler
-
-        ViewHandler().field_value_updated(updated_fields + dependant_fields)
-
-        rows_deleted.send(
-            self,
-            rows=[row],
-            user=user,
-            table=table,
-            model=model,
-            before_return=before_return,
-        )
+        return updated_fields, dependant_fields
 
     def delete_rows(
         self,
@@ -2076,6 +2227,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         table: Table,
         row_ids: List[int],
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
+        permanently_delete: bool = False,
     ) -> TrashedRows:
         """
         Trashes existing rows of the given table based on row_ids.
@@ -2083,9 +2237,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param user: The user of whose behalf the change is made.
         :param table: The table for which the row must be deleted.
         :param row_ids: The ids of the rows that must be deleted.
-        :param model:
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
+         :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
+        :param permanently_delete: If `true` the rows will be permanently deleted
+            instead of trashed.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
@@ -2114,13 +2273,23 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             self, rows=rows, user=user, table=table, model=model
         )
 
-        trashed_rows = TrashedRows.objects.create(row_ids=row_ids, table=table)
-        # It's a bit on a hack, but we're storing the fetched row objects on the
-        # trashed_rows object, so that they can optionally be used later. This is for
-        # example used when storing the names in the trash.
-        trashed_rows.rows = rows
+        if permanently_delete:
+            trashed_rows = TrashedRows(row_ids=row_ids, table=table, table_id=table.id)
+            # It's a bit of hack, but because the `trashed_rows` is never actually
+            # created, it also doesn't have to be deleted in the
+            # `permanently_delete_item` method.
+            trashed_rows.delete = lambda *a, **k: None
+            trash_item_type = trash_item_type_registry.get_by_model(trashed_rows)
+            trash_item_type.permanently_delete_item(trashed_rows)
+        else:
+            trashed_rows = TrashedRows.objects.create(row_ids=row_ids, table=table)
+            # It's a bit on a hack, but we're storing the fetched row objects on the
+            # trashed_rows object, so that they can optionally be used later. This is
+            # for example used when storing the names in the trash.
+            trashed_rows.rows = rows
 
-        TrashHandler.trash(user, workspace, table.database, trashed_rows)
+            TrashHandler.trash(user, workspace, table.database, trashed_rows)
+
         rows_deleted_counter.add(
             len(row_ids),
         )
@@ -2167,6 +2336,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             table=table,
             model=model,
             before_return=before_return,
+            send_realtime_update=send_realtime_update,
+            send_webhook_events=send_webhook_events,
         )
 
         return trashed_rows

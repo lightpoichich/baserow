@@ -2,7 +2,12 @@
   <div
     v-scroll="scroll"
     class="grid-view"
-    :class="{ 'grid-view--disable-selection': isMultiSelectActive }"
+    :class="[
+      {
+        'grid-view--disable-selection': isMultiSelectActive,
+      },
+      'grid-view--row-height-' + view.row_height_size,
+    ]"
   >
     <Scrollbars
       ref="scrollbars"
@@ -64,21 +69,23 @@
       class="grid-view__divider"
       :style="{ left: leftWidth + 'px' }"
     ></div>
-    <GridViewWidthHandle
+    <HorizontalResize
       v-if="primaryFieldIsSticky"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :width="leftFieldsWidth"
+      :min="100"
       @move="moveFieldWidth(leftFields[0], $event)"
       @update="
         updateFieldWidth(leftFields[0], view, database, readOnly, $event)
       "
-    ></GridViewWidthHandle>
-    <GridViewWidthHandle
+    ></HorizontalResize>
+    <HorizontalResize
       v-else-if="viewHasGroupBys && leftFields.length === 0"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :width="activeGroupBys[activeGroupBys.length - 1].width"
+      :min="100"
       @move="
         moveGroupWidth(activeGroupBys[activeGroupBys.length - 1], view, $event)
       "
@@ -91,7 +98,7 @@
           $event
         )
       "
-    ></GridViewWidthHandle>
+    ></HorizontalResize>
     <GridViewSection
       ref="right"
       class="grid-view__right"
@@ -150,18 +157,14 @@
       vertical="getVerticalScrollbarElement"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewRowDragging>
-    <Context
-      ref="rowContext"
-      :overflow-scroll="true"
-      :max-height-if-outside-viewport="true"
-    >
+    <Context ref="rowContext" overflow-scroll max-height-if-outside-viewport>
       <ul v-show="isMultiSelectActive" class="context__menu">
         <component
           :is="contextItemComponent"
           v-for="(contextItemComponent, index) in getMultiSelectContextItems()"
           :key="index"
           :field="getSelectedField()"
-          :rows="getSelectedRows()"
+          :get-rows="getSelectedRowsFunction"
           :store-prefix="storePrefix"
           :database="database"
           @click=";[$refs.rowContext.hide()]"
@@ -178,6 +181,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.delete_row',
               table,
@@ -209,6 +213,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -228,6 +233,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -247,6 +253,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -287,6 +294,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.delete_row',
               table,
@@ -354,7 +362,7 @@ import ResizeObserver from 'resize-observer-polyfill'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
-import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
+import HorizontalResize from '@baserow/modules/core/components/HorizontalResize'
 import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
@@ -371,13 +379,14 @@ import { clone } from '@baserow/modules/core/utils/object'
 import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
 import GridViewRowsAddContext from '@baserow/modules/database/components/view/grid/fields/GridViewRowsAddContext'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
+import { GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING } from '@baserow/modules/database/constants'
 
 export default {
   name: 'GridView',
   components: {
+    HorizontalResize,
     GridViewRowsAddContext,
     GridViewSection,
-    GridViewWidthHandle,
     GridViewRowDragging,
     RowEditModal,
   },
@@ -536,6 +545,17 @@ export default {
           })
         }
       },
+    },
+    'view.row_height_size'(value, oldValue) {
+      if (value === oldValue) {
+        return
+      }
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/setRowHeight',
+        GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING[value]
+      )
+      this.onWindowResize()
+      this.$emit('refresh')
     },
   },
   beforeCreate() {
@@ -1564,11 +1584,12 @@ export default {
       ](this.fields)
       return selectedFields.length === 1 ? selectedFields[0] : null
     },
-    /**
-     * Returns the selected rows if any rows are selected, otherwise returns an empty array.
-     */
-    getSelectedRows() {
-      return this.$store.getters[this.storePrefix + 'view/grid/getSelectedRows']
+    async getSelectedRowsFunction() {
+      const fieldsAndRows = await this.$store.dispatch(
+        this.storePrefix + 'view/grid/getCurrentSelection',
+        { fields: this.fields }
+      )
+      return fieldsAndRows[1]
     },
   },
 }

@@ -1,10 +1,9 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
-from django.core.files.storage import default_storage
-from django.db import IntegrityError, OperationalError
-from django.db.models.query import QuerySet
-from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
+from django.db import OperationalError
+from django.db.models import QuerySet
 
 from baserow.contrib.database.exceptions import (
     DatabaseSnapshotMaxLocksExceededException,
@@ -17,7 +16,7 @@ from baserow.core.exceptions import (
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.models import Job
-from baserow.core.models import Application, Snapshot, User, Workspace
+from baserow.core.models import Application, Snapshot, Workspace
 from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.signals import application_created
 from baserow.core.snapshots.exceptions import (
@@ -28,6 +27,7 @@ from baserow.core.snapshots.exceptions import (
     SnapshotIsBeingRestored,
     SnapshotNameNotUnique,
 )
+from baserow.core.storage import get_default_storage
 from baserow.core.utils import Progress
 
 from .job_types import CreateSnapshotJobType, RestoreSnapshotJobType
@@ -49,9 +49,11 @@ class SnapshotHandler:
         :param workspace: The workspace for which to count the snapshots.
         """
 
-        return Snapshot.objects.filter(
-            snapshot_from_application__workspace=workspace, mark_for_deletion=False
-        ).count()
+        return (
+            Snapshot.objects.restorable()
+            .filter(snapshot_from_application__workspace=workspace)
+            .count()
+        )
 
     def _check_is_in_use(self, snapshot: Snapshot) -> None:
         """
@@ -65,8 +67,7 @@ class SnapshotHandler:
         """
 
         restoring_jobs_count = (
-            JobHandler()
-            .get_pending_or_running_jobs(RestoreSnapshotJobType.type)
+            JobHandler.get_pending_or_running_jobs(RestoreSnapshotJobType.type)
             .filter(snapshot=snapshot)
             .count()
         )
@@ -77,7 +78,7 @@ class SnapshotHandler:
         if snapshot.mark_for_deletion is True:
             raise SnapshotIsBeingDeleted()
 
-    def list(self, application_id: int, performed_by: User) -> QuerySet:
+    def list(self, application_id: int, performed_by: AbstractUser) -> QuerySet:
         """
         Lists all snapshots for the given application id if the provided
         user is in the same workspace as the application.
@@ -113,40 +114,52 @@ class SnapshotHandler:
         )
 
         return (
-            Snapshot.objects.filter(
-                snapshot_from_application__id=application_id,
-                snapshot_to_application__isnull=False,
-                mark_for_deletion=False,
-            )
+            Snapshot.objects.restorable()
+            .filter(snapshot_from_application__id=application_id)
             .select_related("created_by")
             .order_by("-created_at", "-id")
         )
 
-    def create(self, application_id: int, performed_by: User, name: str):
+    def start_create_job(
+        self, application_id: int, performed_by: AbstractUser, name: str
+    ):
         """
-        Creates a new application snapshot of the given application if the provided
-        user is in the same workspace as the application.
+        Create a snapshot instance to track the creation of a snapshot and start the job
+        to perform the snapshot creation.
 
-        :param application_id: The ID of the application for which to list
-            snapshots.
-        :param performed_by: The user performing the operation that should
-            have sufficient permissions.
+        :param application_id: The ID of the application for which to list snapshots.
+        :param performed_by: The user performing the operation that should have
+            sufficient permissions.
         :param name: The name for the new snapshot.
-        :raises ApplicationDoesNotExist: When the application with the provided id
-            does not exist.
+        :raises ApplicationDoesNotExist: When the application with the provided id does
+            not exist.
         :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
-        :raises MaximumSnapshotsReached: When the workspace has already reached
-            the maximum of allowed snapshots.
-        :raises ApplicationOperationNotSupported: When the application type
-            doesn't support creating snapshots.
-        :raises SnapshotIsBeingCreated: When creating a snapshot is already
-            scheduled for the application.
-        :raises MaxJobCountExceeded: When the user already has a running
-            job to create a snapshot of the same type.
-        :return: The snapshot object that was created.
+        :raises MaximumSnapshotsReached: When the workspace has already reached the
+            maximum of allowed snapshots.
+        :raises ApplicationOperationNotSupported: When the application type doesn't
+            support creating snapshots.
+        :raises SnapshotIsBeingCreated: When creating a snapshot is already scheduled
+            for the application.
+        :raises MaxJobCountExceeded: When the user already has a running job to create a
+            snapshot of the same type.
+        :return: The snapshot object that was created and the started job.
         """
 
+        snapshot = self.create(application_id, performed_by, name)
+
+        job = JobHandler().create_and_start_job(
+            performed_by,
+            CreateSnapshotJobType.type,
+            snapshot=snapshot,
+        )
+
+        return {
+            "snapshot": snapshot,
+            "job": job,
+        }
+
+    def create(self, application_id, performed_by, name):
         try:
             application = (
                 Application.objects.filter(id=application_id)
@@ -182,33 +195,29 @@ class SnapshotHandler:
         if creating_jobs_count > 0:
             raise SnapshotIsBeingCreated()
 
-        try:
-            snapshot = Snapshot.objects.create(
+        if (
+            Snapshot.objects.restorable()
+            .filter(
                 snapshot_from_application=application,
                 created_by=performed_by,
                 name=name,
             )
-        except IntegrityError as e:
-            if "unique constraint" in e.args[0]:
-                raise SnapshotNameNotUnique()
-            raise e
+            .exists()
+        ):
+            raise SnapshotNameNotUnique()
 
-        job = JobHandler().create_and_start_job(
-            performed_by,
-            CreateSnapshotJobType.type,
-            False,
-            snapshot=snapshot,
+        snapshot = Snapshot.objects.create(
+            snapshot_from_application=application,
+            created_by=performed_by,
+            name=name,
         )
 
-        return {
-            "snapshot": snapshot,
-            "job": job,
-        }
+        return snapshot
 
-    def restore(
+    def start_restore_job(
         self,
         snapshot_id: int,
-        performed_by: User,
+        performed_by: AbstractUser,
     ) -> Job:
         """
         Restores a previously created snapshot with the given ID if the
@@ -262,7 +271,6 @@ class SnapshotHandler:
         job = JobHandler().create_and_start_job(
             performed_by,
             RestoreSnapshotJobType.type,
-            False,
             snapshot=snapshot,
         )
 
@@ -274,7 +282,7 @@ class SnapshotHandler:
         if snapshot.snapshot_to_application is not None:
             delete_application_snapshot.delay(snapshot.snapshot_to_application.id)
 
-    def delete(self, snapshot_id: int, performed_by: User) -> None:
+    def delete(self, snapshot_id: int, performed_by: AbstractUser) -> None:
         """
         Deletes a previously created snapshot with the given ID if the
         provided user belongs to the same workspace as the application.
@@ -344,7 +352,7 @@ class SnapshotHandler:
         BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS and schedules their deletion.
         """
 
-        threshold = timezone.now() - datetime.timedelta(
+        threshold = datetime.now(tz=timezone.utc) - timedelta(
             days=settings.BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS
         )
         expired_snapshots = Snapshot.objects.filter(
@@ -364,6 +372,8 @@ class SnapshotHandler:
         :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
         """
+
+        storage = get_default_storage()
 
         if snapshot is None:
             raise SnapshotDoesNotExist()
@@ -387,7 +397,7 @@ class SnapshotHandler:
         )
         try:
             exported_application = application_type.export_serialized(
-                application, snapshot_import_export_config, None, default_storage
+                application, snapshot_import_export_config, None, storage
             )
         except OperationalError as e:
             # Detect if this `OperationalError` is due to us exceeding the
@@ -410,7 +420,7 @@ class SnapshotHandler:
             snapshot_import_export_config,
             id_mapping,
             None,
-            default_storage,
+            storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
 
@@ -426,6 +436,8 @@ class SnapshotHandler:
             as the application.
         :returns: Application that is a copy of the snapshot.
         """
+
+        storage = get_default_storage()
 
         if snapshot is None:
             raise SnapshotDoesNotExist()
@@ -444,8 +456,11 @@ class SnapshotHandler:
         restore_snapshot_import_export_config = ImportExportConfig(
             include_permission_data=True, reduce_disk_space_usage=False
         )
+        # Temporary set the workspace for the application so that the permissions can
+        # be correctly set during the import process.
+        application.workspace = workspace
         exported_application = application_type.export_serialized(
-            application, restore_snapshot_import_export_config, None, default_storage
+            application, restore_snapshot_import_export_config, None, storage
         )
         progress.increment(by=50)
 
@@ -455,7 +470,7 @@ class SnapshotHandler:
             restore_snapshot_import_export_config,
             {},
             None,
-            default_storage,
+            storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
         imported_application.name = CoreHandler().find_unused_application_name(

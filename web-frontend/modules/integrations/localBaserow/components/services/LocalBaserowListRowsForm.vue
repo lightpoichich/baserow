@@ -18,7 +18,7 @@
           >
             <LocalBaserowTableServiceConditionalForm
               v-if="values.table_id && dataSource.schema"
-              v-model="values.filters"
+              v-model="dataSourceFilters"
               :schema="dataSource.schema"
               :table-loading="tableLoading"
               :filter-type.sync="values.filter_type"
@@ -34,7 +34,7 @@
           >
             <LocalBaserowTableServiceSortForm
               v-if="values.table_id && dataSource.schema"
-              v-model="values.sortings"
+              v-model="dataSourceSortings"
               :schema="dataSource.schema"
               :table-loading="tableLoading"
             ></LocalBaserowTableServiceSortForm>
@@ -46,7 +46,7 @@
             :title="$t('localBaserowListRowsForm.searchTabTitle')"
             class="data-source-form__search-form-tab"
           >
-            <InjectedFormulaInputGroup
+            <InjectedFormulaInput
               v-model="values.search_query"
               small
               :placeholder="
@@ -65,21 +65,17 @@ import form from '@baserow/modules/core/mixins/form'
 import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
 import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm'
 import LocalBaserowTableServiceSortForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceSortForm'
-import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   components: {
-    InjectedFormulaInputGroup,
+    InjectedFormulaInput,
     LocalBaserowTableSelector,
     LocalBaserowTableServiceSortForm,
     LocalBaserowTableServiceConditionalForm,
   },
   mixins: [form],
   inject: ['page'],
-  provide() {
-    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
-  },
   props: {
     builder: {
       type: Object,
@@ -116,6 +112,22 @@ export default {
     dataSourceLoading() {
       return this.$store.getters['dataSource/getLoading'](this.page)
     },
+    dataSourceFilters: {
+      get() {
+        return this.excludeTrashedFields(this.values.filters)
+      },
+      set(newValue) {
+        this.values.filters = newValue
+      },
+    },
+    dataSourceSortings: {
+      get() {
+        return this.excludeTrashedFields(this.values.sortings)
+      },
+      set(newValue) {
+        this.values.sortings = newValue
+      },
+    },
     fakeTableId: {
       get() {
         return this.values.table_id
@@ -147,6 +159,26 @@ export default {
         this.tableLoading = false
       },
       immediate: true,
+    },
+  },
+  methods: {
+    /**
+     * Given an array of objects containing a `field` property (e.g. the data
+     * source filters or sortings arrays), this method will return a new array
+     * containing only the objects where the field is part of the schema, so,
+     * untrashed.
+     *
+     * @param {Array} value - The array of objects to filter.
+     * @returns {Array} - The filtered array.
+     */
+    excludeTrashedFields(value) {
+      const schema = this.dataSource.schema
+      const schemaProperties =
+        schema.type === 'array' ? schema.items.properties : schema.properties
+      const localBaserowFieldIds = Object.values(schemaProperties)
+        .filter(({ metadata }) => metadata)
+        .map((prop) => prop.metadata.id)
+      return value.filter(({ field }) => localBaserowFieldIds.includes(field))
     },
   },
 }

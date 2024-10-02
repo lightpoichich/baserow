@@ -7,8 +7,8 @@ from rest_framework_simplejwt.settings import api_settings as jwt_settings
 
 from baserow.core.user_sources.constants import (
     EMAIL_CLAIM,
+    ROLE,
     USER_SOURCE_CLAIM,
-    USER_SOURCE_ID_CLAIM,
     USERNAME_CLAIM,
 )
 from baserow.core.user_sources.jwt_token import UserSourceToken
@@ -33,6 +33,7 @@ class UserSourceUser:
         user_id,
         username,
         email,
+        role="",
         is_staff=False,
         is_superuser=False,
         **kwargs,
@@ -42,6 +43,7 @@ class UserSourceUser:
         self.id = user_id
         self.username = username
         self.email = email
+        self.role = role
         self.is_staff = is_staff
         self.is_superuser = is_superuser
         self.extra = kwargs
@@ -64,10 +66,10 @@ class UserSourceUser:
 
         # add basic information
         refresh[USER_SOURCE_CLAIM] = str(self.user_source.uid)
-        refresh[USER_SOURCE_ID_CLAIM] = self.user_source.id
         refresh[USERNAME_CLAIM] = str(self.username)
         refresh[EMAIL_CLAIM] = str(self.email)
         refresh[jwt_settings.USER_ID_CLAIM] = self.id
+        refresh[ROLE] = self.role
 
         return refresh
 
@@ -143,6 +145,9 @@ class UserSourceUser:
 
     def get_username(self) -> str:
         return self.username
+
+    def get_role(self) -> str:
+        return self.role
 
     def __getattr__(self, attr: str) -> Optional[Any]:
         """This acts as a backup attribute getter for custom attributes."""

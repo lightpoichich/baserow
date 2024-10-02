@@ -1,13 +1,15 @@
 <template>
-  <ABLink variant="button" :url="url" :target="target">
+  <ABLink :variant="variant" :url="url" :target="target">
     {{ realLinkName }}
   </ABLink>
 </template>
 
 <script>
+import collectionField from '@baserow/modules/builder/mixins/collectionField'
+
 export default {
   name: 'LinkField',
-  inject: ['mode', 'builder'],
+  mixins: [collectionField],
   props: {
     url: {
       type: String,
@@ -18,6 +20,10 @@ export default {
       required: true,
     },
     target: {
+      type: String,
+      required: true,
+    },
+    variant: {
       type: String,
       required: true,
     },

@@ -3,6 +3,7 @@ import {
   ChoiceElementType,
   ElementType,
   InputTextElementType,
+  RecordSelectorElementType,
 } from '@baserow/modules/builder/elementTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import _ from 'lodash'
@@ -11,6 +12,47 @@ describe('elementTypes tests', () => {
   const testApp = new TestApp()
 
   const contextBlankParam = { page: { parameters: { id: '' } } }
+
+  test('hasAncestorOfType', () => {
+    const page = { id: 123 }
+    const elementParent = { id: 456, type: 'column', page_id: page.id }
+    const element = {
+      id: 789,
+      type: 'heading',
+      page_id: page.id,
+      parent_element_id: elementParent.id,
+    }
+    page.elementMap = { 456: elementParent, 789: element }
+
+    const elementType = testApp.getRegistry().get('element', element.type)
+    expect(elementType.hasAncestorOfType(page, element, 'column')).toBe(true)
+    expect(elementType.hasAncestorOfType(page, element, 'repeat')).toBe(false)
+  })
+
+  test('hasCollectionAncestor', () => {
+    const page = { id: 123 }
+    const repeatAncestor = { id: 111, type: 'repeat', page_id: page.id }
+    const tableElement = {
+      id: 222,
+      type: 'table',
+      page_id: page.id,
+      parent_element_id: repeatAncestor.id,
+    }
+    page.elementMap = { 111: repeatAncestor, 222: tableElement }
+
+    const repeatElementType = testApp
+      .getRegistry()
+      .get('element', repeatAncestor.type)
+    expect(repeatElementType.hasCollectionAncestor(page, repeatAncestor)).toBe(
+      false
+    )
+    const tableElementType = testApp
+      .getRegistry()
+      .get('element', tableElement.type)
+    expect(tableElementType.hasCollectionAncestor(page, tableElement)).toBe(
+      true
+    )
+  })
 
   describe('elementType getDisplayName permutation tests', () => {
     test('ElementType returns the name by default', () => {
@@ -228,6 +270,9 @@ describe('elementTypes tests', () => {
       ).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
       expect(elementType.getDisplayName({}, {})).toBe(elementType.name)
     })
+  })
+
+  describe('elementType form validation tests', () => {
     test('InputTextElementType | required | no value.', () => {
       const elementType = new InputTextElementType()
       expect(elementType.isValid({ required: true }, '')).toBe(false)
@@ -309,7 +354,7 @@ describe('elementTypes tests', () => {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, '')).toBe(false)
+      expect(elementType.isValid(element, '', {})).toBe(false)
     })
     test('ChoiceElementType | required | blank option.', () => {
       const elementType = new ChoiceElementType()
@@ -320,7 +365,7 @@ describe('elementTypes tests', () => {
           { id: 2, value: 'uk', name: 'UK' },
         ],
       }
-      expect(elementType.isValid(element, '')).toBe(true)
+      expect(elementType.isValid(element, '', {})).toBe(true)
     })
     test('ChoiceElementType | required | valid value.', () => {
       const elementType = new ChoiceElementType()
@@ -328,7 +373,7 @@ describe('elementTypes tests', () => {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, 'uk')).toBe(true)
+      expect(elementType.isValid(element, 'uk', {})).toBe(true)
     })
     test('ChoiceElementType | not required | no value.', () => {
       const elementType = new ChoiceElementType()
@@ -336,7 +381,7 @@ describe('elementTypes tests', () => {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, '')).toBe(true)
+      expect(elementType.isValid(element, '', {})).toBe(true)
     })
     test('ChoiceElementType | not required | valid value.', () => {
       const elementType = new ChoiceElementType()
@@ -344,74 +389,84 @@ describe('elementTypes tests', () => {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, 'uk')).toBe(true)
+      expect(elementType.isValid(element, 'uk', {})).toBe(true)
+    })
+    test('RecordSelectorElementType | required | no value.', () => {
+      const elementType = new RecordSelectorElementType()
+      const element = { required: true, multiple: false }
+      expect(elementType.isValid(element, '', {})).toBe(false)
+    })
+    test('RecordSelectorType | required | valid value.', () => {
+      const app = {
+        store: {
+          getters: {
+            'elementContent/getElementContent'() {
+              return [{ id: 1 }, { id: 2 }]
+            },
+          },
+        },
+      }
+      const elementType = new RecordSelectorElementType({ app })
+      const element = { required: true, multiple: false, data_source_id: 1 }
+      expect(elementType.isValid(element, 1, {})).toBe(true)
+    })
+    test('RecordSelectorElementType | not required | no value.', () => {
+      const app = {
+        store: {
+          getters: {
+            'elementContent/getElementContent'() {
+              return [{ id: 1 }, { id: 2 }]
+            },
+          },
+        },
+      }
+      const elementType = new RecordSelectorElementType({ app })
+      const element = { required: false, multiple: false, data_source_id: 1 }
+      expect(elementType.isValid(element, '', {})).toBe(true)
+    })
+    test('RecordSelectorType | not required | valid value.', () => {
+      const app = {
+        store: {
+          getters: {
+            'elementContent/getElementContent'() {
+              return [{ id: 1 }, { id: 2 }]
+            },
+          },
+        },
+      }
+      const elementType = new RecordSelectorElementType({ app })
+      const element = { required: false, multiple: false, data_source_id: 1 }
+      expect(elementType.isValid(element, 1, {})).toBe(true)
     })
   })
 
   describe('elementType childElementTypesForbidden tests', () => {
-    test('FormContainerElementType forbids non-form elements as children.', () => {
+    test('FormContainerElementType only itself as a nested child.', () => {
       const formContainerElementType = testApp
         .getRegistry()
         .get('element', 'form_container')
-      const nonFormElementTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((elementType) => !elementType.isFormElement)
-        .map((elementType) => elementType.getType())
-
-      const forbiddenChildTypes =
-        formContainerElementType.childElementTypesForbidden.map((el) =>
-          el.getType()
-        )
-      expect(forbiddenChildTypes).toEqual(nonFormElementTypes)
+      const forbiddenChildTypes = formContainerElementType
+        .childElementTypesForbidden({}, {})
+        .map((el) => el.getType())
+      expect(forbiddenChildTypes).toEqual(['form_container'])
     })
-    test('ColumnElementType forbids container elements as children.', () => {
+    test('ColumnElementType forbids only itself as a nested child.', () => {
       const columnElementType = testApp.getRegistry().get('element', 'column')
-      const containerElementTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((elementType) => elementType.isContainerElement)
-        .map((elementType) => elementType.getType())
-
-      const forbiddenChildTypes =
-        columnElementType.childElementTypesForbidden.map((el) => el.getType())
-      expect(forbiddenChildTypes).toEqual(containerElementTypes)
+      const forbiddenChildTypes = columnElementType
+        .childElementTypesForbidden({}, {})
+        .map((el) => el.getType())
+      expect(forbiddenChildTypes).toEqual(['column'])
     })
-    test('RepeatElementType forbids collection elements as children.', () => {
+    test('RepeatElementType forbids nothing as a child.', () => {
       const repeatElementType = testApp.getRegistry().get('element', 'repeat')
-
-      const expectedForbiddenChildTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((type) => type.isCollectionElement)
-        .map((elementType) => elementType.getType())
-
-      const forbiddenChildTypes =
-        repeatElementType.childElementTypesForbidden.map((el) => el.getType())
-      expect(forbiddenChildTypes.sort()).toEqual(
-        expectedForbiddenChildTypes.sort()
-      )
+      const forbiddenChildTypes = repeatElementType
+        .childElementTypesForbidden({}, {})
+        .map((el) => el.getType())
+      expect(forbiddenChildTypes).toEqual([])
     })
   })
 
   describe('elementType childElementTypes tests', () => {
-    test('childElementTypes called with element with no parent only restricts child types to its own requirements.', () => {
-      const page = { id: 1, name: 'Contact Us' }
-      const element = { id: 2, parent_element_id: null }
-      const formContainerElementType = testApp
-        .getRegistry()
-        .get('element', 'form_container')
-      const formElementTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((elementType) => elementType.isFormElement)
-        .map((elementType) => elementType.getType())
-
-      const childElementTypes = formContainerElementType
-        .childElementTypes(page, element)
-        .map((el) => el.getType())
-      expect(childElementTypes).toEqual(formElementTypes)
-    })
     test('childElementTypes called with element with parent restricts child types using all ancestor childElementTypes requirements.', () => {
       const page = { id: 1, name: 'Contact Us' }
       const parentElement = {
@@ -433,12 +488,14 @@ describe('elementTypes tests', () => {
       ).map((el) => el.getType())
 
       const columnElementType = testApp.getRegistry().get('element', 'column')
-      const forbiddenColumnChildTypes =
-        columnElementType.childElementTypesForbidden.map((el) => el.getType())
+      const forbiddenColumnChildTypes = columnElementType
+        .childElementTypesForbidden(page, element)
+        .map((el) => el.getType())
 
       const repeatElementType = testApp.getRegistry().get('element', 'repeat')
-      const forbiddenRepeatChildTypes =
-        repeatElementType.childElementTypesForbidden.map((el) => el.getType())
+      const forbiddenRepeatChildTypes = repeatElementType
+        .childElementTypesForbidden(page, {})
+        .map((el) => el.getType())
 
       const allExpectedForbiddenChildTypes = forbiddenColumnChildTypes.concat(
         forbiddenRepeatChildTypes
@@ -452,6 +509,55 @@ describe('elementTypes tests', () => {
         .childElementTypes(page, element)
         .map((el) => el.getType())
       expect(childElementTypes).toEqual(expectedAllowedChildTypes)
+    })
+  })
+
+  describe('elementTypes ChoiceElementType choiceOptions tests', () => {
+    test('choiceOptions returns Value if Value is not null.', () => {
+      const elementType = new ChoiceElementType()
+      const element = {
+        required: true,
+        options: [
+          { id: 1, value: '', name: 'Foo Name' },
+          { id: 2, value: 'bar_name', name: 'Bar Name' },
+        ],
+      }
+
+      // When the Value is non-null, we expect them to be returned verbatim.
+      expect(elementType.choiceOptions(element)).toEqual(['', 'bar_name'])
+    })
+
+    test('choiceOptions returns Name if Value is null.', () => {
+      const elementType = new ChoiceElementType()
+      const element = {
+        required: true,
+        options: [
+          { id: 1, value: null, name: 'Foo Name' },
+          { id: 2, value: 'bar_name', name: 'Bar Name' },
+        ],
+      }
+
+      // When Value is null, we assume the user wants it to be the same as
+      // the Name. Thus, we return 'Foo Name' instead of null.
+      expect(elementType.choiceOptions(element)).toEqual([
+        'Foo Name',
+        'bar_name',
+      ])
+    })
+
+    test('choiceOptions returns Value if it is an empty string.', () => {
+      const elementType = new ChoiceElementType()
+      const element = {
+        required: true,
+        options: [
+          { id: 1, value: '', name: 'Foo Name' },
+          { id: 2, value: 'bar_name', name: 'Bar Name' },
+        ],
+      }
+
+      // Since an empty string is a valid Value, if the user has explicitly
+      // declared it, we should return an empty string.
+      expect(elementType.choiceOptions(element)).toEqual(['', 'bar_name'])
     })
   })
 })

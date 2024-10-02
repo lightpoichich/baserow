@@ -3,14 +3,14 @@ import { callGrouper } from '@baserow/modules/core/utils/function'
 
 const GRACE_DELAY = 50 // ms before querying the backend with a get query
 
-const workspaceGetNameCalls = callGrouper(GRACE_DELAY)
+const groupGetNameCalls = callGrouper(GRACE_DELAY)
 
 export default (client) => {
   return {
     get(tableId, rowId) {
       return client.get(`/database/rows/table/${tableId}/${rowId}/`)
     },
-    fetchAll({ tableId, page = 1, size = 10, search = null }) {
+    fetchAll({ tableId, page = 1, size = 10, search = null, viewId = null }) {
       const config = {
         params: {
           page,
@@ -22,13 +22,17 @@ export default (client) => {
         config.params.search = search
       }
 
+      if (viewId !== null) {
+        config.params.view_id = viewId
+      }
+
       return client.get(`/database/rows/table/${tableId}/`, config)
     },
     /**
      * Returns the name of specified table row. Batch consecutive queries into one
      * during the defined GRACE_TIME.
      */
-    getName: workspaceGetNameCalls(async (argList) => {
+    getName: groupGetNameCalls(async (argList) => {
       // [[tableId, id], ...] -> { table__<id>: Array<row ids> }
       const tableMap = argList.reduce((acc, [tableId, rowId]) => {
         if (!acc[`table__${tableId}`]) {

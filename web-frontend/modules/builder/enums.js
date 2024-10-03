@@ -98,12 +98,6 @@ export const PAGE_POSITIONS = {
   RIGHT: 'right',
 }
 
-export const SCROLL_BEHAVIOURS = {
-  SCROLL: 'scroll',
-  FIXED: 'fixed',
-  STICKY: 'sticky',
-}
-
 export const SHARE_TYPES = {
   ALL: 'all',
   ONLY: 'only',

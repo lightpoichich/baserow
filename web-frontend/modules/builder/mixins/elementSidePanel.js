@@ -5,7 +5,18 @@ import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
-  inject: ['workspace', 'builder', 'page'],
+  inject: ['workspace', 'builder', 'applicationContext'],
+  provide() {
+    return {
+      applicationContext: {
+        ...this.applicationContext,
+        element: this.element,
+        page: this.page,
+      },
+      // We replace the page with the element page
+      page: this.page,
+    }
+  },
   computed: {
     ...mapGetters({
       element: 'element/getSelected',
@@ -22,6 +33,14 @@ export default {
       return this.$store.getters['element/getElementById'](
         this.page,
         this.element?.parent_element_id
+      )
+    },
+
+    page() {
+      // We use the page from the element itself
+      return this.$store.getters['page/getById'](
+        this.builder,
+        this.element.page_id
       )
     },
 

@@ -61,7 +61,6 @@ export default {
   data() {
     return {
       search: null,
-      addingElementType: null,
     }
   },
   computed: {

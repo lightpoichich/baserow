@@ -882,16 +882,9 @@ class MultiPageContainerElement(ContainerElement):
     multiple pages.
     """
 
-    class ELEMENT_POSITION(models.TextChoices):
+    class ELEMENT_PLACE(models.TextChoices):
         HEADER = "header"
         FOOTER = "footer"
-        LEFT = "left"
-        RIGHT = "right"
-
-    class POSITIONED_BEHAVIOUR(models.TextChoices):
-        SCROLL = "scroll"
-        FIXED = "fixed"
-        STICKY = "sticky"
 
     class SHARE_TYPE(models.TextChoices):
         ALL = "all"
@@ -899,15 +892,9 @@ class MultiPageContainerElement(ContainerElement):
         EXCEPT = "except"
 
     page_position = models.CharField(
-        choices=ELEMENT_POSITION.choices,
+        choices=ELEMENT_PLACE.choices,
         max_length=10,
-        default=ELEMENT_POSITION.HEADER,
-    )
-
-    behaviour = models.CharField(
-        choices=POSITIONED_BEHAVIOUR.choices,
-        max_length=10,
-        default=POSITIONED_BEHAVIOUR.SCROLL,
+        default=ELEMENT_PLACE.HEADER,
     )
 
     share_type = models.CharField(

@@ -20,6 +20,7 @@
         :element="element"
         :application-context-additions="{
           element,
+          page,
         }"
         class="element"
       />
@@ -50,7 +51,7 @@ export default {
   mixins: [applicationContextMixin],
   inject: ['builder', 'mode'],
   provide() {
-    return { mode: this.elementMode }
+    return { mode: this.elementMode, page: this.page }
   },
   props: {
     element: {
@@ -81,6 +82,13 @@ export default {
     ...mapGetters({
       loggedUser: 'userSourceUser/getUser',
     }),
+    page() {
+      // We use the page from the element itself
+      return this.$store.getters['page/getById'](
+        this.builder,
+        this.element.page_id
+      )
+    },
     isVisible() {
       const isAuthenticated = this.$store.getters[
         'userSourceUser/isAuthenticated'

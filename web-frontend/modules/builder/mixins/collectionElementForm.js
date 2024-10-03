@@ -90,7 +90,10 @@ export default {
      * @returns {Array} - The data sources the page designer can choose from.
      */
     dataSources() {
-      const pages = [this.sharedPage, this.page]
+      const pages =
+        this.page.id !== this.sharedPage.id
+          ? [this.sharedPage, this.page]
+          : [this.page]
       return this.$store.getters['dataSource/getPagesDataSources'](
         pages
       ).filter((dataSource) => dataSource.type)

@@ -56,6 +56,7 @@ export default {
       return this.$registry.get('element', this.element.type)
     },
     children() {
+      // TODO deal with shared page
       return this.$store.getters['element/getChildren'](this.page, this.element)
     },
     /**

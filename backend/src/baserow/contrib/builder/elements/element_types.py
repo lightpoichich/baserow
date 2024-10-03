@@ -34,13 +34,13 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
+    MultiPageContainerElement,
     NavigationElementMixin,
     RecordSelectorElement,
     RepeatElement,
     TableElement,
     TextElement,
     VerticalAlignments,
-    MultiPageContainerElement,
     get_default_table_orientation,
 )
 from baserow.contrib.builder.elements.registries import (
@@ -181,7 +181,6 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
 
     class SerializedDict(ElementDict):
         page_position: str
-        behaviour: str
         share_type: str
         pages: List[int]
 
@@ -189,7 +188,6 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
     def serializer_field_names(self):
         return super().serializer_field_names + [
             "page_position",
-            "behaviour",
             "share_type",
             "pages",
         ]
@@ -198,15 +196,68 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
     def allowed_fields(self):
         return super().allowed_fields + [
             "page_position",
-            "behaviour",
             "share_type",
             "pages",
         ]
 
+    def serialize_property(
+        self,
+        element: MultiPageContainerElement,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "pages":
+            return [page.id for page in element.pages.all()]
+
+        return super().serialize_property(
+            element,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+    def create_instance_from_serialized(
+        self,
+        serialized_values: Dict[str, Any],
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
+        """Deals with the fields"""
+
+        pages = serialized_values.pop("pages", [])
+
+        instance = super().create_instance_from_serialized(
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+        pages = [id_mapping["builder_pages"][page_id] for page_id in pages]
+
+        if pages:
+            instance.pages.add(*pages)
+
+        return instance
+
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
             "page_position": "header",
-            "behaviour": "fixed",
             "share_type": "all_pages",
             "pages": [],
         }

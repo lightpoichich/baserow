@@ -180,11 +180,11 @@ class BuilderConfig(AppConfig):
             ImageElementType,
             InputTextElementType,
             LinkElementType,
+            MultiPageContainerType,
             RecordSelectorElementType,
             RepeatElementType,
             TableElementType,
             TextElementType,
-            MultiPageContainerType,
         )
         from .elements.registries import element_type_registry
 

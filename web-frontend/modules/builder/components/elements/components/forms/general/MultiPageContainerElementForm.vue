@@ -19,23 +19,6 @@
     </FormGroup>
     <FormGroup
       small-label
-      :label="$t('multiPageContainerElementForm.behaviour')"
-      class="margin-bottom-2"
-      required
-    >
-      <Dropdown v-model="values.behaviour" :show-search="false" small>
-        <DropdownItem
-          v-for="item in scrollBehaviours"
-          :key="item.value"
-          :name="item.label"
-          :value="item.value"
-        >
-          {{ item.label }}
-        </DropdownItem>
-      </Dropdown>
-    </FormGroup>
-    <FormGroup
-      small-label
       :label="$t('multiPageContainerElementForm.display')"
       class="margin-bottom-2"
       required
@@ -56,11 +39,7 @@
 
 <script>
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import {
-  PAGE_POSITIONS,
-  SCROLL_BEHAVIOURS,
-  SHARE_TYPES,
-} from '@baserow/modules/builder/enums'
+import { PAGE_POSITIONS, SHARE_TYPES } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'MultiPageContainerElementForm',
@@ -69,18 +48,11 @@ export default {
     return {
       values: {
         page_position: '',
-        behaviour: '',
         share_type: '',
         pages: [],
         styles: {},
       },
-      allowedValues: [
-        'page_position',
-        'behaviour',
-        'share_type',
-        'pages',
-        'styles',
-      ],
+      allowedValues: ['page_position', 'share_type', 'pages', 'styles'],
     }
   },
   computed: {
@@ -93,30 +65,6 @@ export default {
         {
           label: this.$t('pagePosition.footer'),
           value: PAGE_POSITIONS.FOOTER,
-        },
-        {
-          label: this.$t('pagePosition.left'),
-          value: PAGE_POSITIONS.LEFT,
-        },
-        {
-          label: this.$t('pagePosition.right'),
-          value: PAGE_POSITIONS.RIGHT,
-        },
-      ]
-    },
-    scrollBehaviours() {
-      return [
-        {
-          label: this.$t('scrollBehaviour.scroll'),
-          value: SCROLL_BEHAVIOURS.SCROLL,
-        },
-        {
-          label: this.$t('scrollBehaviour.fixed'),
-          value: SCROLL_BEHAVIOURS.FIXED,
-        },
-        {
-          label: this.$t('scrollBehaviour.sticky'),
-          value: SCROLL_BEHAVIOURS.STICKY,
         },
       ]
     },

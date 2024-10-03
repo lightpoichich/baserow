@@ -155,7 +155,6 @@ export default {
     applicationContext() {
       return {
         builder: this.builder,
-        page: this.page,
         mode,
       }
     },
@@ -173,7 +172,7 @@ export default {
     dispatchContext() {
       return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
-        this.applicationContext
+        { ...this.applicationContext, page: this.page }
       )
     },
     // Separate dispatch context for application level shared data sources

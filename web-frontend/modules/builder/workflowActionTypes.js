@@ -128,6 +128,7 @@ export class RefreshDataSourceWorkflowActionType extends WorkflowActionType {
   }
 
   async execute({ workflowAction, applicationContext }) {
+    // TODO refresh also elements on shared page
     applicationContext.page.elements
       .filter((element) => {
         // Only refresh elements that use the data source
@@ -145,6 +146,7 @@ export class RefreshDataSourceWorkflowActionType extends WorkflowActionType {
       { ...applicationContext }
     )
 
+    // TODO Deal with shared page
     await this.app.store.dispatch(
       'dataSourceContent/fetchPageDataSourceContentById',
       {

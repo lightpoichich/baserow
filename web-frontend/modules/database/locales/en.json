@@ -44,11 +44,8 @@
       "content": "This webhook has been deactivated because there have been too many consecutive failures. Please check the call log for more details. Click on the button below to activate it again. Don't forgot to save the webhook after activating.",
       "activate": "Activate"
     },
-    "deprecatedEventType": {
-      "title": "Deprecated event type",
-      "description": "This webhook doesn't receive information about all changed rows at once. Please convert it to batch-style event type. This changes the JSON body payload to a format that contains multiple rows.",
-      "convert": "Convert"
-    }
+    "triggerWhenFieldsHaveChanged": "Trigger when fields have changed",
+    "helpTriggerWhenFieldsHaveChanged": "Will only be triggered if the cell value of the chosen fields changes."
   },
   "webhook": {
     "details": "details",
@@ -989,5 +986,11 @@
     "description": "This table is linked to a data sync. When you click the sync button, the data will be synchronized with the source. During this process, a lock is placed on the updated rows, which may temporarily slow down API requests or table modifications.",
     "sync": "Sync table",
     "hide": "Hide"
+  },
+  "gridViewRowHeight": {
+    "name": "Height",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large"
   }
 }

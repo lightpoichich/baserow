@@ -27,7 +27,11 @@ from baserow.contrib.database.views.models import (
     FormViewFieldOptionsConditionGroup,
 )
 from baserow.core.user_files.models import UserFile
-from baserow.test_utils.helpers import AnyInt, setup_interesting_test_table
+from baserow.test_utils.helpers import (
+    AnyInt,
+    is_dict_subset,
+    setup_interesting_test_table,
+)
 
 ICAL_FEED_WITH_ONE_ITEMS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -182,6 +186,77 @@ def test_create_form_view(api_client, data_fixture):
     assert response_json["mode"] == "form"
     assert response_json["cover_image"] is None
     assert response_json["logo_image"]["name"] == user_file_2.name
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_form_view_with_webhooks(api_client, data_fixture):
+    """
+    Test create form handling with webhooks attached to check if the payload is
+    rendered correctly.
+
+    In case of regression, this is a test for a fix for an error:
+
+    File "/baserow/backend/src/baserow/contrib/database/api/views/form/serializers.py",
+        line 175, in get_receive_notification_on_submit
+
+        logged_user_id = self.context["user"].id
+                     ~~~~~~~~~~~~^^^^^^^^
+    KeyError: 'user'
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    data_fixture.create_table_webhook(
+        table=table,
+        user=user,
+        request_method="POST",
+        url="http://localhost",
+        use_user_field_names=False,
+        events=["view.created", "view.updated", "view.deleted"],
+    )
+
+    # a transaction should be commited and webhooks after_commit hook should be called
+    # here.
+    with patch("baserow.contrib.database.webhooks.registries.call_webhook.delay") as m:
+        response = api_client.post(
+            reverse("api:database:views:list", kwargs={"table_id": table.id}),
+            {
+                "name": "Test Form",
+                "type": "form",
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert m.called
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["slug"]) == 43
+    assert response_json["type"] == "form"
+    assert response_json["name"] == "Test Form"
+    assert response_json["mode"] == "form"
+    assert response_json["table_id"] == table.id
+    call_args = m.call_args.kwargs
+    assert call_args.get("event_type") == "view.created"
+    assert is_dict_subset(
+        {
+            "event_type": "view.created",
+            "payload": {
+                "view": {
+                    "table_id": table.id,
+                    "type": "form",
+                    "name": "Test Form",
+                    "id": response_json["id"],
+                }
+            },
+        },
+        call_args,
+    ), call_args
+
+    assert "receive_notification_on_submit" in call_args["payload"]["view"], call_args[
+        "payload"
+    ]["view"]
 
 
 @pytest.mark.django_db
@@ -2687,7 +2762,11 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
 
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch(
+        "baserow.core.user_files.handler.get_default_storage"
+    ) as get_storage_mock:
+        get_storage_mock.return_value = storage
+
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             token = data_fixture.generate_token(user)
@@ -2719,7 +2798,11 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     file_path = tmpdir.join("user_files", user_file.name)
     assert file_path.isfile()
 
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch(
+        "baserow.core.user_files.handler.get_default_storage"
+    ) as get_storage_mock:
+        get_storage_mock.return_value = storage
+
         token = data_fixture.generate_token(user)
         file = SimpleUploadedFile("test.txt", b"Hello World")
         response_2 = api_client.post(
@@ -2742,7 +2825,11 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     image.save(file, format="PNG")
     file.seek(0)
 
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch(
+        "baserow.core.user_files.handler.get_default_storage"
+    ) as get_storage_mock:
+        get_storage_mock.return_value = storage
+
         response = api_client.post(
             reverse(
                 "api:database:views:form:upload_file",
@@ -2783,7 +2870,7 @@ def test_upload_file_view_with_no_public_file_field(api_client, data_fixture, tm
     data_fixture.create_form_view_field_option(view, field=file_field, enabled=False)
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2812,7 +2899,7 @@ def test_upload_file_view_with_a_rich_text_field_is_possible(
     )
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2830,7 +2917,7 @@ def test_upload_file_view_with_a_rich_text_field_is_possible(
 @pytest.mark.django_db
 def test_upload_file_form_view_does_not_exist(api_client, data_fixture, tmpdir):
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2854,7 +2941,7 @@ def test_upload_file_view_form_is_password_protected(api_client, data_fixture, t
     data_fixture.create_form_view_field_option(view, field=file_field, enabled=True)
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2880,7 +2967,7 @@ def test_upload_file_view_form_is_password_protected(api_client, data_fixture, t
     assert public_view_token is not None
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(

@@ -39,7 +39,7 @@ enriched with job-specific properties.
 
 Basic workflow of job creation and execution is shown on a graph below:
 
-![Job creation & execution workflow](../assets/diagrams/job-workflows-job_creation_execution.png)
+![Job creation & execution workflow](../assets/diagrams/job-workflow/job-workflows-job_creation_execution.png)
 
 The workflow consists of following steps:
 
@@ -95,7 +95,7 @@ current [state](#job-state) and [progress value](#progress-tracking).
 
 The workflow of querying for job state update:
 
-![Job status update](../assets/diagrams/job-workflows-job_state_update.png)
+![Job status update](../assets/diagrams//job-workflow/job-workflows-job_state_update.png)
 
 * `JobHandler.run()` prepares `Progress` instance with a callback that
 * a Job instance receives `Progress` instance as a part of the `Job.run()` signature.
@@ -150,7 +150,7 @@ If a job has been finished already, it cannot be cancelled. In that case a
 
 Job cancellation workflow:
 
-![Job cancellation](../assets/diagrams/job-workflows-job_cancellation.png)
+![Job cancellation](../assets/diagrams//job-workflow/job-workflows-job_cancellation.png)
 
 * the owner of the job should have a UI to trigger the cancellation
 * when activated (clicked) a component should dispatch `job/cancel` action which will

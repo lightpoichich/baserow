@@ -28,14 +28,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterModelOptions(
-            name="page",
-            options={"ordering": ("-shared", "order")},
-        ),
         migrations.AddField(
             model_name="page",
             name="shared",
-            field=models.BooleanField(default=False, null=True),
+            field=models.BooleanField(db_default=False, default=False),
+        ),
+        migrations.AlterModelOptions(
+            name="page",
+            options={"ordering": ("-shared", "order")},
         ),
         migrations.AlterModelOptions(
             name="datasource",

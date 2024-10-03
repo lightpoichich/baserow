@@ -32,6 +32,7 @@
           :label="$t('dataSourceForm.integrationLabel')"
           small-label
           required
+          :error-message="integrationError"
         >
           <IntegrationDropdown
             v-model="values.integration_id"
@@ -195,6 +196,14 @@ export default {
         return ''
       }
       return !this.$v.values.type.required ? this.$t('error.requiredField') : ''
+    },
+    integrationError() {
+      if (!this.$v.values.integration_id.$dirty) {
+        return ''
+      }
+      return !this.$v.values.integration_id.required
+        ? this.$t('error.requiredField')
+        : ''
     },
   },
   methods: {

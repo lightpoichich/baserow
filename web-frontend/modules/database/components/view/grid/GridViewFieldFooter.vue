@@ -22,6 +22,13 @@
       :aggregation-type="viewAggregationType"
       :value="value"
     />
+    <div
+      v-else-if="userCanMakeAggregations"
+      class="grid-view-aggregation__empty"
+    >
+      <i class="grid-view-aggregation__empty-icon iconoir-plus"></i>
+      Summarize
+    </div>
     <Context :ref="`fieldContext`">
       <ul class="select__items">
         <li

@@ -27,7 +27,7 @@
       class="grid-view-aggregation__empty"
     >
       <i class="grid-view-aggregation__empty-icon iconoir-plus"></i>
-      Summarize
+      {{ $t('common.summarize') }}
     </div>
     <Context :ref="`fieldContext`">
       <ul class="select__items">

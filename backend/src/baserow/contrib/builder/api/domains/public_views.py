@@ -329,12 +329,12 @@ class PublicDispatchDataSourceView(APIView):
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, data_source_id: str):
+    def post(self, request, data_source_id: int):
         """
         Call the given data_source related service dispatch method.
         """
 
-        data_source = DataSourceHandler().get_data_source(int(data_source_id))
+        data_source = DataSourceHandler().get_data_source(data_source_id)
         dispatch_context = BuilderDispatchContext(
             request, data_source.page, only_expose_public_formula_fields=True
         )

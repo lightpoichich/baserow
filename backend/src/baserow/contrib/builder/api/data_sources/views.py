@@ -483,7 +483,10 @@ class DispatchDataSourceView(APIView):
         # An `element` will be provided if we're dispatching a collection
         # element's data source with adhoc refinements.
         dispatch_context = BuilderDispatchContext(
-            request, data_source.page, element=element, only_expose_public_formula_fields=False
+            request,
+            data_source.page,
+            element=element,
+            only_expose_public_formula_fields=False,
         )
 
         response = DataSourceService().dispatch_data_source(

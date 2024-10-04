@@ -2004,10 +2004,11 @@ def test_dispatch_data_source_view(
 
     assert response.status_code == 200
     assert response.json() == mock_response
-    mock_get_data_source.assert_called_once_with(mock_data_source_id)
+    mock_get_data_source.assert_called_once_with(str(mock_data_source_id))
     mock_builder_dispatch_context.assert_called_once_with(
         ANY,
         mock_data_source.page,
+        element=None,
         only_expose_public_formula_fields=False,
     )
     mock_dispatch_data_source.assert_called_once_with(
@@ -2028,7 +2029,8 @@ def test_dispatch_data_sources_view(
     api_client,
 ):
     """
-    Test the DispatchDataSourcesView endpoint.
+    Test the DispatchDataSourcesView
+    endpoint.mock_builder_dispatch_context.assert_called_once_with
 
     Ensure that the field_names are not computed, because we don't want to
     filter any fields in the Editor.
@@ -2051,7 +2053,7 @@ def test_dispatch_data_sources_view(
 
     assert response.status_code == 200
     assert response.json() == mock_service_contents
-    mock_get_page.assert_called_once_with(mock_page_id)
+    mock_get_page.assert_called_once_with(str(mock_page_id))
     mock_builder_dispatch_context.assert_called_once_with(
         ANY, mock_page, only_expose_public_formula_fields=False
     )

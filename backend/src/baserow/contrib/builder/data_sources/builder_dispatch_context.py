@@ -6,10 +6,10 @@ from django.http import HttpRequest
 from baserow.contrib.builder.data_providers.registries import (
     builder_data_provider_type_registry,
 )
-from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceRefinementForbidden,
 )
+from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.feature_flags import feature_flag_is_enabled
 from baserow.core.services.dispatch_context import DispatchContext

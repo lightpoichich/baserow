@@ -23,6 +23,10 @@
   font-size: 12px;
   line-height: 19px;
   color: $palette-neutral-700;
+
+  .grid-view-aggregation:hover & {
+    color: $palette-neutral-900;
+  }
 }
 
 .grid-view-aggregation__empty-icon {
@@ -30,6 +34,10 @@
   line-height: 16px;
   margin-right: 4px;
   color: $palette-neutral-500;
+
+  .grid-view-aggregation:hover & {
+    color: $palette-neutral-700;
+  }
 }
 
 .grid-view-aggregation__generic {

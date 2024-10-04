@@ -24,7 +24,8 @@
   line-height: 19px;
   color: $palette-neutral-700;
 
-  .grid-view-aggregation:hover & {
+  .grid-view-aggregation:hover &,
+  &.grid-view-aggregation__empty--active {
     color: $palette-neutral-900;
   }
 }
@@ -35,7 +36,8 @@
   margin-right: 4px;
   color: $palette-neutral-500;
 
-  .grid-view-aggregation:hover & {
+  .grid-view-aggregation:hover &,
+  .grid-view-aggregation__empty--active & {
     color: $palette-neutral-700;
   }
 }

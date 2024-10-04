@@ -4,7 +4,6 @@ from typing import Any, List, Optional
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
-from baserow.contrib.database.import_export_handler import ImportExportHandler
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
@@ -18,6 +17,7 @@ from baserow.core.action.scopes import (
     WorkspaceActionScopeType,
 )
 from baserow.core.handler import CoreHandler, WorkspaceForUpdate
+from baserow.core.import_export_handler import ImportExportHandler
 from baserow.core.models import (
     Application,
     Template,
@@ -1155,31 +1155,26 @@ class ExportApplicationsActionType(ActionType):
         workspace_id: int
         workspace_name: str
         application_ids: List[int]
-        application_names: str
+        application_names: List[str]
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
         workspace: Workspace,
-        applications: Optional[List[Application]] = None,
+        applications: List[Application],
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> str:
         """
-        Export an existing workspace or provided workspace application subset.
-        See baserow.core.handler.CoreHandler.export_workspace_applications_single_file
-        for further details.
+        Export provided Applications set from the given workspace.
         This action is readonly and is not undoable.
 
-        :param user: The user on whose behalf the application is duplicated.
-        :param workspace: Workspace instance to be exported.
-        :param applications: List of application instances to be exported, if omitted
-            then all applications from workspace that user has access to, will be
-            exported.
+        :param user: The user on whose behalf the application is exported.
+        :param workspace: Workspace instance from which applications are exported.
+        :param applications: List of application instances to be exported
         :param progress_builder: A progress builder instance that can be used to
-            track the progress of the duplication.
+            track the progress of the export.
         :return: file name of exported applications.
-        :rtype: str
         """
 
         cli_import_export_config = ImportExportConfig(
@@ -1197,7 +1192,7 @@ class ExportApplicationsActionType(ActionType):
             workspace_id=workspace.id,
             workspace_name=workspace.name,
             application_ids=[application.id for application in applications],
-            application_names="",
+            application_names=[application.name for application in applications],
         )
 
         cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)

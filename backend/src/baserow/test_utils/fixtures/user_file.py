@@ -2,6 +2,7 @@ import mimetypes
 import pathlib
 
 from django.core.files.base import ContentFile
+from django.core.files.storage import Storage
 
 from baserow.core.models import UserFile
 from baserow.core.user_files.handler import UserFileHandler
@@ -35,8 +36,15 @@ class UserFileFixtures:
 
         user_file = UserFile.objects.create(**kwargs)
 
-        if storage is not None:
-            path = UserFileHandler().user_file_path(user_file.name)
-            content = f'test file  {kwargs["original_name"]} at {path}'
-            storage.save(path, ContentFile(content))
         return user_file
+
+    def save_content_in_user_file(
+        self, user_file: UserFile, storage: Storage, content: str = ""
+    ) -> UserFile:
+        path = UserFileHandler().user_file_path(user_file.name)
+        content = content or f"test file  {user_file.original_name} at {path}"
+        storage.save(path, ContentFile(content))
+        return user_file
+
+    def create_user(self):
+        pass

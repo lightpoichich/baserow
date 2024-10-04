@@ -16,15 +16,13 @@ from baserow.api.errors import (
     ERROR_PERMISSION_DENIED,
     ERROR_USER_NOT_IN_GROUP,
 )
+from baserow.api.export.serializers import ExportWorkspaceExportedFileURLSerializerMixin
 from baserow.api.templates.errors import (
     ERROR_TEMPLATE_DOES_NOT_EXIST,
     ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
 )
 from baserow.api.templates.serializers import TemplateSerializer
 from baserow.api.workspaces.serializers import WorkspaceSerializer
-from baserow.contrib.database.api.export.serializers import (
-    ExportedFileURLSerializerMixin,
-)
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     DuplicateApplicationActionType,
@@ -243,22 +241,17 @@ class ExportApplicationsJobType(JobType):
         ),
     }
 
-    serializer_mixins = [ExportedFileURLSerializerMixin]
+    serializer_mixins = [ExportWorkspaceExportedFileURLSerializerMixin]
     serializer_field_names = ["exported_file_name", "url"]
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
-        # In most cases we need the isolation level set to repeatable read
-        # to ensure consistent reads, and we also want to ensure no one can
-        # modify the table structure while we export all the data,
-        # otherwise it won't be possible to read data anymore.
-        # This is only achievable with repeatable read (or serializable)
-        # isolation levels
-        # However, because the isolation level must be set before any SQL query,
-        # Exporting an entire workspace risks hitting the max_locks_per_transaction
-        # limit, and we’re only reading data, so there's no need for a single
-        # transaction,
-        # We can safely return an empty context here and handle a separate
-        # transaction for each application, using repeatable read for data export.
+        """
+        Each application is isolated, so a single transaction for all of them together
+        is unnecessary and increases the risk of `max_locks_per_transaction`.
+        Instead, the `import_export_handler` creates a transaction for each
+        application in a `repeatable_read` isolation level to guarantee consistency
+        in the data read.
+        """
 
         @contextmanager
         def empty_context():

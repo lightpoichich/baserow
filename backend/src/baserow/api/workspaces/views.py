@@ -4,19 +4,20 @@ from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
-    ERROR_FEATURE_DISABLED,
     ERROR_GROUP_DOES_NOT_EXIST,
-    ERROR_PERMISSION_DENIED,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
     ERROR_USER_NOT_IN_GROUP,
 )
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
@@ -36,36 +37,42 @@ from baserow.core.actions import (
 )
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
-    FeatureDisabled,
-    PermissionDenied,
     UserInvalidWorkspacePermissionsError,
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
     WorkspaceUserIsLastAdmin,
 )
+from baserow.core.feature_flags import FF_EXPORT_WORKSPACE, feature_flag_is_enabled
 from baserow.core.handler import CoreHandler
+from baserow.core.job_types import ExportApplicationsJobType
+from baserow.core.jobs.exceptions import MaxJobCountExceeded
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.registries import job_type_registry
 from baserow.core.notifications.handler import NotificationHandler
 from baserow.core.operations import UpdateWorkspaceOperationType
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
-from ...contrib.database.api.export.views import (
-    ExportApplicationsJobRequestSerializer,
-    ExportApplicationsJobResponseSerializer,
-)
-from ...core.feature_flag import FF_EXPORT_WORKSPACE, feature_flag_is_enabled
-from ...core.job_types import ExportApplicationsJobType
-from ...core.jobs.exceptions import MaxJobCountExceeded
-from ...core.jobs.handler import JobHandler
-from ...core.jobs.registries import job_type_registry
-from ..applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
-from ..jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
-from ..jobs.serializers import JobSerializer
 from .errors import ERROR_GROUP_USER_IS_LAST_ADMIN
 from .serializers import (
     OrderWorkspacesSerializer,
     PermissionObjectSerializer,
     WorkspaceSerializer,
     get_generative_ai_settings_serializer,
+)
+
+ExportApplicationsJobRequestSerializer = job_type_registry.get(
+    ExportApplicationsJobType.type
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    request_serializer=True,
+    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
+)
+
+ExportApplicationsJobResponseSerializer = job_type_registry.get(
+    ExportApplicationsJobType.type
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
 )
 
 
@@ -476,7 +483,6 @@ class AsyncExportWorkspaceApplicationsView(APIView):
                 description="The id of the workspace that must be exported.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
-            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Workspace"],
         operation_id="export_workspace_applications_async",
@@ -485,7 +491,7 @@ class AsyncExportWorkspaceApplicationsView(APIView):
             "in the application's workspace. "
             "All the related children are also going to be exported. For example "
             "in case of a database application all the underlying tables, fields, "
-            "views and rows are going to be duplicated."
+            "views and rows are going to be exported."
             "Roles are not part of the export."
         ),
         request=None,
@@ -496,11 +502,14 @@ class AsyncExportWorkspaceApplicationsView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_APPLICATION_NOT_IN_GROUP",
                     "ERROR_MAX_JOB_COUNT_EXCEEDED",
-                    "ERROR_APPLICATION_DOES_NOT_EXIST",
-                    "ERROR_PERMISSION_DENIED",
                 ]
             ),
-            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+            404: get_error_schema(
+                [
+                    "ERROR_GROUP_DOES_NOT_EXIST",
+                    "ERROR_APPLICATION_DOES_NOT_EXIST",
+                ]
+            ),
         },
     )
     @transaction.atomic
@@ -510,8 +519,6 @@ class AsyncExportWorkspaceApplicationsView(APIView):
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
-            PermissionDenied: ERROR_PERMISSION_DENIED,
-            FeatureDisabled: ERROR_FEATURE_DISABLED,
         }
     )
     @validate_body(ExportApplicationsJobRequestSerializer, return_validated=True)
@@ -522,8 +529,7 @@ class AsyncExportWorkspaceApplicationsView(APIView):
         the workspace are exported.
         """
 
-        if not feature_flag_is_enabled(FF_EXPORT_WORKSPACE):
-            raise FeatureDisabled("Workspace export is not available")
+        feature_flag_is_enabled(FF_EXPORT_WORKSPACE, raise_if_disabled=True)
 
         job = JobHandler().create_and_start_job(
             request.user,

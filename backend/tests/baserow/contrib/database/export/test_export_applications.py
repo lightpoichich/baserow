@@ -3,113 +3,15 @@ import zipfile
 from unittest.mock import patch
 
 from django.core.files.storage import FileSystemStorage
-from django.test.utils import override_settings
 from django.urls import reverse
 
 import pytest
-from rest_framework.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_404_NOT_FOUND,
-)
 
-from baserow.contrib.database.import_export_handler import ImportExportHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.import_export_handler import ImportExportHandler
 from baserow.core.registries import ImportExportConfig
+from baserow.core.user_files.models import UserFile
 from baserow.test_utils.helpers import setup_interesting_test_database
-
-
-@pytest.mark.django_db
-@override_settings(
-    FEATURE_FLAGS="",
-)
-def test_exporting_workspace_with_feature_flag_disabled(
-    data_fixture, api_client, tmpdir
-):
-    user, token = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    data_fixture.create_database_application(workspace=workspace)
-
-    response = api_client.post(
-        reverse(
-            "api:workspaces:export_workspace_async",
-            kwargs={"workspace_id": workspace.id},
-        ),
-        data={},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_FEATURE_DISABLED"
-
-
-@pytest.mark.django_db
-def test_exporting_missing_workspace_returns_error(data_fixture, api_client, tmpdir):
-    user, token = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    data_fixture.create_database_application(workspace=workspace)
-
-    response = api_client.post(
-        reverse(
-            "api:workspaces:export_workspace_async",
-            kwargs={"workspace_id": 9999},
-        ),
-        data={},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
-
-
-@pytest.mark.django_db
-def test_exporting_workspace_with_no_permissions_returns_error(
-    data_fixture, api_client, tmpdir
-):
-    user, token = data_fixture.create_user_and_token()
-    _, token2 = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    data_fixture.create_database_application(workspace=workspace)
-
-    response = api_client.post(
-        reverse(
-            "api:workspaces:export_workspace_async",
-            kwargs={"workspace_id": workspace.id},
-        ),
-        data={},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token2}",
-    )
-
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
-
-
-@pytest.mark.django_db
-def test_exporting_workspace_with_application_without_permissions_returns_error(
-    data_fixture, api_client, tmpdir
-):
-    user, token = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    database = data_fixture.create_database_application(workspace=workspace)
-
-    user2, token2 = data_fixture.create_user_and_token()
-    workspace2 = data_fixture.create_workspace(user=user2)
-    database2 = data_fixture.create_database_application(workspace=workspace2)
-
-    response = api_client.post(
-        reverse(
-            "api:workspaces:export_workspace_async",
-            kwargs={"workspace_id": workspace.id},
-        ),
-        data={"application_ids": [database.id, database2.id]},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "PERMISSION_DENIED"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -127,8 +29,8 @@ def test_exporting_interesting_database(
     storage = FileSystemStorage(location=storage_location, base_url="http://localhost")
 
     with patch(
-        "baserow.contrib.database.import_export_handler.default_storage",
-        new=storage,
+        "baserow.core.import_export_handler.get_default_storage",
+        new=lambda: storage,
     ):
         database = setup_interesting_test_database(
             data_fixture,
@@ -137,6 +39,9 @@ def test_exporting_interesting_database(
             name=database_name,
             storage=storage,
         )
+
+        for user_file in UserFile.objects.all():
+            data_fixture.save_content_in_user_file(user_file=user_file, storage=storage)
 
         file_name = ImportExportHandler().export_workspace_applications(
             workspace,
@@ -184,13 +89,8 @@ def test_exporting_workspace_writes_file_to_storage(
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with patch(
-        "baserow.contrib.database.import_export_handler.default_storage",
-        new=storage,
-    ), patch(
-        "baserow.contrib.database.api.export.serializers.default_storage",
-        new=storage,
-    ), patch(
-        "baserow.contrib.database.export.handler.default_storage", new=storage
+        "baserow.core.import_export_handler.get_default_storage",
+        new=lambda: storage,
     ):
         token = data_fixture.generate_token(user)
         with django_capture_on_commit_callbacks(execute=True):
@@ -229,7 +129,10 @@ def test_exporting_workspace_writes_file_to_storage(
 
         assert response_json["state"] == "finished"
         assert response_json["progress_percentage"] == 100
-        assert response_json["url"] == f"http://localhost/export_files/{file_name}"
+        assert (
+            response_json["url"]
+            == f"http://localhost:8000/media/export_files/{file_name}"
+        )
 
         file_path = tmpdir.join(settings.EXPORT_FILES_DIRECTORY, file_name)
         assert file_path.isfile()

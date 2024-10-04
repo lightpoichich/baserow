@@ -6,7 +6,6 @@ from django.utils.functional import lazy
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -40,8 +39,6 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.exceptions import UserNotInWorkspace
-from baserow.core.job_types import ExportApplicationsJobType
-from baserow.core.jobs.registries import job_type_registry
 
 User = get_user_model()
 
@@ -50,21 +47,6 @@ CreateExportJobSerializer = DiscriminatorMappingSerializer(
     "Export",
     lazy(table_exporter_registry.get_option_serializer_map, dict)(),
     type_field_name="exporter_type",
-)
-
-ExportApplicationsJobRequestSerializer = job_type_registry.get(
-    ExportApplicationsJobType.type
-).get_serializer_class(
-    base_class=serializers.Serializer,
-    request_serializer=True,
-    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
-)
-
-ExportApplicationsJobResponseSerializer = job_type_registry.get(
-    ExportApplicationsJobType.type
-).get_serializer_class(
-    base_class=serializers.Serializer,
-    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
 )
 
 

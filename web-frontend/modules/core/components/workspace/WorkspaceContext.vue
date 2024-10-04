@@ -16,7 +16,7 @@
       <li
         v-if="
           $hasPermission('workspace.read', workspace, workspace.id) &&
-          $featureFlagIsEnabled('workspace_export')
+          $featureFlagIsEnabled(FF_EXPORT_WORKSPACE)
         "
         class="context__menu-item"
       >
@@ -132,6 +132,7 @@ import ExportWorkspaceModal from '@baserow/modules/core/components/export/Export
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import LeaveWorkspaceModal from '@baserow/modules/core/components/workspace/LeaveWorkspaceModal'
 import WorkspaceSettingsModal from '@baserow/modules/core/components/workspace/WorkspaceSettingsModal'
+import { FF_EXPORT_WORKSPACE } from '@baserow/modules/core/plugins/featureFlags'
 
 export default {
   name: 'WorkspaceContext',
@@ -151,6 +152,7 @@ export default {
   data() {
     return {
       loading: false,
+      FF_EXPORT_WORKSPACE,
     }
   },
   methods: {

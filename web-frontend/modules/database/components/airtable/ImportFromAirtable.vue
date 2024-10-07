@@ -75,7 +75,7 @@ export default {
   methods: {
     async submit() {
       this.$v.$touch()
-      if (!this.$v.$invalid) {
+      if (!this.$v.$invalid && !this.loading) {
         this.$emit('submit')
         if (this.loading) {
           return

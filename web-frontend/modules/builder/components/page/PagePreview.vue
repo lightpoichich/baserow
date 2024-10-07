@@ -13,7 +13,7 @@
         @keydown="handleKeyDown"
       >
         <div class="page">
-          <template v-if="sharedElements.length === 0">
+          <template v-if="headerElements.length === 0">
             <CallToAction
               class="page-preview__empty"
               icon="baserow-icon-plus"
@@ -28,7 +28,7 @@
           </template>
           <template v-else>
             <ElementPreview
-              v-for="(element, index) in sharedElements"
+              v-for="(element, index) in headerElements"
               :key="element.id"
               is-root-element
               :element="element"
@@ -39,7 +39,8 @@
                 recordIndexPath: [],
               }"
               @move="moveElement($event)"
-          /></template>
+            />
+          </template>
           <hr />
           <template v-if="elements.length === 0">
             <CallToAction
@@ -66,7 +67,37 @@
                 recordIndexPath: [],
               }"
               @move="moveElement($event)"
-          /></template>
+            />
+          </template>
+          <hr />
+          <template v-if="footerElements.length === 0">
+            <CallToAction
+              class="page-preview__empty"
+              icon="baserow-icon-plus"
+              icon-color="neutral"
+              icon-size="large"
+              icon-rounded
+              :style="{ margin: '0 auto' }"
+              @click="$refs.addSharedPageElementModal.show()"
+            >
+              {{ $t('pagePreview.emptyMessage') }} (shared)
+            </CallToAction>
+          </template>
+          <template v-else>
+            <ElementPreview
+              v-for="(element, index) in footerElements"
+              :key="element.id"
+              is-root-element
+              :element="element"
+              :is-first-element="index === 0"
+              :is-last-element="index === elements.length - 1"
+              :is-copying="copyingElementIndex === index"
+              :application-context-additions="{
+                recordIndexPath: [],
+              }"
+              @move="moveElement($event)"
+            />
+          </template>
         </div>
       </div>
       <AddElementModal ref="addSharedPageElementModal" :page="sharedPage" />
@@ -119,6 +150,16 @@ export default {
     },
     sharedElements() {
       return this.$store.getters['element/getRootElements'](this.sharedPage)
+    },
+    headerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'header'
+      )
+    },
+    footerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'footer'
+      )
     },
     elementSelectedId() {
       return this.elementSelected?.id

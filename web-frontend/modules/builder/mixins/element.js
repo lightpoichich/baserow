@@ -5,7 +5,7 @@ import applicationContextMixin from '@baserow/modules/builder/mixins/application
 import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
 
 export default {
-  inject: ['workspace', 'builder', 'mode'],
+  inject: ['workspace', 'builder', 'page', 'mode'],
   mixins: [applicationContextMixin],
   props: {
     element: {
@@ -28,13 +28,6 @@ export default {
           workflowAction,
           dispatchedById
         )
-      )
-    },
-    page() {
-      // We use the page from the element itself
-      return this.$store.getters['page/getById'](
-        this.builder,
-        this.element.page_id
       )
     },
     elementType() {

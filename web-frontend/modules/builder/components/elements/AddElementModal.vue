@@ -65,9 +65,6 @@ export default {
         )
       )
     },
-    sharedPage() {
-      return this.$store.getters['page/getSharedPage'](this.builder)
-    },
     parentElementType() {
       const parentElement = this.$store.getters['element/getElementById'](
         this.page,

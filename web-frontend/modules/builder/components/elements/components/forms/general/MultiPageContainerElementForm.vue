@@ -33,6 +33,34 @@
           {{ item.label }}
         </DropdownItem>
       </Dropdown>
+      <template v-if="values.share_type !== 'all'">
+        <div class="multi-page-container-element-form__page-list">
+          <div
+            v-for="page in pages"
+            :key="page.id"
+            class="multi-page-container-element-form__page-checkbox"
+          >
+            <Checkbox
+              :checked="values.pages.includes(page.id)"
+              @input="togglePage(page)"
+            >
+              {{ page.name }}
+            </Checkbox>
+          </div>
+
+          <div class="multi-page-container-element-form__actions">
+            <a @click.prevent="selectAll">
+              {{ $t('multiPageContainerElementForm.selectAll') }}
+            </a>
+            <a
+              class="multi-page-container-element-form__deselect-all"
+              @click.prevent="deselectAll"
+            >
+              {{ $t('multiPageContainerElementForm.deselectAll') }}
+            </a>
+          </div>
+        </div>
+      </template>
     </FormGroup>
   </form>
 </template>
@@ -83,6 +111,26 @@ export default {
           value: SHARE_TYPES.EXCEPT,
         },
       ]
+    },
+    pages() {
+      return this.$store.getters['page/getVisiblePages'](this.builder)
+    },
+  },
+  methods: {
+    togglePage(page) {
+      if (!this.values.pages.includes(page.id)) {
+        this.values.pages.push(page.id)
+      } else {
+        this.values.pages = this.values.pages.filter(
+          (pageId) => pageId !== page.id
+        )
+      }
+    },
+    selectAll() {
+      this.values.pages = this.pages.map(({ id }) => id)
+    },
+    deselectAll() {
+      this.values.pages = []
     },
   },
 }

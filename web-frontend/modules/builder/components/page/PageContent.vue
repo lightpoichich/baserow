@@ -1,7 +1,7 @@
 <template>
   <ThemeProvider class="page">
     <PageElement
-      v-for="element in sharedElements"
+      v-for="element in headerElements"
       :key="element.id"
       :element="element"
       :mode="mode"
@@ -11,6 +11,15 @@
     />
     <PageElement
       v-for="element in elements"
+      :key="element.id"
+      :element="element"
+      :mode="mode"
+      :application-context-additions="{
+        recordIndexPath: [],
+      }"
+    />
+    <PageElement
+      v-for="element in footerElements"
       :key="element.id"
       :element="element"
       :mode="mode"
@@ -51,6 +60,18 @@ export default {
     sharedElements: {
       type: Array,
       required: true,
+    },
+  },
+  computed: {
+    headerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'header'
+      )
+    },
+    footerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'footer'
+      )
     },
   },
   watch: {

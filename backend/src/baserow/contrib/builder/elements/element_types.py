@@ -197,8 +197,25 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
         return super().allowed_fields + [
             "page_position",
             "share_type",
-            "pages",
+            # "pages",
         ]
+
+    @property
+    def request_serializer_field_overrides(self):
+        return {
+            "pages": serializers.ListField(
+                child=serializers.IntegerField(),
+                help_text="Page Ids",
+            ),
+        }
+
+    def after_update(self, instance: Any, values: Dict):
+        super().after_update(instance, values)
+
+        if "pages" in values:
+            print("pages", values["pages"])
+            instance.pages.clear()
+            instance.pages.add(*values["pages"])
 
     def serialize_property(
         self,

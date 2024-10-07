@@ -20,6 +20,9 @@ from baserow.contrib.builder.api.data_sources.errors import (
     ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
     ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN,
 )
+from baserow.contrib.builder.api.data_sources.serializers import (
+    DispatchDataSourceRequestSerializer,
+)
 from baserow.contrib.builder.api.domains.serializers import PublicBuilderSerializer
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.api.workflow_actions.serializers import (
@@ -53,9 +56,6 @@ from baserow.core.exceptions import ApplicationDoesNotExist, PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import service_type_registry
 
-from baserow.contrib.builder.api.data_sources.serializers import (
-    DispatchDataSourceRequestSerializer,
-)
 from .serializers import PublicDataSourceSerializer, PublicElementSerializer
 
 

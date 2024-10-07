@@ -131,7 +131,7 @@ class BuilderDispatchContext(DispatchContext):
 
         return self.request.GET.get("order_by", None)
 
-    def validate_adhoc_refinements(
+    def validate_filter_search_sort_fields(
         self, fields: List[str], refinement: ServiceAdhocRefinements
     ):
         """

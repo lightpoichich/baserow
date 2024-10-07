@@ -778,7 +778,7 @@ class FakeDispatchContext(DispatchContext):
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
         return {}
 
-    def validate_adhoc_refinements(
+    def validate_filter_search_sort_fields(
         self, fields: List[str], refinement: ServiceAdhocRefinements
     ):
         pass

@@ -93,7 +93,7 @@ class DispatchContext(RuntimeFormulaContext, ABC):
         """
 
     @abstractmethod
-    def validate_adhoc_refinements(
+    def validate_filter_search_sort_fields(
         self, fields: List[str], refinement: ServiceAdhocRefinements
     ):
         """

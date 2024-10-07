@@ -195,7 +195,7 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
         },
     ],
 )
-def test_validate_adhoc_refinements(data_fixture, property_option_params):
+def test_validate_filter_search_sort_fields(data_fixture, property_option_params):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     element = data_fixture.create_builder_table_element(page=page)
@@ -205,10 +205,12 @@ def test_validate_adhoc_refinements(data_fixture, property_option_params):
     for refinement in list(ServiceAdhocRefinements):
         model_field_name = ServiceAdhocRefinements.to_model_field(refinement)
         if property_option_params[model_field_name]:
-            dispatch_context.validate_adhoc_refinements([schema_property], refinement)
+            dispatch_context.validate_filter_search_sort_fields(
+                [schema_property], refinement
+            )
         else:
             with pytest.raises(DataSourceRefinementForbidden) as exc:
-                dispatch_context.validate_adhoc_refinements(
+                dispatch_context.validate_filter_search_sort_fields(
                     [schema_property], refinement
                 )
             assert (
@@ -218,7 +220,9 @@ def test_validate_adhoc_refinements(data_fixture, property_option_params):
 
 
 @pytest.mark.django_db
-def test_validate_adhoc_refinements_caching(data_fixture, django_assert_num_queries):
+def test_validate_filter_search_sort_fields_caching(
+    data_fixture, django_assert_num_queries
+):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     element = data_fixture.create_builder_table_element(page=page)
@@ -228,22 +232,22 @@ def test_validate_adhoc_refinements_caching(data_fixture, django_assert_num_quer
     dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
 
     with django_assert_num_queries(1):
-        dispatch_context.validate_adhoc_refinements(
+        dispatch_context.validate_filter_search_sort_fields(
             ["name"], ServiceAdhocRefinements.FILTER
         )
     assert dispatch_context.cache["element_property_options"][element.id] == {
         "name": {"filterable": True, "sortable": False, "searchable": False}
     }
     with django_assert_num_queries(0):
-        dispatch_context.validate_adhoc_refinements(
+        dispatch_context.validate_filter_search_sort_fields(
             ["name"], ServiceAdhocRefinements.FILTER
         )
 
 
-def test_validate_adhoc_refinements_without_element():
+def test_validate_filter_search_sort_fields_without_element():
     dispatch_context = BuilderDispatchContext(HttpRequest(), None)
     with pytest.raises(DataSourceRefinementForbidden) as exc:
-        dispatch_context.validate_adhoc_refinements(
+        dispatch_context.validate_filter_search_sort_fields(
             ["name"], ServiceAdhocRefinements.FILTER
         )
     assert exc.value.args[0] == "An element is required to validate adhoc refinements."

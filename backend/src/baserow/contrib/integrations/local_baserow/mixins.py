@@ -216,7 +216,7 @@ class LocalBaserowTableServiceFilterableMixin:
             # Extract the field db columns names.
             field_names = [field.db_column for field in fields]
             # Validate that the fields are filterable.
-            dispatch_context.validate_adhoc_refinements(
+            dispatch_context.validate_filter_search_sort_fields(
                 field_names, ServiceAdhocRefinements.FILTER
             )
             adhoc_filters = AdHocFilters.from_dict(deserialized_filters)
@@ -312,7 +312,7 @@ class LocalBaserowTableServiceSortableMixin:
         adhoc_sort = dispatch_context.sortings()
         if adhoc_sort is not None:
             field_names = [field.strip("-") for field in adhoc_sort.split(",")]
-            dispatch_context.validate_adhoc_refinements(
+            dispatch_context.validate_filter_search_sort_fields(
                 field_names, ServiceAdhocRefinements.SORT
             )
             queryset = queryset.order_by_fields_string(adhoc_sort, False)

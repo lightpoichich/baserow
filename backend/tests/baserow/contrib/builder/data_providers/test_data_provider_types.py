@@ -572,7 +572,9 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_another_dat
 
     data_source_provider = DataSourceDataProviderType()
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
 
     assert (
         data_source_provider.get_data_chunk(

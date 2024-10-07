@@ -61,8 +61,10 @@
         ></AddElementZone>
         <AddElementModal
           ref="addElementModal"
-          :page="page"
-          :element-types-allowed="elementType.childElementTypes(page, element)"
+          :page="elementPage"
+          :element-types-allowed="
+            elementType.childElementTypes(elementPage, element)
+          "
         ></AddElementModal>
       </template>
     </template>
@@ -77,8 +79,10 @@
         ></AddElementZone>
         <AddElementModal
           ref="addElementModal"
-          :page="page"
-          :element-types-allowed="elementType.childElementTypes(page, element)"
+          :page="elementPage"
+          :element-types-allowed="
+            elementType.childElementTypes(elementPage, element)
+          "
         ></AddElementModal>
       </template>
       <!-- We have no contents, but we do have children in edit mode -->
@@ -153,7 +157,7 @@ export default {
     },
     repeatElementIsNested() {
       return this.elementType.hasAncestorOfType(
-        this.page,
+        this.elementPage,
         this.element,
         RepeatElementType.getType()
       )
@@ -204,7 +208,7 @@ export default {
     async moveElement(element, placement) {
       try {
         await this.actionMoveElement({
-          page: this.page,
+          page: this.elementPage,
           element,
           placement,
         })

@@ -22,6 +22,7 @@ import {
   CHOICE_OPTION_TYPES,
   ELEMENT_EVENTS,
   PLACEMENTS,
+  SHARE_TYPES,
 } from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
@@ -125,6 +126,16 @@ export class ElementType extends Registerable {
 
   getEventByName(element, name) {
     return this.getEvents(element).find((event) => event.name === name)
+  }
+
+  /**
+   * Should return whether this element is visible.
+   * @param {Object} element the element to check
+   * @param {Object} currentPage the current displayed page
+   * @returns
+   */
+  isVisible({ element, currentPage }) {
+    return true
   }
 
   /**
@@ -1819,6 +1830,19 @@ export class MultiPageContainerElementType extends ContainerElementTypeMixin(
 
   get onSharedPage() {
     return true
+  }
+
+  isVisible({ element, currentPage }) {
+    switch (element.share_type) {
+      case SHARE_TYPES.ALL:
+        return true
+      case SHARE_TYPES.ONLY:
+        return element.pages.includes(currentPage.id)
+      case SHARE_TYPES.EXCEPT:
+        return !element.pages.includes(currentPage.id)
+      default:
+        return false
+    }
   }
 
   /**

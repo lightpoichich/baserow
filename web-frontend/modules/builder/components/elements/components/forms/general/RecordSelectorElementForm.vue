@@ -16,7 +16,7 @@
         v-model="values.data_source_id"
         small
         :data-sources="listDataSources"
-        :page="page"
+        :page="elementPage"
       >
         <template #chooseValueState>
           {{ $t('recordSelectorElementForm.noDataSourceMessage') }}

@@ -10,7 +10,10 @@ export default {
     }),
     PLACEMENTS: () => PLACEMENTS,
     children() {
-      return this.$store.getters['element/getChildren'](this.page, this.element)
+      return this.$store.getters['element/getChildren'](
+        this.elementPage,
+        this.element
+      )
     },
     elementSelectedId() {
       return this.elementSelected?.id

@@ -197,7 +197,6 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
         return super().allowed_fields + [
             "page_position",
             "share_type",
-            # "pages",
         ]
 
     @property
@@ -206,6 +205,7 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
             "pages": serializers.ListField(
                 child=serializers.IntegerField(),
                 help_text="Page Ids",
+                required=False,
             ),
         }
 

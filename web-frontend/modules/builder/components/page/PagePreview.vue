@@ -1,10 +1,10 @@
 <template>
-  <ThemeProvider
+  <div
     class="page-preview__wrapper"
     :class="`page-preview__wrapper--${deviceType.type}`"
     @click.self="actionSelectElement({ element: null })"
   >
-    <PreviewNavigationBar :page="page" :style="{ maxWidth }" />
+    <PreviewNavigationBar :page="currentPage" :style="{ maxWidth }" />
     <div ref="preview" class="page-preview" :style="{ 'max-width': maxWidth }">
       <div
         ref="previewScaled"
@@ -12,7 +12,7 @@
         tabindex="0"
         @keydown="handleKeyDown"
       >
-        <div class="page">
+        <ThemeProvider class="page">
           <template v-if="headerElements.length === 0">
             <CallToAction
               class="page-preview__empty"
@@ -87,7 +87,6 @@
             <ElementPreview
               v-for="(element, index) in footerElements"
               :key="element.id"
-              is-root-element
               :element="element"
               :is-first-element="index === 0"
               :is-last-element="index === elements.length - 1"
@@ -98,12 +97,12 @@
               @move="moveElement($event)"
             />
           </template>
-        </div>
+        </ThemeProvider>
       </div>
       <AddElementModal ref="addSharedPageElementModal" :page="sharedPage" />
-      <AddElementModal ref="addElementModal" :page="page" />
+      <AddElementModal ref="addElementModal" :page="currentPage" />
     </div>
-  </ThemeProvider>
+  </div>
 </template>
 
 <script>
@@ -124,7 +123,7 @@ export default {
     ElementPreview,
     PreviewNavigationBar,
   },
-  inject: ['builder', 'page', 'workspace'],
+  inject: ['builder', 'currentPage', 'workspace'],
   data() {
     return {
       // The element that is currently being copied
@@ -143,7 +142,7 @@ export default {
       getClosestSiblingElement: 'element/getClosestSiblingElement',
     }),
     elements() {
-      return this.$store.getters['element/getRootElements'](this.page)
+      return this.$store.getters['element/getRootElements'](this.currentPage)
     },
     sharedPage() {
       return this.$store.getters['page/getSharedPage'](this.builder)
@@ -196,7 +195,7 @@ export default {
     canCreateElement() {
       return this.$hasPermission(
         'builder.page.create_element',
-        this.page,
+        this.currentPage,
         this.workspace.id
       )
     },

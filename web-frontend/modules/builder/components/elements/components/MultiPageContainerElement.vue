@@ -1,20 +1,22 @@
 <template>
   <div>
-    <div
+    <template
       v-if="
         mode === 'editing' &&
         children.length === 0 &&
-        $hasPermission('builder.page.create_element', page, workspace.id)
+        $hasPermission('builder.page.create_element', currentPage, workspace.id)
       "
     >
       <AddElementZone @add-element="showAddElementModal"></AddElementZone>
       <AddElementModal
         ref="addElementModal"
-        :page="page"
-        :element-types-allowed="elementType.childElementTypes(page, element)"
+        :page="elementPage"
+        :element-types-allowed="
+          elementType.childElementTypes(elementPage, element)
+        "
       ></AddElementModal>
-    </div>
-    <div v-else>
+    </template>
+    <template v-else>
       <template v-for="child in children">
         <ElementPreview
           v-if="mode === 'editing'"
@@ -29,7 +31,7 @@
           :mode="mode"
         />
       </template>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -87,7 +89,7 @@ export default {
     async moveElement(element, placement) {
       try {
         await this.actionMoveElement({
-          page: this.page,
+          page: this.elementPage,
           element,
           placement,
         })

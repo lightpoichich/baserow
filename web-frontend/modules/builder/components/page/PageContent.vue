@@ -41,10 +41,6 @@ export default {
   mixins: [dimensionMixin],
   inject: ['builder', 'mode'],
   props: {
-    page: {
-      type: Object,
-      required: true,
-    },
     path: {
       type: String,
       required: true,

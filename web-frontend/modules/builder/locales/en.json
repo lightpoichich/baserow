@@ -790,7 +790,9 @@
   "multiPageContainerElementForm": {
     "pagePosition": "Position",
     "behaviour": "Behaviour",
-    "display": "Display on"
+    "display": "Display on",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all"
   },
   "pagePosition": {
     "header": "Header",

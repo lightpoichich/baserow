@@ -23,7 +23,7 @@
       class="margin-bottom-2"
       required
     >
-      <Dropdown v-model="values.share_type" :show-search="false" small>
+      <Dropdown v-model="computedPageShareType" :show-search="false" small>
         <DropdownItem
           v-for="item in pageShareTypes"
           :key="item.value"
@@ -84,6 +84,23 @@ export default {
     }
   },
   computed: {
+    computedPageShareType: {
+      get() {
+        return this.values.share_type
+      },
+      set(newValue) {
+        // We want to invert the page selection if we change from except <-> only
+        if (
+          [SHARE_TYPES.ONLY, SHARE_TYPES.EXCEPT].includes(newValue) &&
+          ![SHARE_TYPES.ALL, undefined].includes(this.values.share_type)
+        ) {
+          this.values.pages = this.pageIds.filter(
+            (id) => !this.values.pages.includes(id)
+          )
+        }
+        this.values.share_type = newValue
+      },
+    },
     pagePositions() {
       return [
         {
@@ -115,6 +132,9 @@ export default {
     pages() {
       return this.$store.getters['page/getVisiblePages'](this.builder)
     },
+    pageIds() {
+      return this.pages.map(({ id }) => id)
+    },
   },
   methods: {
     togglePage(page) {
@@ -127,7 +147,7 @@ export default {
       }
     },
     selectAll() {
-      this.values.pages = this.pages.map(({ id }) => id)
+      this.values.pages = this.pageIds
     },
     deselectAll() {
       this.values.pages = []

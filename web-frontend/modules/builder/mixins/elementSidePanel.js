@@ -11,10 +11,10 @@ export default {
       applicationContext: {
         ...this.applicationContext,
         element: this.element,
-        page: this.page,
+        page: this.elementPage,
       },
-      // We replace the page with the element page
-      page: this.page,
+      // We add the current element page
+      elementPage: this.elementPage,
     }
   },
   computed: {
@@ -31,12 +31,12 @@ export default {
 
     parentElement() {
       return this.$store.getters['element/getElementById'](
-        this.page,
+        this.elementPage,
         this.element?.parent_element_id
       )
     },
 
-    page() {
+    elementPage() {
       // We use the page from the element itself
       return this.$store.getters['page/getById'](
         this.builder,
@@ -76,7 +76,7 @@ export default {
       if (Object.keys(differences).length > 0) {
         try {
           await this.actionDebouncedUpdateSelectedElement({
-            page: this.page,
+            page: this.elementPage,
             // Here we clone the values to prevent
             // "modification outside of the store" error
             values: clone(differences),

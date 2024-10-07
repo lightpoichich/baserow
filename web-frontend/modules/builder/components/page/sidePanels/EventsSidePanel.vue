@@ -33,7 +33,7 @@ export default {
     },
     workflowActions() {
       return this.$store.getters['workflowAction/getElementWorkflowActions'](
-        this.page,
+        this.elementPage,
         this.element.id
       )
     },

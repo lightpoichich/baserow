@@ -20,7 +20,7 @@
         :element="element"
         :application-context-additions="{
           element,
-          page,
+          page: elementPage,
         }"
         class="element"
       />
@@ -49,9 +49,9 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'PageElement',
   mixins: [applicationContextMixin],
-  inject: ['builder', 'mode'],
+  inject: ['builder', 'mode', 'currentPage'],
   provide() {
-    return { mode: this.elementMode, page: this.page }
+    return { mode: this.elementMode, elementPage: this.elementPage }
   },
   props: {
     element: {
@@ -82,14 +82,26 @@ export default {
     ...mapGetters({
       loggedUser: 'userSourceUser/getUser',
     }),
-    page() {
+    elementPage() {
       // We use the page from the element itself
       return this.$store.getters['page/getById'](
         this.builder,
         this.element.page_id
       )
     },
+    elementType() {
+      return this.$registry.get('element', this.element.type)
+    },
     isVisible() {
+      if (
+        !this.elementType.isVisible({
+          element: this.element,
+          currentPage: this.currentPage,
+        })
+      ) {
+        return false
+      }
+
       const isAuthenticated = this.$store.getters[
         'userSourceUser/isAuthenticated'
       ](this.builder)

@@ -2,7 +2,6 @@
   <div>
     <Toasts></Toasts>
     <PageContent
-      :page="page"
       :path="path"
       :params="params"
       :elements="elements"
@@ -43,7 +42,7 @@ export default {
     return {
       workspace: this.workspace,
       builder: this.builder,
-      page: this.page,
+      currentPage: this.currentPage,
       mode: this.mode,
       formulaComponent: ApplicationBuilderFormulaInput,
       applicationContext: this.applicationContext,
@@ -219,7 +218,7 @@ export default {
 
     return {
       builder,
-      page,
+      currentPage: page,
       path,
       params,
       mode,
@@ -228,7 +227,7 @@ export default {
   head() {
     return {
       titleTemplate: '',
-      title: this.page.name,
+      title: this.currentPage.name,
       bodyAttrs: {
         class: 'public-page',
       },
@@ -237,7 +236,7 @@ export default {
   },
   computed: {
     elements() {
-      return this.$store.getters['element/getRootElements'](this.page)
+      return this.$store.getters['element/getRootElements'](this.currentPage)
     },
     applicationContext() {
       return {
@@ -249,7 +248,7 @@ export default {
     dispatchContext() {
       return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
-        { ...this.applicationContext, page: this.page }
+        { ...this.applicationContext, page: this.currentPage }
       )
     },
     // Separate dispatch context for application level data sources
@@ -300,7 +299,7 @@ export default {
           this.$store.dispatch(
             'dataSourceContent/debouncedFetchPageDataSourceContent',
             {
-              page: this.page,
+              page: this.currentPage,
               data: newDispatchContext,
               mode: this.mode,
             }
@@ -320,6 +319,7 @@ export default {
             {
               page: this.sharedPage,
               data: newDispatchContext,
+              mode: this.mode,
             }
           )
         }
@@ -328,8 +328,14 @@ export default {
     isAuthenticated() {
       // When the user login or logout, we need to refetch the elements and actions
       // as they might have changed
-      this.$store.dispatch('element/fetchPublished', { page: this.page })
-      this.$store.dispatch('workflowAction/fetchPublished', { page: this.page })
+      this.$store.dispatch('element/fetchPublished', { page: this.currentPage })
+      this.$store.dispatch('workflowAction/fetchPublished', {
+        page: this.currentPage,
+      })
+      this.$store.dispatch('element/fetchPublished', { page: this.sharedPage })
+      this.$store.dispatch('workflowAction/fetchPublished', {
+        page: this.sharePage,
+      })
     },
   },
 }

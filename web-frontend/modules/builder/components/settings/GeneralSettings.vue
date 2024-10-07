@@ -22,7 +22,6 @@ export default {
   provide() {
     return {
       builder: this.builder,
-      page: null,
       mode: null,
     }
   },

@@ -4,14 +4,16 @@
       v-if="
         mode === 'editing' &&
         children.length === 0 &&
-        $hasPermission('builder.page.create_element', page, workspace.id)
+        $hasPermission('builder.page.create_element', currentPage, workspace.id)
       "
     >
       <AddElementZone @add-element="showAddElementModal"></AddElementZone>
       <AddElementModal
         ref="addElementModal"
-        :page="page"
-        :element-types-allowed="elementType.childElementTypes(page, element)"
+        :page="elementPage"
+        :element-types-allowed="
+          elementType.childElementTypes(elementPage, element)
+        "
       ></AddElementModal>
     </div>
     <div v-else>
@@ -79,7 +81,7 @@ export default {
     },
     getFormElementDescendants() {
       const descendants = this.$store.getters['element/getDescendants'](
-        this.page,
+        this.elementPage,
         this.element
       )
       return descendants
@@ -103,7 +105,7 @@ export default {
             recordIndexPath
           )
           return this.$store.getters['formData/getElementInvalid'](
-            this.page,
+            this.elementPage,
             uniqueElementId
           )
         }
@@ -127,7 +129,7 @@ export default {
             recordIndexPath
           )
           this.$store.dispatch('formData/setElementTouched', {
-            page: this.page,
+            page: this.elementPage,
             wasTouched,
             uniqueElementId,
           })
@@ -165,7 +167,7 @@ export default {
               ),
             }
             this.$store.dispatch('formData/setFormData', {
-              page: this.page,
+              page: this.elementPage,
               payload,
               uniqueElementId,
             })
@@ -196,7 +198,7 @@ export default {
     async moveElement(element, placement) {
       try {
         await this.actionMoveElement({
-          page: this.page,
+          page: this.elementPage,
           element,
           placement,
         })

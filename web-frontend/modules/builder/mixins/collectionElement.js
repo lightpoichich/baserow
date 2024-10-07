@@ -31,7 +31,7 @@ export default {
       if (!this.element.data_source_id) {
         return null
       }
-      const pages = [this.page, this.sharedPage]
+      const pages = [this.currentPage, this.sharedPage]
       return this.getPagesDataSourceById(pages, this.element.data_source_id)
     },
     dataSourceType() {
@@ -60,7 +60,7 @@ export default {
     },
     elementIsInError() {
       return this.elementType.isInError({
-        page: this.page,
+        page: this.elementPage,
         element: this.element,
         builder: this.builder,
       })
@@ -114,7 +114,7 @@ export default {
       }
       try {
         await this.fetchElementContent({
-          page: this.page,
+          page: this.elementPage,
           element: this.element,
           dataSource: this.dataSource,
           data: this.dispatchContext,

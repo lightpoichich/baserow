@@ -38,7 +38,7 @@ export default {
     hasCollectionAncestor() {
       const { element } = this.applicationContext
       const elementType = this.$registry.get('element', element.type)
-      return elementType.hasCollectionAncestor(this.page, element)
+      return elementType.hasCollectionAncestor(this.elementPage, element)
     },
     /**
      * In collection element forms, the ability to view paging options
@@ -91,9 +91,9 @@ export default {
      */
     dataSources() {
       const pages =
-        this.page.id !== this.sharedPage.id
-          ? [this.sharedPage, this.page]
-          : [this.page]
+        this.currentPage.id !== this.sharedPage.id
+          ? [this.sharedPage, this.currentPage]
+          : [this.currentPage]
       return this.$store.getters['dataSource/getPagesDataSources'](
         pages
       ).filter((dataSource) => dataSource.type)
@@ -102,7 +102,7 @@ export default {
       if (!this.values.data_source_id) {
         return null
       }
-      const pages = [this.sharedPage, this.page]
+      const pages = [this.sharedPage, this.currentPage]
       return this.$store.getters['dataSource/getPagesDataSourceById'](
         pages,
         this.values.data_source_id

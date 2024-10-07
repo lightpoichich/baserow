@@ -18,9 +18,7 @@ import psycopg2
 from freezegun import freeze_time
 from pytest_unordered import unordered
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
+from baserow.contrib.builder.data_sources.builder_dispatch_context import BuilderDispatchContext
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )

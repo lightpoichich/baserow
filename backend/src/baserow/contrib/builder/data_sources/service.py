@@ -229,6 +229,25 @@ class DataSourceService:
             self, data_source_id=data_source.id, page=page, user=user
         )
 
+    def row_has_allowed_field_name(
+        self,
+        row: Dict[str, Any],
+        field_names: List[str],
+    ) -> bool:
+        """
+        Given a dispatched row, return True if the row has a field name that is
+        in the field_names list. Otherwise, return False to indicate that the
+        row shouldn't be included in the response.
+        """
+
+        for key in row:
+            if key in field_names:
+                # If the key is in the field_names, we know that the row is
+                # safe to include in the response, so return early
+                return True
+
+        return False
+
     def dispatch_data_sources(
         self,
         user,
@@ -260,6 +279,8 @@ class DataSourceService:
         if dispatch_context.public_formula_fields is None:
             return results
 
+        data_sources_used = set()
+
         # We filter the fields before returning the result
         for data_source in data_sources:
             if isinstance(results[data_source.id], Exception):
@@ -268,35 +289,33 @@ class DataSourceService:
             field_names = dispatch_context.public_formula_fields.get(
                 "external", {}
             ).get(data_source.service.id, [])
+
+            # If field_names is empty, that means no fields are allowed so
+            # we should skip this data source altogether.
+            if not field_names:
+                continue
+
             if data_source.service.get_type().returns_list:
                 new_result = []
                 for row in results[data_source.id]["results"]:
-                    new_row = {}
-                    for key, value in row.items():
-                        if key in ["id", "order"]:
-                            # Ensure keys like "id" and "order" are included
-                            # in new_row
-                            new_row[key] = value
-                        elif key in field_names:
-                            # Only include the field if it is in the
-                            # external/safe field_names list
-                            new_row[key] = value
-                    new_result.append(new_row)
+                    if self.row_has_allowed_field_name(row, field_names):
+                        new_result.append(row)
+                        data_sources_used.add(data_source.id)
+
                 results[data_source.id] = {
                     **results[data_source.id],
                     "results": new_result,
                 }
             else:
-                new_result = {}
-                for key, value in results[data_source.id].items():
-                    if key in ["id", "order"]:
-                        # Ensure keys like "id" and "order" are included in new_row
-                        new_result[key] = value
-                    elif key in field_names:
-                        # Only include the field if it is in the external/safe
-                        # field_names list
-                        new_result[key] = value
-                results[data_source.id] = new_result
+                if self.row_has_allowed_field_name(
+                    results[data_source.id], field_names
+                ):
+                    data_sources_used.add(data_source.id)
+
+        # Only return data sources that are actually used
+        results = {
+            key: value for key, value in results.items() if key in data_sources_used
+        }
 
         return results
 

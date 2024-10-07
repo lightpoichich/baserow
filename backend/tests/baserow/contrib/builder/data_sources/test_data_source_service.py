@@ -1,5 +1,5 @@
 from decimal import Decimal
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import PropertyMock, patch
 
 from django.http import HttpRequest
 
@@ -15,6 +15,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.data_sources.service import DataSourceService
+from baserow.contrib.database.views.view_filters import EqualViewFilterType
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
 from baserow.core.services.models import Service
@@ -514,15 +515,14 @@ def test_dispatch_data_source_permission_denied(data_fixture, stub_check_permiss
         row_id="1",
     )
 
-    formula_context = MagicMock()
-    formula_context.cache = {}
-    type(formula_context.request).user = PropertyMock(return_value=user)
-    type(formula_context).page = PropertyMock(return_value=page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
 
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
-        DataSourceService().dispatch_data_source(user, data_source, formula_context)
+        DataSourceService().dispatch_data_source(user, data_source, dispatch_context)
 
 
 @pytest.mark.django_db
@@ -545,8 +545,267 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
         user=user, page=page, integration=integration
     )
 
-    formula_context = MagicMock()
-    formula_context.cache = {}
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
 
     with pytest.raises(DataSourceImproperlyConfigured):
-        DataSourceService().dispatch_data_source(user, data_source, formula_context)
+        DataSourceService().dispatch_data_source(user, data_source, dispatch_context)
+
+
+@pytest.mark.parametrize(
+    "row,field_names,expected_bool",
+    [
+        (
+            {"id": 1, "order": "1.000", "field_100": "foo"},
+            ["field_100"],
+            True,
+        ),
+        (
+            {"id": 1, "order": "1.000", "field_100": "foo"},
+            ["field_99", "field_100", "field_101"],
+            True,
+        ),
+        (
+            {
+                "id": 2,
+                "order": "1.000",
+                "field_200": {"id": 500, "value": "Delhi", "color": "dark-blue"},
+            },
+            ["field_200"],
+            True,
+        ),
+        # Expect False because field_names is empty
+        (
+            {"id": 4, "order": "1.000", "field_300": "foo"},
+            [],
+            False,
+        ),
+        # Expect False because field_names doesn't contain "field_400"
+        (
+            {"id": 3, "order": "1.000", "field_400": "foo"},
+            ["field_301"],
+            False,
+        ),
+        # Expect False because field_names doesn't contain "field_500"
+        (
+            # Multiple select will appear as a nested dict
+            {
+                "id": 5,
+                "order": "1.000",
+                "field_500": {"id": 501, "value": "Delhi", "color": "dark-blue"},
+            },
+            [],
+            False,
+        ),
+        # Expect False because field_names doesn't contain "field_500"
+        (
+            {
+                "id": 5,
+                "order": "1.000",
+                "field_500": {"id": 501, "value": "Delhi", "color": "dark-blue"},
+            },
+            ["field_502"],
+            False,
+        ),
+    ],
+)
+def test_row_has_allowed_field_name(row, field_names, expected_bool):
+    """
+    Test the row_has_allowed_field_name() method.
+
+    Given a dispatched row, it should return True if the row contains a
+    field name that is in the field_names list. Otherwise, False should be
+    returned to indicate that the row shouldn't be included in the response.
+    """
+
+    result = DataSourceService().row_has_allowed_field_name(row, field_names)
+    assert result is expected_bool
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "data_source_row_ids",
+    (
+        ["1"],
+        ["1", "2"],
+        ["1", "2", "3"],
+    ),
+)
+def test_dispatch_data_sources_excludes_unused_get_row_data_sources(
+    data_fixture, data_source_row_ids
+):
+    """
+    Test the dispatch_data_sources() method when using Get Row. Ensure that
+    any unused data sources are excluded from the results.
+    """
+
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Candy", "text"),
+            ("Category", "text"),
+        ],
+        rows=[
+            ["Fruit Roll-up", "Fruit leather"],
+            ["Gobstopper", "Hard candy"],
+            ["Twix", "Chocolate biscuit"],
+        ],
+    )
+
+    view = data_fixture.create_grid_view(user, table=table)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_sources = []
+
+    # We want to test that only some of the data sources are returned, thus
+    # we need to create multiple data sources for this page.
+    #
+    # We use the same table with a different row_id for each data source.
+    for row_id in data_source_row_ids:
+        data_sources.append(
+            data_fixture.create_builder_local_baserow_get_row_data_source(
+                user=user,
+                page=page,
+                integration=integration,
+                view=view,
+                table=table,
+                row_id=row_id,
+            )
+        )
+
+    # We are testing the logic that excludes Data Sources from the results.
+    # We aren't testing how the field names themselves are derived; that is
+    # tested elsewhere.
+    #
+    # To simplify the test, we are mocking the allowed field names. The
+    # alternative is to create an Element with a formula for each data
+    # source we want to test.
+    field_names = [f"field_{field.id}" for field in fields]
+    external_public_formula_fields = {
+        data_source.service.id: field_names for data_source in data_sources
+    }
+
+    with patch(
+        "baserow.contrib.builder.data_sources.service.BuilderDispatchContext.public_formula_fields",
+        new_callable=PropertyMock,
+    ) as mock_public_formula_fields:
+        mock_public_formula_fields.return_value = {
+            "external": external_public_formula_fields
+        }
+        dispatch_context = BuilderDispatchContext(
+            HttpRequest(), page, only_expose_public_formula_fields=True
+        )
+        result = DataSourceService().dispatch_data_sources(
+            user, data_sources, dispatch_context
+        )
+
+    # Ensure that the results size equals the number of data sources used
+    # in the page.
+    assert len(result.keys()) == len(data_sources)
+
+    for index, data_source in enumerate(data_sources):
+        row = result[data_source.id]
+        assert "id" in row
+        assert "order" in row
+        for field in fields:
+            field_name = f"field_{field.id}"
+            assert row[field_name] == getattr(rows[index], field_name)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "data_source_fruit_names", (["Fruit Roll-up", "Gobstopper", "Twix"],)
+)
+def test_dispatch_data_sources_excludes_unused_list_rows_data_sources(
+    data_fixture, data_source_fruit_names
+):
+    """
+    Test the dispatch_data_sources() method when using List Rows. Ensure that
+    any unused data sources are excluded from the results.
+    """
+
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Candy", "text"),
+            ("Category", "text"),
+        ],
+        rows=[
+            ["Fruit Roll-up", "Fruit leather"],
+            ["Gobstopper", "Hard candy"],
+            ["Twix", "Chocolate biscuit"],
+        ],
+    )
+
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_sources = []
+
+    # We want to test that only some of the data sources are returned, thus
+    # we need to create multiple data sources for this page.
+    #
+    # We use the same table with a search filter to target a different row
+    # for each data source.
+    for fruit_name in data_source_fruit_names:
+        data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+            user=user, page=page, table=table, integration=integration
+        )
+
+        data_fixture.create_local_baserow_table_service_filter(
+            service=data_source.service,
+            field=fields[0],
+            value=fruit_name,
+            type=EqualViewFilterType.type,
+            value_is_formula=False,
+        )
+        data_sources.append(data_source)
+
+    # We are testing the logic that excludes Data Sources from the results.
+    # We aren't testing how the field names themselves are derived; that is
+    # tested elsewhere.
+    #
+    # To simplify the test, we are mocking the allowed field names. The
+    # alternative is to create an Element with a formula for each data
+    # source we want to test.
+    field_names = [f"field_{field.id}" for field in fields]
+    external_public_formula_fields = {
+        data_source.service.id: field_names for data_source in data_sources
+    }
+
+    with patch(
+        "baserow.contrib.builder.data_sources.service.BuilderDispatchContext.public_formula_fields",
+        new_callable=PropertyMock,
+    ) as mock_public_formula_fields:
+        mock_public_formula_fields.return_value = {
+            "external": external_public_formula_fields
+        }
+        dispatch_context = BuilderDispatchContext(
+            HttpRequest(), page, only_expose_public_formula_fields=True
+        )
+        result = DataSourceService().dispatch_data_sources(
+            user, data_sources, dispatch_context
+        )
+
+    # Ensure that the results size equals the number of data sources used
+    # in the page.
+    assert len(result.keys()) == len(data_sources)
+
+    for index, data_source in enumerate(data_sources):
+        assert result[data_source.id]["has_next_page"] is False
+        row = result[data_source.id]["results"][0]
+        assert "id" in row
+        assert "order" in row
+        for field in fields:
+            field_name = f"field_{field.id}"
+            assert row[field_name] == getattr(rows[index], field_name)

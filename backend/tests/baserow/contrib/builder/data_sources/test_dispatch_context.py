@@ -5,10 +5,12 @@ from django.http import HttpRequest
 import pytest
 from rest_framework.request import Request
 
+from tests.baserow.contrib.builder.api.user_sources.helpers import create_user_table_and_role
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
+from baserow.core.user_sources.user_source_user import UserSourceUser
 
 
 def test_dispatch_context_page_range():
@@ -120,9 +122,9 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     only_expose_public_formula_fields,
 ):
     """
-    Test the BuilderDispatchContext::field_names property.
+    Test the BuilderDispatchContext::public_formula_fields property.
 
-    Ensure that the field_names property is computed only when the feature
+    Ensure that the public_formula_fields property is computed only when the feature
     flag is on.
     """
 
@@ -151,3 +153,89 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     else:
         assert dispatch_context.public_formula_fields is None
         mock_get_formula_field_names.assert_not_called()
+
+
+@pytest.mark.django_db
+@patch(
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.feature_flag_is_enabled"
+)
+def test_builder_dispatch_context_public_formula_fields_is_cached(
+    mock_feature_flag_is_enabled, data_fixture, django_assert_num_queries
+):
+    """
+    Test the BuilderDispatchContext::public_formula_fields property.
+
+    Ensure that the expensive call to get_formula_field_names() is cached.
+    """
+
+    mock_feature_flag_is_enabled.return_value = True
+
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("Color", "text"),
+        ],
+        rows=[
+            ["Apple", "Red"],
+            ["Banana", "Yellow"],
+            ["Cherry", "Purple"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+
+    user_source, integration = create_user_table_and_role(
+        data_fixture,
+        user,
+        builder,
+        "foo_user_role",
+    )
+    user_source_user = UserSourceUser(
+        user_source, None, 1, "foo_username", "foo@bar.com", role="foo_user_role"
+    )
+
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source.id}.0.field_{fields[0].id}')",
+    )
+    
+    request = Request(HttpRequest())
+    request.user = user_source_user
+
+    dispatch_context = BuilderDispatchContext(
+        request,
+        page,
+        only_expose_public_formula_fields=True,
+    )
+
+    expected_results = {
+        "all": {
+            data_source.service.id: [f"field_{fields[0].id}"]
+        },
+        'external': {
+            data_source.service.id: [f"field_{fields[0].id}"]
+        },
+        'internal': {},
+    }
+
+    # Initially calling the property should cause a bunch of DB queries.
+    with django_assert_num_queries(14):
+        result = dispatch_context.public_formula_fields
+        assert result == expected_results
+
+    # Subsequent calls to the property should *not* cause any DB queries.
+    with django_assert_num_queries(0):
+        result = dispatch_context.public_formula_fields
+        assert result == expected_results

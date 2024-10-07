@@ -19,9 +19,9 @@ from baserow.contrib.builder.data_sources.exceptions import (
 from baserow.contrib.builder.elements.models import Element
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
-from baserow.core.user_sources.registries import user_source_type_registry
 from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.test_utils.helpers import AnyInt, AnyStr
+from tests.baserow.contrib.builder.api.user_sources.helpers import create_user_table_and_role
 
 
 @pytest.fixture
@@ -800,40 +800,6 @@ def test_public_dispatch_data_sources_list_rows_no_elements(
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {}
-
-
-def create_user_table_and_role(data_fixture, user, builder, user_role):
-    """Helper to create a User table with a particular user role."""
-
-    # Create the user table for the user_source
-    user_table, user_fields, user_rows = data_fixture.build_table(
-        user=user,
-        columns=[
-            ("Email", "text"),
-            ("Name", "text"),
-            ("Password", "text"),
-            ("Role", "text"),
-        ],
-        rows=[
-            ["foo@bar.com", "Foo User", "secret", user_role],
-        ],
-    )
-    email_field, name_field, password_field, role_field = user_fields
-
-    integration = data_fixture.create_local_baserow_integration(
-        user=user, application=builder
-    )
-    user_source = data_fixture.create_user_source(
-        user_source_type_registry.get("local_baserow").model_class,
-        application=builder,
-        integration=integration,
-        table=user_table,
-        email_field=email_field,
-        name_field=name_field,
-        role_field=role_field,
-    )
-
-    return user_source, integration
 
 
 @pytest.mark.django_db

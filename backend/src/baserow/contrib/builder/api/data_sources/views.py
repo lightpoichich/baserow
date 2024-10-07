@@ -35,6 +35,7 @@ from baserow.contrib.builder.api.data_sources.serializers import (
     BaseUpdateDataSourceSerializer,
     CreateDataSourceSerializer,
     DataSourceSerializer,
+    DispatchDataSourceRequestSerializer,
     GetRecordIdsSerializer,
     MoveDataSourceSerializer,
     UpdateDataSourceSerializer,
@@ -53,7 +54,6 @@ from baserow.contrib.builder.data_sources.exceptions import (
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
-from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.core.exceptions import PermissionException
@@ -432,6 +432,7 @@ class DispatchDataSourceView(APIView):
             "Dispatches the service of the related data_source and returns "
             "the result."
         ),
+        request=DispatchDataSourceRequestSerializer,
         responses={
             404: get_error_schema(
                 [
@@ -461,27 +462,15 @@ class DispatchDataSourceView(APIView):
 
         data_source = DataSourceHandler().get_data_source(data_source_id)
 
-        # If the dispatch context is provided, and the `data_source` points
-        # to an element, fetch it so that it can be used for adhoc refinements.
-        element = None
-        element_id = request.data.get("data_source", {}).get("element", None)
-        if element_id:
-            element = ElementHandler().get_element(element_id)
-            if element.page_id != data_source.page_id:
-                raise DataSourceImproperlyConfigured(
-                    "The dispatched element does not "
-                    "belong to the same page as the data source."
-                )
-
-            element_type = element.get_type()
-            if not getattr(element_type, "is_collection_element", False):
-                raise DataSourceImproperlyConfigured(
-                    "A data source can only dispatched with an element if it is "
-                    "a collection element."
-                )
+        serializer = DispatchDataSourceRequestSerializer(
+            data=request.data, context={"data_source": data_source}
+        )
+        serializer.is_valid(raise_exception=True)
 
         # An `element` will be provided if we're dispatching a collection
         # element's data source with adhoc refinements.
+        element = serializer.validated_data.get("data_source").get("element")
+
         dispatch_context = BuilderDispatchContext(
             request,
             data_source.page,

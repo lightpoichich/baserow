@@ -53,7 +53,12 @@ class BuilderDispatchContext(DispatchContext):
     def data_provider_registry(self):
         return builder_data_provider_type_registry
 
-    def get_cache_key(self):
+    def get_cache_key(self) -> str:
+        """
+        Returns a cache key that can be used to key the results of making the
+        expensive function call to get_formula_field_names().
+        """
+
         if self.request.user.is_anonymous:
             role = "anonymous"
         else:

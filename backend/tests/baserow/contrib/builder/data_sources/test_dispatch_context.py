@@ -239,3 +239,50 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
     with django_assert_num_queries(0):
         result = dispatch_context.public_formula_fields
         assert result == expected_results
+
+
+@pytest.mark.parametrize(
+    "is_anonymous,user_role,expected_cache_key",
+    [
+        (
+            True,
+            "",
+            "100_anonymous",
+        ),
+        (
+            True,
+            "foo_role",
+            "100_anonymous",
+        ),
+        (
+            False,
+            "foo_role",
+            "100_foo_role",
+        ),
+        (
+            False,
+            "bar_role",
+            "100_bar_role",
+        ),
+    ]
+)
+def test_builder_dispatch_context_get_cache_key(is_anonymous, user_role, expected_cache_key):
+    """
+    Test the BuilderDispatchContext::get_cache_key() method.
+    """
+
+    mock_request = MagicMock()
+    mock_request.user.is_anonymous = is_anonymous
+    mock_request.user.role = user_role
+
+    mock_page = MagicMock()
+    mock_page.builder.id = 100
+
+    dispatch_context = BuilderDispatchContext(
+        mock_request,
+        mock_page,
+    )
+    
+    cache_key = dispatch_context.get_cache_key()
+
+    assert cache_key == expected_cache_key

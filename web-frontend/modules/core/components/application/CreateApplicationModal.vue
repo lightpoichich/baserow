@@ -121,7 +121,6 @@ export default {
       }
     },
     handleSubmit() {
-      this.loading = true
       this.$refs.applicationForm.submit()
     },
     handleJobDone(event) {

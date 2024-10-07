@@ -38,7 +38,6 @@
 <script>
 import { mapGetters } from 'vuex'
 
-import form from '@baserow/modules/core/mixins/form'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
@@ -46,7 +45,7 @@ import AirtableService from '@baserow/modules/database/services/airtable'
 
 export default {
   name: 'ImportFromAirtable',
-  mixins: [error, jobProgress, form],
+  mixins: [error, jobProgress],
   data() {
     return {
       loading: false,
@@ -75,30 +74,33 @@ export default {
   },
   methods: {
     async submit() {
-      this.$emit('submit')
-      if (this.loading) {
-        return
-      }
+      this.$v.$touch()
+      if (!this.$v.$invalid) {
+        this.$emit('submit')
+        if (this.loading) {
+          return
+        }
 
-      this.loading = true
-      this.hideError()
+        this.loading = true
+        this.hideError()
 
-      try {
-        const { data } = await AirtableService(this.$client).create(
-          this.selectedWorkspaceId,
-          this.values.airtableUrl
-        )
-        this.startJobPoller(data)
-      } catch (error) {
-        this.$emit('job-failed', {
-          state: this.jobHumanReadableState,
-        })
-        this.stopPollAndHandleError(error, {
-          ERROR_MAX_JOB_COUNT_EXCEEDED: new ResponseErrorMessage(
-            this.$t('importFromAirtable.errorJobAlreadyRunningTitle'),
-            this.$t('importFromAirtable.errorJobAlreadyRunningDescription')
-          ),
-        })
+        try {
+          const { data } = await AirtableService(this.$client).create(
+            this.selectedWorkspaceId,
+            this.values.airtableUrl
+          )
+          this.startJobPoller(data)
+        } catch (error) {
+          this.$emit('job-failed', {
+            state: this.jobHumanReadableState,
+          })
+          this.stopPollAndHandleError(error, {
+            ERROR_MAX_JOB_COUNT_EXCEEDED: new ResponseErrorMessage(
+              this.$t('importFromAirtable.errorJobAlreadyRunningTitle'),
+              this.$t('importFromAirtable.errorJobAlreadyRunningDescription')
+            ),
+          })
+        }
       }
     },
     stopPollAndHandleError(error, specificErrorMap = null) {

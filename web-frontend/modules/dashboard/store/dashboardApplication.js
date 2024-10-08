@@ -1,5 +1,3 @@
-// TODO: where to clean the edit mode state?
-
 export const state = () => ({
   editMode: false,
 })

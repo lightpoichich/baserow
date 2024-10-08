@@ -9,6 +9,7 @@
   border: 1px solid $palette-neutral-200;
   max-width: 100%;
   box-sizing: border-box;
+  line-height: 16px;
 
   @include rounded($rounded-2xl);
 }

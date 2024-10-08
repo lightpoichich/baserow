@@ -21,7 +21,9 @@ from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.test_utils.helpers import AnyInt, AnyStr
-from tests.baserow.contrib.builder.api.user_sources.helpers import create_user_table_and_role
+from tests.baserow.contrib.builder.api.user_sources.helpers import (
+    create_user_table_and_role,
+)
 
 
 @pytest.fixture
@@ -676,7 +678,7 @@ def test_public_dispatch_data_source_view_returns_all_fields(
         "api:builder:domains:public_dispatch",
         kwargs={"data_source_id": data_source.id},
     )
-    user_token = user_source_user_fixture['user_source_user_token']
+    user_token = user_source_user_fixture["user_source_user_token"]
 
     response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {user_token}")
 
@@ -746,7 +748,7 @@ def test_public_dispatch_data_source_view_returns_some_fields(
         "api:builder:domains:public_dispatch",
         kwargs={"data_source_id": data_source.id},
     )
-    user_token = user_source_user_fixture['user_source_user_token']
+    user_token = user_source_user_fixture["user_source_user_token"]
     response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {user_token}")
 
     assert response.status_code == 200
@@ -781,7 +783,7 @@ def test_public_dispatch_data_sources_get_row_no_elements(
     If the page has zero elements, the API response should not contain any
     field specific data.
     """
-    
+
     user = user_source_user_fixture["user"]
     table, fields, rows = data_fixture.build_table(
         user=user,
@@ -814,7 +816,7 @@ def test_public_dispatch_data_sources_get_row_no_elements(
         "api:builder:domains:public_dispatch_all",
         kwargs={"page_id": page.id},
     )
-    user_token = user_source_user_fixture['user_source_user_token']
+    user_token = user_source_user_fixture["user_source_user_token"]
 
     response = api_client.post(
         url,
@@ -870,7 +872,7 @@ def test_public_dispatch_data_sources_list_rows_no_elements(
         "api:builder:domains:public_dispatch_all",
         kwargs={"page_id": page.id},
     )
-    user_token = user_source_user_fixture['user_source_user_token']
+    user_token = user_source_user_fixture["user_source_user_token"]
 
     response = api_client.post(
         url,

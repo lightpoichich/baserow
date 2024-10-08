@@ -5,12 +5,14 @@ from django.http import HttpRequest
 import pytest
 from rest_framework.request import Request
 
-from tests.baserow.contrib.builder.api.user_sources.helpers import create_user_table_and_role
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
 from baserow.core.user_sources.user_source_user import UserSourceUser
+from tests.baserow.contrib.builder.api.user_sources.helpers import (
+    create_user_table_and_role,
+)
 
 
 def test_dispatch_context_page_range():
@@ -222,7 +224,7 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
         page=page,
         value=f"get('data_source.{data_source.id}.0.field_{fields[0].id}')",
     )
-    
+
     request = Request(HttpRequest())
     request.user = user_source_user
 
@@ -233,13 +235,9 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
     )
 
     expected_results = {
-        "all": {
-            data_source.service.id: [f"field_{fields[0].id}"]
-        },
-        'external': {
-            data_source.service.id: [f"field_{fields[0].id}"]
-        },
-        'internal': {},
+        "all": {data_source.service.id: [f"field_{fields[0].id}"]},
+        "external": {data_source.service.id: [f"field_{fields[0].id}"]},
+        "internal": {},
     }
 
     # Initially calling the property should cause a bunch of DB queries.
@@ -276,9 +274,11 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
             "bar_role",
             "100_bar_role",
         ),
-    ]
+    ],
 )
-def test_builder_dispatch_context_get_cache_key(is_anonymous, user_role, expected_cache_key):
+def test_builder_dispatch_context_get_cache_key(
+    is_anonymous, user_role, expected_cache_key
+):
     """
     Test the BuilderDispatchContext::get_cache_key() method.
     """
@@ -294,7 +294,7 @@ def test_builder_dispatch_context_get_cache_key(is_anonymous, user_role, expecte
         mock_request,
         mock_page,
     )
-    
+
     cache_key = dispatch_context.get_cache_key()
 
     assert cache_key == expected_cache_key

@@ -63,7 +63,7 @@ class BuilderDispatchContext(DispatchContext):
             role = "anonymous"
         else:
             role = self.request.user.role
-        
+
         return f"{self.page.id}_{role}"
 
     @cached_property

@@ -14,9 +14,11 @@ from rest_framework.status import (
 
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.core.services.models import Service
-from baserow.test_utils.helpers import AnyInt, AnyStr
-from tests.baserow.contrib.builder.api.user_sources.helpers import create_user_table_and_role
 from baserow.core.user_sources.user_source_user import UserSourceUser
+from baserow.test_utils.helpers import AnyInt, AnyStr
+from tests.baserow.contrib.builder.api.user_sources.helpers import (
+    create_user_table_and_role,
+)
 
 
 @pytest.fixture
@@ -1190,7 +1192,9 @@ def test_dispatch_data_sources_list_rows_with_elements(
 
     data_source_fixture["page"].builder.workspace = None
     data_source_fixture["page"].builder.save()
-    data_fixture.create_builder_custom_domain(published_to=data_source_fixture["page"].builder)
+    data_fixture.create_builder_custom_domain(
+        published_to=data_source_fixture["page"].builder
+    )
 
     url = reverse(
         "api:builder:domains:public_dispatch_all",
@@ -1275,7 +1279,9 @@ def test_dispatch_data_sources_get_row_with_elements(
 
     data_source_fixture["page"].builder.workspace = None
     data_source_fixture["page"].builder.save()
-    data_fixture.create_builder_custom_domain(published_to=data_source_fixture["page"].builder)
+    data_fixture.create_builder_custom_domain(
+        published_to=data_source_fixture["page"].builder
+    )
 
     url = reverse(
         "api:builder:domains:public_dispatch_all",
@@ -1381,7 +1387,9 @@ def test_dispatch_data_sources_get_and_list_rows_with_elements(
 
     data_source_fixture["page"].builder.workspace = None
     data_source_fixture["page"].builder.save()
-    data_fixture.create_builder_custom_domain(published_to=data_source_fixture["page"].builder)
+    data_fixture.create_builder_custom_domain(
+        published_to=data_source_fixture["page"].builder
+    )
 
     url = reverse(
         "api:builder:domains:public_dispatch_all",

@@ -20,9 +20,11 @@ from baserow.contrib.integrations.local_baserow.models import (
 )
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.services.registries import service_type_registry
-from baserow.test_utils.helpers import AnyStr
-from tests.baserow.contrib.builder.api.user_sources.helpers import create_user_table_and_role
 from baserow.core.user_sources.user_source_user import UserSourceUser
+from baserow.test_utils.helpers import AnyStr
+from tests.baserow.contrib.builder.api.user_sources.helpers import (
+    create_user_table_and_role,
+)
 
 
 @pytest.mark.django_db

@@ -20,7 +20,6 @@ from baserow.contrib.builder.elements.models import Element
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.user_sources.user_source_user import UserSourceUser
-from baserow.test_utils.helpers import AnyInt, AnyStr
 from tests.baserow.contrib.builder.api.user_sources.helpers import (
     create_user_table_and_role,
 )
@@ -689,14 +688,10 @@ def test_public_dispatch_data_source_view_returns_all_fields(
             {
                 f"field_{fields[0].id}": "Paneer Tikka",
                 f"field_{fields[1].id}": "5",
-                "id": AnyInt(),
-                "order": AnyStr(),
             },
             {
                 f"field_{fields[0].id}": "Gobi Manchurian",
                 f"field_{fields[1].id}": "8",
-                "id": AnyInt(),
-                "order": AnyStr(),
             },
         ],
     }
@@ -760,13 +755,9 @@ def test_public_dispatch_data_source_view_returns_some_fields(
         "results": [
             {
                 f"field_{fields[0].id}": "Paneer Tikka",
-                "id": AnyInt(),
-                "order": AnyStr(),
             },
             {
                 f"field_{fields[0].id}": "Gobi Manchurian",
-                "id": AnyInt(),
-                "order": AnyStr(),
             },
         ],
     }
@@ -799,7 +790,7 @@ def test_public_dispatch_data_sources_get_row_no_elements(
     )
 
     page = user_source_user_fixture["page"]
-    data_fixture.create_builder_local_baserow_get_row_data_source(
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
         integration=user_source_user_fixture["integration"],
@@ -826,7 +817,7 @@ def test_public_dispatch_data_sources_get_row_no_elements(
     )
 
     assert response.status_code == HTTP_200_OK
-    assert response.json() == {}
+    assert response.json() == {str(data_source.id): {}}
 
 
 @pytest.mark.django_db
@@ -856,7 +847,7 @@ def test_public_dispatch_data_sources_list_rows_no_elements(
     )
 
     page = user_source_user_fixture["page"]
-    data_fixture.create_builder_local_baserow_list_rows_data_source(
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
         user=user,
         page=page,
         integration=user_source_user_fixture["integration"],
@@ -882,7 +873,9 @@ def test_public_dispatch_data_sources_list_rows_no_elements(
     )
 
     assert response.status_code == HTTP_200_OK
-    assert response.json() == {}
+    assert response.json() == {
+        str(data_source.id): {"has_next_page": False, "results": []}
+    }
 
 
 @pytest.mark.django_db
@@ -970,10 +963,7 @@ def test_public_dispatch_data_sources_list_rows_with_elements_and_role(
 
     expected_results = []
     for row in data_source_element_roles_fixture["rows"]:
-        result = {
-            "id": row.id,
-            "order": str(row.order),
-        }
+        result = {}
         if expect_fields:
             # Field should only be visible if the user's role allows them
             # to see the data source fields.
@@ -991,4 +981,9 @@ def test_public_dispatch_data_sources_list_rows_with_elements_and_role(
             },
         }
     else:
-        assert response.json() == {}
+        assert response.json() == {
+            str(data_source.id): {
+                "has_next_page": False,
+                "results": [],
+            },
+        }

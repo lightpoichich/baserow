@@ -868,4 +868,159 @@ def test_formula_property_visitor_visit_function_call_handles_formula_error(
     mock_data_provider_type.extract_properties.assert_called_once_with(["field_999"])
 
 
-# TODO add one test with all types
+@pytest.mark.django_db
+def test_get_builder_used_property_names_returns_merged_property_names_integration(
+    data_fixture,
+):
+    """
+    Test the get_builder_used_property_names() function.
+
+    Integration tests that ensure that formulas are extracted correctly from
+    multiple element/wa/DS at the same time.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Spiciness", "number"),
+            ("Color", "text"),
+        ],
+        rows=[
+            ["Paneer Tikka", 5, "Grey"],
+            ["Gobi Manchurian", 8, "Yellow"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    shared_page = builder.page_set.get(shared=True)
+    page = data_fixture.create_builder_page(builder=builder)
+    page2 = data_fixture.create_builder_page(builder=builder)
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    data_source_2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        table=table,
+    )
+    data_source_3 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=shared_page,
+        table=table,
+    )
+    data_source_4 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page2,
+        table=table,
+    )
+    # Data source using another one
+    # Also unused data source
+    data_source_5 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page,
+        integration=integration,
+        table=table,
+        row_id=f"get('data_source.{data_source.id}.field_{fields[2].id}')",
+    )
+
+    data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {"value": f"get('current_record.field_{fields[0].id}')"},
+            },
+        ],
+    )
+
+    heading_element_1 = data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source.id}.field_{fields[0].id}')",
+    )
+    heading_element_2 = data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source_3.id}.0.field_{fields[1].id}')",
+    )
+    heading_element_3 = data_fixture.create_builder_heading_element(
+        page=page2,
+        value=f"get('data_source.{data_source_2.id}.0.field_{fields[2].id}')",
+    )
+    heading_element_4 = data_fixture.create_builder_heading_element(
+        page=page2,
+        value=f"get('data_source.{data_source_4.id}.0.field_{fields[2].id}')",
+    )
+
+    button_element_1 = data_fixture.create_builder_button_element(page=page)
+    button_element_2 = data_fixture.create_builder_button_element(page=page2)
+
+    workflow_action1 = data_fixture.create_notification_workflow_action(
+        page=page,
+        element=button_element_1,
+        event=EventTypes.CLICK,
+        description=f"get('data_source.{data_source_3.id}.0.field_{fields[0].id}')",
+        title=f"get('data_source.{data_source.id}.field_{fields[0].id}')",
+    )
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        integration=integration,
+    )
+    service.field_mappings.create(
+        field=fields[2],
+        value=f"get('data_source.{data_source_4.id}.0.field_{fields[0].id}')",
+    )
+    service.field_mappings.create(
+        field=fields[1],
+        value=f"get('data_source.{data_source_3.id}.0.field_{fields[2].id}')",
+    )
+    workflow_action2 = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, service=service, element=button_element_2, event=EventTypes.CLICK
+    )
+
+    results = get_builder_used_property_names(user, builder)
+
+    assert results == {
+        "all": {
+            data_source.service_id: [
+                f"field_{fields[0].id}",
+                f"field_{fields[2].id}",
+            ],
+            data_source_2.service_id: [f"field_{fields[2].id}"],
+            data_source_3.service_id: [
+                f"field_{fields[0].id}",
+                f"field_{fields[1].id}",
+                f"field_{fields[2].id}",
+            ],
+            data_source_4.service_id: [
+                f"field_{fields[0].id}",
+                f"field_{fields[2].id}",
+            ],
+        },
+        "external": {
+            data_source.service_id: [
+                f"field_{fields[0].id}",  # From heading_element_1
+            ],
+            data_source_2.service_id: [f"field_{fields[2].id}"],  # From heading_elmt_3
+            data_source_3.service_id: [
+                f"field_{fields[0].id}",  # From workflow_action_1
+                f"field_{fields[1].id}",  # From heading_element_2
+            ],
+            data_source_4.service_id: [
+                f"field_{fields[2].id}",  # From heading_element_4
+            ],
+        },
+        "internal": {
+            data_source.service_id: [f"field_{fields[2].id}"],  # From data_source_1
+            data_source_3.service_id: [f"field_{fields[2].id}"],  # From workflow_act_2
+            data_source_4.service_id: [f"field_{fields[0].id}"],  # From workflow_act_2
+        },
+    }

@@ -59,19 +59,6 @@ class PageHandler:
         except Page.DoesNotExist:
             raise PageDoesNotExist()
 
-    def get_pages(
-        self, builder: Builder, base_queryset: Optional[QuerySet] = None
-    ) -> QuerySet[Page]:
-        """
-        Returns builder pages.
-        """
-
-        queryset = base_queryset if base_queryset is not None else Page.objects.all()
-
-        queryset.select_related("builder__workspace")
-
-        return queryset.filter(builder=builder)
-
     def get_shared_page(self, builder: Builder) -> Page:
         return Page.objects.select_related("builder", "builder__workspace").get(
             builder=builder, shared=True

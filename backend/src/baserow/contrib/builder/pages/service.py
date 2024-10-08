@@ -52,16 +52,6 @@ class PageService:
 
         return page
 
-    def get_pages(self, user: AbstractUser, builder: Builder):
-        builder_pages = CoreHandler().filter_queryset(
-            user,
-            ListPagesBuilderOperationType.type,
-            Page.objects.all(),
-            workspace=builder.workspace,
-        )
-
-        return self.handler.get_pages(builder, base_queryset=builder_pages)
-
     def create_page(
         self,
         user: AbstractUser,

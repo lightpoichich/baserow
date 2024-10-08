@@ -5,7 +5,7 @@
       :label="$t('dataSourceDropdown.label')"
       small-label
       required
-      class="margin-bottom-4"
+      class="margin-bottom-2"
     >
       <DataSourceDropdown
         v-model="values.data_source_id"

@@ -9,7 +9,7 @@
       <Dropdown
         v-model="values.ai_generative_ai_type"
         class="dropdown--floating"
-        :error="$v.values.ai_generative_ai_model.$error"
+        :error="$v.values.ai_generative_ai_type.$errors"
         :fixed-items="true"
         :show-search="false"
         @hide="$v.values.ai_generative_ai_type.$touch()"

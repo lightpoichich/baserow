@@ -9,7 +9,7 @@
         v-model="databaseSelectedId"
         :show-search="false"
         fixed-items
-        :small="smallDropdowns"
+        :size="dropdownSize"
       >
         <DropdownItem
           v-for="database in databases"
@@ -32,7 +32,7 @@
         :show-search="false"
         :disabled="databaseSelectedId === null"
         fixed-items
-        :small="smallDropdowns"
+        :size="dropdownSize"
         @input="$emit('input', $event)"
       >
         <DropdownItem
@@ -99,13 +99,13 @@ export default {
       type: Boolean,
       default: true,
     },
-    dropdownSizes: {
+    dropdownSize: {
       type: String,
       required: false,
       validator: function (value) {
-        return ['small', 'large'].includes(value)
+        return ['regular', 'large'].includes(value)
       },
-      default: 'small',
+      default: 'regular',
     },
   },
   data() {

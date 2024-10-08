@@ -34,7 +34,7 @@ def test_dispatch_context_page_range():
 
 @pytest.mark.django_db
 @patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_builder_used_property_names"
 )
 def test_dispatch_context_page_from_context(mock_get_field_names, data_fixture):
     mock_get_field_names.return_value = {"all": {}, "external": {}, "internal": {}}
@@ -108,14 +108,14 @@ def test_dispatch_context_sortings():
     ),
 )
 @patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_builder_used_property_names"
 )
 @patch(
     "baserow.contrib.builder.data_sources.builder_dispatch_context.feature_flag_is_enabled"
 )
 def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     mock_feature_flag_is_enabled,
-    mock_get_formula_field_names,
+    mock_get_builder_used_property_names,
     feature_flag_is_set,
     only_expose_public_formula_fields,
 ):
@@ -129,10 +129,11 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     mock_feature_flag_is_enabled.return_value = True if feature_flag_is_set else False
 
     mock_field_names = MagicMock()
-    mock_get_formula_field_names.return_value = mock_field_names
+    mock_get_builder_used_property_names.return_value = mock_field_names
 
     mock_request = MagicMock()
     mock_page = MagicMock()
+    mock_page.builder = MagicMock()
 
     dispatch_context = BuilderDispatchContext(
         mock_request,
@@ -142,12 +143,12 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
 
     if feature_flag_is_set and only_expose_public_formula_fields:
         assert dispatch_context.public_formula_fields == mock_field_names
-        mock_get_formula_field_names.assert_called_once_with(
-            mock_request.user, mock_page
+        mock_get_builder_used_property_names.assert_called_once_with(
+            mock_request.user, mock_page.builder
         )
         mock_feature_flag_is_enabled.assert_called_once_with(
             FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         )
     else:
         assert dispatch_context.public_formula_fields is None
-        mock_get_formula_field_names.assert_not_called()
+        mock_get_builder_used_property_names.assert_not_called()

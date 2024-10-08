@@ -6,7 +6,9 @@ from django.http import HttpRequest
 from baserow.contrib.builder.data_providers.registries import (
     builder_data_provider_type_registry,
 )
-from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
+from baserow.contrib.builder.formula_property_extractor import (
+    get_builder_used_property_names,
+)
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.feature_flags import feature_flag_is_enabled
 from baserow.core.services.dispatch_context import DispatchContext
@@ -72,7 +74,7 @@ class BuilderDispatchContext(DispatchContext):
         if self.only_expose_public_formula_fields and feature_flag_is_enabled(
             FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         ):
-            return get_formula_field_names(self.request.user, self.page)
+            return get_builder_used_property_names(self.request.user, self.page.builder)
 
         return None
 

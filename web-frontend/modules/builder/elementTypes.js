@@ -518,7 +518,10 @@ const ContainerElementTypeMixin = (Base) =>
      * @returns {Array} An array of forbidden child element types.
      */
     childElementTypesForbidden(page, element) {
-      return []
+      if (page.shared) {
+        return []
+      }
+      return this.elementTypesAll.filter((type) => type.onSharedPage)
     }
 
     /**
@@ -643,9 +646,12 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
    * @returns {Array} An array containing the `FormContainerElementType`.
    */
   childElementTypesForbidden(page, element) {
-    return this.elementTypesAll.filter(
-      (elementType) => elementType.type === this.getType()
-    )
+    return [
+      ...super.childElementTypesForbidden(page, element),
+      ...this.elementTypesAll.filter(
+        (elementType) => elementType.type === this.getType()
+      ),
+    ]
   }
 
   get childStylesForbidden() {
@@ -707,9 +713,12 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
    * @returns {Array} An array containing the `ColumnElementType`.
    */
   childElementTypesForbidden(page, element) {
-    return this.elementTypesAll.filter(
-      (elementType) => elementType.type === this.getType()
-    )
+    return [
+      ...super.childElementTypesForbidden(page, element),
+      ...this.elementTypesAll.filter(
+        (elementType) => elementType.type === this.getType()
+      ),
+    ]
   }
 
   get childStylesForbidden() {
@@ -1845,17 +1854,17 @@ export class MultiPageContainerElementType extends ContainerElementTypeMixin(
     }
   }
 
-  /**
-   * Only disallow same type elements nested elements.
-   */
-  childElementTypesForbidden(page, element) {
-    return this.elementTypesAll.filter(
-      (elementType) => elementType.type === this.getType()
-    )
-  }
-
   get childStylesForbidden() {
     return ['style_width']
+  }
+
+  childElementTypesForbidden(page, element) {
+    return [
+      ...super.childElementTypesForbidden(page, element),
+      ...this.elementTypesAll.filter(
+        (elementType) => elementType.type === this.getType()
+      ),
+    ]
   }
 
   getDefaultValues(page, values) {

@@ -213,7 +213,6 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
         super().after_update(instance, values)
 
         if "pages" in values:
-            print("pages", values["pages"])
             instance.pages.clear()
             instance.pages.add(*values["pages"])
 
@@ -275,8 +274,7 @@ class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
             "page_position": "header",
-            "share_type": "all_pages",
-            "pages": [],
+            "share_type": "all",
         }
 
     @property

@@ -615,7 +615,7 @@ def test_remove_unused_field_names(row, field_names, updated_row):
     Test the remove_unused_field_names() method.
 
     Given a dispatched row, it should a modified version of the row.
-     
+
     The method should only return the row contents if its key exists in the
     field_names list.
     """

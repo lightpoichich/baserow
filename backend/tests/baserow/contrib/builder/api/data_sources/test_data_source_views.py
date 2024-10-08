@@ -768,7 +768,8 @@ def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json() == {
         "error": "ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN",
-        "detail": f"Data source refinement error: {private_field.db_column} is not a filterable field.",
+        "detail": "Data source filter, search and/or sort fields error: "
+        f"{private_field.db_column} is not a filterable field.",
     }
 
 
@@ -870,7 +871,8 @@ def test_dispatch_data_source_with_adhoc_sortings(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json() == {
         "error": "ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN",
-        "detail": f"Data source refinement error: {private_field.db_column} is not a sortable field.",
+        "detail": "Data source filter, search and/or sort fields error: "
+        f"{private_field.db_column} is not a sortable field.",
     }
 
 

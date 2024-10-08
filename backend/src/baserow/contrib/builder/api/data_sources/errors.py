@@ -34,5 +34,5 @@ ERROR_DATA_SOURCE_CANNOT_USE_SERVICE_TYPE = (
 ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN = (
     "ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN",
     HTTP_400_BAD_REQUEST,
-    "Data source refinement error: {e}",
+    "Data source filter, search and/or sort fields error: {e}",
 )

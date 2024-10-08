@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from django.contrib.auth.models import AbstractUser
 from django.utils import translation
@@ -33,6 +33,9 @@ from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
 from baserow.core.services.registries import DispatchTypes, ServiceType
 from baserow.core.types import PermissionCheck
+
+if TYPE_CHECKING:
+    from baserow.contrib.builder.models import Builder
 
 
 class DataSourceService:
@@ -79,11 +82,33 @@ class DataSourceService:
         user_data_sources = CoreHandler().filter_queryset(
             user,
             ListDataSourcesPageOperationType.type,
-            DataSource.objects.filter(page=page),
+            DataSource.objects.all(),
             workspace=page.builder.workspace,
         )
 
         return self.handler.get_data_sources(page, base_queryset=user_data_sources)
+
+    def get_builder_data_sources(
+        self, user: AbstractUser, builder: "Builder"
+    ) -> List[DataSource]:
+        """
+        Gets all the data_sources of a given builder visible to the given user.
+
+        :param user: The user trying to get the data_sources.
+        :param page: The builder that holds the data_sources.
+        :return: The data_sources of that builder.
+        """
+
+        user_data_sources = CoreHandler().filter_queryset(
+            user,
+            ListDataSourcesPageOperationType.type,
+            DataSource.objects.all(),
+            workspace=builder.workspace,
+        )
+
+        return self.handler.get_builder_data_sources(
+            builder, base_queryset=user_data_sources
+        )
 
     def create_data_source(
         self,

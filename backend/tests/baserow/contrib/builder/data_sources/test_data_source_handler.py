@@ -494,13 +494,14 @@ def test_recalculate_full_orders(data_fixture):
 
 @pytest.mark.django_db
 @patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_builder_used_property_names"
 )
 def test_dispatch_data_source_returns_formula_field_names(
-    mock_get_formula_field_names, data_fixture, api_request_factory
+    mock_get_builder_used_property_names, data_fixture, api_request_factory
 ):
     """
-    Integration test to ensure get_formula_field_names() is called without errors.
+    Integration test to ensure get_builder_used_property_names() is called without
+    errors.
     """
 
     user, token = data_fixture.create_user_and_token()
@@ -574,7 +575,7 @@ def test_dispatch_data_source_returns_formula_field_names(
     fake_request.user = user_source_user
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
-    mock_get_formula_field_names.return_value = {
+    mock_get_builder_used_property_names.return_value = {
         "external": {data_source.service.id: [f"field_{field.id}" for field in fields]}
     }
 

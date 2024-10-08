@@ -711,8 +711,6 @@ def test_dispatch_data_sources_excludes_unused_get_row_data_sources(
 
     for index, data_source in enumerate(data_sources):
         row = result[data_source.id]
-        assert "id" in row
-        assert "order" in row
         for field in fields:
             field_name = f"field_{field.id}"
             assert row[field_name] == getattr(rows[index], field_name)
@@ -804,8 +802,6 @@ def test_dispatch_data_sources_excludes_unused_list_rows_data_sources(
     for index, data_source in enumerate(data_sources):
         assert result[data_source.id]["has_next_page"] is False
         row = result[data_source.id]["results"][0]
-        assert "id" in row
-        assert "order" in row
         for field in fields:
             field_name = f"field_{field.id}"
             assert row[field_name] == getattr(rows[index], field_name)

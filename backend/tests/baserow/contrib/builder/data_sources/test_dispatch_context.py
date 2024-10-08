@@ -288,7 +288,7 @@ def test_builder_dispatch_context_get_cache_key(is_anonymous, user_role, expecte
     mock_request.user.role = user_role
 
     mock_page = MagicMock()
-    mock_page.builder.id = 100
+    mock_page.id = 100
 
     dispatch_context = BuilderDispatchContext(
         mock_request,

@@ -82,7 +82,8 @@ def test_dispatch_context_searchable_fields(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     dispatch_context = BuilderDispatchContext(HttpRequest(), page)
-    assert dispatch_context.searchable_fields() == []
+    with pytest.raises(DataSourceRefinementForbidden):
+        dispatch_context.searchable_fields()
     element = data_fixture.create_builder_table_element(page=page)
     element.property_options.create(schema_property="name", searchable=True)
     element.property_options.create(schema_property="location", searchable=True)
@@ -220,9 +221,7 @@ def test_validate_filter_search_sort_fields(data_fixture, property_option_params
 
 
 @pytest.mark.django_db
-def test_validate_filter_search_sort_fields_caching(
-    data_fixture, django_assert_num_queries
-):
+def test_get_element_property_options(data_fixture, django_assert_num_queries):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     element = data_fixture.create_builder_table_element(page=page)
@@ -230,18 +229,14 @@ def test_validate_filter_search_sort_fields_caching(
         schema_property="name", filterable=True, sortable=False, searchable=False
     )
     dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
-
+    assert dispatch_context.cache == {}
     with django_assert_num_queries(1):
-        dispatch_context.validate_filter_search_sort_fields(
-            ["name"], ServiceAdhocRefinements.FILTER
-        )
-    assert dispatch_context.cache["element_property_options"][element.id] == {
+        dispatch_context.get_element_property_options()
+    assert dispatch_context.cache["element_property_options"] == {
         "name": {"filterable": True, "sortable": False, "searchable": False}
     }
     with django_assert_num_queries(0):
-        dispatch_context.validate_filter_search_sort_fields(
-            ["name"], ServiceAdhocRefinements.FILTER
-        )
+        dispatch_context.get_element_property_options()
 
 
 def test_validate_filter_search_sort_fields_without_element():
@@ -250,4 +245,7 @@ def test_validate_filter_search_sort_fields_without_element():
         dispatch_context.validate_filter_search_sort_fields(
             ["name"], ServiceAdhocRefinements.FILTER
         )
-    assert exc.value.args[0] == "An element is required to validate adhoc refinements."
+    assert (
+        exc.value.args[0]
+        == "An element is required to validate filter, search and sort fields."
+    )

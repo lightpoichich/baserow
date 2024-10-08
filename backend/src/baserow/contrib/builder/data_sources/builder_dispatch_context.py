@@ -85,6 +85,30 @@ class BuilderDispatchContext(DispatchContext):
             max(1, count),
         ]
 
+    def get_element_property_options(self) -> Dict[str, Dict[str, bool]]:
+        """
+        Responsible for returning the property options for the element.
+        The property options are cached if they haven't already been, so
+        that they can be re-used by other methods.
+        """
+
+        if not self.element:
+            raise DataSourceRefinementForbidden(
+                "An element is required to validate filter, search and sort fields."
+            )
+
+        if "element_property_options" not in self.cache:
+            self.cache["element_property_options"] = {
+                po.schema_property: {
+                    "filterable": po.filterable,
+                    "sortable": po.sortable,
+                    "searchable": po.searchable,
+                }
+                for po in self.element.property_options.all()
+            }
+
+        return self.cache["element_property_options"]
+
     def search_query(self) -> Optional[str]:
         """
         In a `BuilderDispatchContext`, we will use the HTTP request
@@ -99,16 +123,17 @@ class BuilderDispatchContext(DispatchContext):
         """
         In a `BuilderDispatchContext`, we will use the `element` to
         determine which fields are searchable, by checking the `property_options`.
+
+        :raises: DataSourceRefinementForbidden: If `self.element` is `None`.
+        :return: A list of searchable fields.
         """
 
-        if not self.element:
-            return []
-
-        return list(
-            self.element.property_options.filter(searchable=True).values_list(
-                "schema_property", flat=True
-            )
-        )
+        property_options = self.get_element_property_options()
+        return [
+            schema_property
+            for schema_property, options in property_options.items()
+            if options["searchable"]
+        ]
 
     def filters(self) -> Optional[str]:
         """
@@ -146,42 +171,27 @@ class BuilderDispatchContext(DispatchContext):
             refinement.
         """
 
-        if not self.element:
-            raise DataSourceRefinementForbidden(
-                "An element is required to validate adhoc refinements."
-            )
-
-        if self.element.id not in self.cache.setdefault("element_property_options", {}):
-            property_options = {
-                po.schema_property: {
-                    "filterable": po.filterable,
-                    "sortable": po.sortable,
-                    "searchable": po.searchable,
-                }
-                for po in self.element.property_options.all()
-            }
-            self.cache["element_property_options"][self.element.id] = property_options
-
-        # All property options for the given element, set by the page designer.
-        element_property_options = self.cache["element_property_options"][
-            self.element.id
-        ]
+        # Get the property options for the element.
+        property_options = self.get_element_property_options()
 
         # The filterable/sortable/searchable options for the given fields.
-        property_options = {
-            schema_property: element_property_options.get(
+        # If a `field` has been provided that doesn't exist in the property options
+        # table, it means it hasn't been configured by the page designer, so all
+        # three refinement options are disabled.
+        field_property_options = {
+            schema_property: property_options.get(
                 schema_property,
                 {"filterable": False, "sortable": False, "searchable": False},
             )
             for schema_property in fields
         }
 
-        for schema_property, options in property_options.items():
+        for field_property, field_options in field_property_options.items():
             # If the property is not allowed for the given refinement, raise an error.
             model_field = ServiceAdhocRefinements.to_model_field(refinement)
-            if not options[model_field]:
+            if not field_options[model_field]:
                 raise DataSourceRefinementForbidden(
-                    f"{schema_property} is not a {model_field} field."
+                    f"{field_property} is not a {model_field} field."
                 )
 
     @cached_property

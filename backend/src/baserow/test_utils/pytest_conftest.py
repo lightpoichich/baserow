@@ -1,6 +1,10 @@
 import asyncio
 import contextlib
 import os
+import sys
+import threading
+from contextlib import contextmanager
+from functools import partial
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import patch
@@ -14,6 +18,7 @@ from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
+from loguru import logger
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import PostgresLexer
@@ -27,6 +32,7 @@ from baserow.core.exceptions import PermissionDenied
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.permission_manager import CorePermissionManagerType
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.services.utils import ServiceAdhocRefinements
 from baserow.core.trash.trash_types import WorkspaceTrashableItemType
 from baserow.core.utils import get_value_at_path
 
@@ -744,6 +750,9 @@ class FakeDispatchContext(DispatchContext):
     def search_query(self):
         return None
 
+    def searchable_fields(self):
+        return []
+
     def filters(self):
         return None
 
@@ -768,3 +777,80 @@ class FakeDispatchContext(DispatchContext):
     @property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
         return {}
+
+    def validate_filter_search_sort_fields(
+        self, fields: List[str], refinement: ServiceAdhocRefinements
+    ):
+        pass
+
+
+@pytest.fixture()
+def test_thread():
+    """
+    Run a side thread with an arbitrary function.
+
+    This fixture allows to run a helper thread with an arbitrary function
+    to test concurrent flows, i.e. in-Celery-task state changes.
+
+    This fixture will increase min thread switching granularity for the test to
+    to 0.00001s.
+
+    It's advised to use threading primitives to communicate with the helper thread.
+
+    A callable will be wrapped to log any error ocurred during the execution.
+
+    A Thread object yielded from this fixture has .thread_stopped Event attached to
+    simplify synchronization with the test code. This event is set when a
+    callable finished it's work.
+
+    >>> def test_x(test_thread):
+        evt_start = threading.Event()
+        evt_end = threading.Event()
+        evt_can_end = threading.Event()
+
+        def callable(*args, **kwargs):
+            evt_start.set()
+            assert evt_can_end(timeout=0.01)
+            evt_end.set()
+
+        with test_thread(callable, foo='bar') as t:
+             # pick a moment to start
+             t.start()
+             evt_can_end.set()
+
+             # wait for the callable to finish
+             assert t.thread_stopped.wait(0.1)
+
+        assert evt_start.is_set()
+        assert evt_end.is_set()
+
+    :return:
+    """
+
+    thread_stopped = threading.Event()
+
+    def wrapper(c, *args, **kwargs):
+        try:
+            logger.info(f"running callable {c} with args {args} {kwargs}")
+            return c(*args, **kwargs)
+        except Exception as err:
+            logger.error(f"error when running {c}: {err}", exc_info=True)
+            raise
+        finally:
+            thread_stopped.set()
+
+    @contextmanager
+    def run_callable(callable, *args, **kwargs):
+        t = threading.Thread(target=partial(wrapper, callable, *args, **kwargs))
+        t.thread_stopped = thread_stopped
+        switch_interval = 0.00001
+        orig_switch_interval = sys.getswitchinterval()
+        try:
+            sys.setswitchinterval(switch_interval)
+            yield t
+        finally:
+            while t.is_alive():
+                t.join(0.01)
+            sys.setswitchinterval(orig_switch_interval)
+
+    yield run_callable

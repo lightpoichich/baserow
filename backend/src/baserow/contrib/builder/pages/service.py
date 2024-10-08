@@ -3,10 +3,7 @@ from typing import List, Optional
 from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.builder.models import Builder
-from baserow.contrib.builder.operations import (
-    ListPagesBuilderOperationType,
-    OrderPagesBuilderOperationType,
-)
+from baserow.contrib.builder.operations import OrderPagesBuilderOperationType
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.operations import (
@@ -51,16 +48,6 @@ class PageService:
         )
 
         return page
-
-    def get_pages(self, user: AbstractUser, builder: Builder):
-        builder_pages = CoreHandler().filter_queryset(
-            user,
-            ListPagesBuilderOperationType.type,
-            Page.objects.all(),
-            workspace=builder.workspace,
-        )
-
-        return self.handler.get_pages(builder, base_queryset=builder_pages)
 
     def create_page(
         self,

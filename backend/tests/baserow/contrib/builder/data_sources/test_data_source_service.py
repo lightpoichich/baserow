@@ -554,17 +554,17 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
 
 
 @pytest.mark.parametrize(
-    "row,field_names,expected_bool",
+    "row,field_names,updated_row",
     [
         (
             {"id": 1, "order": "1.000", "field_100": "foo"},
             ["field_100"],
-            True,
+            {"field_100": "foo"},
         ),
         (
             {"id": 1, "order": "1.000", "field_100": "foo"},
             ["field_99", "field_100", "field_101"],
-            True,
+            {"field_100": "foo"},
         ),
         (
             {
@@ -573,21 +573,21 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
                 "field_200": {"id": 500, "value": "Delhi", "color": "dark-blue"},
             },
             ["field_200"],
-            True,
+            {"field_200": {"id": 500, "value": "Delhi", "color": "dark-blue"}},
         ),
-        # Expect False because field_names is empty
+        # Expect an empty dict because field_names is empty
         (
             {"id": 4, "order": "1.000", "field_300": "foo"},
             [],
-            False,
+            {},
         ),
-        # Expect False because field_names doesn't contain "field_400"
+        # Expect an empty dict because field_names doesn't contain "field_400"
         (
             {"id": 3, "order": "1.000", "field_400": "foo"},
             ["field_301"],
-            False,
+            {},
         ),
-        # Expect False because field_names doesn't contain "field_500"
+        # Expect an empty dict because field_names doesn't contain "field_500"
         (
             # Multiple select will appear as a nested dict
             {
@@ -596,9 +596,9 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
                 "field_500": {"id": 501, "value": "Delhi", "color": "dark-blue"},
             },
             [],
-            False,
+            {},
         ),
-        # Expect False because field_names doesn't contain "field_500"
+        # Expect an empty dict because field_names doesn't contain "field_500"
         (
             {
                 "id": 5,
@@ -606,21 +606,22 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
                 "field_500": {"id": 501, "value": "Delhi", "color": "dark-blue"},
             },
             ["field_502"],
-            False,
+            {},
         ),
     ],
 )
-def test_row_has_allowed_field_name(row, field_names, expected_bool):
+def test_remove_unused_field_names(row, field_names, updated_row):
     """
-    Test the row_has_allowed_field_name() method.
+    Test the remove_unused_field_names() method.
 
-    Given a dispatched row, it should return True if the row contains a
-    field name that is in the field_names list. Otherwise, False should be
-    returned to indicate that the row shouldn't be included in the response.
+    Given a dispatched row, it should a modified version of the row.
+     
+    The method should only return the row contents if its key exists in the
+    field_names list.
     """
 
-    result = DataSourceService().row_has_allowed_field_name(row, field_names)
-    assert result is expected_bool
+    result = DataSourceService().remove_unused_field_names(row, field_names)
+    assert result == updated_row
 
 
 @pytest.mark.django_db

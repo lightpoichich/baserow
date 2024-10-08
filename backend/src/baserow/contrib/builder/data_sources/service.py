@@ -248,6 +248,18 @@ class DataSourceService:
 
         return False
 
+    def remove_unused_field_names(
+        self,
+        row: Dict[str, Any],
+        field_names: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Given a row dictionary, return a version of it that only contains keys
+        existing in the field_names list.
+        """
+
+        return {key: value for key, value in row.items() if key in field_names}
+
     def dispatch_data_sources(
         self,
         user,
@@ -276,14 +288,17 @@ class DataSourceService:
 
         results = self.handler.dispatch_data_sources(data_sources, dispatch_context)
 
+        if not results:
+            return results
+
         if dispatch_context.public_formula_fields is None:
             return results
 
-        data_sources_used = set()
-
         # We filter the fields before returning the result
+        new_results = {}
         for data_source in data_sources:
             if isinstance(results[data_source.id], Exception):
+                new_results[data_source.id] = results[data_source.id]
                 continue
 
             field_names = dispatch_context.public_formula_fields.get(
@@ -293,31 +308,32 @@ class DataSourceService:
             # If field_names is empty, that means no fields are allowed so
             # we should skip this data source altogether.
             if not field_names:
+                if data_source.service.get_type().returns_list:
+                    new_results[data_source.id] = {
+                        "results": [],
+                        "has_next_page": False,
+                    }
+                else:
+                    new_results[data_source.id] = {}
+
+                # Since field_names is empty, there is nothing to filter for
+                # this data source.
                 continue
 
             if data_source.service.get_type().returns_list:
-                new_result = []
-                for row in results[data_source.id]["results"]:
-                    if self.row_has_allowed_field_name(row, field_names):
-                        new_result.append(row)
-                        data_sources_used.add(data_source.id)
-
-                results[data_source.id] = {
+                new_results[data_source.id] = {
                     **results[data_source.id],
-                    "results": new_result,
+                    "results": [
+                        self.remove_unused_field_names(row, field_names)
+                        for row in results[data_source.id]["results"]
+                    ],
                 }
             else:
-                if self.row_has_allowed_field_name(
+                new_results[data_source.id] = self.remove_unused_field_names(
                     results[data_source.id], field_names
-                ):
-                    data_sources_used.add(data_source.id)
+                )
 
-        # Only return data sources that are actually used
-        results = {
-            key: value for key, value in results.items() if key in data_sources_used
-        }
-
-        return results
+        return new_results
 
     def dispatch_page_data_sources(
         self,

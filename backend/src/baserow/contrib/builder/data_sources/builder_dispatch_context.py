@@ -13,7 +13,6 @@ from baserow.contrib.builder.formula_property_extractor import get_formula_field
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.feature_flags import feature_flag_is_enabled
 from baserow.core.services.dispatch_context import DispatchContext
-from baserow.core.utils import merge_dicts_no_duplicates
 
 if TYPE_CHECKING:
     from baserow.core.workflow_actions.models import WorkflowAction

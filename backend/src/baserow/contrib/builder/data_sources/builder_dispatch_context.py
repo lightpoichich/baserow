@@ -2,6 +2,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.http import HttpRequest
 
@@ -12,11 +13,14 @@ from baserow.contrib.builder.formula_property_extractor import get_formula_field
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.feature_flags import feature_flag_is_enabled
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.utils import merge_dicts_no_duplicates
 
 if TYPE_CHECKING:
     from baserow.core.workflow_actions.models import WorkflowAction
 
 FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS = "feature-exclude-unused-fields"
+
+User = get_user_model()
 
 
 class BuilderDispatchContext(DispatchContext):
@@ -61,6 +65,10 @@ class BuilderDispatchContext(DispatchContext):
 
         if self.request.user.is_anonymous:
             role = "anonymous"
+        # TODO: add a test for this
+        elif isinstance(self.request.user, User):
+            # If the user is an Editor user, it won't have a role.
+            role = "editor"
         else:
             role = self.request.user.role
 

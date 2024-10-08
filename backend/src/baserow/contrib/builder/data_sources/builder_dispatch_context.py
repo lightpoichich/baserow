@@ -90,6 +90,8 @@ class BuilderDispatchContext(DispatchContext):
         Responsible for returning the property options for the element.
         The property options are cached if they haven't already been, so
         that they can be re-used by other methods.
+
+        :raises DataSourceRefinementForbidden: If `self.element` is `None`.
         """
 
         if not self.element:

@@ -229,25 +229,6 @@ class DataSourceService:
             self, data_source_id=data_source.id, page=page, user=user
         )
 
-    def row_has_allowed_field_name(
-        self,
-        row: Dict[str, Any],
-        field_names: List[str],
-    ) -> bool:
-        """
-        Given a dispatched row, return True if the row has a field name that is
-        in the field_names list. Otherwise, return False to indicate that the
-        row shouldn't be included in the response.
-        """
-
-        for key in row:
-            if key in field_names:
-                # If the key is in the field_names, we know that the row is
-                # safe to include in the response, so return early
-                return True
-
-        return False
-
     def remove_unused_field_names(
         self,
         row: Dict[str, Any],

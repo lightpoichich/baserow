@@ -1,7 +1,7 @@
 from baserow.core.user_sources.registries import user_source_type_registry
 
 
-def create_user_table_and_role(data_fixture, user, builder, user_role):
+def create_user_table_and_role(data_fixture, user, builder, user_role, integration=None):
     """Helper to create a User table with a particular user role."""
 
     # Create the user table for the user_source
@@ -19,7 +19,7 @@ def create_user_table_and_role(data_fixture, user, builder, user_role):
     )
     email_field, name_field, password_field, role_field = user_fields
 
-    integration = data_fixture.create_local_baserow_integration(
+    integration = integration or data_fixture.create_local_baserow_integration(
         user=user, application=builder
     )
     user_source = data_fixture.create_user_source(

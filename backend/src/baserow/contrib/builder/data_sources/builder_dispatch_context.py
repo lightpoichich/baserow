@@ -66,7 +66,6 @@ class BuilderDispatchContext(DispatchContext):
         
         return f"{self.page.builder.id}_{role}"
 
-
     @cached_property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
         """

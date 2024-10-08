@@ -15,6 +15,8 @@ from rest_framework.status import (
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.core.services.models import Service
 from baserow.test_utils.helpers import AnyInt, AnyStr
+from tests.baserow.contrib.builder.api.user_sources.helpers import create_user_table_and_role
+from baserow.core.user_sources.user_source_user import UserSourceUser
 
 
 @pytest.fixture
@@ -22,6 +24,7 @@ def data_source_fixture(data_fixture):
     """A fixture to help test views that rely on a data source."""
 
     user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
     table, fields, rows = data_fixture.build_table(
         user=user,
         columns=[
@@ -34,15 +37,29 @@ def data_source_fixture(data_fixture):
             ["Cherry", "Purple"],
         ],
     )
-    builder = data_fixture.create_builder_application(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace, user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
 
+    user_source, _ = create_user_table_and_role(
+        data_fixture,
+        user,
+        builder,
+        "foo_user_role",
+        integration=integration,
+    )
+    user_source_user = UserSourceUser(
+        user_source, None, 1, "foo_username", "foo@bar.com", role="foo_user_role"
+    )
+    user_source_user_token = user_source_user.get_refresh_token().access_token
+
     return {
         "user": user,
         "token": token,
+        "user_source_user": user_source_user,
+        "user_source_user_token": user_source_user_token,
         "page": page,
         "integration": integration,
         "table": table,
@@ -1171,6 +1188,10 @@ def test_dispatch_data_sources_list_rows_with_elements(
         ],
     )
 
+    data_source_fixture["page"].builder.workspace = None
+    data_source_fixture["page"].builder.save()
+    data_fixture.create_builder_custom_domain(published_to=data_source_fixture["page"].builder)
+
     url = reverse(
         "api:builder:domains:public_dispatch_all",
         kwargs={"page_id": data_source_fixture["page"].id},
@@ -1180,7 +1201,7 @@ def test_dispatch_data_sources_list_rows_with_elements(
         url,
         {},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['token']}",
+        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['user_source_user_token']}",
     )
 
     expected_results = []
@@ -1188,6 +1209,8 @@ def test_dispatch_data_sources_list_rows_with_elements(
     for row in rows:
         expected_results.append(
             {
+                # Although this Data Source has 2 Fields/Columns, only one is
+                # returned since only one field_id is used by the Table.
                 f"field_{field_id}": getattr(row, f"field_{field_id}"),
                 "id": row.id,
                 "order": str(row.order),
@@ -1195,8 +1218,6 @@ def test_dispatch_data_sources_list_rows_with_elements(
         )
 
     assert response.status_code == HTTP_200_OK
-    # Although this Data Source has 2 Fields/Columns, only one is returned
-    # since only one field_id is used by the Table.
     assert response.json() == {
         str(data_source.id): {
             "has_next_page": False,
@@ -1252,6 +1273,10 @@ def test_dispatch_data_sources_get_row_with_elements(
         ],
     )
 
+    data_source_fixture["page"].builder.workspace = None
+    data_source_fixture["page"].builder.save()
+    data_fixture.create_builder_custom_domain(published_to=data_source_fixture["page"].builder)
+
     url = reverse(
         "api:builder:domains:public_dispatch_all",
         kwargs={"page_id": data_source_fixture["page"].id},
@@ -1261,7 +1286,7 @@ def test_dispatch_data_sources_get_row_with_elements(
         url,
         {},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['token']}",
+        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['user_source_user_token']}",
     )
 
     rows = data_source_fixture["rows"]
@@ -1354,6 +1379,10 @@ def test_dispatch_data_sources_get_and_list_rows_with_elements(
         ],
     )
 
+    data_source_fixture["page"].builder.workspace = None
+    data_source_fixture["page"].builder.save()
+    data_fixture.create_builder_custom_domain(published_to=data_source_fixture["page"].builder)
+
     url = reverse(
         "api:builder:domains:public_dispatch_all",
         kwargs={"page_id": data_source_fixture["page"].id},
@@ -1363,7 +1392,7 @@ def test_dispatch_data_sources_get_and_list_rows_with_elements(
         url,
         {},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['token']}",
+        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['user_source_user_token']}",
     )
 
     assert response.status_code == HTTP_200_OK

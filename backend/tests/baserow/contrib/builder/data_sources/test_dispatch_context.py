@@ -43,8 +43,19 @@ def test_dispatch_context_page_from_context(mock_get_field_names, data_fixture):
 
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
+
+    user_source, integration = create_user_table_and_role(
+        data_fixture,
+        user,
+        page.builder,
+        "foo_user_role",
+    )
+    user_source_user = UserSourceUser(
+        user_source, None, 1, "foo_username", "foo@bar.com", role="foo_user_role"
+    )
+
     request = Request(HttpRequest())
-    request.user = user
+    request.user = user_source_user
 
     dispatch_context = BuilderDispatchContext(
         request, page, offset=0, count=5, only_expose_public_formula_fields=True
@@ -130,10 +141,11 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
 
     mock_feature_flag_is_enabled.return_value = True if feature_flag_is_set else False
 
-    mock_field_names = MagicMock()
+    mock_field_names = ["field_123"]
     mock_get_formula_field_names.return_value = mock_field_names
 
     mock_request = MagicMock()
+    mock_request.user.is_anonymous = True
     mock_page = MagicMock()
 
     dispatch_context = BuilderDispatchContext(

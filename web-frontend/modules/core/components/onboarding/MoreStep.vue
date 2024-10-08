@@ -56,6 +56,7 @@
       <Dropdown
         v-model="country"
         :error="$v.country.$error"
+        size="large"
         @hide="$v.country.$touch()"
       >
         <DropdownItem

@@ -4,6 +4,7 @@
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
+      'dropdown--large': size === 'large',
     }"
     :tabindex="realTabindex"
     :error="error"
@@ -130,6 +131,11 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    size: {
+      type: String,
+      required: false,
+      default: 'regular',
     },
   },
   data() {

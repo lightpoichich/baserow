@@ -20,7 +20,11 @@ from baserow.contrib.integrations.local_baserow.models import (
 )
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.services.registries import service_type_registry
+from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.test_utils.helpers import AnyStr
+from tests.baserow.contrib.builder.api.user_sources.helpers import (
+    create_user_table_and_role,
+)
 
 
 @pytest.mark.django_db
@@ -425,6 +429,19 @@ def test_dispatch_data_source_returns_formula_field_names(
         user=user, application=builder
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    user_source, _ = create_user_table_and_role(
+        data_fixture,
+        user,
+        builder,
+        "foo_user_role",
+        integration=integration,
+    )
+    user_source_user = UserSourceUser(
+        user_source, None, 1, "foo_username", "foo@bar.com", role="foo_user_role"
+    )
+    user_source_user_token = user_source_user.get_refresh_token().access_token
+
     data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
         user=user,
         page=page,
@@ -453,12 +470,16 @@ def test_dispatch_data_source_returns_formula_field_names(
         ],
     )
 
+    builder.workspace = None
+    builder.save()
+    data_fixture.create_builder_custom_domain(published_to=builder)
+
     fake_request = api_request_factory.post(
         reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
         {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
+        HTTP_USERSOURCEAUTHORIZATION=f"JWT {user_source_user_token}",
     )
-    fake_request.user = user
+    fake_request.user = user_source_user
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
     mock_get_formula_field_names.return_value = {

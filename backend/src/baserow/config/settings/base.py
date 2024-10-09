@@ -305,6 +305,12 @@ CACHALOT_UNCACHABLE_TABLES = [
     "baserow_enterprise_auditlogentry",
 ]
 
+PUBLIC_FORMULA_FIELDS_CACHE_TTL_SECONDS = int(
+    # Default TTL is 10 minutes: 60 seconds * 10
+    os.getenv("BASEROW_PUBLIC_FORMULA_FIELDS_CACHE_TTL_SECONDS")
+    or 600
+)
+
 
 def install_cachalot():
     global INSTALLED_APPS

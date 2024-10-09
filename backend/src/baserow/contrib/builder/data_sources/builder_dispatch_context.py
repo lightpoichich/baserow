@@ -1,6 +1,9 @@
 from functools import cached_property
 from typing import TYPE_CHECKING, Dict, List, Optional
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.http import HttpRequest
 
 from baserow.contrib.builder.data_providers.registries import (
@@ -15,6 +18,8 @@ if TYPE_CHECKING:
     from baserow.core.workflow_actions.models import WorkflowAction
 
 FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS = "feature-exclude-unused-fields"
+
+User = get_user_model()
 
 
 class BuilderDispatchContext(DispatchContext):
@@ -51,6 +56,22 @@ class BuilderDispatchContext(DispatchContext):
     def data_provider_registry(self):
         return builder_data_provider_type_registry
 
+    def get_cache_key(self) -> str:
+        """
+        Returns a cache key that can be used to key the results of making the
+        expensive function call to get_formula_field_names().
+        """
+
+        if self.request.user.is_anonymous:
+            role = "anonymous"
+        elif isinstance(self.request.user, User):
+            # If the user is an Editor user, it won't have a role.
+            role = "editor"
+        else:
+            role = self.request.user.role
+
+        return f"{self.page.id}_{role}"
+
     @cached_property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
         """
@@ -72,7 +93,17 @@ class BuilderDispatchContext(DispatchContext):
         if self.only_expose_public_formula_fields and feature_flag_is_enabled(
             FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         ):
-            return get_formula_field_names(self.request.user, self.page)
+            cache_key = self.get_cache_key()
+            formula_fields = cache.get(cache_key)
+            if not formula_fields:
+                formula_fields = get_formula_field_names(self.request.user, self.page)
+                cache.set(
+                    cache_key,
+                    formula_fields,
+                    timeout=settings.PUBLIC_FORMULA_FIELDS_CACHE_TTL_SECONDS,
+                )
+
+            return formula_fields
 
         return None
 

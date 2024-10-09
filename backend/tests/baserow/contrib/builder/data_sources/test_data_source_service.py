@@ -1,5 +1,5 @@
 from decimal import Decimal
-from unittest.mock import PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 
@@ -554,17 +554,17 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
 
 
 @pytest.mark.parametrize(
-    "row,field_names,expected_bool",
+    "row,field_names,updated_row",
     [
         (
             {"id": 1, "order": "1.000", "field_100": "foo"},
             ["field_100"],
-            True,
+            {"field_100": "foo"},
         ),
         (
             {"id": 1, "order": "1.000", "field_100": "foo"},
             ["field_99", "field_100", "field_101"],
-            True,
+            {"field_100": "foo"},
         ),
         (
             {
@@ -573,21 +573,21 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
                 "field_200": {"id": 500, "value": "Delhi", "color": "dark-blue"},
             },
             ["field_200"],
-            True,
+            {"field_200": {"id": 500, "value": "Delhi", "color": "dark-blue"}},
         ),
-        # Expect False because field_names is empty
+        # Expect an empty dict because field_names is empty
         (
             {"id": 4, "order": "1.000", "field_300": "foo"},
             [],
-            False,
+            {},
         ),
-        # Expect False because field_names doesn't contain "field_400"
+        # Expect an empty dict because field_names doesn't contain "field_400"
         (
             {"id": 3, "order": "1.000", "field_400": "foo"},
             ["field_301"],
-            False,
+            {},
         ),
-        # Expect False because field_names doesn't contain "field_500"
+        # Expect an empty dict because field_names doesn't contain "field_500"
         (
             # Multiple select will appear as a nested dict
             {
@@ -596,9 +596,9 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
                 "field_500": {"id": 501, "value": "Delhi", "color": "dark-blue"},
             },
             [],
-            False,
+            {},
         ),
-        # Expect False because field_names doesn't contain "field_500"
+        # Expect an empty dict because field_names doesn't contain "field_500"
         (
             {
                 "id": 5,
@@ -606,21 +606,22 @@ def test_dispatch_data_source_improperly_configured(data_fixture):
                 "field_500": {"id": 501, "value": "Delhi", "color": "dark-blue"},
             },
             ["field_502"],
-            False,
+            {},
         ),
     ],
 )
-def test_row_has_allowed_field_name(row, field_names, expected_bool):
+def test_remove_unused_field_names(row, field_names, updated_row):
     """
-    Test the row_has_allowed_field_name() method.
+    Test the remove_unused_field_names() method.
 
-    Given a dispatched row, it should return True if the row contains a
-    field name that is in the field_names list. Otherwise, False should be
-    returned to indicate that the row shouldn't be included in the response.
+    Given a dispatched row, it should a modified version of the row.
+
+    The method should only return the row contents if its key exists in the
+    field_names list.
     """
 
-    result = DataSourceService().row_has_allowed_field_name(row, field_names)
-    assert result is expected_bool
+    result = DataSourceService().remove_unused_field_names(row, field_names)
+    assert result == updated_row
 
 
 @pytest.mark.django_db
@@ -711,8 +712,6 @@ def test_dispatch_data_sources_excludes_unused_get_row_data_sources(
 
     for index, data_source in enumerate(data_sources):
         row = result[data_source.id]
-        assert "id" in row
-        assert "order" in row
         for field in fields:
             field_name = f"field_{field.id}"
             assert row[field_name] == getattr(rows[index], field_name)
@@ -804,8 +803,72 @@ def test_dispatch_data_sources_excludes_unused_list_rows_data_sources(
     for index, data_source in enumerate(data_sources):
         assert result[data_source.id]["has_next_page"] is False
         row = result[data_source.id]["results"][0]
-        assert "id" in row
-        assert "order" in row
         for field in fields:
             field_name = f"field_{field.id}"
             assert row[field_name] == getattr(rows[index], field_name)
+
+
+@pytest.mark.django_db
+def test_dispatch_data_sources_skips_exceptions_in_results(data_fixture):
+    """
+    Test the dispatch_data_sources() method when the results contain an exception.
+
+    If a Data Source ID's value is an exception, the same exception should be
+    returned in the results, without being modified.
+    """
+
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source_1 = MagicMock()
+    data_source_1.id = 100
+    data_source_1.service.id = 200
+    data_source_2 = MagicMock()
+    data_source_2.id = 101
+    data_source_2.service.id = 201
+    data_sources = [data_source_1, data_source_2]
+
+    expected_error = ValueError("Foo Error")
+
+    with patch(
+        "baserow.contrib.builder.data_sources.service.BuilderDispatchContext.public_formula_fields",
+        new_callable=PropertyMock,
+    ) as mock_public_formula_fields:
+        # Any non None return value is sufficient, so that the test can reach
+        # the for-loop of data_sources.
+        mock_public_formula_fields.return_value = {
+            "external": {
+                200: ["field_1"],
+                201: ["field_2"],
+            }
+        }
+
+        results = {
+            data_source_1.id: {
+                "results": [
+                    {
+                        "id": 300,
+                        "order": "1.0",
+                        "field_1": "foo",
+                    }
+                ]
+            },
+            data_source_2.id: expected_error,
+        }
+        service = DataSourceService()
+        service.handler.dispatch_data_sources = MagicMock(return_value=results)
+
+        dispatch_context = BuilderDispatchContext(
+            HttpRequest(), page, only_expose_public_formula_fields=True
+        )
+        result = service.dispatch_data_sources(
+            user, data_sources, dispatch_context
+        )
+    
+    assert result == {
+        data_source_1.id: {
+            "results": [{"field_1": "foo"}]
+        },
+        data_source_2.id: expected_error,
+    }

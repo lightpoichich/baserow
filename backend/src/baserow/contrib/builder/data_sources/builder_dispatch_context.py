@@ -64,7 +64,6 @@ class BuilderDispatchContext(DispatchContext):
 
         if self.request.user.is_anonymous:
             role = "anonymous"
-        # TODO: add a test for this
         elif isinstance(self.request.user, User):
             # If the user is an Editor user, it won't have a role.
             role = "editor"

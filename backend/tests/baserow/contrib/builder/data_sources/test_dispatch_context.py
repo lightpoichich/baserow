@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 
 import pytest
@@ -13,6 +14,8 @@ from baserow.core.user_sources.user_source_user import UserSourceUser
 from tests.baserow.contrib.builder.api.user_sources.helpers import (
     create_user_table_and_role,
 )
+
+User = get_user_model()
 
 
 def test_dispatch_context_page_range():
@@ -252,38 +255,53 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
 
 
 @pytest.mark.parametrize(
-    "is_anonymous,user_role,expected_cache_key",
+    "is_anonymous,is_editor_user,user_role,expected_cache_key",
     [
         (
             True,
+            False,
             "",
             "100_anonymous",
         ),
         (
             True,
+            False,
             "foo_role",
             "100_anonymous",
         ),
         (
+            False,
             False,
             "foo_role",
             "100_foo_role",
         ),
         (
             False,
+            False,
             "bar_role",
             "100_bar_role",
+        ),
+        # Test the "editor" role
+        (
+            False,
+            True,
+            "",
+            "100_editor",
         ),
     ],
 )
 def test_builder_dispatch_context_get_cache_key(
-    is_anonymous, user_role, expected_cache_key
+    is_anonymous, is_editor_user, user_role, expected_cache_key
 ):
     """
     Test the BuilderDispatchContext::get_cache_key() method.
     """
 
     mock_request = MagicMock()
+
+    if is_editor_user:
+        mock_request.user = MagicMock(spec=User)
+
     mock_request.user.is_anonymous = is_anonymous
     mock_request.user.role = user_role
 

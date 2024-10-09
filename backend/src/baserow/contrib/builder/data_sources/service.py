@@ -269,9 +269,8 @@ class DataSourceService:
 
         results = self.handler.dispatch_data_sources(data_sources, dispatch_context)
 
-        if not results:
-            return results
-
+        # When public_formula_fields is None, it indicates that filtering
+        # shouldn't be applied, thus the results are returned without changes.
         if dispatch_context.public_formula_fields is None:
             return results
 

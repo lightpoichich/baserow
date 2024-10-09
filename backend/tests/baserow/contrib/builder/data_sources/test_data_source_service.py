@@ -1,5 +1,5 @@
 from decimal import Decimal
-from unittest.mock import PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 
@@ -806,3 +806,69 @@ def test_dispatch_data_sources_excludes_unused_list_rows_data_sources(
         for field in fields:
             field_name = f"field_{field.id}"
             assert row[field_name] == getattr(rows[index], field_name)
+
+
+@pytest.mark.django_db
+def test_dispatch_data_sources_skips_exceptions_in_results(data_fixture):
+    """
+    Test the dispatch_data_sources() method when the results contain an exception.
+
+    If a Data Source ID's value is an exception, the same exception should be
+    returned in the results, without being modified.
+    """
+
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source_1 = MagicMock()
+    data_source_1.id = 100
+    data_source_1.service.id = 200
+    data_source_2 = MagicMock()
+    data_source_2.id = 101
+    data_source_2.service.id = 201
+    data_sources = [data_source_1, data_source_2]
+
+    expected_error = ValueError("Foo Error")
+
+    with patch(
+        "baserow.contrib.builder.data_sources.service.BuilderDispatchContext.public_formula_fields",
+        new_callable=PropertyMock,
+    ) as mock_public_formula_fields:
+        # Any non None return value is sufficient, so that the test can reach
+        # the for-loop of data_sources.
+        mock_public_formula_fields.return_value = {
+            "external": {
+                200: ["field_1"],
+                201: ["field_2"],
+            }
+        }
+
+        results = {
+            data_source_1.id: {
+                "results": [
+                    {
+                        "id": 300,
+                        "order": "1.0",
+                        "field_1": "foo",
+                    }
+                ]
+            },
+            data_source_2.id: expected_error,
+        }
+        service = DataSourceService()
+        service.handler.dispatch_data_sources = MagicMock(return_value=results)
+
+        dispatch_context = BuilderDispatchContext(
+            HttpRequest(), page, only_expose_public_formula_fields=True
+        )
+        result = service.dispatch_data_sources(
+            user, data_sources, dispatch_context
+        )
+    
+    assert result == {
+        data_source_1.id: {
+            "results": [{"field_1": "foo"}]
+        },
+        data_source_2.id: expected_error,
+    }

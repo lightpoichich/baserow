@@ -360,13 +360,13 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
             True,
             False,
             "",
-            f"{CACHE_KEY_PREFIX}_100_anonymous",
+            f"{CACHE_KEY_PREFIX}_100",
         ),
         (
             True,
             False,
             "foo_role",
-            f"{CACHE_KEY_PREFIX}_100_anonymous",
+            f"{CACHE_KEY_PREFIX}_100",
         ),
         (
             False,

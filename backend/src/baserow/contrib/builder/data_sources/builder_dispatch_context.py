@@ -79,11 +79,12 @@ class BuilderDispatchContext(DispatchContext):
         if isinstance(self.request.user, User):
             return None
         elif self.request.user.is_anonymous:
-            role = "anonymous"
+            # When the user is anonymous, only use the prefix + page ID.
+            role = ""
         else:
-            role = self.request.user.role
+            role = f"_{self.request.user.role}"
 
-        return f"{CACHE_KEY_PREFIX}_{self.page.id}_{role}"
+        return f"{CACHE_KEY_PREFIX}_{self.page.id}{role}"
 
     @cached_property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:

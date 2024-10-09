@@ -420,7 +420,7 @@ def require_request_data_type(*rtypes: typing.Type) -> typing.Callable:
     def wrapper(f):
         @wraps(f)
         def _wrap(_self, request, *args, **kwargs):
-            if not isinstance(request.data, rtypes):
+            if request.data is None or not isinstance(request.data, rtypes):
                 detail = {
                     "non_field_errors": [
                         {

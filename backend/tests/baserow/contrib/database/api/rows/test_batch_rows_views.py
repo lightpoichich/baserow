@@ -134,6 +134,33 @@ def test_batch_create_rows_no_rows_provided(api_client, data_fixture):
     assert response.json()["detail"] == expected_error_detail
 
 
+@pytest.mark.parametrize("request_body", [None, "", []])
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_create_rows_invalid_body_type(api_client, data_fixture, request_body):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    expected_error_detail = {
+        "non_field_errors": [
+            {
+                "code": "invalid",
+                "error": f"Invalid data. Expected a dictionary, but got {type(request_body).__name__}.",
+            }
+        ],
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == expected_error_detail
+
+
 @pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_create_rows_batch_size_limit(api_client, data_fixture):

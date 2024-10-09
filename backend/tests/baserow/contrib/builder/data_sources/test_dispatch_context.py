@@ -7,6 +7,7 @@ import pytest
 from rest_framework.request import Request
 
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    CACHE_KEY_PREFIX,
     FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
@@ -359,25 +360,25 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
             True,
             False,
             "",
-            "100_anonymous",
+            f"{CACHE_KEY_PREFIX}_100_anonymous",
         ),
         (
             True,
             False,
             "foo_role",
-            "100_anonymous",
+            f"{CACHE_KEY_PREFIX}_100_anonymous",
         ),
         (
             False,
             False,
             "foo_role",
-            "100_foo_role",
+            f"{CACHE_KEY_PREFIX}_100_foo_role",
         ),
         (
             False,
             False,
             "bar_role",
-            "100_bar_role",
+            f"{CACHE_KEY_PREFIX}_100_bar_role",
         ),
         # Test the "editor" role
         (

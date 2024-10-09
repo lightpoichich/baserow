@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from baserow.core.workflow_actions.models import WorkflowAction
 
 FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS = "feature-exclude-unused-fields"
+CACHE_KEY_PREFIX = "used_properties_for_page_"
 
 User = get_user_model()
 
@@ -82,7 +83,7 @@ class BuilderDispatchContext(DispatchContext):
         else:
             role = self.request.user.role
 
-        return f"{self.page.id}_{role}"
+        return f"{CACHE_KEY_PREFIX}_{self.page.id}_{role}"
 
     @cached_property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:

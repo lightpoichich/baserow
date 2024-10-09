@@ -33,7 +33,6 @@
           :integrations="integrations"
           :disabled="!values.type"
           :integration-type="serviceType?.integrationType"
-          small
         />
         <ButtonIcon icon="iconoir-bin" @click="$emit('delete')" />
       </div>

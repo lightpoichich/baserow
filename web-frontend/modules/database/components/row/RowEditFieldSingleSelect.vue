@@ -6,7 +6,7 @@
       :allow-create-option="allowCreateOptions"
       :disabled="readOnly"
       :error="touched && !valid"
-      :size="large"
+      size="large"
       @input="updateValue($event, value)"
       @create-option="createOption($event)"
       @hide="touch()"

@@ -5,9 +5,9 @@
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
       'dropdown--large': size === 'large',
+      'dropdown--error': error,
     }"
     :tabindex="realTabindex"
-    :error="error"
     @contextmenu.stop
     @focusin="show()"
     @focusout="focusout($event)"

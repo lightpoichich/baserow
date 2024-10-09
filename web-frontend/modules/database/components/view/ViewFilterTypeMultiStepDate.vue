@@ -152,7 +152,6 @@ export default {
       this.delayedUpdate(this.value, true)
     },
     setValue(value) {
-      console.log(value)
       this.copy = value
       this.delayedUpdate(value, true)
     },

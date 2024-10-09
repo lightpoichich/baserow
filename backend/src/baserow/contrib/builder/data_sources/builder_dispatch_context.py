@@ -251,28 +251,3 @@ class BuilderDispatchContext(DispatchContext):
                 raise DataSourceRefinementForbidden(
                     f"{field_property} is not a {model_field} field."
                 )
-
-    @cached_property
-    def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
-        """
-        Return a Dict where keys are ["all", "external", "internal"] and values
-        dicts. The internal dicts' keys are Service IDs and values are a list
-        of Data Source field names.
-
-        Returns None if field names shouldn't be included in the dispatch
-        context. This is mainly to support a feature flag for this new feature.
-
-        The field names are used to improve the security of the backend by
-        ensuring only the minimum necessary data is exposed to the frontend.
-
-        It is used to restrict the queryset as well as to discern which Data
-        Source fields are external and safe (user facing) vs internal and
-        sensitive (required only by the backend).
-        """
-
-        if self.only_expose_public_formula_fields and feature_flag_is_enabled(
-            FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
-        ):
-            return get_formula_field_names(self.request.user, self.page)
-
-        return None

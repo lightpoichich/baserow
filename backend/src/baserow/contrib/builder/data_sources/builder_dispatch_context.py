@@ -64,17 +64,21 @@ class BuilderDispatchContext(DispatchContext):
     def data_provider_registry(self):
         return builder_data_provider_type_registry
 
-    def get_cache_key(self) -> str:
+    def get_cache_key(self) -> Optional[str]:
         """
         Returns a cache key that can be used to key the results of making the
         expensive function call to get_formula_field_names().
+
+        If the user is a Django user, return None. This is because the Page
+        Designer should always have the latest data in the Preview (e.g. when
+        they are not authenticated). Also, the Django user doesn't have the role
+        attribute, unlike the User Source User.
         """
 
-        if self.request.user.is_anonymous:
+        if isinstance(self.request.user, User):
+            return None
+        elif self.request.user.is_anonymous:
             role = "anonymous"
-        elif isinstance(self.request.user, User):
-            # If the user is an Editor user, it won't have a role.
-            role = "editor"
         else:
             role = self.request.user.role
 
@@ -102,14 +106,17 @@ class BuilderDispatchContext(DispatchContext):
             FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         ):
             cache_key = self.get_cache_key()
-            formula_fields = cache.get(cache_key)
-            if not formula_fields:
+
+            formula_fields = cache.get(cache_key) if cache_key else None
+            if formula_fields is None:
                 formula_fields = get_formula_field_names(self.request.user, self.page)
-                cache.set(
-                    cache_key,
-                    formula_fields,
-                    timeout=settings.PUBLIC_FORMULA_FIELDS_CACHE_TTL_SECONDS,
-                )
+            
+                if cache_key:
+                    cache.set(
+                        cache_key,
+                        formula_fields,
+                        timeout=settings.PUBLIC_FORMULA_FIELDS_CACHE_TTL_SECONDS,
+                    )
 
             return formula_fields
 

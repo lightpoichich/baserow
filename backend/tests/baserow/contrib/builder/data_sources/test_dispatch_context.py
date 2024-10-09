@@ -384,7 +384,7 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
             False,
             True,
             "",
-            "100_editor",
+            None,
         ),
     ],
 )

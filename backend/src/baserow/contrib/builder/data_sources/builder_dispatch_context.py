@@ -112,7 +112,7 @@ class BuilderDispatchContext(DispatchContext):
             formula_fields = cache.get(cache_key) if cache_key else None
             if formula_fields is None:
                 formula_fields = get_formula_field_names(self.request.user, self.page)
-            
+
                 if cache_key:
                     cache.set(
                         cache_key,

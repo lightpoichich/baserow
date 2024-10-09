@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 
 import pytest
@@ -13,6 +14,12 @@ from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceRefinementForbidden,
 )
 from baserow.core.services.utils import ServiceAdhocRefinements
+from baserow.core.user_sources.user_source_user import UserSourceUser
+from tests.baserow.contrib.builder.api.user_sources.helpers import (
+    create_user_table_and_role,
+)
+
+User = get_user_model()
 
 
 def test_dispatch_context_page_range():
@@ -45,8 +52,19 @@ def test_dispatch_context_page_from_context(mock_get_field_names, data_fixture):
 
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
+
+    user_source, integration = create_user_table_and_role(
+        data_fixture,
+        user,
+        page.builder,
+        "foo_user_role",
+    )
+    user_source_user = UserSourceUser(
+        user_source, None, 1, "foo_username", "foo@bar.com", role="foo_user_role"
+    )
+
     request = Request(HttpRequest())
-    request.user = user
+    request.user = user_source_user
 
     dispatch_context = BuilderDispatchContext(
         request, page, offset=0, count=5, only_expose_public_formula_fields=True
@@ -139,18 +157,19 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     only_expose_public_formula_fields,
 ):
     """
-    Test the BuilderDispatchContext::field_names property.
+    Test the BuilderDispatchContext::public_formula_fields property.
 
-    Ensure that the field_names property is computed only when the feature
+    Ensure that the public_formula_fields property is computed only when the feature
     flag is on.
     """
 
     mock_feature_flag_is_enabled.return_value = True if feature_flag_is_set else False
 
-    mock_field_names = MagicMock()
+    mock_field_names = ["field_123"]
     mock_get_formula_field_names.return_value = mock_field_names
 
     mock_request = MagicMock()
+    mock_request.user.is_anonymous = True
     mock_page = MagicMock()
 
     dispatch_context = BuilderDispatchContext(
@@ -249,3 +268,149 @@ def test_validate_filter_search_sort_fields_without_element():
         exc.value.args[0]
         == "An element is required to validate filter, search and sort fields."
     )
+
+
+@pytest.mark.django_db
+@patch(
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.feature_flag_is_enabled"
+)
+def test_builder_dispatch_context_public_formula_fields_is_cached(
+    mock_feature_flag_is_enabled, data_fixture, django_assert_num_queries
+):
+    """
+    Test the BuilderDispatchContext::public_formula_fields property.
+
+    Ensure that the expensive call to get_formula_field_names() is cached.
+    """
+
+    mock_feature_flag_is_enabled.return_value = True
+
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("Color", "text"),
+        ],
+        rows=[
+            ["Apple", "Red"],
+            ["Banana", "Yellow"],
+            ["Cherry", "Purple"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+
+    user_source, integration = create_user_table_and_role(
+        data_fixture,
+        user,
+        builder,
+        "foo_user_role",
+    )
+    user_source_user = UserSourceUser(
+        user_source, None, 1, "foo_username", "foo@bar.com", role="foo_user_role"
+    )
+
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source.id}.0.field_{fields[0].id}')",
+    )
+
+    request = Request(HttpRequest())
+    request.user = user_source_user
+
+    dispatch_context = BuilderDispatchContext(
+        request,
+        page,
+        only_expose_public_formula_fields=True,
+    )
+
+    expected_results = {
+        "all": {data_source.service.id: [f"field_{fields[0].id}"]},
+        "external": {data_source.service.id: [f"field_{fields[0].id}"]},
+        "internal": {},
+    }
+
+    # Initially calling the property should cause a bunch of DB queries.
+    with django_assert_num_queries(14):
+        result = dispatch_context.public_formula_fields
+        assert result == expected_results
+
+    # Subsequent calls to the property should *not* cause any DB queries.
+    with django_assert_num_queries(0):
+        result = dispatch_context.public_formula_fields
+        assert result == expected_results
+
+
+@pytest.mark.parametrize(
+    "is_anonymous,is_editor_user,user_role,expected_cache_key",
+    [
+        (
+            True,
+            False,
+            "",
+            "100_anonymous",
+        ),
+        (
+            True,
+            False,
+            "foo_role",
+            "100_anonymous",
+        ),
+        (
+            False,
+            False,
+            "foo_role",
+            "100_foo_role",
+        ),
+        (
+            False,
+            False,
+            "bar_role",
+            "100_bar_role",
+        ),
+        # Test the "editor" role
+        (
+            False,
+            True,
+            "",
+            "100_editor",
+        ),
+    ],
+)
+def test_builder_dispatch_context_get_cache_key(
+    is_anonymous, is_editor_user, user_role, expected_cache_key
+):
+    """
+    Test the BuilderDispatchContext::get_cache_key() method.
+    """
+
+    mock_request = MagicMock()
+
+    if is_editor_user:
+        mock_request.user = MagicMock(spec=User)
+
+    mock_request.user.is_anonymous = is_anonymous
+    mock_request.user.role = user_role
+
+    mock_page = MagicMock()
+    mock_page.id = 100
+
+    dispatch_context = BuilderDispatchContext(
+        mock_request,
+        mock_page,
+    )
+
+    cache_key = dispatch_context.get_cache_key()
+
+    assert cache_key == expected_cache_key

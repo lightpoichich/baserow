@@ -702,7 +702,8 @@ class LocalBaserowListRowsUserServiceType(
         """
 
         if service.table_id:
-            return service.table.field_set.get(primary=True).db_column
+            primary_field = service.table.field_set.filter(primary=True).first()
+            return getattr(primary_field, "db_column", None)
         else:
             return None
 

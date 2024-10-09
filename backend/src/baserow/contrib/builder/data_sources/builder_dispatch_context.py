@@ -117,7 +117,7 @@ class BuilderDispatchContext(DispatchContext):
                     cache.set(
                         cache_key,
                         formula_fields,
-                        timeout=settings.PUBLIC_FORMULA_FIELDS_CACHE_TTL_SECONDS,
+                        timeout=settings.BUILDER_PUBLICLY_USED_PROPERTIES_CACHE_TTL_SECONDS,
                     )
 
             return formula_fields

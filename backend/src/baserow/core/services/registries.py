@@ -312,8 +312,7 @@ class ListServiceTypeMixin:
         # Sane default
         return "id"
 
-    @abstractmethod
-    def get_name_property(self, service: Service) -> str:
+    def get_name_property(self, service: Service) -> Optional[str]:
         """
         We need the name of the records for some elements (like the record selector).
         This method returns it depending on the service.
@@ -321,6 +320,8 @@ class ListServiceTypeMixin:
         :param service: the instance of the service.
         :return: a string identifying the name property name.
         """
+
+        return None
 
     @abstractmethod
     def get_record_names(

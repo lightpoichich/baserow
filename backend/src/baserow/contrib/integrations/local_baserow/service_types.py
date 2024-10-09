@@ -696,6 +696,16 @@ class LocalBaserowListRowsUserServiceType(
     ):
         pass
 
+    def get_name_property(self, service: ServiceSubClass):
+        """
+        Returns the primary field name.
+        """
+
+        if service.table_id:
+            return service.table.field_set.get(primary=True).db_column
+        else:
+            return None
+
     def import_path(self, path, id_mapping):
         """
         Updates the field ids in the path.

@@ -1226,6 +1226,7 @@ class BatchRowsView(APIView):
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         }
     )
+    @require_request_data_type(dict)
     def patch(self, request, table_id):
         """
         Updates all provided rows at once for the table with

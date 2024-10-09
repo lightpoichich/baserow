@@ -327,7 +327,7 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
     }
 
     # Initially calling the property should cause a bunch of DB queries.
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(12):
         result = dispatch_context.public_formula_fields
         assert result == expected_results
 
@@ -389,7 +389,7 @@ def test_builder_dispatch_context_get_cache_key(
     mock_request.user.role = user_role
 
     mock_page = MagicMock()
-    mock_page.id = 100
+    mock_page.builder_id = 100
 
     dispatch_context = BuilderDispatchContext(
         mock_request,

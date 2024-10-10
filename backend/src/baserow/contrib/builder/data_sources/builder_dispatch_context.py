@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from baserow.core.workflow_actions.models import WorkflowAction
 
 FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS = "feature-exclude-unused-fields"
-CACHE_KEY_PREFIX = "used_properties_for_page_"
+CACHE_KEY_PREFIX = "used_properties_for_page"
 
 User = get_user_model()
 

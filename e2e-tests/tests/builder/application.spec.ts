@@ -1,14 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { baserowConfig } from "../../playwright.config";
-import { createUser } from "../../fixtures/user";
+import { createUser, deleteUser, User } from "../../fixtures/user";
 import { createWorkspace } from "../../fixtures/workspace";
 
 const baseUrl = baserowConfig.PUBLIC_WEB_FRONTEND_URL;
 
 test.describe("Builder application test suite", () => {
+  let user: User;
+
   test.beforeEach(async ({ page }) => {
     // Create a new Enterprise license.
-    const user = await createUser();
+    user = await createUser();
     const workspace = await createWorkspace(user);
 
     // authenticate using middleware
@@ -16,6 +18,15 @@ test.describe("Builder application test suite", () => {
     // Visit workspace page
     await page.goto(`${baseUrl}/workspace/${workspace.id}`);
     await expect(page.url()).toBe(`${baseUrl}/workspace/${workspace.id}`);
+  });
+
+  test.afterEach(async () => {
+    // We only want to bother cleaning up in a devs local env or when pointed at a real
+    // server. If in CI then the first user will be the first admin and this will fail.
+    // Secondly in CI we are going to delete the database anyway so no need to clean-up.
+    if (!process.env.CI) {
+      await deleteUser(user);
+    }
   });
 
   test("Can create builder application", async ({ page }) => {

@@ -371,61 +371,6 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return true
   }
 
-  /**
-   * Here we load all element contents to populate the elements while in SSR for the
-   * first render.
-   */
-  async init(applicationContext) {
-    const pages = [
-      applicationContext.page,
-      this.app.store.getters['page/getSharedPage'](applicationContext.builder),
-    ]
-
-    const elements = this.app.store.getters['element/getElementsOrdered'](
-      applicationContext.page
-    )
-
-    await Promise.all(
-      elements.map(async (element) => {
-        const elementType = this.app.$registry.get('element', element.type)
-        if (elementType.isCollectionElement) {
-          const dataSource = this.app.store.getters[
-            'dataSource/getPagesDataSourceById'
-          ](pages, element.data_source_id)
-
-          const dispatchContext =
-            DataProviderType.getAllDataSourceDispatchContext(
-              this.app.$registry.getAll('builderDataProvider'),
-              { ...applicationContext, element }
-            )
-
-          const elementType = this.app.$registry.get('element', element.type)
-
-          if (elementType.fetchAtLoad) {
-            try {
-              // fetch the initial content
-              return await this.app.store.dispatch(
-                'elementContent/fetchElementContent',
-                {
-                  // The element belongs to this page
-                  page: applicationContext.page,
-                  element,
-                  dataSource,
-                  data: dispatchContext,
-                  range: [0, element.items_per_page],
-                  mode: applicationContext.mode,
-                }
-              )
-            } catch (e) {
-              // We don't want to block next dispatches so we do nothing, a notification
-              // will be displayed by the component itself.
-            }
-          }
-        }
-      })
-    )
-  }
-
   getActionDispatchContext(applicationContext) {
     return applicationContext.recordIndexPath.at(-1)
   }

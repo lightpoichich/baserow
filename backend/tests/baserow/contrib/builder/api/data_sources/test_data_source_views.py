@@ -1088,6 +1088,7 @@ def test_dispatch_data_source_with_element_from_different_page(
     data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
         page=page_with_data_source
     )
+
     url = reverse(
         "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
     )
@@ -1099,8 +1100,50 @@ def test_dispatch_data_source_with_element_from_different_page(
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json() == [
-        "The dispatched element does not belong to the same page as the data source."
+        "The data source is not available for the dispatched element."
     ]
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_with_element_from_shared_page(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+
+    page_with_element = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+
+    page_with_element = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=page_with_element.builder
+    )
+
+    element = data_fixture.create_builder_table_element(page=page_with_element)
+
+    shared_page = page_with_element.builder.shared_page
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=shared_page,
+        integration=integration,
+        table=table,
+    )
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+    response = api_client.post(
+        url,
+        {"data_source": {"element": element.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db

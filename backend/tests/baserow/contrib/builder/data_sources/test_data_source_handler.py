@@ -61,7 +61,8 @@ def test_get_data_source_does_not_exist(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_data_sources(data_fixture):
+@pytest.mark.parametrize("specific", [True, False])
+def test_get_data_sources(data_fixture, specific):
     page = data_fixture.create_builder_page()
     data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
         page=page
@@ -74,7 +75,7 @@ def test_get_data_sources(data_fixture):
     )
     data_source4 = data_fixture.create_builder_data_source(page=page)
 
-    data_sources = DataSourceHandler().get_data_sources(page)
+    data_sources = DataSourceHandler().get_data_sources(page, specific=specific)
 
     assert [e.id for e in data_sources] == [
         data_source1.id,
@@ -83,8 +84,10 @@ def test_get_data_sources(data_fixture):
         data_source4.id,
     ]
 
-    assert isinstance(data_sources[0].service, LocalBaserowGetRow)
-    assert isinstance(data_sources[2].service, LocalBaserowListRows)
+    if specific:
+        assert isinstance(data_sources[0].service, LocalBaserowGetRow)
+        assert isinstance(data_sources[2].service, LocalBaserowListRows)
+
     assert data_sources[3].service is None
 
 

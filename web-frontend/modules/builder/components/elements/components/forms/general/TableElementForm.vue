@@ -17,8 +17,8 @@
       <DataSourceDropdown
         v-model="computedDataSourceId"
         small
-        :data-sources="dataSources"
-        :page="elementPage"
+        :shared-data-sources="sharedDataSources"
+        :local-data-sources="localDataSources"
       >
         <template #chooseValueState>
           {{ $t('collectionElementForm.noDataSourceMessage') }}
@@ -244,7 +244,6 @@ import {
   minValue,
   maxValue,
 } from 'vuelidate/lib/validators'
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 import { TABLE_ORIENTATION } from '@baserow/modules/builder/enums'
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
@@ -262,7 +261,7 @@ export default {
     DeviceSelector,
     CustomStyle,
   },
-  mixins: [elementForm, collectionElementForm],
+  mixins: [collectionElementForm],
   data() {
     return {
       allowedValues: [

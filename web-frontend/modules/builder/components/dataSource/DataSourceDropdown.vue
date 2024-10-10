@@ -18,7 +18,7 @@
       >
       </DropdownItem>
       <DropdownItem
-        v-for="dataSource in pageDataSources"
+        v-for="dataSource in localDataSources"
         :key="dataSource.id"
         :name="getDataSourceLabel(dataSource)"
         :value="dataSource.id"
@@ -44,7 +44,11 @@ export default {
       required: false,
       default: null,
     },
-    dataSources: {
+    sharedDataSources: {
+      type: Array,
+      required: true,
+    },
+    localDataSources: {
       type: Array,
       required: true,
     },
@@ -52,22 +56,6 @@ export default {
       type: Boolean,
       required: false,
       default: false,
-    },
-    page: {
-      type: Object,
-      required: true,
-    },
-  },
-  computed: {
-    pageDataSources() {
-      return this.dataSources.filter(
-        ({ page_id: pageId }) => pageId === this.page.id
-      )
-    },
-    sharedDataSources() {
-      return this.dataSources.filter(
-        ({ page_id: pageId }) => pageId !== this.page.id
-      )
     },
   },
   methods: {

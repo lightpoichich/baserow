@@ -47,10 +47,7 @@ export default {
       return this.getHasMorePage(this.element)
     },
     contentLoading() {
-      return (
-        this.$fetchState.pending ||
-        (this.getLoading(this.element) && !this.elementIsInError)
-      )
+      return this.getLoading(this.element) && !this.elementIsInError
     },
     dispatchContext() {
       return DataProviderType.getAllDataSourceDispatchContext(
@@ -92,7 +89,7 @@ export default {
   },
   async fetch() {
     if (!this.elementIsInError && this.elementType.fetchAtLoad) {
-      await this.fetchContent([0, this.element.items_per_page], true)
+      await this.fetchContent([0, this.element.items_per_page])
     }
   },
   methods: {

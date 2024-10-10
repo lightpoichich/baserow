@@ -25,7 +25,7 @@
       </slot>
     </template>
     <template #empty-state>
-      <div class="ab-table__empty-message">
+      <div class="ab-table__empty-state">
         <template v-if="contentLoading">
           <div class="loading-spinner" />
         </template>

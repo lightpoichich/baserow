@@ -17,7 +17,7 @@
     <div class="element__inner-wrapper">
       <component
         :is="component"
-        :key="`${element._.uid}`"
+        :key="element._.uid"
         :element="element"
         :application-context-additions="{
           element,

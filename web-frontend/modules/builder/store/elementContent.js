@@ -174,8 +174,6 @@ const actions = {
       return
     }
 
-    commit('SET_LOADING', { element, value: true })
-
     try {
       if (serviceType.isValid(dataSource)) {
         let rangeToFetch = range
@@ -189,7 +187,6 @@ const actions = {
 
           // Everything is already loaded we can quit now
           if (!rangeToFetch) {
-            commit('SET_LOADING', { element, value: false })
             return
           }
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]
@@ -200,6 +197,7 @@ const actions = {
           service = PublishedBuilderService
         }
 
+        commit('SET_LOADING', { element, value: true })
         const { data } = await service(this.app.$client).dispatch(
           dataSource.id,
           dispatchContext,

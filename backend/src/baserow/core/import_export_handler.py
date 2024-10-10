@@ -144,7 +144,7 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
         applications = applications or []
 
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
-        export_app_progress = progress.create_child(80, len(applications) or 1)
+        export_app_progress = progress.create_child(80, len(applications))
 
         zip_file_name = f"workspace_{workspace.id}_{uuid.uuid4()}.zip"
         json_file_name = f"data/workspace_export.json"

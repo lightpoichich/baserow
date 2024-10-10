@@ -10,7 +10,7 @@ from baserow.core.utils import random_string
 
 
 class UserFileFixtures:
-    def create_user_file(self, storage=None, **kwargs):
+    def create_user_file(self, **kwargs):
         if "original_name" not in kwargs:
             kwargs["original_name"] = self.fake.file_name()
 
@@ -45,6 +45,3 @@ class UserFileFixtures:
         content = content or f"test file  {user_file.original_name} at {path}"
         storage.save(path, ContentFile(content))
         return user_file
-
-    def create_user(self):
-        pass

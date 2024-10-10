@@ -733,11 +733,10 @@ def test_exporting_csv_writes_file_to_storage_and_its_served_by_the_backend(
     api_client,
     tmpdir,
     django_capture_on_commit_callbacks,
+    use_tmp_media_root,
 ):
     user = enterprise_data_fixture.create_user()
     table = enterprise_data_fixture.create_database_table(user=user)
-
-    storage = dummy_storage(tmpdir)
 
     token = enterprise_data_fixture.generate_token(user)
     with django_capture_on_commit_callbacks(execute=True):
@@ -789,6 +788,7 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend(
     synced_roles,
     django_capture_on_commit_callbacks,
     tmpdir,
+    use_tmp_media_root,
 ):
     (
         admin_user,
@@ -801,7 +801,6 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend(
         "export_charset": "utf-8",
     }
 
-    storage = dummy_storage(tmpdir)
     with django_capture_on_commit_callbacks(execute=True):
         response = api_client.post(
             reverse("api:enterprise:audit_log:async_export"),
@@ -848,51 +847,45 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend(
     },
 )
 def test_files_can_be_downloaded_with_dl_query_param_as_filename(
-    enable_enterprise, enterprise_data_fixture, api_client, tmpdir
+    enable_enterprise, enterprise_data_fixture, api_client, tmpdir, use_tmp_media_root
 ):
     _, token = enterprise_data_fixture.create_user_and_token()
 
-    storage = dummy_storage(tmpdir)
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        file = SimpleUploadedFile("test.txt", b"Hello World")
-        response = api_client.post(
-            reverse("api:user_files:upload_file"),
-            data={"file": file},
-            format="multipart",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
+    file = SimpleUploadedFile("test.txt", b"Hello World")
+    response = api_client.post(
+        reverse("api:user_files:upload_file"),
+        data={"file": file},
+        format="multipart",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
 
     assert response.status_code == HTTP_200_OK, response.json()
     backend_file_url = response.json()["url"]
     file_name = response.json()["name"]
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", ""),
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", ""),
+    )
     assert response.status_code == HTTP_200_OK
     assert response.headers["Content-Disposition"] == f'inline; filename="{file_name}"'
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", "") + "?dl=",
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", "") + "?dl=",
+    )
     assert response.status_code == HTTP_200_OK
     assert response.headers["Content-Disposition"] == f'inline; filename="{file_name}"'
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", "") + "?dl=download.txt",
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", "") + "?dl=download.txt",
+    )
     assert response.status_code == HTTP_200_OK
     assert (
         response.headers["Content-Disposition"] == 'attachment; filename="download.txt"'
     )
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", "") + "?dl=1",
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", "") + "?dl=1",
+    )
     assert response.status_code == HTTP_200_OK
     assert response.headers["Content-Disposition"] == 'attachment; filename="1"'
 
@@ -914,6 +907,7 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend_with_workspace
     synced_roles,
     django_capture_on_commit_callbacks,
     tmpdir,
+    use_tmp_media_root,
 ):
     (
         admin_user,
@@ -932,7 +926,6 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend_with_workspace
         "export_charset": "utf-8",
     }
 
-    storage = dummy_storage(tmpdir)
     with django_capture_on_commit_callbacks(execute=True):
         response = api_client.post(
             reverse("api:enterprise:audit_log:async_export"),
@@ -992,13 +985,12 @@ def test_exporting_csv_writes_file_to_storage_and_its_served_by_the_backend_with
     api_client,
     tmpdir,
     django_capture_on_commit_callbacks,
+    use_tmp_media_root,
 ):
     user = enterprise_data_fixture.create_user()
     table = enterprise_data_fixture.create_database_table(user=user)
 
     other_user = enterprise_data_fixture.create_user()
-
-    storage = dummy_storage(tmpdir)
 
     token = enterprise_data_fixture.generate_token(user)
     with django_capture_on_commit_callbacks(execute=True):

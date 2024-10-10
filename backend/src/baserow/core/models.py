@@ -51,6 +51,7 @@ __all__ = [
     "Service",
     "Notification",
     "BlacklistedToken",
+    "ExportApplicationsJob",
 ]
 
 User = get_user_model()

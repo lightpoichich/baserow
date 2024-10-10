@@ -696,7 +696,7 @@ class LocalBaserowListRowsUserServiceType(
     ):
         pass
 
-    def get_name_property(self, service: ServiceSubClass):
+    def get_name_property(self, service: ServiceSubClass) -> Optional[str]:
         """
         Returns the primary field name.
         """

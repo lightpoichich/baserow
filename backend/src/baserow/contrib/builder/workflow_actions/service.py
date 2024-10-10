@@ -123,9 +123,7 @@ class BuilderWorkflowActionService:
             workspace=builder.workspace,
         )
 
-        return self.handler.get_builder_workflow_actions(
-            builder, base_queryset=user_workflow_actions
-        )
+        return self.handler.get_builder_workflow_actions(builder, user_workflow_actions)
 
     def create_workflow_action(
         self,

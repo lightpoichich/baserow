@@ -104,6 +104,7 @@ export default {
     debouncedReset() {
       clearTimeout(this.resetTimeout)
       this.resetTimeout = setTimeout(() => {
+        this.contentFetchEnabled = true
         this.errorNotified = false
         this.currentOffset = 0
         this.loadMore(true)

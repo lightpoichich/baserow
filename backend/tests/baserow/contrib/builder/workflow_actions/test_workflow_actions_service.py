@@ -236,7 +236,6 @@ def test_get_builder_workflow_actions(data_fixture, stub_check_permissions):
         workspace=None,
         context=None,
     ):
-        print("here", queryset)
         return queryset.exclude(id=workflow_action_one.id)
 
     with stub_check_permissions() as stub:

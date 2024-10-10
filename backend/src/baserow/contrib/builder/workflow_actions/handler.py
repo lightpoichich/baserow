@@ -53,18 +53,15 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
         return super().get_all_workflow_actions(base_queryset)
 
     def get_builder_workflow_actions(
-        self, builder: "Builder", base_queryset: Optional[QuerySet] = None
+        self, builder: "Builder", base_queryset: QuerySet
     ) -> Iterable[WorkflowAction]:
         """
         Get all the workflow actions of a builder
 
         :param builder: The builder that holds the workflow actions
-        :param base_queryset: Optional base queryset to filter the results
+        :param base_queryset: The base queryset to filter the results
         :return: A list of workflow actions
         """
-
-        if base_queryset is None:
-            base_queryset = self.model.objects
 
         base_queryset = base_queryset.filter(page__builder=builder)
 

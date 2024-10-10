@@ -1108,6 +1108,7 @@ class BatchRowsView(APIView):
             CannotCreateRowsInTable: ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
         }
     )
+    @require_request_data_type(dict)
     @validate_query_parameters(BatchCreateRowsQueryParamsSerializer)
     def post(self, request: Request, table_id: int, query_params) -> Response:
         """
@@ -1226,6 +1227,7 @@ class BatchRowsView(APIView):
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         }
     )
+    @require_request_data_type(dict)
     def patch(self, request, table_id):
         """
         Updates all provided rows at once for the table with

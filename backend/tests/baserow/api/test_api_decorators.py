@@ -585,4 +585,10 @@ def test_request_data_types():
     with pytest.raises(RequestBodyValidationException):
         Fake().callable(fakerequest(""), None, None)
 
+    with pytest.raises(RequestBodyValidationException):
+        Fake().callable(fakerequest(None), None, None)
+
+    with pytest.raises(RequestBodyValidationException):
+        Fake().callable(fakerequest([]), None, None)
+
     assert Fake().callable(fakerequest({"a": 1}), None, None) == ["a"]

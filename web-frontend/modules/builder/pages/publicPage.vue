@@ -325,16 +325,20 @@ export default {
         }
       },
     },
-    isAuthenticated() {
+    async isAuthenticated() {
       // When the user login or logout, we need to refetch the elements and actions
       // as they might have changed
-      this.$store.dispatch('element/fetchPublished', { page: this.currentPage })
-      this.$store.dispatch('workflowAction/fetchPublished', {
+      await this.$store.dispatch('element/fetchPublished', {
+        page: this.sharedPage,
+      })
+      await this.$store.dispatch('element/fetchPublished', {
         page: this.currentPage,
       })
-      this.$store.dispatch('element/fetchPublished', { page: this.sharedPage })
-      this.$store.dispatch('workflowAction/fetchPublished', {
-        page: this.sharePage,
+      await this.$store.dispatch('workflowAction/fetchPublished', {
+        page: this.currentPage,
+      })
+      await this.$store.dispatch('workflowAction/fetchPublished', {
+        page: this.sharedPage,
       })
     },
   },

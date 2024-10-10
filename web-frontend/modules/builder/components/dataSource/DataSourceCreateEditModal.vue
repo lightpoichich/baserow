@@ -61,6 +61,15 @@ export default {
   components: { DataSourceForm },
 
   mixins: [modal, error],
+  provide() {
+    // I know, it's not the page of the element but it's injected into the
+    // ApplicationBuilderFormulaInput for data source loading states,
+    // and we need the right page which can be in fact the data source page in this
+    // case, so it works.
+    // May be we could change the name of the elementPage but it would be only for
+    // this exception.
+    return { elementPage: this.dataSourcePage }
+  },
   inject: ['builder', 'currentPage'],
   props: {
     dataSourceId: { type: Number, required: false, default: null },

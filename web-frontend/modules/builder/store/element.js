@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js'
 import ElementService from '@baserow/modules/builder/services/element'
 import PublicBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 import { calculateTempOrder } from '@baserow/modules/core/utils/order'
+import { uuid } from '@baserow/modules/core/utils/string'
 
 const populateElement = (element, registry) => {
   const elementType = registry.get('element', element.type)
@@ -13,6 +14,11 @@ const populateElement = (element, registry) => {
     reset: 0,
     shouldBeFocused: false,
     elementNamespacePath: null,
+    // This uid ensure that when we refresh the elements from the server when we
+    // authenticate that it didn't reuse some of the store values
+    // It breaks collection element reload after authentication for instance
+    // This uid is used as key in the PageElement component
+    uid: uuid(),
     ...elementType.getPopulateStoreProperties(),
   }
 

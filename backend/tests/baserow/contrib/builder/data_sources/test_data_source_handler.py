@@ -3,12 +3,10 @@ from unittest.mock import patch
 
 from django.http import HttpRequest
 from django.shortcuts import reverse
-from django.test import override_settings
 
 import pytest
 
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
 from baserow.contrib.builder.data_sources.exceptions import DataSourceDoesNotExist
@@ -399,7 +397,6 @@ def test_recalculate_full_orders(data_fixture):
     assert data_sources[1].order == Decimal("2.00300000000000000000")
 
 
-@override_settings(FEATURE_FLAGS=[FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS])
 @pytest.mark.django_db
 @patch(
     "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"

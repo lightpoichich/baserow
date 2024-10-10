@@ -8,7 +8,6 @@ from rest_framework.request import Request
 
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     CACHE_KEY_PREFIX,
-    FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
 from baserow.contrib.builder.data_sources.exceptions import (
@@ -137,34 +136,26 @@ def test_dispatch_context_sortings():
 
 
 @pytest.mark.parametrize(
-    "feature_flag_is_set,only_expose_public_formula_fields",
+    "only_expose_public_formula_fields",
     (
-        [False, True],
-        [True, True],
-        [False, False],
-        [True, False],
+        [True],
+        [True],
+        [False],
+        [False],
     ),
 )
 @patch(
     "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
 )
-@patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.feature_flag_is_enabled"
-)
-def test_builder_dispatch_context_field_names_computed_on_feature_flag(
-    mock_feature_flag_is_enabled,
+def test_builder_dispatch_context_field_names_computed_on_param(
     mock_get_formula_field_names,
-    feature_flag_is_set,
     only_expose_public_formula_fields,
 ):
     """
     Test the BuilderDispatchContext::public_formula_fields property.
 
-    Ensure that the public_formula_fields property is computed only when the feature
-    flag is on.
+    Ensure that the public_formula_fields property is computed depending on the param.
     """
-
-    mock_feature_flag_is_enabled.return_value = True if feature_flag_is_set else False
 
     mock_field_names = ["field_123"]
     mock_get_formula_field_names.return_value = mock_field_names
@@ -179,13 +170,10 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
         only_expose_public_formula_fields=only_expose_public_formula_fields,
     )
 
-    if feature_flag_is_set and only_expose_public_formula_fields:
+    if only_expose_public_formula_fields:
         assert dispatch_context.public_formula_fields == mock_field_names
         mock_get_formula_field_names.assert_called_once_with(
             mock_request.user, mock_page
-        )
-        mock_feature_flag_is_enabled.assert_called_once_with(
-            FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
         )
     else:
         assert dispatch_context.public_formula_fields is None
@@ -272,19 +260,14 @@ def test_validate_filter_search_sort_fields_without_element():
 
 
 @pytest.mark.django_db
-@patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.feature_flag_is_enabled"
-)
 def test_builder_dispatch_context_public_formula_fields_is_cached(
-    mock_feature_flag_is_enabled, data_fixture, django_assert_num_queries
+    data_fixture, django_assert_num_queries
 ):
     """
     Test the BuilderDispatchContext::public_formula_fields property.
 
     Ensure that the expensive call to get_formula_field_names() is cached.
     """
-
-    mock_feature_flag_is_enabled.return_value = True
 
     user, token = data_fixture.create_user_and_token()
     table, fields, rows = data_fixture.build_table(

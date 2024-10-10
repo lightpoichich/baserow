@@ -14,7 +14,6 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.feature_flags import feature_flag_is_enabled
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.utils import ServiceAdhocRefinements
 
@@ -22,7 +21,6 @@ if TYPE_CHECKING:
     from baserow.contrib.builder.elements.models import CollectionElement
     from baserow.core.workflow_actions.models import WorkflowAction
 
-FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS = "feature-exclude-unused-fields"
 CACHE_KEY_PREFIX = "used_properties_for_page"
 
 User = get_user_model()
@@ -104,9 +102,7 @@ class BuilderDispatchContext(DispatchContext):
         sensitive (required only by the backend).
         """
 
-        if self.only_expose_public_formula_fields and feature_flag_is_enabled(
-            FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
-        ):
+        if self.only_expose_public_formula_fields:
             cache_key = self.get_cache_key()
 
             formula_fields = cache.get(cache_key) if cache_key else None

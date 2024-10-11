@@ -134,7 +134,6 @@ docker-allinone-build: .docker-build-standalone-images .docker-build
 docker-allinone-start: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF)
 docker-allinone-start: docker-allinone-build .docker-start
 
-
 docker-allinone-stop: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF)
 docker-allinone-stop: .docker-stop
 
@@ -147,18 +146,22 @@ docker-allinone-start-dev: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF_DEV)
 docker-allinone-start-dev: docker-allinone-build .docker-start
 
 docker-backend-shell:
-	# pick first available
-	($(DOCKERC) $(DOCKER_SPLIT_CONF) exec backend bash || $(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) exec baserow_all_in_one bash)
+	$(DOCKERC) $(DOCKER_SPLIT_CONF) exec backend bash
+
+docker-allinone-shell:
+	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) exec baserow_all_in_one bash
 
 docker-backend-attach:
-	# pick first available
-	($(DOCKERC) $(DOCKER_SPLIT_CONF) attach backend || $(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) attach baserow_all_in_one )
+	$(DOCKERC) $(DOCKER_SPLIT_CONF) attach backend
 
+docker-allinone-attach:
+	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) attach baserow_all_in_one
 
 docker-backend-logs:
-	# pick first available
-	($(DOCKERC) $(DOCKER_SPLIT_CONF) logs -tf backend || $(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) logs -tf baserow_all_in_one)
+	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) logs -tf baserow_all_in_one
 
+docker-allinone-logs:
+	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) logs -tf baserow_all_in_one
 
 clean: SUBCMD=clean
 clean: .subcmd docker-clean

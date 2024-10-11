@@ -12,8 +12,7 @@ DOCKERCLI:=docker
 DOCKERC:=$(DOCKERCLI) compose
 
 DOCKER_SPLIT_CONF:=-f docker-compose.yml -f docker-compose.dev.yml
-DOCKER_ALL_IN_ONE_CONF_DEV:=-f deploy/all-in-one/docker-compose.yml -f deploy/all-in-one/docker-compose.dev.yml
-DOCKER_ALL_IN_ONE_CONF:=-f deploy/all-in-one/docker-compose.yml
+DOCKER_ALL_IN_ONE_CONF:=-f deploy/all-in-one/docker-compose.yml -f deploy/all-in-one/docker-compose.dev.yml
 
 .PHONY: install build .callsubcmd $(SUBDIRS) help package-build test tests\
 		lint lint-fix docker-lint changelog\
@@ -138,12 +137,6 @@ docker-allinone-stop: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF)
 docker-allinone-stop: .docker-stop
 
 docker-allinone-restart: docker-allinone-stop docker-allinone-start
-
-docker-allinone-build-dev: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF_DEV)
-docker-allinone-build-dev: .docker-build
-
-docker-allinone-start-dev: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF_DEV)
-docker-allinone-start-dev: docker-allinone-build .docker-start
 
 docker-allinone-shell:
 	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) exec baserow_all_in_one bash

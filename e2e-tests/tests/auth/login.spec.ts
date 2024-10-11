@@ -1,6 +1,6 @@
 import { test } from "@playwright/test";
 import { LoginPage } from "../../pages/loginPage";
-import { DashboardPage } from "../../pages/dashboardPage";
+import { WorkspacePage } from "../../pages/workspacePage";
 import { createUser, deleteUser, User } from "../../fixtures/user";
 import { createWorkspace, Workspace } from "../../fixtures/workspace";
 
@@ -25,6 +25,8 @@ test("User can log in with email/password @fast", async ({ page }) => {
   const loginPage = new LoginPage(page);
   await loginPage.goto();
   await loginPage.loginWithPassword(user.email, user.password);
-  const dashboardPage = new DashboardPage(page, workspace);
-  await dashboardPage.checkOnPage();
+  const workspacePage = new WorkspacePage(page, user);
+  await workspacePage.createWorkspace();
+  await workspacePage.goto();
+  await workspacePage.checkOnPage();
 });

@@ -24,7 +24,7 @@ end loop;
 
 end
 $$;
-"""
+"""  # nosec B105
 
 
 class Migration(migrations.Migration):

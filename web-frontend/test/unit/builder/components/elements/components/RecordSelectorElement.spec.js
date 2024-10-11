@@ -74,11 +74,11 @@ describe('RecordSelectorElement', () => {
       .onPost(url)
       .replyOnce(200, {
         results: [
-          { id: 1, order: 1, name: 'First' },
-          { id: 2, order: 1, name: 'Second' },
-          { id: 3, order: 1, name: 'Third' },
-          { id: 4, order: 1, name: 'Fourth' },
-          { id: 5, order: 1, name: 'Fifth' },
+          { id: 1, order: 1, field_1: 'First' },
+          { id: 2, order: 1, field_1: 'Second' },
+          { id: 3, order: 1, field_1: 'Third' },
+          { id: 4, order: 1, field_1: 'Fourth' },
+          { id: 5, order: 1, field_1: 'Fifth' },
         ],
         has_next_page: true,
       })

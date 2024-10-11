@@ -5,7 +5,9 @@ from django.test.utils import override_settings
 from django.urls import reverse
 
 import pytest
+from freezegun import freeze_time
 from rest_framework.status import (
+    HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
@@ -118,8 +120,9 @@ def test_exporting_empty_workspace(
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
 
-    token = data_fixture.generate_token(user)
-    with django_capture_on_commit_callbacks(execute=True):
+    run_time = "2024-10-14T08:00:00Z"
+    with django_capture_on_commit_callbacks(execute=True), freeze_time(run_time):
+        token = data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:workspaces:export_workspace_async",
@@ -135,6 +138,7 @@ def test_exporting_empty_workspace(
 
     job_id = response_json["id"]
     assert response_json == {
+        "created_on": run_time,
         "exported_file_name": "",
         "human_readable_error": "",
         "id": job_id,
@@ -142,13 +146,16 @@ def test_exporting_empty_workspace(
         "state": "pending",
         "type": "export_applications",
         "url": None,
+        "workspace_id": workspace.id,
     }
 
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         reverse("api:jobs:item", kwargs={"job_id": job_id}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     file_name = response_json["exported_file_name"]
@@ -182,8 +189,9 @@ def test_exporting_workspace_with_single_empty_database(
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
-    token = data_fixture.generate_token(user)
-    with django_capture_on_commit_callbacks(execute=True):
+    run_time = "2024-10-14T08:00:00Z"
+    with django_capture_on_commit_callbacks(execute=True), freeze_time(run_time):
+        token = data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:workspaces:export_workspace_async",
@@ -199,6 +207,7 @@ def test_exporting_workspace_with_single_empty_database(
 
     job_id = response_json["id"]
     assert response_json == {
+        "created_on": run_time,
         "exported_file_name": "",
         "human_readable_error": "",
         "id": job_id,
@@ -206,13 +215,16 @@ def test_exporting_workspace_with_single_empty_database(
         "state": "pending",
         "type": "export_applications",
         "url": None,
+        "workspace_id": database.workspace.id,
     }
 
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         reverse("api:jobs:item", kwargs={"job_id": job_id}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     file_name = response_json["exported_file_name"]

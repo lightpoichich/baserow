@@ -187,7 +187,7 @@ export default {
      * from the parent component.
      */
     refreshSnapshots() {
-      this.$forceUpdate()
+      this.$refs.snapshotsList?.forEach((child) => child.$forceUpdate())
     },
     async loadSnapshots() {
       this.snapshotsLoading = true

@@ -7,7 +7,7 @@
         </div>
         <div class="snapshots-modal__detail">
           {{ snapshot.created_by ? `${snapshot.created_by.username} - ` : '' }}
-          {{ $t('snapshotListItem.created') }} {{ humanCreatedAt }}
+          {{ $t('snapshotListItem.created') }} {{ humanCreatedAt() }}
         </div>
       </div>
       <ProgressBar
@@ -60,18 +60,16 @@ export default {
       required: true,
     },
   },
-  computed: {
-    humanCreatedAt() {
-      const { period, count } = getHumanPeriodAgoCount(this.snapshot.created_at)
-      return this.$tc(`datetime.${period}Ago`, count)
-    },
-  },
   mounted() {
     if (!this.job) {
       this.restoreRunningState()
     }
   },
   methods: {
+    humanCreatedAt() {
+      const { period, count } = getHumanPeriodAgoCount(this.snapshot.created_at)
+      return this.$tc(`datetime.${period}Ago`, count)
+    },
     restoreRunningState() {
       const runningJob = this.$store.getters['job/getUnfinishedJobs'].find(
         (job) => {

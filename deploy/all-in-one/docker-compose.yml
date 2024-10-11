@@ -21,7 +21,6 @@ services:
       - "443:443"
     volumes:
       - baserow_all_in_one_data:/baserow/data
-      - $PWD/backend/:/baserow/backend
     healthcheck:
       test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh backend-healthcheck" ]
       interval: 10s

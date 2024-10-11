@@ -1,5 +1,4 @@
-# import settings after initialization
-from django.conf import settings  # noqa
+from django.conf import settings
 from django.core.asgi import get_asgi_application
 
 from channels.routing import ProtocolTypeRouter
@@ -12,7 +11,6 @@ from baserow.ws.routers import websocket_router
 setup_telemetry(add_django_instrumentation=True)
 
 django_asgi_app = get_asgi_application()
-
 
 # It is critical to setup our own logging after django has been setup and done its own
 # logging setup. Otherwise Django will try to destroy and log handlers we added prior.

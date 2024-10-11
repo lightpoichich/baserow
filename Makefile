@@ -145,23 +145,23 @@ docker-allinone-build-dev: .docker-build
 docker-allinone-start-dev: DOCKER_CONFIG_FILES=$(DOCKER_ALL_IN_ONE_CONF_DEV)
 docker-allinone-start-dev: docker-allinone-build .docker-start
 
-docker-backend-shell:
-	$(DOCKERC) $(DOCKER_SPLIT_CONF) exec backend bash
-
 docker-allinone-shell:
 	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) exec baserow_all_in_one bash
-
-docker-backend-attach:
-	$(DOCKERC) $(DOCKER_SPLIT_CONF) attach backend
 
 docker-allinone-attach:
 	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) attach baserow_all_in_one
 
-docker-backend-logs:
-	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) logs -tf baserow_all_in_one
-
 docker-allinone-logs:
 	$(DOCKERC) $(DOCKER_ALL_IN_ONE_CONF) logs -tf baserow_all_in_one
+
+docker-backend-shell:
+	$(DOCKERC) $(DOCKER_SPLIT_CONF) exec backend bash
+
+docker-backend-attach:
+	$(DOCKERC) $(DOCKER_SPLIT_CONF) attach backend
+
+docker-backend-logs:
+	$(DOCKERC) $(DOCKER_SPLIT_CONF) logs -tf backend
 
 clean: SUBCMD=clean
 clean: .subcmd docker-clean

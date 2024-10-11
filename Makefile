@@ -37,8 +37,15 @@ help:
 	@echo " make docker-stop - stop local dev env"
 	@echo " make docker-status - show current docker containers"
 	@echo " make docker-clean - remove docker images"
-
-
+	@echo " make docker-lint - validate dockerfiles"
+	@echo " make docker-backend-shell - start a shell in backend container"
+	@echo " make docker-backend-logs - follow logs in backend container"
+	@echo " make docker-backend-attach - attach to backend container"
+	@echo ""
+	@echo " make docker-allinone-build - build all-in-one dev container"
+	@echo " make docker-allinone-start - start all-in-one dev container"
+	@echo " make docker-allinone-stop - stop all-in-one dev container"
+	@echo ""
 # create .env file with default values if no file exists
 .env:
 	@cat .env.example > .env

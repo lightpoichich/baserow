@@ -56,7 +56,7 @@
         :show-search="false"
         :disabled="value === null"
         fixed-items
-        :small="smallDropdowns"
+        :size="dropdownSize"
         @input="$emit('update:view-id', $event)"
       >
         <DropdownItem
@@ -128,9 +128,6 @@ export default {
           (view) => view.table_id === this.value
         ) || []
       )
-    },
-    smallDropdowns() {
-      return this.dropdownSizes === 'small'
     },
   },
   watch: {

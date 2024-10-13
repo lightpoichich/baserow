@@ -45,7 +45,6 @@
           :disabled="
             defaultValues.immutable_type || defaultValues.immutable_properties
           "
-          small
           @hide="$v.values.type.$touch()"
         >
           <DropdownItem

@@ -49,7 +49,6 @@
           v-else
           v-model="values.link_row_limit_selection_view_id"
           class="margin-top-1"
-          small
           :fixed-items="true"
         >
           <DropdownItem

@@ -1,9 +1,10 @@
 <template>
   <div
-    class="dropdown dropdown--small"
+    class="dropdown"
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
+      'dropdown--large': size === 'large',
       'dropdown--error': error,
     }"
     :tabindex="realTabindex"

@@ -42,7 +42,6 @@
       <Dropdown
         v-model="values.date_time_format"
         :fixed-items="true"
-        small
         @hide="$v.values.date_time_format.$touch()"
       >
         <DropdownItem

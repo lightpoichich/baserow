@@ -6,7 +6,7 @@
       class="margin-bottom-2"
       required
     >
-      <Dropdown v-model="navigateTo" :show-search="false" small>
+      <Dropdown v-model="navigateTo" :show-search="false">
         <template #selectedValue>
           <template v-if="destinationPage">
             {{ destinationPage.name }}

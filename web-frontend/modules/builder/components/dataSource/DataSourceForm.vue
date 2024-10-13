@@ -10,7 +10,7 @@
         <Dropdown
           v-model="values.type"
           fixed-items
-          class="dropdown--small data-source-form__type-dropdown"
+          class="data-source-form__type-dropdown"
           :placeholder="$t('dataSourceForm.servicePlaceholder')"
         >
           <template

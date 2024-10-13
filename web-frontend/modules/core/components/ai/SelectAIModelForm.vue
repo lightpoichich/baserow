@@ -37,7 +37,6 @@
         :error="$v.values.ai_generative_ai_model.$error"
         :fixed-items="true"
         :show-search="false"
-        small
         @hide="$v.values.ai_generative_ai_model.$touch()"
       >
         <DropdownItem

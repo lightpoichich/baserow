@@ -127,11 +127,6 @@ export default {
       required: false,
       default: true,
     },
-    error: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     size: {
       type: String,
       required: false,

@@ -2,8 +2,11 @@ from datetime import date, datetime
 from typing import Any, Dict, List
 from uuid import UUID
 
+import requests
 from baserow_premium.fields.field_types import AIFieldType
 from baserow_premium.license.handler import LicenseHandler
+from requests.auth import HTTPBasicAuth
+from requests.exceptions import RequestException
 from rest_framework import serializers
 
 from baserow.contrib.database.data_sync.data_sync_types import compare_date
@@ -33,6 +36,7 @@ from baserow.contrib.database.fields.models import (
     LongTextField,
     NumberField,
     TextField,
+    URLField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
@@ -42,7 +46,7 @@ from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow_enterprise.features import DATA_SYNC
 
-from .models import LocalBaserowTableDataSync
+from .models import JiraIssuesDataSync, LocalBaserowTableDataSync
 
 
 class RowIDDataSyncProperty(DataSyncProperty):
@@ -189,3 +193,190 @@ class LocalBaserowTableDataSyncType(DataSyncType):
         model = table.get_model()
         rows_queryset = model.objects.all().values(*["id"] + enabled_property_field_ids)
         return rows_queryset
+
+
+class JiraIDDataSyncProperty(DataSyncProperty):
+    unique_primary = True
+    immutable_properties = True
+
+    def to_baserow_field(self) -> TextField:
+        return TextField(name=self.name)
+
+
+class JiraSummaryDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> TextField:
+        return TextField(name=self.name)
+
+
+class JiraDescriptionDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> LongTextField:
+        return LongTextField(name=self.name)
+
+
+class JiraAssigneeDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> TextField:
+        return TextField(name=self.name)
+
+
+class JiraReporterDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> TextField:
+        return TextField(name=self.name)
+
+
+class JiraLabelsDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> TextField:
+        return TextField(name=self.name)
+
+
+class JiraCreatedDateDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
+    def to_baserow_field(self) -> DateField:
+        return DateField(name=self.name)
+
+    def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
+        return compare_date(baserow_row_value, data_sync_row_value)
+
+
+class JiraUpdatedDateDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> DateField:
+        return DateField(name=self.name)
+
+    def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
+        return compare_date(baserow_row_value, data_sync_row_value)
+
+
+class JiraResolvedDateDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> DateField:
+        return DateField(name=self.name)
+
+    def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
+        return compare_date(baserow_row_value, data_sync_row_value)
+
+
+class JiraDueDateDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> DateField:
+        return DateField(name=self.name)
+
+    def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
+        return compare_date(baserow_row_value, data_sync_row_value)
+
+
+class JiraStateDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> TextField:
+        return TextField(name=self.name)
+
+
+class JiraURLDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> URLField:
+        return URLField(name=self.name)
+
+
+class JiraIssuesDataSyncType(DataSyncType):
+    type = "jira_issues"
+    model_class = JiraIssuesDataSync
+    allowed_fields = ["jira_url", "jira_project_key", "jira_username", "jira_api_token"]
+    serializer_field_names = [
+        "jira_url",
+        "jira_project_key",
+        "jira_username",
+        "jira_api_token",
+    ]
+    serializer_field_overrides = {
+        "jira_url": serializers.URLField(
+            help_text="The base URL of your Jira instance (e.g., https://your-domain.atlassian.net).",
+            required=True,
+            allow_null=False,
+        ),
+        "jira_project_key": serializers.CharField(
+            help_text="The project key of the Jira project (e.g., PROJ).",
+            required=True,
+            allow_null=False,
+        ),
+        "jira_username": serializers.CharField(
+            help_text="The username of the Jira account used to authenticate.",
+            required=True,
+            allow_null=False,
+        ),
+        "jira_api_token": serializers.CharField(
+            help_text="The API token of the Jira account used for authentication.",
+            required=True,
+            allow_null=False,
+        ),
+    }
+
+    def prepare_values(self, user, values):
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            DATA_SYNC, user, workspace=None
+        )
+        return values
+
+    def get_properties(self, instance) -> List[DataSyncProperty]:
+        return [
+            JiraIDDataSyncProperty("jira_id", "Jira Issue ID"),
+            JiraSummaryDataSyncProperty("summary", "Summary"),
+            JiraDescriptionDataSyncProperty("description", "Description"),
+            JiraAssigneeDataSyncProperty("assignee", "Assignee"),
+            JiraReporterDataSyncProperty("reporter", "Reporter"),
+            JiraLabelsDataSyncProperty("labels", "Labels"),
+            JiraCreatedDateDataSyncProperty("created", "Created Date"),
+            JiraUpdatedDateDataSyncProperty("updated", "Updated Date"),
+            JiraResolvedDateDataSyncProperty("resolved", "Resolved Date"),
+            JiraDueDateDataSyncProperty("due", "Due Date"),
+            JiraStateDataSyncProperty("status", "State"),
+            JiraURLDataSyncProperty("url", "Issue URL"),
+        ]
+
+    def get_all_rows(self, instance) -> List[Dict]:
+        headers = {"Content-Type": "application/json"}
+        issues = []
+        start_at = 0
+        max_results = 50
+        try:
+            while True:
+                response = requests.get(
+                    f"{instance.jira_url}/rest/api/3/search?jql=project={instance.jira_project_key}&startAt={start_at}&maxResults={max_results}",
+                    auth=HTTPBasicAuth(instance.jira_username, instance.jira_api_token),
+                    headers=headers,
+                    timeout=10,
+                )
+                print(response.content)
+                if not response.ok:
+                    raise SyncError(
+                        "The request to Jira did not return an OK response."
+                    )
+
+                data = response.json()
+                issues.extend(data["issues"])
+                if data["total"] <= len(issues):
+                    break
+                start_at += max_results
+
+        except (RequestException, ConnectionError):
+            raise SyncError("Error fetching issues from Jira.")
+
+        import json
+
+        print(json.dumps(issues, indent=4))
+
+        return [
+            {
+                "jira_id": issue["id"],
+                "summary": issue["fields"]["summary"],
+                "description": issue["fields"].get("description", ""),
+                "assignee": issue["fields"].get("assignee", {}).get("displayName")
+                if issue["fields"].get("assignee")
+                else "",
+                "reporter": issue["fields"].get("reporter", {}).get("displayName")
+                if issue["fields"].get("reporter")
+                else "",
+                "labels": ",".join(issue["fields"].get("labels", [])),
+                "created": issue["fields"].get("created"),
+                "updated": issue["fields"].get("updated"),
+                "resolved": issue["fields"].get("resolutiondate"),
+                "due": issue["fields"].get("duedate"),
+                "status": issue["fields"]["status"]["name"],
+                "url": f"{instance.jira_url}/browse/{issue['key']}",
+            }
+            for issue in issues
+        ]

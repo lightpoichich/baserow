@@ -5,8 +5,9 @@ from uuid import UUID
 import requests
 from baserow_premium.fields.field_types import AIFieldType
 from baserow_premium.license.handler import LicenseHandler
+from jira2markdown import convert
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import RequestException
+from requests.exceptions import JSONDecodeError, RequestException
 from rest_framework import serializers
 
 from baserow.contrib.database.data_sync.data_sync_types import compare_date
@@ -141,12 +142,10 @@ class LocalBaserowTableDataSyncType(DataSyncType):
         return values
 
     def prepare_sync_job_values(self, instance):
-        # Raise the error so that the job doens't start and the user is informed with
+        # Raise the error so that the job doesn't start and the user is informed with
         # the correct error.
-        LicenseHandler.raise_if_user_doesnt_have_feature(
-            DATA_SYNC,
-            instance.authorized_user,
-            instance.source_table.database.workspace,
+        LicenseHandler.raise_if_workspace_doesnt_have_feature(
+            DATA_SYNC, instance.table.database.workspace
         )
 
     def _get_table(self, instance):
@@ -168,9 +167,10 @@ class LocalBaserowTableDataSyncType(DataSyncType):
 
     def get_properties(self, instance) -> List[DataSyncProperty]:
         table = self._get_table(instance)
-        LicenseHandler.raise_if_user_doesnt_have_feature(
-            DATA_SYNC, instance.authorized_user, table.database.workspace
-        )
+        if instance.table_id:
+            LicenseHandler.raise_if_workspace_doesnt_have_feature(
+                DATA_SYNC, instance.table.database.workspace
+            )
         fields = specific_iterator(table.field_set.all())
         properties = [RowIDDataSyncProperty("id", "Row ID")]
 
@@ -210,7 +210,7 @@ class JiraSummaryDataSyncProperty(DataSyncProperty):
 
 class JiraDescriptionDataSyncProperty(DataSyncProperty):
     def to_baserow_field(self) -> LongTextField:
-        return LongTextField(name=self.name)
+        return LongTextField(name=self.name, long_text_enable_rich_text=True)
 
 
 class JiraAssigneeDataSyncProperty(DataSyncProperty):
@@ -232,7 +232,13 @@ class JiraCreatedDateDataSyncProperty(DataSyncProperty):
     immutable_properties = True
 
     def to_baserow_field(self) -> DateField:
-        return DateField(name=self.name)
+        return DateField(
+            name=self.name,
+            date_format="ISO",
+            date_include_time=True,
+            date_time_format="24",
+            date_show_tzinfo=True,
+        )
 
     def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
         return compare_date(baserow_row_value, data_sync_row_value)
@@ -240,7 +246,13 @@ class JiraCreatedDateDataSyncProperty(DataSyncProperty):
 
 class JiraUpdatedDateDataSyncProperty(DataSyncProperty):
     def to_baserow_field(self) -> DateField:
-        return DateField(name=self.name)
+        return DateField(
+            name=self.name,
+            date_format="ISO",
+            date_include_time=True,
+            date_time_format="24",
+            date_show_tzinfo=True,
+        )
 
     def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
         return compare_date(baserow_row_value, data_sync_row_value)
@@ -248,7 +260,13 @@ class JiraUpdatedDateDataSyncProperty(DataSyncProperty):
 
 class JiraResolvedDateDataSyncProperty(DataSyncProperty):
     def to_baserow_field(self) -> DateField:
-        return DateField(name=self.name)
+        return DateField(
+            name=self.name,
+            date_format="ISO",
+            date_include_time=True,
+            date_time_format="24",
+            date_show_tzinfo=True,
+        )
 
     def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
         return compare_date(baserow_row_value, data_sync_row_value)
@@ -256,13 +274,24 @@ class JiraResolvedDateDataSyncProperty(DataSyncProperty):
 
 class JiraDueDateDataSyncProperty(DataSyncProperty):
     def to_baserow_field(self) -> DateField:
-        return DateField(name=self.name)
+        return DateField(
+            name=self.name,
+            date_format="ISO",
+            date_include_time=True,
+            date_time_format="24",
+            date_show_tzinfo=True,
+        )
 
     def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
         return compare_date(baserow_row_value, data_sync_row_value)
 
 
 class JiraStateDataSyncProperty(DataSyncProperty):
+    def to_baserow_field(self) -> TextField:
+        return TextField(name=self.name)
+
+
+class JiraProjectDataSyncProperty(DataSyncProperty):
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
@@ -282,36 +311,19 @@ class JiraIssuesDataSyncType(DataSyncType):
         "jira_username",
         "jira_api_token",
     ]
-    serializer_field_overrides = {
-        "jira_url": serializers.URLField(
-            help_text="The base URL of your Jira instance (e.g., https://your-domain.atlassian.net).",
-            required=True,
-            allow_null=False,
-        ),
-        "jira_project_key": serializers.CharField(
-            help_text="The project key of the Jira project (e.g., PROJ).",
-            required=True,
-            allow_null=False,
-        ),
-        "jira_username": serializers.CharField(
-            help_text="The username of the Jira account used to authenticate.",
-            required=True,
-            allow_null=False,
-        ),
-        "jira_api_token": serializers.CharField(
-            help_text="The API token of the Jira account used for authentication.",
-            required=True,
-            allow_null=False,
-        ),
-    }
 
-    def prepare_values(self, user, values):
-        LicenseHandler.raise_if_user_doesnt_have_feature(
-            DATA_SYNC, user, workspace=None
+    def prepare_sync_job_values(self, instance):
+        # Raise the error so that the job doesn't start and the user is informed with
+        # the correct error.
+        LicenseHandler.raise_if_workspace_doesnt_have_feature(
+            DATA_SYNC, instance.table.database.workspace
         )
-        return values
 
     def get_properties(self, instance) -> List[DataSyncProperty]:
+        if instance.table_id:
+            LicenseHandler.raise_if_workspace_doesnt_have_feature(
+                DATA_SYNC, instance.table.database.workspace
+            )
         return [
             JiraIDDataSyncProperty("jira_id", "Jira Issue ID"),
             JiraSummaryDataSyncProperty("summary", "Summary"),
@@ -324,6 +336,7 @@ class JiraIssuesDataSyncType(DataSyncType):
             JiraResolvedDateDataSyncProperty("resolved", "Resolved Date"),
             JiraDueDateDataSyncProperty("due", "Due Date"),
             JiraStateDataSyncProperty("status", "State"),
+            JiraStateDataSyncProperty("project", "Project"),
             JiraURLDataSyncProperty("url", "Issue URL"),
         ]
 
@@ -334,14 +347,28 @@ class JiraIssuesDataSyncType(DataSyncType):
         max_results = 50
         try:
             while True:
+                url = (
+                    f"{instance.jira_url}"
+                    + f"/rest/api/2/search"
+                    + f"?startAt={start_at}"
+                    + f"&maxResults={max_results}"
+                )
+                if instance.jira_project_key:
+                    url += f"&jql=project={instance.jira_project_key}"
+
                 response = requests.get(
-                    f"{instance.jira_url}/rest/api/3/search?jql=project={instance.jira_project_key}&startAt={start_at}&maxResults={max_results}",
+                    url,
                     auth=HTTPBasicAuth(instance.jira_username, instance.jira_api_token),
                     headers=headers,
                     timeout=10,
                 )
-                print(response.content)
                 if not response.ok:
+                    try:
+                        json = response.json()
+                        if "errorMessages" in json and len(json["errorMessages"]) > 0:
+                            raise SyncError(json["errorMessages"][0])
+                    except JSONDecodeError:
+                        pass
                     raise SyncError(
                         "The request to Jira did not return an OK response."
                     )
@@ -355,15 +382,11 @@ class JiraIssuesDataSyncType(DataSyncType):
         except (RequestException, ConnectionError):
             raise SyncError("Error fetching issues from Jira.")
 
-        import json
-
-        print(json.dumps(issues, indent=4))
-
         return [
             {
                 "jira_id": issue["id"],
                 "summary": issue["fields"]["summary"],
-                "description": issue["fields"].get("description", ""),
+                "description": convert(issue["fields"].get("description", "")),
                 "assignee": issue["fields"].get("assignee", {}).get("displayName")
                 if issue["fields"].get("assignee")
                 else "",
@@ -376,6 +399,9 @@ class JiraIssuesDataSyncType(DataSyncType):
                 "resolved": issue["fields"].get("resolutiondate"),
                 "due": issue["fields"].get("duedate"),
                 "status": issue["fields"]["status"]["name"],
+                "project": issue["fields"]["project"]["name"]
+                if issue["fields"]["project"]
+                else "",
                 "url": f"{instance.jira_url}/browse/{issue['key']}",
             }
             for issue in issues

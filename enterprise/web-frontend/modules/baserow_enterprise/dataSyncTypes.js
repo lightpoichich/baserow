@@ -38,12 +38,12 @@ export class JiraIssuesDataSyncType extends DataSyncType {
   }
 
   getIconClass() {
-    return 'iconoir-git-pull-request'
+    return 'baserow-icon-jira'
   }
 
   getName() {
     const { i18n } = this.app
-    return i18n.t('dataSyncType.jiraIssues')
+    return i18n.t('enterpriseDataSyncType.jiraIssues')
   }
 
   getFormComponent() {

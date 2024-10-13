@@ -100,6 +100,19 @@ export default {
         : this.$registry.get('dataSync', this.chosenType).getFormComponent()
     },
   },
+  watch: {
+    chosenType(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.loadedProperties = false
+        this.loadingProperties = false
+        this.formValues = null
+        this.properties = null
+        this.syncedProperties = null
+        this.creatingTable = false
+        this.createdTable = null
+      }
+    },
+  },
   beforeDestroy() {
     this.stopPollIfRunning()
   },

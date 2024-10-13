@@ -16,24 +16,14 @@
         @focus.once="$event.target.select()"
         @blur="$v.values.jira_url.$touch()"
       />
-    </FormGroup>
-
-    <FormGroup
-      :error="fieldHasErrors('jira_project_key')"
-      :helper-text="$t('jiraIssuesDataSync.projectKeyHelper')"
-      required
-      small-label
-      class="margin-bottom-2"
-    >
-      <template #label>{{ $t('jiraIssuesDataSync.projectKey') }}</template>
-      <FormInput
-        ref="jira_project_key"
-        v-model="values.jira_project_key"
-        size="large"
-        :error="fieldHasErrors('jira_project_key')"
-        @focus.once="$event.target.select()"
-        @blur="$v.values.jira_project_key.$touch()"
-      />
+      <template #error>
+        <span v-if="$v.values.jira_url.$dirty && !$v.values.jira_url.required">
+          {{ $t('error.requiredField') }}
+        </span>
+        <span v-else-if="$v.values.jira_url.$dirty && !$v.values.jira_url.url">
+          {{ $t('error.invalidURL') }}
+        </span>
+      </template>
     </FormGroup>
 
     <FormGroup
@@ -52,6 +42,15 @@
         @focus.once="$event.target.select()"
         @blur="$v.values.jira_username.$touch()"
       />
+      <template #error>
+        <span
+          v-if="
+            $v.values.jira_username.$dirty && !$v.values.jira_username.required
+          "
+        >
+          {{ $t('error.requiredField') }}
+        </span>
+      </template>
     </FormGroup>
 
     <FormGroup
@@ -70,6 +69,30 @@
         @focus.once="$event.target.select()"
         @blur="$v.values.jira_api_token.$touch()"
       />
+      <template #error>
+        <span
+          v-if="
+            $v.values.jira_api_token.$dirty &&
+            !$v.values.jira_api_token.required
+          "
+        >
+          {{ $t('error.requiredField') }}
+        </span>
+      </template>
+    </FormGroup>
+
+    <FormGroup
+      :helper-text="$t('jiraIssuesDataSync.projectKeyHelper')"
+      required
+      small-label
+    >
+      <template #label>{{ $t('jiraIssuesDataSync.projectKey') }}</template>
+      <FormInput
+        ref="jira_project_key"
+        v-model="values.jira_project_key"
+        size="large"
+        @focus.once="$event.target.select()"
+      />
     </FormGroup>
   </form>
 </template>
@@ -85,22 +108,21 @@ export default {
     return {
       allowedValues: [
         'jira_url',
-        'jira_project_key',
         'jira_username',
         'jira_api_token',
+        'jira_project_key',
       ],
       values: {
         jira_url: '',
-        jira_project_key: '',
         jira_username: '',
         jira_api_token: '',
+        jira_project_key: '',
       },
     }
   },
   validations: {
     values: {
       jira_url: { required, url },
-      jira_project_key: { required },
       jira_username: { required },
       jira_api_token: { required },
     },

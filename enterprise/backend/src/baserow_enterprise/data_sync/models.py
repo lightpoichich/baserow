@@ -30,7 +30,9 @@ class JiraIssuesDataSync(DataSync):
         help_text="The base URL of your Jira instance (e.g., https://your-domain.atlassian.net).",
     )
     jira_project_key = models.CharField(
-        max_length=255, help_text="The project key of the Jira project (e.g., PROJ)."
+        blank=True,
+        max_length=255,
+        help_text="The project key of the Jira project (e.g., PROJ).",
     )
     jira_username = models.CharField(
         max_length=255,

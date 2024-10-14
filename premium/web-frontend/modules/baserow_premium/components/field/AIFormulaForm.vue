@@ -25,7 +25,11 @@
         <div v-if="$v.values.ai_prompt.$dirty && !$v.values.ai_prompt.required">
           {{ $t('error.requiredField') }}
         </div>
-        <span v-else-if="$v.values.ai_prompt.$dirty && !$v.values.ai_prompt.maxLength">
+        <span
+          v-else-if="
+            $v.values.ai_prompt.$dirty && !$v.values.ai_prompt.maxLength
+          "
+        >
           {{
             $t('error.maxLength', {
               max: $v.values.ai_prompt.$params.maxLength.max,

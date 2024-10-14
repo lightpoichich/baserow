@@ -512,7 +512,9 @@ class ListExportWorkspaceApplicationsView(APIView):
         feature_flag_is_enabled(FF_EXPORT_WORKSPACE, raise_if_disabled=True)
 
         exports = ImportExportHandler().list(workspace_id, request.user)
-        return Response(ListExportWorkspaceApplicationsSerializer({"results": exports}).data)
+        return Response(
+            ListExportWorkspaceApplicationsSerializer({"results": exports}).data
+        )
 
 
 class AsyncExportWorkspaceApplicationsView(APIView):

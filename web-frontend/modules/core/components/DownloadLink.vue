@@ -1,7 +1,7 @@
 <template>
   <a
     v-if="!downloadXHR"
-    :href="`${url}?dl=${filename}`"
+    :href="`${url}${url.indexOf('?') >= 0 ? '&' : '?'}dl=${filename}`"
     target="_blank"
     :download="filename"
   >

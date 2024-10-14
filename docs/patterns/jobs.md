@@ -274,8 +274,8 @@ stores basic job information: identification, ownership, and the current state.
 
 #### `Job.state`
 
-`Job.state` stores state's description. The value here can be one of predefined constant
-values for known states:
+`Job.state` stores state's description. The `Job.state` value can be one of predefined
+constant values for known states:
 
 * `pending` - when a job is scheduled and waits to be picked up by a Celery worker
 * `started` - when a job has been started
@@ -284,7 +284,8 @@ values for known states:
 * `failed` - when an error happened during the execution. Details of the error should be
   present in `error` and `human_readable_error` properties.
 
-However, other values can be present. A job can set the state to more descriptive value.
+Note that other values can be present. A job can set the state to more descriptive
+value.
 An example is a snapshot creation job type that sets state to `import-table-$id` for
 each table that is being created in a snapshot dataset.
 
@@ -295,7 +296,12 @@ frontend (`mixin/job` provides calculated properties for different states).
 
 Note that job states `finished`, `failed` and `cancelled` are considered as final: they
 should not be changed once set. A job that has such state won't be executed anymore,
-even if it wasn't executed yet (a job can be cancelled before its execution). 
+even if it wasn't executed yet (a job can be cancelled before its execution).
+
+A job can change its state in certain direction only. Eventually a job will be in one of
+final states. A diagram below shows possible state changes:
+
+![Job state changes](../assets/diagrams/job-workflow/job-states.png)
 
 ### Progress tracking
 

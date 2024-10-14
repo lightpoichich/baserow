@@ -34,7 +34,11 @@ from baserow.contrib.database.rows.actions import (
     DeleteRowsActionType,
     UpdateRowsActionType,
 )
-from baserow.contrib.database.rows.exceptions import RowDoesNotExist
+from baserow.contrib.database.rows.exceptions import (
+    CannotCreateRowsInTable,
+    CannotDeleteRowsInTable,
+    RowDoesNotExist,
+)
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
@@ -1632,13 +1636,18 @@ class LocalBaserowUpsertRowServiceType(
                     f"The row with id {row_id} does not exist."
                 ) from exc
         else:
-            (row,) = CreateRowsActionType.do(
-                user=integration.authorized_user,
-                table=table,
-                rows_values=[row_values],
-                model=model,
-                values_already_prepared=True,
-            )
+            try:
+                (row,) = CreateRowsActionType.do(
+                    user=integration.authorized_user,
+                    table=table,
+                    rows_values=[row_values],
+                    model=model,
+                    values_already_prepared=True,
+                )
+            except CannotCreateRowsInTable as exc:
+                raise ServiceImproperlyConfigured(
+                    f"Cannot create rows in table {table.id} because it has a data sync."
+                ) from exc
 
         return {"data": row, "baserow_table_model": model}
 
@@ -1778,6 +1787,10 @@ class LocalBaserowDeleteRowServiceType(
             except RowDoesNotExist as exc:
                 raise ServiceImproperlyConfigured(
                     f"The row with id {row_id} does not exist."
+                ) from exc
+            except CannotDeleteRowsInTable as exc:
+                raise ServiceImproperlyConfigured(
+                    f"Cannot delete rows in table {table.id} because it has a data sync."
                 ) from exc
 
         return {"data": {}, "baserow_table_model": model}

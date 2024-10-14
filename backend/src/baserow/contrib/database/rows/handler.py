@@ -1,5 +1,5 @@
 from collections import defaultdict
-from copy import copy, deepcopy
+from copy import deepcopy
 from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
@@ -1115,7 +1115,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         report = {}
         if values_already_prepared:
-            prepared_rows_values = [copy(row_values) for row_values in rows_values]
+            prepared_rows_values = [deepcopy(row_values) for row_values in rows_values]
         else:
             prepared_rows_values, errors = self.prepare_rows_in_bulk(
                 model._field_objects,
@@ -1715,7 +1715,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         user_id = user and user.id
 
         if values_already_prepared:
-            prepared_rows_values = [copy(row_values) for row_values in rows_values]
+            prepared_rows_values = [deepcopy(row_values) for row_values in rows_values]
         else:
             prepared_rows_values, _ = self.prepare_rows_in_bulk(
                 model._field_objects, rows_values

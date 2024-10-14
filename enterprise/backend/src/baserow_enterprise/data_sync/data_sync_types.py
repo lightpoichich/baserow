@@ -456,6 +456,4 @@ class JiraIssuesDataSyncType(DataSyncType):
 
             issue_list.append(issue_dict)
 
-        print(issue_list)
-
         return issue_list

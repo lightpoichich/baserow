@@ -77,6 +77,10 @@ ExportApplicationsJobResponseSerializer = job_type_registry.get(
 )
 
 
+class ListExportWorkspaceApplicationsSerializer(serializers.Serializer):
+    results = ExportApplicationsJobResponseSerializer(many=True)
+
+
 class WorkspacesView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -485,11 +489,11 @@ class ListExportWorkspaceApplicationsView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Workspace"],
+        tags=["Workspaces"],
         operation_id="list_workspace_exports",
         description="Lists exports that were created for given workspace.",
         responses={
-            200: ExportApplicationsJobResponseSerializer(many=True),
+            200: ListExportWorkspaceApplicationsSerializer,
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
         },
@@ -507,10 +511,8 @@ class ListExportWorkspaceApplicationsView(APIView):
 
         feature_flag_is_enabled(FF_EXPORT_WORKSPACE, raise_if_disabled=True)
 
-        handler = ImportExportHandler()
-        exports = handler.list(workspace_id, request.user)
-        serializer = ExportApplicationsJobResponseSerializer(exports, many=True)
-        return Response({"results": serializer.data})
+        exports = ImportExportHandler().list(workspace_id, request.user)
+        return Response(ListExportWorkspaceApplicationsSerializer({"results": exports}).data)
 
 
 class AsyncExportWorkspaceApplicationsView(APIView):
@@ -526,7 +528,7 @@ class AsyncExportWorkspaceApplicationsView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Workspace"],
+        tags=["Workspaces"],
         operation_id="export_workspace_applications_async",
         description=(
             "Export workspace or set of applications application if the authorized user is "

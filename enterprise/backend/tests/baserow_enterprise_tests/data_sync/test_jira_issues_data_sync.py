@@ -140,7 +140,7 @@ SINGLE_ISSUE = {
         "assignee": {
             "self": "https://test.atlassian.net/rest/api/2/user?accountId=5aaec010e78b8c2a7c88b72e",
             "accountId": "5aaec010e78b8c2a7c88b72e",
-            "emailAddress": "bram2w@live.nl",
+            "emailAddress": "test@test.nl",
             "avatarUrls": {
                 "48x48": "https://secure.gravatar.com/avatar/69c218ba78985d1a01da2dd7191411d6?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FBW-3.png",
                 "24x24": "https://secure.gravatar.com/avatar/69c218ba78985d1a01da2dd7191411d6?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FBW-3.png",
@@ -184,7 +184,7 @@ SINGLE_ISSUE = {
         "creator": {
             "self": "https://test.atlassian.net/rest/api/2/user?accountId=5aaec010e78b8c2a7c88b72e",
             "accountId": "5aaec010e78b8c2a7c88b72e",
-            "emailAddress": "bram2w@live.nl",
+            "emailAddress": "test@test.nl",
             "avatarUrls": {
                 "48x48": "https://secure.gravatar.com/avatar/69c218ba78985d1a01da2dd7191411d6?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FBW-3.png",
                 "24x24": "https://secure.gravatar.com/avatar/69c218ba78985d1a01da2dd7191411d6?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FBW-3.png",
@@ -200,7 +200,7 @@ SINGLE_ISSUE = {
         "reporter": {
             "self": "https://test.atlassian.net/rest/api/2/user?accountId=5aaec010e78b8c2a7c88b72e",
             "accountId": "5aaec010e78b8c2a7c88b72e",
-            "emailAddress": "bram2w@live.nl",
+            "emailAddress": "test@test.nl",
             "avatarUrls": {
                 "48x48": "https://secure.gravatar.com/avatar/69c218ba78985d1a01da2dd7191411d6?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FBW-3.png",
                 "24x24": "https://secure.gravatar.com/avatar/69c218ba78985d1a01da2dd7191411d6?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FBW-3.png",

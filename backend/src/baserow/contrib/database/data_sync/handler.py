@@ -95,16 +95,7 @@ class DataSyncHandler:
         values = extract_allowed(kwargs, allowed_fields)
         values = data_sync_type.prepare_values(user, values)
 
-        # Create an empty table that we're going to sync the data into.
-        last_order = Table.get_last_order(database)
-        table = Table(
-            database=database,
-            order=last_order,
-            name=table_name,
-            needs_background_update_column_added=True,
-        )
-
-        # Create an empty table that we're going to sync the data into and add it to
+        # Create an empty table where we're going to sync the data into, and add it to
         # the values, so that it already can be used in the `get_properties` method.
         last_order = Table.get_last_order(database)
         table = Table.objects.create(

@@ -204,26 +204,36 @@ class JiraIDDataSyncProperty(DataSyncProperty):
 
 
 class JiraSummaryDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
 
 class JiraDescriptionDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> LongTextField:
         return LongTextField(name=self.name, long_text_enable_rich_text=True)
 
 
 class JiraAssigneeDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
 
 class JiraReporterDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
 
 class JiraLabelsDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
@@ -245,6 +255,8 @@ class JiraCreatedDateDataSyncProperty(DataSyncProperty):
 
 
 class JiraUpdatedDateDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> DateField:
         return DateField(
             name=self.name,
@@ -259,6 +271,8 @@ class JiraUpdatedDateDataSyncProperty(DataSyncProperty):
 
 
 class JiraResolvedDateDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> DateField:
         return DateField(
             name=self.name,
@@ -273,6 +287,8 @@ class JiraResolvedDateDataSyncProperty(DataSyncProperty):
 
 
 class JiraDueDateDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> DateField:
         return DateField(
             name=self.name,
@@ -287,16 +303,22 @@ class JiraDueDateDataSyncProperty(DataSyncProperty):
 
 
 class JiraStateDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
 
 class JiraProjectDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> TextField:
         return TextField(name=self.name)
 
 
 class JiraURLDataSyncProperty(DataSyncProperty):
+    immutable_properties = True
+
     def to_baserow_field(self) -> URLField:
         return URLField(name=self.name)
 
@@ -374,35 +396,66 @@ class JiraIssuesDataSyncType(DataSyncType):
                     )
 
                 data = response.json()
-                issues.extend(data["issues"])
-                if data["total"] <= len(issues):
-                    break
-                start_at += max_results
 
+                if len(data["issues"]) == 0 and start_at == 0:
+                    raise SyncError(
+                        "No issues found. This is usually because the authentication "
+                        "details are wrong."
+                    )
+
+                issues.extend(data["issues"])
+                start_at += max_results
+                if data["total"] <= start_at:
+                    break
         except (RequestException, ConnectionError):
             raise SyncError("Error fetching issues from Jira.")
 
-        return [
-            {
+        issue_list = []
+        for issue in issues:
+            assignee = (
+                issue["fields"].get("assignee", {}).get("displayName")
+                if issue["fields"].get("assignee")
+                else ""
+            )
+            reporter = (
+                issue["fields"].get("reporter", {}).get("displayName")
+                if issue["fields"].get("reporter")
+                else ""
+            )
+            project = (
+                issue["fields"]["project"]["name"] if issue["fields"]["project"] else ""
+            )
+
+            issue_dict = {
                 "jira_id": issue["id"],
                 "summary": issue["fields"]["summary"],
                 "description": convert(issue["fields"].get("description", "")),
-                "assignee": issue["fields"].get("assignee", {}).get("displayName")
-                if issue["fields"].get("assignee")
-                else "",
-                "reporter": issue["fields"].get("reporter", {}).get("displayName")
-                if issue["fields"].get("reporter")
-                else "",
-                "labels": ",".join(issue["fields"].get("labels", [])),
+                "assignee": assignee,
+                "reporter": reporter,
+                "labels": ", ".join(issue["fields"].get("labels", [])),
                 "created": issue["fields"].get("created"),
                 "updated": issue["fields"].get("updated"),
                 "resolved": issue["fields"].get("resolutiondate"),
                 "due": issue["fields"].get("duedate"),
                 "status": issue["fields"]["status"]["name"],
-                "project": issue["fields"]["project"]["name"]
-                if issue["fields"]["project"]
-                else "",
+                "project": project,
                 "url": f"{instance.jira_url}/browse/{issue['key']}",
             }
-            for issue in issues
-        ]
+
+            if issue_dict["created"]:
+                issue_dict["created"] = datetime.fromisoformat(issue_dict["created"])
+
+            if issue_dict["updated"]:
+                issue_dict["updated"] = datetime.fromisoformat(issue_dict["updated"])
+
+            if issue_dict["resolved"]:
+                issue_dict["resolved"] = datetime.fromisoformat(issue_dict["resolved"])
+
+            if issue_dict["due"]:
+                issue_dict["due"] = datetime.fromisoformat(issue_dict["due"])
+
+            issue_list.append(issue_dict)
+
+        print(issue_list)
+
+        return issue_list

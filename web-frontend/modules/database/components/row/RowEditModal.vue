@@ -10,7 +10,12 @@
   >
     <template #topbar-content>
       <div v-if="enableNavigation" class="row-edit-modal__navigation">
-        <div v-if="navigationLoading" class="loading"></div>
+        <div
+          v-if="navigationLoading"
+          class="row-edit-modal__navigation-loading"
+        >
+          <span class="loading"> </span>
+        </div>
         <template v-else>
           <a
             class="row-edit-modal__navigation-item"

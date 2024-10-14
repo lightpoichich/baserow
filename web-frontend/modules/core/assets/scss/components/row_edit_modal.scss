@@ -2,6 +2,10 @@
   @include flex-align-items;
 }
 
+.row-edit-modal__navigation-loading {
+  width: 64px;
+}
+
 .row-edit-modal__navigation-item {
   border: 1px solid $palette-neutral-400;
   height: 32px;

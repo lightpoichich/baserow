@@ -80,7 +80,7 @@ def test_adhoc_filters_without_value_field():
 
     data = {
         "groups": [],
-        "filter_type": "OR",  # grouped filtering filter_type
+        "filter_type": "OR",
         "filters": [
             {
                 "field": 123,

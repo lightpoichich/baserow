@@ -131,7 +131,6 @@ export default {
       ) {
         this.exportJobs.unshift(this.job)
         this.exportJobs = this.exportJobs.splice(0, WORKSPACE_EXPORTS_LIMIT)
-        this.refreshExports()
       }
     },
 
@@ -143,9 +142,6 @@ export default {
         this.job.human_readable_error
       )
     },
-    refreshExports() {
-      this.$refs.exportsList?.forEach((child) => child.$forceUpdate())
-    },
     async loadExports() {
       this.exportJobLoading = true
 
@@ -153,7 +149,7 @@ export default {
         const { data: exportJobs } = await WorkspaceService(
           this.$client
         ).listExports(this.workspace.id)
-        this.exportJobs = exportJobs?.exports || []
+        this.exportJobs = exportJobs?.results || []
       } catch (error) {
         this.handleError(error)
       } finally {

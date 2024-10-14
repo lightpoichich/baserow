@@ -78,7 +78,7 @@ export default (client) => {
         return client.post(`/workspaces/${workspaceId}/export/async/`, values)
       },
       listExports(workspaceId) {
-        return client.get(`/workspaces/${workspaceId}/export/list/`)
+        return client.get(`/workspaces/${workspaceId}/export/`)
       },
     }
   )

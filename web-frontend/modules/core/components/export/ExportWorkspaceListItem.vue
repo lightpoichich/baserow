@@ -37,10 +37,6 @@ export default {
       type: Object,
       required: true,
     },
-    lastUpdated: {
-      type: String,
-      required: true,
-    },
   },
   computed: {
     name() {

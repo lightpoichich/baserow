@@ -46,7 +46,7 @@ urlpatterns = [
         name="export_workspace_async",
     ),
     re_path(
-        r"(?P<workspace_id>[0-9]+)/export/list/$",
+        r"(?P<workspace_id>[0-9]+)/export/$",
         ListExportWorkspaceApplicationsView.as_view(),
         name="export_workspace_list",
     ),

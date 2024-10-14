@@ -474,7 +474,6 @@ class CreateInitialWorkspaceView(APIView):
 
 class ListExportWorkspaceApplicationsView(APIView):
     permission_classes = (IsAuthenticated,)
-    http_method_names = ["get"]
 
     @extend_schema(
         parameters=[
@@ -492,12 +491,12 @@ class ListExportWorkspaceApplicationsView(APIView):
         responses={
             200: ExportApplicationsJobResponseSerializer(many=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
-            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
         },
     )
     @map_exceptions(
         {
-            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
@@ -506,15 +505,16 @@ class ListExportWorkspaceApplicationsView(APIView):
         Lists all available exports created for a given workspace.
         """
 
+        feature_flag_is_enabled(FF_EXPORT_WORKSPACE, raise_if_disabled=True)
+
         handler = ImportExportHandler()
         exports = handler.list(workspace_id, request.user)
         serializer = ExportApplicationsJobResponseSerializer(exports, many=True)
-        return Response({"exports": serializer.data})
+        return Response({"results": serializer.data})
 
 
 class AsyncExportWorkspaceApplicationsView(APIView):
     permission_classes = (IsAuthenticated,)
-    http_method_names = ["post"]
 
     @extend_schema(
         parameters=[

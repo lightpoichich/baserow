@@ -31,7 +31,7 @@ class JobQuerySet(models.QuerySet):
     def is_running(self):
         return self.exclude(state__in=JOB_STATES_NOT_RUNNING)
 
-    def is_finished(self):
+    def is_ended(self):
         return self.filter(state__in=JOB_STATES_FINISHED)
 
     def is_pending_or_running(self):
@@ -192,6 +192,10 @@ class Job(CreatedAndUpdatedOnMixin, PolymorphicContentTypeMixin, models.Model):
     @property
     def finished(self) -> bool:
         return self.get_cached_state() == JOB_FINISHED
+
+    @property
+    def done(self):
+        return self.finished or self.failed or self.cancelled
 
     def clear_job_cache(self):
         """

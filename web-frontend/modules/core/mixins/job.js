@@ -27,17 +27,17 @@ export default {
     }
   },
   computed: {
-    jobHasSucceeded() {
-      return this.job?.state === 'finished'
-    },
     jobHasFailed() {
       return this.job?.state === 'failed' || this.job?.state === 'cancelled'
     },
+    jobIsDone() {
+      return this.jobIsFinished || this.jobHasFailed
+    },
     jobIsFinished() {
-      return this.jobHasSucceeded || this.jobHasFailed
+      return this.job?.state === 'finished'
     },
     jobIsRunning() {
-      return this.job !== null && !this.jobIsFinished
+      return this.job !== null && !this.jobIsDone
     },
 
     jobHumanReadableState() {
@@ -61,8 +61,8 @@ export default {
     'job.state'(newState) {
       switch (newState) {
         case 'finished':
-          if (typeof this.onJobDone === 'function') {
-            this.onJobDone()
+          if (typeof this.onJobFinished === 'function') {
+            this.onJobFinished()
           }
           break
         case 'failed':

@@ -1,0 +1,11 @@
+stateDiagram-v2
+
+    [*] --> pending
+    pending --> started: a job is scheduled
+    pending --> cancelled: a job is cancelled before started
+    started --> cancelled: a job is cancelled during the execution
+    started --> finished
+    started --> failed
+    cancelled --> [*]
+    finished --> [*]
+    failed --> [*]

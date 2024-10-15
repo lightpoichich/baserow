@@ -49,24 +49,6 @@
         </template>
       </li>
     </ul>
-    <!-- <ul class="field-multiple-collaborators__items">
-      <li
-        v-for="item in value"
-        :key="item.id"
-        class="field-multiple-collaborators__item field-multiple-collaborators__item--row-edit"
-      >
-        <template v-if="item.id && item.name">
-          <BadgeCollaborator
-            remove-icon
-            :initials="getCollaboratorNameInitials(item)"
-            @remove="removeValue($event, value, item.id)"
-          >
-            {{ getCollaboratorName(item) }}
-          </BadgeCollaborator>
-        </template>
-      </li>
-    </ul> -->
-
     <div v-show="touched && !valid" class="error">
       {{ error }}
     </div>

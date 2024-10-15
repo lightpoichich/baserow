@@ -93,6 +93,10 @@
   flex: 0 0;
   overflow-y: auto;
 
+  .modalv2--sidebar-no-scroll & {
+    overflow-y: inherit;
+  }
+
   &.modalv2__sidebar--left {
     flex-basis: 200px;
     border-right: 1px solid $color-neutral-200;

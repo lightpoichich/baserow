@@ -1,5 +1,5 @@
 .row-comments {
-  @include absolute(0, 0, 0, 0);
+  height: 100%;
 
   display: flex;
   flex-direction: column;
@@ -17,14 +17,18 @@
 }
 
 .row-comments__empty {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  margin: 0 30px;
+  position: relative;
   height: 100%;
-  border-top-left-radius: 6px;
+  overflow-y: auto;
+  text-align: center;
+  display: grid;
+  place-items: center;
+}
+
+.row-comments__empty-content {
+  display: table-cell;
+  vertical-align: middle;
+  padding: 30px;
 }
 
 .row-comments__empty-icon {
@@ -34,8 +38,6 @@
 
 .row-comments__empty-text {
   font-size: 14px;
-  line-height: 160%;
-  margin-bottom: 30px;
 }
 
 .row-comments__loading {
@@ -143,6 +145,7 @@
   flex-shrink: 0;
   padding: 20px;
   border-top: solid 1px $palette-neutral-200;
+  margin-top: auto;
 
   .rich-text-editor__content {
     @extend %form-input;

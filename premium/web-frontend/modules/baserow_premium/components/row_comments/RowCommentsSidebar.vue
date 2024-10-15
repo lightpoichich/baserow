@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height: 100%">
     <template v-if="!hasPremiumFeaturesEnabled">
       <div class="row-comments">
         <div class="row-comments__empty">
@@ -27,30 +27,32 @@
     </template>
     <template v-else>
       <div v-if="!loaded && loading" class="loading-absolute-center" />
-      <div v-else>
+      <template v-else>
         <div class="row-comments">
           <div v-if="currentCount === 0" class="row-comments__empty">
-            <ButtonIcon
-              type="secondary"
-              class="margin-bottom-2"
-              icon="iconoir-message-text"
-            ></ButtonIcon>
+            <div class="row-comments__empty-content">
+              <ButtonIcon
+                type="secondary"
+                class="margin-bottom-2"
+                icon="iconoir-message-text"
+              ></ButtonIcon>
 
-            <div class="row-comments__empty-text">
-              <h4>
-                {{ $t('rowCommentSidebar.noCommentsYet') }}
-              </h4>
-              <p
-                v-if="
-                  $hasPermission(
-                    'database.table.create_comment',
-                    table,
-                    workspace.id
-                  )
-                "
-              >
-                {{ $t('rowCommentSidebar.noComment') }}
-              </p>
+              <div>
+                <h4>
+                  {{ $t('rowCommentSidebar.noCommentsYet') }}
+                </h4>
+                <p
+                  v-if="
+                    $hasPermission(
+                      'database.table.create_comment',
+                      table,
+                      workspace.id
+                    )
+                  "
+                >
+                  {{ $t('rowCommentSidebar.noComment') }}
+                </p>
+              </div>
             </div>
           </div>
           <div v-else class="row-comments__body">
@@ -106,7 +108,7 @@
             />
           </div>
         </div>
-      </div>
+      </template>
     </template>
   </div>
 </template>

@@ -3,6 +3,7 @@
     ref="modal"
     :full-height="hasRightSidebar"
     :right-sidebar="hasRightSidebar"
+    sidebar-no-scroll
     :footer="false"
     :header="false"
     topbar

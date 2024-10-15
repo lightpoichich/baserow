@@ -17,14 +17,18 @@
 }
 
 .row-history__empty {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  margin: 0 30px;
+  position: relative;
   height: 100%;
-  border-top-left-radius: 6px;
+  overflow-y: auto;
+  text-align: center;
+  display: grid;
+  place-items: center;
+}
+
+.row-history__empty-content {
+  display: table-cell;
+  vertical-align: middle;
+  padding: 30px;
 }
 
 .row-history__empty-icon {

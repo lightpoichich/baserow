@@ -50,11 +50,16 @@
           </InfiniteScroll>
         </div>
         <div v-else class="row-history__empty">
-          <ButtonIcon type="secondary" icon="baserow-icon-history"></ButtonIcon>
-          <h4>{{ $t('rowHistorySidebar.noChangesYet') }}</h4>
-          <p class="row-history__empty-text">
-            {{ $t('rowHistorySidebar.empty') }}
-          </p>
+          <div class="row-history__empty-content">
+            <ButtonIcon
+              type="secondary"
+              icon="baserow-icon-history"
+            ></ButtonIcon>
+            <h4>{{ $t('rowHistorySidebar.noChangesYet') }}</h4>
+            <p class="row-history__empty-text">
+              {{ $t('rowHistorySidebar.empty') }}
+            </p>
+          </div>
         </div>
       </div>
     </template>

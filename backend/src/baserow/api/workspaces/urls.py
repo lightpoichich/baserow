@@ -4,7 +4,9 @@ from .invitations import urls as invitation_urls
 from .users import urls as user_urls
 from .views import (
     AsyncExportWorkspaceApplicationsView,
+    AsyncImportApplicationsView,
     CreateInitialWorkspaceView,
+    ImportApplicationsUploadFileView,
     ListExportWorkspaceApplicationsView,
     WorkspaceGenerativeAISettingsView,
     WorkspaceLeaveView,
@@ -12,6 +14,7 @@ from .views import (
     WorkspacePermissionsView,
     WorkspacesView,
     WorkspaceView,
+    ImportApplicationsDeleteResourceView,
 )
 
 app_name = "baserow.api.workspaces"
@@ -49,5 +52,20 @@ urlpatterns = [
         r"(?P<workspace_id>[0-9]+)/export/$",
         ListExportWorkspaceApplicationsView.as_view(),
         name="export_workspace_list",
+    ),
+    re_path(
+        r"(?P<workspace_id>[0-9]+)/import/upload-file/$",
+        ImportApplicationsUploadFileView.as_view(),
+        name="workspace_import_upload_file",
+    ),
+    re_path(
+        r"(?P<workspace_id>[0-9]+)/import/(?P<resource_id>[0-9a-fA-F-]{36})/delete/$",
+        ImportApplicationsDeleteResourceView.as_view(),
+        name="workspace_import_delete_resource",
+    ),
+    re_path(
+        r"(?P<workspace_id>[0-9]+)/import/async/$",
+        AsyncImportApplicationsView.as_view(),
+        name="async_workspace_import",
     ),
 ]

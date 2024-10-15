@@ -1217,3 +1217,66 @@ class ExportApplicationsActionType(ActionType):
     @classmethod
     def scope(cls, workspace_id: int) -> ActionScopeStr:
         return WorkspaceActionScopeType.value(workspace_id)
+
+
+class ImportApplicationsActionType(ActionType):
+    type = "import_applications"
+    description = ActionTypeDescription(
+        _("Import applications"),
+        _('Applications "%(application_names)s" (%(application_ids)s) imported'),
+        WORKSPACE_ACTION_CONTEXT,
+    )
+    analytics_params = [
+        "workspace_id",
+        "imported_file_name",
+        "application_ids",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        workspace_id: int
+        workspace_name: str
+        file_name: str
+        application_ids: List[int]
+        application_names: List[str]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        workspace: Workspace,
+        file_name: str,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> List[Application]:
+        """
+        Import applications into the provided workspace.
+
+        TODO:
+        """
+
+        cli_import_export_config = ImportExportConfig(
+            include_permission_data=False, reduce_disk_space_usage=False
+        )
+
+        applications = ImportExportHandler().import_workspace_applications(
+            user=user,
+            workspace=workspace,
+            file_name=file_name,
+            import_export_config=cli_import_export_config,
+            progress_builder=progress_builder,
+        )
+
+        params = cls.Params(
+            workspace_id=workspace.id,
+            workspace_name=workspace.name,
+            application_ids=[app.id for app in applications],
+            application_names=[app.name for app in applications],
+            file_name=file_name,
+        )
+
+        cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
+        return applications
+
+    @classmethod
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)

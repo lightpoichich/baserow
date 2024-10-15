@@ -480,13 +480,16 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
     def get_table_field_objects(self, service: LocalBaserowTableService) -> List[Dict]:
         """
-        Returns the fields of the table associated with the given service.
+        Returns the fields objects of the table of the given service.
+
+        :param service: The service we want the fields for.
+        :returns: The field objects from the table model.
         """
 
         model = self.get_table_model(service)
 
         if model is None:
-            return []
+            return None
 
         return model.get_field_objects()
 

@@ -14,7 +14,7 @@ from decimal import Decimal
 from fractions import Fraction
 from itertools import chain, islice
 from numbers import Number
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, Callable
 
 from django.conf import settings
 from django.db import transaction
@@ -1146,7 +1146,9 @@ TTL_CACHE_CLEANUP_INTERVAL = 60 * 60  # 1 hour
 
 
 def get_or_set_ttl_cache(
-    instance, property_name, populate_callback, ttl=settings.TTL_CACHE_DURATION
+    instance: Any,
+    property_name: str,
+    populate_callback: Callable,
 ):
     """
     Retrieves a cached value for a given property on the instance. If the cached value
@@ -1157,7 +1159,6 @@ def get_or_set_ttl_cache(
     :param property_name: The name of the property on the instance to cache and set.
     :param populate_callback: A callable that generates the value to cache if it is not
       present or has expired.
-    :param ttl: Time-To-Live in seconds for the cached value.
     :param cleanup_interval: Time in seconds for how often the cleanup should occur.
     :return: The cached or newly generated value.
     """
@@ -1193,6 +1194,9 @@ def get_or_set_ttl_cache(
     # If not valid or doesn't exist, call the callback to populate the value
     new_value = populate_callback()
 
-    instance._ttl_cache[property_name] = (new_value, current_time + ttl)
+    instance._ttl_cache[property_name] = (
+        new_value,
+        current_time + settings.TTL_CACHE_DURATION,
+    )
 
     return new_value

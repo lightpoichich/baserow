@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Iterable
 
 from django.contrib.auth import get_user_model
 
@@ -42,6 +42,7 @@ from .operations import (
 )
 from .registries import PermissionManagerType
 from .subjects import AnonymousUserSubjectType, UserSubjectType
+from django.contrib.auth.models import AbstractUser
 
 User = get_user_model()
 
@@ -194,7 +195,10 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
         return getattr(actor, self.actor_cache_key, {}).get(workspace.id, False)
 
     def get_user_ids_map_actually_in_workspace(
-        self, workspace, users_to_query, include_trash=False
+        self,
+        workspace: Workspace,
+        users_to_query: Iterable[AbstractUser],
+        include_trash: bool = False,
     ):
         """
         Return a `user_id -> is in the workspace` map. This version is cached for
@@ -203,7 +207,7 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
 
         cached = get_or_set_ttl_cache(
             self,
-            f"worspace_user_{workspace.id}",
+            f"workspace_user_{workspace.id}",
             dict,
         )
 

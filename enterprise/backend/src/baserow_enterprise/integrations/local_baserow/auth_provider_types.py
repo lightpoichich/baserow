@@ -203,7 +203,7 @@ class LocalBaserowPasswordAppAuthProviderType(AppAuthProviderType):
             **kwargs,
         )
 
-    def get_user_model_field_ids(self, auth_provider):
+    def get_user_model_field_ids(self, auth_provider: AuthProviderModelSubClass):
         """
         This method is specific to local_baserow app_auth_providers to return the list
         of fields used by this provider to select them on the table model to save

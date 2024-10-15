@@ -273,12 +273,10 @@ export default ({ service, customPopulateRow }) => {
       if (
         !Object.prototype.hasOwnProperty.call(row._.metadata, rowMetadataType)
       ) {
-        console.log('not exist')
         const metaDataCopy = clone(row._.metadata)
         metaDataCopy[rowMetadataType] = newValue
         Vue.set(row._, 'metadata', metaDataCopy)
       } else {
-        console.log('exists')
         Vue.set(row._.metadata, rowMetadataType, newValue)
       }
     },

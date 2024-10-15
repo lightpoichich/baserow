@@ -38,7 +38,7 @@ export class ServiceType extends Registerable {
   }
 
   /**
-   * Should return a JSON schema of the data returned by this data source.
+   * Should return a JSON schema of the data returned by this service.
    */
   getDataSchema(applicationContext, service) {
     throw new Error('Must be set on the type.')
@@ -53,7 +53,7 @@ export class ServiceType extends Registerable {
   }
 
   /**
-   * Returns a description of the given data source
+   * Returns a description of the given service
    */
   getDescription(service, application) {
     return this.name

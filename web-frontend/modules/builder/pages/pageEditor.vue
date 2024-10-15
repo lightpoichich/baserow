@@ -80,12 +80,14 @@ export default {
     const builder = this.$store.getters['application/get'](
       parseInt(from.params.builderId)
     )
-    // We want to reload once only data for this builder next time
-    this.$store.dispatch('application/forceUpdate', {
-      application: builder,
-      data: { _loadedOnce: false },
-    })
-    this.$store.dispatch('userSourceUser/logoff', { application: builder })
+    if (builder) {
+      // We want to reload once only data for this builder next time
+      this.$store.dispatch('application/forceUpdate', {
+        application: builder,
+        data: { _loadedOnce: false },
+      })
+      this.$store.dispatch('userSourceUser/logoff', { application: builder })
+    }
 
     next()
   },

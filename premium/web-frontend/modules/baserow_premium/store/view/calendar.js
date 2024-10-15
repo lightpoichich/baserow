@@ -213,7 +213,19 @@ export const mutations = {
   },
   UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
     const currentValue = row._.metadata[rowMetadataType]
-    Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
+    const newValue = updateFunction(currentValue)
+
+    if (
+      !Object.prototype.hasOwnProperty.call(row._.metadata, rowMetadataType)
+    ) {
+      console.log('not exist')
+      const metaDataCopy = clone(row._.metadata)
+      metaDataCopy[rowMetadataType] = newValue
+      Vue.set(row._, 'metadata', metaDataCopy)
+    } else {
+      console.log('exists')
+      Vue.set(row._.metadata, rowMetadataType, newValue)
+    }
   },
   SET_ADHOC_FILTERING(state, adhocFiltering) {
     state.adhocFiltering = adhocFiltering

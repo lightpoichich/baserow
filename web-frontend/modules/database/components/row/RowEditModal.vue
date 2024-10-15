@@ -1,27 +1,22 @@
 <template>
-  <Modal
+  <ModalV2
     ref="modal"
     :full-height="hasRightSidebar"
     :right-sidebar="hasRightSidebar"
-    :content-scrollable="hasRightSidebar"
-    :right-sidebar-scrollable="false"
-    :collapsible-right-sidebar="true"
+    sidebar-no-scroll
+    :footer="false"
+    :header="false"
+    topbar
     @hidden="hidden"
   >
-    <template #actions>
-      <component
-        :is="actionComponent"
-        v-for="(actionComponent, i) in rowModalActionComponents"
-        :key="i"
-        :database="database"
-        :table="table"
-        :row="row"
-      >
-      </component>
-    </template>
-    <template #content>
+    <template #topbar-content>
       <div v-if="enableNavigation" class="row-edit-modal__navigation">
-        <div v-if="navigationLoading" class="loading"></div>
+        <div
+          v-if="navigationLoading"
+          class="row-edit-modal__navigation-loading"
+        >
+          <span class="loading"> </span>
+        </div>
         <template v-else>
           <a
             class="row-edit-modal__navigation-item"
@@ -36,12 +31,69 @@
             <i class="iconoir-nav-arrow-down"></i>
           </a>
         </template>
+
+        <span class="row-edit-modal__heading">
+          {{ $t('localBaserowGetRowForm.rowFieldLabel') }}:
+          <strong>{{ row.id }}</strong>
+        </span>
       </div>
-      <div class="box__title">
-        <h2 class="row-modal__title">
-          {{ heading }}
-        </h2>
-      </div>
+    </template>
+
+    <template #topbar-actions>
+      <component
+        :is="actionComponent"
+        v-for="(actionComponent, i) in rowModalActionComponents"
+        :key="i"
+        :database="database"
+        :table="table"
+        :row="row"
+      >
+      </component>
+
+      <li
+        class="modal__topbar-icon"
+        :class="{ 'modal__topbar-icon--active': !collapseSidebar }"
+        @click="handleCollapseSidebar"
+      >
+        <i class="iconoir-message-text"></i>
+      </li>
+
+      <li
+        ref="contextMoreLink"
+        class="modal__topbar-icon"
+        @click="
+          $refs.moreContext.toggle($refs.contextMoreLink, 'bottom', 'right', 0)
+        "
+      >
+        <i class="baserow-icon-more-vertical"></i>
+      </li>
+
+      <Context ref="moreContext">
+        <ul class="context__menu">
+          <li class="context__menu-item">
+            <a
+              class="context__menu-item-link js-ctx-delete-row"
+              @click="$emit('duplicate-row', row)"
+            >
+              <i class="context__menu-item-icon iconoir-copy"></i>
+              {{ $t('gridView.duplicateRow') }}
+            </a>
+          </li>
+
+          <li class="context__menu-item context__menu-item--with-separator">
+            <a
+              class="context__menu-item-link context__menu-item-link--delete js-ctx-delete-row"
+              @click="$emit('delete-row', row)"
+            >
+              <i class="context__menu-item-icon iconoir-bin"></i>
+              {{ $t('gridView.deleteRow') }}
+            </a>
+          </li>
+        </ul>
+      </Context>
+    </template>
+
+    <template #content>
       <RowEditModalFieldsList
         :primary-is-sortable="primaryIsSortable"
         :fields="visibleFields"
@@ -101,6 +153,7 @@
       >
         <span ref="createFieldContextLink">
           <ButtonText
+            type="secondary"
             icon="iconoir-plus"
             @click="
               $refs.createFieldContext.toggle($refs.createFieldContextLink)
@@ -109,7 +162,6 @@
             {{ $t('rowEditModal.addField') }}
           </ButtonText></span
         >
-
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"
@@ -123,7 +175,8 @@
         ></CreateFieldContext>
       </div>
     </template>
-    <template #sidebar>
+
+    <template #sidebar-content>
       <RowEditModalSidebar
         :row="row"
         :table="table"
@@ -132,12 +185,12 @@
         :read-only="readOnly"
       ></RowEditModalSidebar>
     </template>
-  </Modal>
+  </ModalV2>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import modal from '@baserow/modules/core/mixins/modal'
+import modalv2 from '@baserow/modules/core/mixins/modalv2'
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import RowEditModalFieldsList from './RowEditModalFieldsList.vue'
 import RowEditModalHiddenFieldsSection from './RowEditModalHiddenFieldsSection.vue'
@@ -152,7 +205,7 @@ export default {
     RowEditModalHiddenFieldsSection,
     RowEditModalSidebar,
   },
-  mixins: [modal],
+  mixins: [modalv2],
   props: {
     database: {
       type: Object,
@@ -213,6 +266,11 @@ export default {
       required: false,
       default: () => true,
     },
+  },
+  data() {
+    return {
+      collapseSidebar: false,
+    }
   },
   computed: {
     ...mapGetters({
@@ -369,6 +427,10 @@ export default {
     update(context) {
       context.table = this.table
       this.$emit('update', context)
+    },
+    handleCollapseSidebar() {
+      this.collapseSidebar = !this.collapseSidebar
+      this.$refs.modal.collapseRightSidebar()
     },
   },
 }

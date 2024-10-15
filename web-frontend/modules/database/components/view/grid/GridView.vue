@@ -352,6 +352,8 @@
       @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
       @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
       @refresh-row="refreshRow"
+      @duplicate-row="duplicateRow($event)"
+      @delete-row="deleteRow($event)"
     ></RowEditModal>
   </div>
 </template>
@@ -692,8 +694,12 @@ export default {
     },
     duplicateSelectedRow(event, selectedRow) {
       event.preventFieldCellUnselect = true
-      this.addRowAfter(selectedRow, selectedRow)
+      this.duplicateRow(selectedRow)
+    },
+    duplicateRow(row) {
+      this.addRowAfter(row, row)
       this.$refs.rowContext.hide()
+      this.$refs.rowEditModal.hide()
     },
     copyLinkToSelectedRow(event, selectedRow) {
       const url =
@@ -955,6 +961,7 @@ export default {
             getScrollTop,
           }
         )
+        this.$refs.rowEditModal.hide()
         await this.$store.dispatch('toast/restore', {
           trash_item_type: 'row',
           parent_trash_item_id: this.table.id,
@@ -1028,6 +1035,7 @@ export default {
         return
       }
 
+      this.selectedRow = row
       this.$refs.rowEditModal.show(row.id)
       this.$emit('selected-row', row)
     },

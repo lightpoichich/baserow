@@ -84,6 +84,10 @@
   .tabs--full-height & {
     overflow: auto;
     height: 100%;
+
+    &.tab--no-scroll {
+      overflow: hidden;
+    }
   }
 
   .tabs--nopadding & {

@@ -10,6 +10,7 @@
       v-for="sidebarType in sidebarTypes"
       :key="sidebarType.getType()"
       :title="sidebarType.getName()"
+      no-scroll
     >
       <component
         :is="sidebarType.getComponent()"

@@ -133,9 +133,10 @@
 
 .rich-text-editor__mention,
 span[data-type='mention'] {
-  padding: 0 2px;
-  background-color: rgba(6, 46, 71, 0.08);
-  font-weight: 600;
+  padding: 0 4px;
+  background-color: $palette-blue-50;
+  font-weight: 500;
+  color: $palette-blue-700;
 
   @include rounded($rounded);
 }

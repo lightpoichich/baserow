@@ -5,7 +5,7 @@
         :class="{ 'row-modal__field-item-handle': sortable }"
         data-field-handle
       ></a>
-      <i :class="field._.type.iconClass"></i>
+      <i class="row-modal__field-item-icon" :class="field._.type.iconClass"></i>
       {{ field.name }}
       <span v-if="field.description" class="margin-left-1">
         <HelpIcon
@@ -21,7 +21,7 @@
       <i
         v-if="!readOnly && canModifyFields"
         ref="contextLink"
-        class="control__context baserow-icon-more-vertical"
+        class="row-modal__field-item-icon-more baserow-icon-more-vertical"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
       ></i>
     </label>

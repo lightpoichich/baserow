@@ -1,5 +1,27 @@
 <template>
   <div class="control__elements">
+    <span v-if="!readOnly" ref="dropdownLink" class="row-modal__choose-button">
+      <ButtonText
+        type="secondary"
+        icon="iconoir-plus"
+        @click.prevent="toggleDropdown()"
+      >
+        {{ $t('rowEditFieldMultipleCollaborators.addCollaborator') }}
+      </ButtonText></span
+    >
+    <FieldCollaboratorDropdown
+      v-if="!readOnly"
+      ref="dropdown"
+      :collaborators="availableCollaborators"
+      :disabled="readOnly"
+      :show-input="false"
+      :show-empty-value="false"
+      fixed-items
+      :class="{ 'dropdown--error': touched && !valid }"
+      @input="updateValue($event, value)"
+      @hide="touch()"
+    ></FieldCollaboratorDropdown>
+
     <ul class="field-multiple-collaborators__items">
       <li
         v-for="item in value"
@@ -27,23 +49,6 @@
         </template>
       </li>
     </ul>
-    <span v-if="!readOnly" ref="dropdownLink">
-      <ButtonText icon="iconoir-plus" @click.prevent="toggleDropdown()">
-        {{ $t('rowEditFieldMultipleCollaborators.addCollaborator') }}
-      </ButtonText></span
-    >
-
-    <FieldCollaboratorDropdown
-      v-if="!readOnly"
-      ref="dropdown"
-      :collaborators="availableCollaborators"
-      :disabled="readOnly"
-      :show-input="false"
-      :show-empty-value="false"
-      :class="{ 'dropdown--error': touched && !valid }"
-      @input="updateValue($event, value)"
-      @hide="touch()"
-    ></FieldCollaboratorDropdown>
     <div v-show="touched && !valid" class="error">
       {{ error }}
     </div>

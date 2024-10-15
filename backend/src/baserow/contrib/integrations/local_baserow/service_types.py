@@ -422,6 +422,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             field_type = field_object["type"]
             field = field_object["field"]
             # Only `TextField` has a default value at the moment.
+            field = field_object["field"]
             default_value = getattr(field, "text_default", None)
             field_serializer = field_type.get_serializer(field, FieldSerializer)
             properties[field.db_column] = {
@@ -472,15 +473,10 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         Returns the model for the table associated with the given service.
         """
 
-        if getattr(service, "_table_model", None) is None:
-            table = service.table
+        if getattr(service, "_table_model", None) is None and service.table_id:
+            setattr(service, "_table_model", service.table.get_model())
 
-            if not table:
-                return None
-
-            setattr(service, "_table_model", table.get_model())
-
-        return getattr(service, "_table_model")
+        return getattr(service, "_table_model", None)
 
     def get_table_field_objects(self, service: LocalBaserowTableService) -> List[Dict]:
         """
@@ -501,7 +497,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             return None
 
         ret = {}
-        for field_object in self.get_table_field_objects(service):
+        for field_object in field_objects:
             field_type = field_object["type"]
             if field_type.can_have_select_options:
                 field_serializer = field_type.get_serializer(

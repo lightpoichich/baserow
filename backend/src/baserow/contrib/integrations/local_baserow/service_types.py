@@ -168,7 +168,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         )
 
         if not model:
-            model = table.get_model()
+            model = self.get_table_model(service)
 
         queryset = self.get_queryset(service, table, dispatch_context, model)
 
@@ -183,12 +183,14 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     ):
         """Return the queryset for this model."""
 
-        return model.objects.all().enhance_by_fields()
+        only_field_names = self.get_used_field_names(service, dispatch_context)
+
+        return model.objects.all().enhance_by_fields(
+            only_field_ids=self.extract_field_ids(only_field_names)
+        )
 
     def enhance_queryset(self, queryset):
         return queryset.select_related(
-            "table",
-            "table__database",
             "table__database__workspace",
         ).prefetch_related("table__field_set")
 
@@ -414,9 +416,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             return None
 
         properties = {"id": {"type": "number", "title": "Id"}}
-        fields = FieldHandler().get_fields(table, specific=True)
-        for field in fields:
-            field_type = field_type_registry.get_by_model(field)
+        for field_object in self.get_table_field_objects(service):
+            field_type = field_object["type"]
+            field = field_object["field"]
             # Only `TextField` has a default value at the moment.
             default_value = getattr(field, "text_default", None)
             field_serializer = field_type.get_serializer(field, FieldSerializer)
@@ -439,18 +441,66 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return f"Table{service.table_id}Schema"
 
+    def get_used_field_names(
+        self, service: LocalBaserowTableService, dispatch_context: DispatchContext
+    ) -> Optional[List[str]]:
+        """
+        Retrieves the list of used field for this dispatch_context.
+
+        :param service: The service used for the dispatch.
+        :param dispatch_context: The context object.
+
+        Returns: A list of field names associated with the service ID if available,
+          otherwise None.
+        """
+
+        if dispatch_context.public_formula_fields is not None:
+            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
+                service.id, None
+            )
+            if all_field_names is not None:
+                return all_field_names
+
+        return None
+
+    def get_table_model(
+        self, service: LocalBaserowTableService
+    ) -> "GeneratedTableModel":
+        """
+        Returns the model for the table associated with the given service.
+        """
+
+        if getattr(service, "_table_model", None) is None:
+            table = service.table
+
+            if not table:
+                return None
+
+            setattr(service, "_table_model", table.get_model())
+
+        return getattr(service, "_table_model")
+
+    def get_table_field_objects(self, service: LocalBaserowTableService) -> List[Dict]:
+        """
+        Returns the fields of the table associated with the given service.
+        """
+
+        return self.get_table_model(service).get_field_objects()
+
     def get_context_data(self, service: ServiceSubClass) -> Dict[str, Any]:
         table = service.table
         if not table:
             return None
 
         ret = {}
-        fields = FieldHandler().get_fields(table, specific=True)
-        for field in fields:
-            field_type = field_type_registry.get_by_model(field)
+        field_objects = self.get_table_field_objects(service)
+        for field_object in field_objects:
+            field_type = field_object["type"]
             if field_type.can_have_select_options:
-                field_serializer = field_type.get_serializer(field, FieldSerializer)
-                ret[field.db_column] = field_serializer.data["select_options"]
+                field_serializer = field_type.get_serializer(
+                    field_object["field"], FieldSerializer
+                )
+                ret[field_object["name"]] = field_serializer.data["select_options"]
 
         return ret
 
@@ -503,6 +553,25 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         serializer_field = field_type.get_response_serializer_field(field)
         return guess_json_type_from_response_serializer_field(serializer_field)
+
+    def extract_field_ids(
+        self, field_names: Optional[List[str]]
+    ) -> Optional[List[int]]:
+        """
+        Given a list of field names, e.g. ["field_123"], return a list of
+        IDs, e.g. [123].
+
+        None will be returned if field_names is None.
+        """
+
+        if field_names is None:
+            return None
+
+        return [
+            int(field_name.split("field_")[-1])
+            for field_name in field_names
+            if isinstance(field_name, str) and field_name.startswith("field_")
+        ]
 
 
 class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
@@ -625,25 +694,6 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
                 values["view"] = None
 
         return super().prepare_values(values, user, instance)
-
-    def extract_field_ids(
-        self, field_names: Optional[List[str]]
-    ) -> Optional[List[int]]:
-        """
-        Given a list of field names, e.g. ["field_123"], return a list of
-        IDs, e.g. [123].
-
-        None will be returned if field_names is None.
-        """
-
-        if field_names is None:
-            return None
-
-        return [
-            int(field_name.split("field_")[-1])
-            for field_name in field_names
-            if isinstance(field_name, str) and "field_" in field_name
-        ]
 
 
 class LocalBaserowListRowsUserServiceType(
@@ -895,22 +945,19 @@ class LocalBaserowListRowsUserServiceType(
         :return: The list of rows.
         """
 
+        only_field_names = self.get_used_field_names(service, dispatch_context)
+
         table = resolved_values["table"]
-        model = table.get_model()
-        queryset = self.build_queryset(service, table, dispatch_context, model=model)
+        table_model = self.get_table_model(service)
 
-        public_formula_fields = None
+        queryset = self.build_queryset(
+            service, table, dispatch_context, model=table_model
+        )
 
-        if dispatch_context.public_formula_fields is not None:
-            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
-                service.id, None
-            )
-            if all_field_names is not None:
-                # Ensure that only the public_formula_fields explicitly used
-                # in the page are fetched from the database.
-                queryset = queryset.only(*all_field_names)
-
-            public_formula_fields = all_field_names
+        if only_field_names is not None:
+            # Ensure that only the public_formula_fields explicitly used
+            # in the page are fetched from the database.
+            queryset = queryset.only(*only_field_names)
 
         offset, count = dispatch_context.range(service)
 
@@ -925,8 +972,8 @@ class LocalBaserowListRowsUserServiceType(
         return {
             "results": rows[:-1] if has_next_page else rows,
             "has_next_page": has_next_page,
-            "baserow_table_model": model,
-            "public_formula_fields": public_formula_fields,
+            "baserow_table_model": table_model,
+            "public_formula_fields": only_field_names,
         }
 
     def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Any:
@@ -938,6 +985,7 @@ class LocalBaserowListRowsUserServiceType(
         """
 
         field_ids = self.extract_field_ids(dispatch_data.get("public_formula_fields"))
+
         serializer = get_row_serializer_class(
             dispatch_data["baserow_table_model"],
             RowSerializer,
@@ -1220,20 +1268,11 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         table = resolved_values["table"]
-        model = table.get_model()
-        queryset = self.build_queryset(service, table, dispatch_context, model)
+        only_field_names = self.get_used_field_names(service, dispatch_context)
 
-        public_formula_fields = None
-        if dispatch_context.public_formula_fields is not None:
-            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
-                service.id, None
-            )
-            if all_field_names is not None:
-                # Ensure that only the public_formula_fields explicitly used
-                # in the page are fetched from the database.
-                queryset = queryset.only(*all_field_names)
+        table_model = self.get_table_model(service)
 
-            public_formula_fields = all_field_names
+        queryset = self.build_queryset(service, table, dispatch_context, table_model)
 
         # If no row id is provided return the first item from the queryset
         # This is useful when we want to use filters to specifically choose one
@@ -1243,18 +1282,18 @@ class LocalBaserowGetRowUserServiceType(
                 raise DoesNotExist()
             return {
                 "data": queryset.first(),
-                "baserow_table_model": model,
-                "public_formula_fields": public_formula_fields,
+                "baserow_table_model": table_model,
+                "public_formula_fields": only_field_names,
             }
 
         try:
             row = queryset.get(pk=resolved_values["row_id"])
             return {
                 "data": row,
-                "baserow_table_model": model,
-                "public_formula_fields": public_formula_fields,
+                "baserow_table_model": table_model,
+                "public_formula_fields": only_field_names,
             }
-        except model.DoesNotExist:
+        except table_model.DoesNotExist:
             raise DoesNotExist()
 
 

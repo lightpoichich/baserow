@@ -416,7 +416,15 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         if not table:
             return None
 
-        properties = {"id": {"type": "number", "title": "Id"}}
+        properties = {
+            "id": {
+                "type": "number",
+                "title": "Id",
+                "sortable": True,
+                "filterable": False,
+                "searchable": False,
+            }
+        }
         for field_object in self.get_table_field_objects(service):
             field_type = field_object["type"]
             field = field_object["field"]
@@ -426,6 +434,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             properties[field.db_column] = {
                 "title": field.name,
                 "default": default_value,
+                "searchable": field_type.is_searchable(field),
+                "sortable": field_type.check_can_order_by(field),
+                "filterable": field_type.check_can_filter_by(field),
                 "original_type": field_type.type,
                 "metadata": field_serializer.data,
             } | self.get_json_type_from_response_serializer_field(field, field_type)
@@ -509,7 +520,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return ret
 
-    def get_context_data_schema(self, service: ServiceSubClass) -> Dict[str, Any]:
+    def get_context_data_schema(
+        self, service: ServiceSubClass
+    ) -> Optional[Dict[str, Any]]:
         table = service.table
         if not table:
             return None

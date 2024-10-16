@@ -228,6 +228,17 @@
         </template>
       </DeviceSelector>
     </FormGroup>
+    <FormGroup
+      v-if="selectedDataSource && $featureFlagIsEnabled(FF_PROPERTY_OPTIONS)"
+      small-label
+      class="margin-top-2 margin-bottom-2"
+      :label="$t('collectionElementForm.propertyOptionLabel')"
+    >
+      <PropertyOptionForm
+        :schema="propertySelectorSchema"
+        :element="element"
+      ></PropertyOptionForm>
+    </FormGroup>
   </form>
 </template>
 
@@ -252,10 +263,13 @@ import { mapActions, mapGetters } from 'vuex'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import ServiceSchemaPropertySelector from '@baserow/modules/core/components/services/ServiceSchemaPropertySelector'
 import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown'
+import { FF_PROPERTY_OPTIONS } from '@baserow/modules/core/plugins/featureFlags'
+import PropertyOptionForm from '@baserow/modules/builder/components/elements/components/forms/general/settings/PropertyOptionForm'
 
 export default {
   name: 'TableElementForm',
   components: {
+    PropertyOptionForm,
     DataSourceDropdown,
     ServiceSchemaPropertySelector,
     InjectedFormulaInput,
@@ -283,6 +297,7 @@ export default {
         orientation: {},
         button_load_more_label: '',
       },
+      FF_PROPERTY_OPTIONS,
     }
   },
   computed: {

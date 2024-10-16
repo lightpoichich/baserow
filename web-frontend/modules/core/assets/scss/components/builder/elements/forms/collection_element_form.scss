@@ -1,0 +1,32 @@
+.property-option-table .baserow-table {
+  border-radius: 5px;
+  overflow: hidden; // To prevent the border-radius from being clipped.
+  border: solid 1px $color-neutral-400;
+
+  thead tr {
+    background-color: $color-neutral-100;
+
+    th {
+      border-bottom: 1px solid $color-neutral-400;
+    }
+  }
+
+  .baserow-table__row {
+    td,
+    th {
+      padding-left: 10px;
+      height: 45px;
+    }
+
+    div.checkbox {
+      width: fit-content;
+    }
+
+    &:not(:last-child) {
+      .baserow-table__cell,
+      .baserow-table__header-cell {
+        border-bottom: 1px solid $color-neutral-400;
+      }
+    }
+  }
+}

@@ -129,6 +129,17 @@
       <Checkbox :checked="isCollapsed" @input="emitToggleRepetitions($event)">
       </Checkbox>
     </FormGroup>
+    <FormGroup
+      v-if="selectedDataSource && $featureFlagIsEnabled(FF_PROPERTY_OPTIONS)"
+      small-label
+      class="margin-bottom-2"
+      :label="$t('collectionElementForm.propertyOptionLabel')"
+    >
+      <PropertyOptionForm
+        :schema="propertySelectorSchema"
+        :element="element"
+      ></PropertyOptionForm>
+    </FormGroup>
   </form>
 </template>
 
@@ -143,10 +154,13 @@ import CustomStyle from '@baserow/modules/builder/components/elements/components
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import ServiceSchemaPropertySelector from '@baserow/modules/core/components/services/ServiceSchemaPropertySelector.vue'
 import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown.vue'
+import PropertyOptionForm from '@baserow/modules/builder/components/elements/components/forms/general/settings/PropertyOptionForm'
+import { FF_PROPERTY_OPTIONS } from '@baserow/modules/core/plugins/featureFlags'
 
 export default {
   name: 'RepeatElementForm',
   components: {
+    PropertyOptionForm,
     DataSourceDropdown,
     DeviceSelector,
     CustomStyle,
@@ -175,6 +189,7 @@ export default {
         button_load_more_label: '',
         styles: {},
       },
+      FF_PROPERTY_OPTIONS,
     }
   },
   computed: {

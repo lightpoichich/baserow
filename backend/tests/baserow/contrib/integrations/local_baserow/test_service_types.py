@@ -847,7 +847,7 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
         field_db_column_by_name["password"]: {
             "title": "password",
             "default": None,
-            "searchable": True,  # TODO: this will be changing
+            "searchable": False,
             "sortable": False,
             "filterable": True,  # Only by `EmptyViewFilterType`
             "original_type": "password",

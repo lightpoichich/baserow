@@ -130,15 +130,12 @@
       </Checkbox>
     </FormGroup>
     <FormGroup
-      v-if="selectedDataSource && $featureFlagIsEnabled(FF_PROPERTY_OPTIONS)"
+      v-if="propertyOptionsAvailable"
       small-label
       class="margin-bottom-2"
       :label="$t('collectionElementForm.propertyOptionLabel')"
     >
-      <PropertyOptionForm
-        :schema="propertySelectorSchema"
-        :element="element"
-      ></PropertyOptionForm>
+      <PropertyOptionForm :element="element"></PropertyOptionForm>
     </FormGroup>
   </form>
 </template>
@@ -155,7 +152,6 @@ import InjectedFormulaInput from '@baserow/modules/core/components/formula/Injec
 import ServiceSchemaPropertySelector from '@baserow/modules/core/components/services/ServiceSchemaPropertySelector.vue'
 import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown.vue'
 import PropertyOptionForm from '@baserow/modules/builder/components/elements/components/forms/general/settings/PropertyOptionForm'
-import { FF_PROPERTY_OPTIONS } from '@baserow/modules/core/plugins/featureFlags'
 
 export default {
   name: 'RepeatElementForm',
@@ -189,7 +185,6 @@ export default {
         button_load_more_label: '',
         styles: {},
       },
-      FF_PROPERTY_OPTIONS,
     }
   },
   computed: {

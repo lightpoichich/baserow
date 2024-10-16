@@ -25,6 +25,9 @@
           <template v-else>{{ value }}</template>
         </td>
       </template>
+      <template #empty-state>
+        {{ $t('propertyOptionForm.noPropertiesAvailable') }}
+      </template>
     </BaserowTable>
   </div>
 </template>
@@ -41,12 +44,14 @@ export default {
       type: Object,
       required: true,
     },
-    schema: {
-      type: Object,
-      required: true,
-    },
   },
   computed: {
+    schema() {
+      const dataSource = this.$store.getters[
+        'dataSource/getPageDataSourceById'
+      ](this.page, this.element.data_source_id)
+      return dataSource.schema
+    },
     /**
      * Returns an object with schema properties as keys and their corresponding
      * property options as values. It's a convenience computed method to easily
@@ -73,7 +78,14 @@ export default {
       ]
     },
     rows() {
-      return Object.entries(this.schema.properties)
+      if (this.schema === null) {
+        return []
+      }
+      const schemaProperties =
+        this.schema.type === 'array'
+          ? this.schema.items.properties
+          : this.schema.properties
+      return Object.entries(schemaProperties)
         .filter(
           ([_, propertyValues]) =>
             propertyValues.sortable ||

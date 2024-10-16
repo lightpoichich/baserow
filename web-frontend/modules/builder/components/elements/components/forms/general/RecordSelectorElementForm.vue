@@ -123,15 +123,12 @@
       <Checkbox v-model="values.required"></Checkbox>
     </FormGroup>
     <FormGroup
-      v-if="selectedDataSource && $featureFlagIsEnabled(FF_PROPERTY_OPTIONS)"
+      v-if="propertyOptionsAvailable"
       small-label
       class="margin-bottom-2"
       :label="$t('collectionElementForm.propertyOptionLabel')"
     >
-      <PropertyOptionForm
-        :schema="propertySelectorSchema"
-        :element="element"
-      ></PropertyOptionForm>
+      <PropertyOptionForm :element="element"></PropertyOptionForm>
     </FormGroup>
   </form>
 </template>
@@ -143,7 +140,6 @@ import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle.vue'
 import { integer, maxValue, minValue, required } from 'vuelidate/lib/validators'
 import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown.vue'
-import { FF_PROPERTY_OPTIONS } from '@baserow/modules/core/plugins/featureFlags'
 import PropertyOptionForm from '@baserow/modules/builder/components/elements/components/forms/general/settings/PropertyOptionForm'
 
 export default {
@@ -179,7 +175,6 @@ export default {
         option_name_suffix: '',
         styles: {},
       },
-      FF_PROPERTY_OPTIONS,
     }
   },
   computed: {

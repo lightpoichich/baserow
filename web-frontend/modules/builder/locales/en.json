@@ -573,6 +573,7 @@
   },
   "propertyOptionForm": {
     "optionUnavailable": "Unavailable",
+    "noPropertiesAvailable": "No fields available.",
     "formDescription": "Choose which properties within this element's data source external users can filter, sort and search upon."
   },
   "repeatElementForm": {

@@ -66,9 +66,9 @@ class DataSourceHandler:
                         data_source, specific_service
                     )
             else:
-                data_source = queryset.select_related(
-                    "page__builder__workspace", "service__integration"
-                ).get(id=data_source_id)
+                data_source = queryset.select_related("service__integration").get(
+                    id=data_source_id
+                )
         except DataSource.DoesNotExist:
             raise DataSourceDoesNotExist()
 

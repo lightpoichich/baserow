@@ -377,7 +377,10 @@ class CollectionElementTypeMixin:
         )
 
         # Create property options
-        options = [CollectionElementPropertyOptions(**po) for po in property_options]
+        options = [
+            CollectionElementPropertyOptions(**po, element=instance)
+            for po in property_options
+        ]
         CollectionElementPropertyOptions.objects.bulk_create(options)
 
         instance.property_options.add(*options)

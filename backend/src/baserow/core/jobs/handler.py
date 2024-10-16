@@ -36,7 +36,7 @@ class JobHandler:
 
         if job.cancelled:
             return
-        if job.finished or job.failed:
+        elif job.ended:
             raise JobNotCancellable()
 
         job.set_state_cancelled()

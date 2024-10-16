@@ -13,12 +13,9 @@ from .constants import JOB_CANCELLED, JOB_FAILED, JOB_FINISHED, JOB_PENDING, JOB
 
 User = get_user_model()
 
-JOB_STATES_FAILED = (
-    JOB_CANCELLED,
-    JOB_FAILED,
-)
-JOB_STATES_FINISHED = JOB_STATES_FAILED + (JOB_FINISHED,)
-JOB_STATES_NOT_RUNNING = JOB_STATES_FINISHED + (JOB_PENDING,)
+JOB_STATES_FAILED = (JOB_CANCELLED, JOB_FAILED)
+JOB_STATES_ENDED = JOB_STATES_FAILED + (JOB_FINISHED,)
+JOB_STATES_NOT_RUNNING = JOB_STATES_ENDED + (JOB_PENDING,)
 JOB_STATES_RUNNING = (JOB_STARTED,)
 JOB_STATES_PENDING = (JOB_PENDING,)
 
@@ -32,10 +29,10 @@ class JobQuerySet(models.QuerySet):
         return self.exclude(state__in=JOB_STATES_NOT_RUNNING)
 
     def is_ended(self):
-        return self.filter(state__in=JOB_STATES_FINISHED)
+        return self.filter(state__in=JOB_STATES_ENDED)
 
     def is_pending_or_running(self):
-        return self.exclude(state__in=JOB_STATES_FINISHED)
+        return self.exclude(state__in=JOB_STATES_ENDED)
 
 
 class Job(CreatedAndUpdatedOnMixin, PolymorphicContentTypeMixin, models.Model):
@@ -194,8 +191,8 @@ class Job(CreatedAndUpdatedOnMixin, PolymorphicContentTypeMixin, models.Model):
         return self.get_cached_state() == JOB_FINISHED
 
     @property
-    def done(self):
-        return self.finished or self.failed or self.cancelled
+    def ended(self):
+        return self.get_cached_state() in JOB_STATES_ENDED
 
     def clear_job_cache(self):
         """

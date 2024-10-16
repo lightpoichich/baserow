@@ -9,7 +9,7 @@
  *
  * Job state changes are handled with callbacks. A component that want to use this
  * mixin should provide following methods:
- * - onJobDone() (optional) is called if the job successfully finishes.
+ * - onJobFinished() (optional) is called if the job successfully finishes.
  * - onJobFailed() (optional) is called if the job fails.
  * - onJobCancelled() (optional) is called if a job has been cancelled.
  * - onJobCancelFailed() (optional) is called when a job cancellation request failed.
@@ -30,14 +30,14 @@ export default {
     jobHasFailed() {
       return this.job?.state === 'failed' || this.job?.state === 'cancelled'
     },
-    jobIsDone() {
+    jobIsEnded() {
       return this.jobIsFinished || this.jobHasFailed
     },
     jobIsFinished() {
       return this.job?.state === 'finished'
     },
     jobIsRunning() {
-      return this.job !== null && !this.jobIsDone
+      return this.job !== null && !this.jobIsEnded
     },
 
     jobHumanReadableState() {

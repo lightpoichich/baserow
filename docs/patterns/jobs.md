@@ -391,8 +391,8 @@ and provides:
 + `job` - the job object
 + `jobIsRunning` - job is not done yet, may be pending or running
 + `jobIsFinished` - job has finished successfully
-+ `jobIsDone` - job was finished or was cancelled
-+ `jobHasFailed` - job was finished with an error
++ `jobIsEnded` - job was finished or failed
++ `jobHasFailed` - job failed with an error or it has been cancelled
 
 * methods:
 

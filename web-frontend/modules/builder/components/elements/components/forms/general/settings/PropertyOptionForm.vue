@@ -71,10 +71,26 @@ export default {
      */
     fields() {
       return [
-        { name: 'Field', property: null, isOption: false },
-        { name: 'Filter', property: 'filterable', isOption: true },
-        { name: 'Sort', property: 'sortable', isOption: true },
-        { name: 'Search', property: 'searchable', isOption: true },
+        {
+          name: this.$t('propertyOptionForm.fieldHeading'),
+          property: null,
+          isOption: false,
+        },
+        {
+          name: this.$t('propertyOptionForm.filterHeading'),
+          property: 'filterable',
+          isOption: true,
+        },
+        {
+          name: this.$t('propertyOptionForm.sortHeading'),
+          property: 'sortable',
+          isOption: true,
+        },
+        {
+          name: this.$t('propertyOptionForm.searchHeading'),
+          property: 'searchable',
+          isOption: true,
+        },
       ]
     },
     rows() {

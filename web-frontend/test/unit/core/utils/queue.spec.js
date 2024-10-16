@@ -1,50 +1,94 @@
 import { GroupTaskQueue } from '@baserow/modules/core/utils/queue'
 
-function sleep(ms) {
-  // FIXME: * 10 is a hack to increase the sleep time without the need to change all the
-  // values. The problem is that timing is not always accurate when running tests in
-  // parallel and this tests might fail because of that.
-  return new Promise((resolve) => setTimeout(resolve, ms * 10))
+// Create a custom sense of time that can be controlled by the test
+// and don't rely on some precise timing that could fail in CI.
+function startTimer(timer) {
+  if (timer.timerInterval) {
+    clearInterval(timer.timerInterval)
+  }
+  timer.currentTime = 0
+  timer.timerInterval = setInterval(() => {
+    timer.currentTime += 5
+  }, 5)
 }
 
-// Split the test to make sure they run async. This actually helps with the sleep
-// timing. Not super happy about these tests that rely on `sleep`, but I'm not aware
-// of a better way of testing concurrency in this case.
+function stopTimer(timer) {
+  if (timer.timerInterval) {
+    clearInterval(timer.timerInterval)
+    timer.timerInterval = null
+  }
+}
+
+function sleep(timer, ms) {
+  const targetTime = timer.currentTime + ms
+  return new Promise((resolve) => {
+    const checkTime = () => {
+      if (timer.currentTime >= targetTime) {
+        resolve()
+      } else {
+        setTimeout(checkTime, 2)
+      }
+    }
+    checkTime()
+  })
+}
+
 describe('test GroupTaskQueue when immediately filling the queue', () => {
+  let timer
+
+  beforeAll(() => {
+    timer = { currentTime: 0, timerInterval: null }
+    startTimer(timer)
+  })
+
+  afterAll(() => {
+    stopTimer(timer)
+  })
+
   test('test GroupTaskQueue when immediately filling the queue', async () => {
     let executed1 = false
     let executed2 = false
 
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed1 = true
     })
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed2 = true
     })
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
 
-    await sleep(15)
+    await sleep(timer, 15)
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
 
-    await sleep(10)
+    await sleep(timer, 10)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(false)
 
-    await sleep(20)
+    await sleep(timer, 20)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
   })
 })
 describe('test GroupTaskQueue adding to queue on the fly', () => {
+  let timer
+
+  beforeAll(() => {
+    timer = { currentTime: 0, timerInterval: null }
+    startTimer(timer)
+  })
+
+  afterAll(() => {
+    stopTimer(timer)
+  })
   test('test GroupTaskQueue adding to queue on the fly', async () => {
     let executed1 = false
     let executed2 = false
@@ -52,7 +96,7 @@ describe('test GroupTaskQueue adding to queue on the fly', () => {
 
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed1 = true
     })
 
@@ -60,35 +104,35 @@ describe('test GroupTaskQueue adding to queue on the fly', () => {
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
-    await sleep(15)
+    await sleep(timer, 15)
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed2 = true
     })
 
-    await sleep(15)
+    await sleep(timer, 15)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed3 = true
     })
 
-    await sleep(15)
+    await sleep(timer, 15)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
     expect(executed3).toBe(false)
 
-    await sleep(25)
+    await sleep(timer, 25)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -96,6 +140,16 @@ describe('test GroupTaskQueue adding to queue on the fly', () => {
   })
 })
 describe('test GroupTaskQueue with different ids', () => {
+  let timer
+
+  beforeAll(() => {
+    timer = { currentTime: 0, timerInterval: null }
+    startTimer(timer)
+  })
+
+  afterAll(() => {
+    stopTimer(timer)
+  })
   test('test GroupTaskQueue with different ids', async () => {
     let executed1 = false
     let executed2 = false
@@ -103,32 +157,32 @@ describe('test GroupTaskQueue with different ids', () => {
 
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed1 = true
     }, 1)
 
-    await sleep(10)
+    await sleep(timer, 10)
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed2 = true
     }, 2)
     queue.add(async () => {
-      await sleep(30)
+      await sleep(timer, 30)
       executed3 = true
     }, 1)
 
-    await sleep(30)
+    await sleep(timer, 30)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
     expect(executed3).toBe(false)
 
-    await sleep(10)
+    await sleep(timer, 10)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -136,6 +190,16 @@ describe('test GroupTaskQueue with different ids', () => {
   })
 })
 describe('test GroupTaskQueue with waiting for add to resolve', () => {
+  let timer
+
+  beforeAll(() => {
+    timer = { currentTime: 0, timerInterval: null }
+    startTimer(timer)
+  })
+
+  afterAll(() => {
+    stopTimer(timer)
+  })
   test('test GroupTaskQueue with waiting for add to resolve', async () => {
     let executed1 = false
     let executed2 = false
@@ -144,27 +208,27 @@ describe('test GroupTaskQueue with waiting for add to resolve', () => {
     const queue = new GroupTaskQueue()
     queue
       .add(async () => {
-        await sleep(20)
+        await sleep(timer, 20)
       })
       .then(() => {
         executed1 = true
       })
     queue
       .add(async () => {
-        await sleep(20)
+        await sleep(timer, 20)
       })
       .then(() => {
         executed2 = true
       })
     queue
       .add(async () => {
-        await sleep(20)
+        await sleep(timer, 20)
       })
       .then(() => {
         executed3 = true
       })
 
-    await sleep(50)
+    await sleep(timer, 50)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -172,6 +236,16 @@ describe('test GroupTaskQueue with waiting for add to resolve', () => {
   })
 })
 describe('test GroupTaskQueue with exception during execution', () => {
+  let timer
+
+  beforeAll(() => {
+    timer = { currentTime: 0, timerInterval: null }
+    startTimer(timer)
+  })
+
+  afterAll(() => {
+    stopTimer(timer)
+  })
   test('test GroupTaskQueue with exception during execution', async () => {
     let failed1 = false
     let failed1Error = null
@@ -180,7 +254,7 @@ describe('test GroupTaskQueue with exception during execution', () => {
     const queue = new GroupTaskQueue()
     queue
       .add(async () => {
-        await sleep(20)
+        await sleep(timer, 20)
         throw new Error('test')
       })
       .then(() => {
@@ -192,7 +266,7 @@ describe('test GroupTaskQueue with exception during execution', () => {
       })
     queue
       .add(async () => {
-        await sleep(20)
+        await sleep(timer, 20)
       })
       .then(() => {
         failed2 = false
@@ -201,7 +275,7 @@ describe('test GroupTaskQueue with exception during execution', () => {
         failed2 = true
       })
 
-    await sleep(50)
+    await sleep(timer, 50)
 
     expect(failed1).toBe(true)
     expect(failed1Error.toString()).toBe('Error: test')
@@ -209,6 +283,16 @@ describe('test GroupTaskQueue with exception during execution', () => {
   })
 })
 describe('test GroupTaskQueue with lock', () => {
+  let timer
+
+  beforeAll(() => {
+    timer = { currentTime: 0, timerInterval: null }
+    startTimer(timer)
+  })
+
+  afterAll(() => {
+    stopTimer(timer)
+  })
   test('test GroupTaskQueue with exception during execution', async () => {
     let executed1 = false
     let executed2 = false
@@ -219,19 +303,19 @@ describe('test GroupTaskQueue with lock', () => {
     queue.lock(2)
 
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed1 = true
     }, 1)
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed2 = true
     }, 2)
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
       executed3 = true
     }, 1)
 
-    await sleep(30)
+    await sleep(timer, 30)
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
@@ -239,7 +323,7 @@ describe('test GroupTaskQueue with lock', () => {
 
     queue.release(2)
 
-    await sleep(30)
+    await sleep(timer, 30)
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(true)
@@ -247,13 +331,13 @@ describe('test GroupTaskQueue with lock', () => {
 
     queue.release(1)
 
-    await sleep(30)
+    await sleep(timer, 30)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
     expect(executed3).toBe(false)
 
-    await sleep(20)
+    await sleep(timer, 20)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -261,15 +345,25 @@ describe('test GroupTaskQueue with lock', () => {
   })
 })
 describe('test queue deleted from GroupTaskQueue', () => {
+  let timer
+
+  beforeAll(() => {
+    timer = { currentTime: 0, timerInterval: null }
+    startTimer(timer)
+  })
+
+  afterAll(() => {
+    stopTimer(timer)
+  })
   test('test queue deleted from GroupTaskQueue', async () => {
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(20)
+      await sleep(timer, 20)
     }, 1)
 
     expect(Object.prototype.hasOwnProperty.call(queue.queues, 1)).toBe(true)
 
-    await sleep(30)
+    await sleep(timer, 30)
 
     expect(Object.prototype.hasOwnProperty.call(queue.queues, 1)).toBe(false)
   })

@@ -73,7 +73,6 @@ export default {
     LocalBaserowTableServiceConditionalForm,
   },
   mixins: [form],
-  inject: ['page'],
   props: {
     builder: {
       type: Object,
@@ -107,9 +106,6 @@ export default {
     }
   },
   computed: {
-    dataSourceLoading() {
-      return this.$store.getters['dataSource/getLoading'](this.page)
-    },
     dataSourceFilters: {
       get() {
         return this.excludeTrashedFields(this.values.filters)
@@ -160,12 +156,6 @@ export default {
       if (oldValue && newValue !== oldValue) {
         this.tableLoading = true
       }
-    },
-    dataSourceLoading: {
-      handler() {
-        this.tableLoading = false
-      },
-      immediate: true,
     },
   },
   methods: {

@@ -1,7 +1,25 @@
 <template>
   <ThemeProvider class="page">
     <PageElement
+      v-for="element in headerElements"
+      :key="element.id"
+      :element="element"
+      :mode="mode"
+      :application-context-additions="{
+        recordIndexPath: [],
+      }"
+    />
+    <PageElement
       v-for="element in elements"
+      :key="element.id"
+      :element="element"
+      :mode="mode"
+      :application-context-additions="{
+        recordIndexPath: [],
+      }"
+    />
+    <PageElement
+      v-for="element in footerElements"
       :key="element.id"
       :element="element"
       :mode="mode"
@@ -23,10 +41,6 @@ export default {
   mixins: [dimensionMixin],
   inject: ['builder', 'mode'],
   props: {
-    page: {
-      type: Object,
-      required: true,
-    },
     path: {
       type: String,
       required: true,
@@ -38,6 +52,22 @@ export default {
     elements: {
       type: Array,
       required: true,
+    },
+    sharedElements: {
+      type: Array,
+      required: true,
+    },
+  },
+  computed: {
+    headerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'header'
+      )
+    },
+    footerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'footer'
+      )
     },
   },
   watch: {

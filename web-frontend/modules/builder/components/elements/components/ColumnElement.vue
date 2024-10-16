@@ -35,15 +35,21 @@
       <AddElementZone
         v-else-if="
           mode === 'editing' &&
-          $hasPermission('builder.page.create_element', page, workspace.id)
+          $hasPermission(
+            'builder.page.create_element',
+            elementPage,
+            workspace.id
+          )
         "
         @add-element="showAddElementModal(columnIndex)"
       />
     </div>
     <AddElementModal
       ref="addElementModal"
-      :page="page"
-      :element-types-allowed="elementType.childElementTypes(page, element)"
+      :page="elementPage"
+      :element-types-allowed="
+        elementType.childElementTypes(elementPage, element)
+      "
     />
   </div>
 </template>
@@ -148,7 +154,7 @@ export default {
     async move(element, placement) {
       try {
         await this.actionMoveElement({
-          page: this.page,
+          page: this.elementPage,
           element,
           placement,
         })

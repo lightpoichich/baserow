@@ -1,10 +1,10 @@
 <template>
-  <ThemeProvider
+  <div
     class="page-preview__wrapper"
     :class="`page-preview__wrapper--${deviceType.type}`"
     @click.self="actionSelectElement({ element: null })"
   >
-    <PreviewNavigationBar :page="page" :style="{ maxWidth }" />
+    <PreviewNavigationBar :page="currentPage" :style="{ maxWidth }" />
     <div ref="preview" class="page-preview" :style="{ 'max-width': maxWidth }">
       <div
         ref="previewScaled"
@@ -12,36 +12,97 @@
         tabindex="0"
         @keydown="handleKeyDown"
       >
-        <CallToAction
-          v-if="!elements.length"
-          class="page-preview__empty"
-          icon="baserow-icon-plus"
-          icon-color="neutral"
-          icon-size="large"
-          icon-rounded
-          @click="$refs.addElementModal.show()"
-        >
-          {{ $t('pagePreview.emptyMessage') }}
-        </CallToAction>
-        <div v-else class="page">
-          <ElementPreview
-            v-for="(element, index) in elements"
-            :key="element.id"
-            is-root-element
-            :element="element"
-            :is-first-element="index === 0"
-            :is-last-element="index === elements.length - 1"
-            :is-copying="copyingElementIndex === index"
-            :application-context-additions="{
-              recordIndexPath: [],
-            }"
-            @move="moveElement($event)"
-          />
-        </div>
+        <ThemeProvider class="page">
+          <template v-if="headerElements.length === 0">
+            <CallToAction
+              class="page-preview__empty"
+              icon="baserow-icon-plus"
+              icon-color="neutral"
+              icon-size="large"
+              icon-rounded
+              :style="{ margin: '0 auto' }"
+              @click="$refs.addSharedPageElementModal.show()"
+            >
+              {{ $t('pagePreview.emptyMessage') }} (shared)
+            </CallToAction>
+          </template>
+          <template v-else>
+            <ElementPreview
+              v-for="(element, index) in headerElements"
+              :key="element.id"
+              is-root-element
+              :element="element"
+              :is-first-element="index === 0"
+              :is-last-element="index === elements.length - 1"
+              :is-copying="copyingElementIndex === index"
+              :application-context-additions="{
+                recordIndexPath: [],
+              }"
+              @move="moveElement($event)"
+            />
+          </template>
+          <hr />
+          <template v-if="elements.length === 0">
+            <CallToAction
+              class="page-preview__empty"
+              icon="baserow-icon-plus"
+              icon-color="neutral"
+              icon-size="large"
+              icon-rounded
+              @click="$refs.addElementModal.show()"
+            >
+              {{ $t('pagePreview.emptyMessage') }} (local)
+            </CallToAction>
+          </template>
+          <template v-else>
+            <ElementPreview
+              v-for="(element, index) in elements"
+              :key="element.id"
+              is-root-element
+              :element="element"
+              :is-first-element="index === 0"
+              :is-last-element="index === elements.length - 1"
+              :is-copying="copyingElementIndex === index"
+              :application-context-additions="{
+                recordIndexPath: [],
+              }"
+              @move="moveElement($event)"
+            />
+          </template>
+          <hr />
+          <template v-if="footerElements.length === 0">
+            <CallToAction
+              class="page-preview__empty"
+              icon="baserow-icon-plus"
+              icon-color="neutral"
+              icon-size="large"
+              icon-rounded
+              :style="{ margin: '0 auto' }"
+              @click="$refs.addSharedPageElementModal.show()"
+            >
+              {{ $t('pagePreview.emptyMessage') }} (shared)
+            </CallToAction>
+          </template>
+          <template v-else>
+            <ElementPreview
+              v-for="(element, index) in footerElements"
+              :key="element.id"
+              :element="element"
+              :is-first-element="index === 0"
+              :is-last-element="index === elements.length - 1"
+              :is-copying="copyingElementIndex === index"
+              :application-context-additions="{
+                recordIndexPath: [],
+              }"
+              @move="moveElement($event)"
+            />
+          </template>
+        </ThemeProvider>
       </div>
-      <AddElementModal ref="addElementModal" :page="page" />
+      <AddElementModal ref="addSharedPageElementModal" :page="sharedPage" />
+      <AddElementModal ref="addElementModal" :page="currentPage" />
     </div>
-  </ThemeProvider>
+  </div>
 </template>
 
 <script>
@@ -62,7 +123,7 @@ export default {
     ElementPreview,
     PreviewNavigationBar,
   },
-  inject: ['page', 'workspace'],
+  inject: ['builder', 'currentPage', 'workspace'],
   data() {
     return {
       // The element that is currently being copied
@@ -81,10 +142,36 @@ export default {
       getClosestSiblingElement: 'element/getClosestSiblingElement',
     }),
     elements() {
-      return this.$store.getters['element/getRootElements'](this.page)
+      return this.$store.getters['element/getRootElements'](this.currentPage)
+    },
+    sharedPage() {
+      return this.$store.getters['page/getSharedPage'](this.builder)
+    },
+    sharedElements() {
+      return this.$store.getters['element/getRootElements'](this.sharedPage)
+    },
+    headerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'header'
+      )
+    },
+    footerElements() {
+      return this.sharedElements.filter(
+        ({ page_position: pagePosition }) => pagePosition === 'footer'
+      )
     },
     elementSelectedId() {
       return this.elementSelected?.id
+    },
+    elementSelectedPage() {
+      if (this.elementSelectedId) {
+        // We use the page from the element itself
+        return this.$store.getters['page/getById'](
+          this.builder,
+          this.elementSelected.page_id
+        )
+      }
+      return null
     },
     deviceType() {
       return this.deviceTypeSelected
@@ -101,14 +188,14 @@ export default {
         return null
       }
       return this.$store.getters['element/getElementById'](
-        this.page,
+        this.elementSelectedPage,
         this.elementSelected.parent_element_id
       )
     },
     canCreateElement() {
       return this.$hasPermission(
         'builder.page.create_element',
-        this.page,
+        this.currentPage,
         this.workspace.id
       )
     },
@@ -210,7 +297,7 @@ export default {
         this.elementSelected.type
       )
       const placementsDisabled = elementType.getPlacementsDisabled(
-        this.page,
+        this.elementSelectedPage,
         this.elementSelected
       )
 
@@ -220,7 +307,7 @@ export default {
 
       try {
         await this.actionMoveElement({
-          page: this.page,
+          page: this.elementSelectedPage,
           element: this.elementSelected,
           placement,
         })
@@ -239,7 +326,7 @@ export default {
         this.elementSelected.type
       )
       const placementsDisabled = elementType.getPlacementsDisabled(
-        this.page,
+        this.elementSelectedPage,
         this.elementSelected
       )
 
@@ -248,8 +335,9 @@ export default {
       }
 
       try {
+        // TODO it's not possible to jump from shared page to current page
         await this.actionSelectNextElement({
-          page: this.page,
+          page: this.elementSelectedPage,
           element: this.elementSelected,
           placement,
         })
@@ -265,7 +353,7 @@ export default {
       this.isDuplicating = true
       try {
         await this.actionDuplicateElement({
-          page: this.page,
+          page: this.elementSelectedPage,
           elementId: this.elementSelected.id,
         })
       } catch (error) {
@@ -279,11 +367,11 @@ export default {
       }
       try {
         const siblingElementToSelect = this.getClosestSiblingElement(
-          this.page,
+          this.elementSelectedPage,
           this.elementSelected
         )
         await this.actionDeleteElement({
-          page: this.page,
+          page: this.elementSelectedPage,
           elementId: this.elementSelected.id,
         })
         if (siblingElementToSelect?.id) {
@@ -299,7 +387,10 @@ export default {
       }
     },
     selectChildElement() {
-      const children = this.getChildren(this.page, this.elementSelected)
+      const children = this.getChildren(
+        this.elementSelectedPage,
+        this.elementSelected
+      )
       if (children.length) {
         this.actionSelectElement({ element: children[0] })
       }

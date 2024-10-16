@@ -34,6 +34,7 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
+    MultiPageContainerElement,
     NavigationElementMixin,
     RecordSelectorElement,
     RepeatElement,
@@ -155,6 +156,126 @@ class ColumnElementType(ContainerElementTypeMixin, ElementType):
             raise DRFValidationError(
                 f"place_in_container can at most be {max_place_in_container}, ({place_in_container}, was given)"
             )
+
+    @property
+    def child_types_allowed(self) -> List[str]:
+        """
+        The column container only forbids itself as a child.
+        :return: a list of element types, without the column container type.
+        """
+
+        return [
+            element_type.type
+            for element_type in element_type_registry.get_all()
+            if element_type.type != self.type
+        ]
+
+
+class MultiPageContainerType(ContainerElementTypeMixin, ElementType):
+    """
+    A container element that can be displayed on multiple pages.
+    """
+
+    type = "multi_page"
+    model_class = MultiPageContainerElement
+
+    class SerializedDict(ElementDict):
+        page_position: str
+        share_type: str
+        pages: List[int]
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + [
+            "page_position",
+            "share_type",
+            "pages",
+        ]
+
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + [
+            "page_position",
+            "share_type",
+        ]
+
+    @property
+    def request_serializer_field_overrides(self):
+        return {
+            "pages": serializers.ListField(
+                child=serializers.IntegerField(),
+                help_text="Page Ids",
+                required=False,
+            ),
+        }
+
+    def after_update(self, instance: Any, values: Dict):
+        super().after_update(instance, values)
+
+        if "pages" in values:
+            instance.pages.clear()
+            instance.pages.add(*values["pages"])
+
+    def serialize_property(
+        self,
+        element: MultiPageContainerElement,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "pages":
+            return [page.id for page in element.pages.all()]
+
+        return super().serialize_property(
+            element,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+    def create_instance_from_serialized(
+        self,
+        serialized_values: Dict[str, Any],
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
+        """Deals with the fields"""
+
+        pages = serialized_values.pop("pages", [])
+
+        instance = super().create_instance_from_serialized(
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+        pages = [id_mapping["builder_pages"][page_id] for page_id in pages]
+
+        if pages:
+            instance.pages.add(*pages)
+
+        return instance
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {
+            "page_position": "header",
+            "share_type": "all",
+        }
 
     @property
     def child_types_allowed(self) -> List[str]:

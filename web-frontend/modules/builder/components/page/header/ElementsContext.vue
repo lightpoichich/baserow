@@ -24,7 +24,9 @@
       {{ $t('elementsContext.noElements') }}
     </div>
     <div
-      v-if="$hasPermission('builder.page.create_element', page, workspace.id)"
+      v-if="
+        $hasPermission('builder.page.create_element', currentPage, workspace.id)
+      "
       class="elements-list__footer"
     >
       <div class="elements-list__footer-create">
@@ -37,9 +39,11 @@
       </div>
     </div>
     <AddElementModal
-      v-if="$hasPermission('builder.page.create_element', page, workspace.id)"
+      v-if="
+        $hasPermission('builder.page.create_element', currentPage, workspace.id)
+      "
       ref="addElementModal"
-      :page="page"
+      :page="currentPage"
       @element-added="onElementAdded"
     />
   </Context>
@@ -57,11 +61,10 @@ export default {
   name: 'ElementsContext',
   components: { AddElementModal, AddElementButton, ElementsList },
   mixins: [context],
-  inject: ['workspace', 'page', 'builder', 'mode'],
+  inject: ['workspace', 'currentPage', 'builder', 'mode'],
   data() {
     return {
       search: null,
-      addingElementType: null,
     }
   },
   computed: {
@@ -72,7 +75,7 @@ export default {
       )
     },
     rootElements() {
-      return this.$store.getters['element/getRootElements'](this.page)
+      return this.$store.getters['element/getRootElements'](this.currentPage)
     },
     /*
      * When a user searches for elements in the list, this computed method
@@ -118,7 +121,7 @@ export default {
       this.rootElements.forEach((rootElement) => {
         // Find this element's descendants and loop over them.
         const descendants = this.$store.getters['element/getDescendants'](
-          this.page,
+          this.currentPage,
           rootElement
         )
         descendants.forEach((descendant) => {
@@ -129,7 +132,7 @@ export default {
             // The descendant matches. We need to include *this* element,
             // and all its *ancestors* in our list of narrowed results.
             const ascendants = this.$store.getters['element/getAncestors'](
-              this.page,
+              this.carrentPage,
               descendant
             )
             filteredToElementIds.push(descendant.id)
@@ -165,7 +168,7 @@ export default {
       const elementType = this.$registry.get('element', element.type)
       return elementType.getDisplayName(element, {
         builder: this.builder,
-        page: this.page,
+        page: this.currentPage,
         mode: this.mode,
         element,
       })

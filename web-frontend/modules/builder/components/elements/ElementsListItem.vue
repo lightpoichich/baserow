@@ -33,7 +33,7 @@ export default {
     ElementsList: () =>
       import('@baserow/modules/builder/components/elements/ElementsList'),
   },
-  inject: ['builder', 'page', 'mode'],
+  inject: ['builder', 'mode'],
   props: {
     element: {
       type: Object,
@@ -55,8 +55,18 @@ export default {
     elementType() {
       return this.$registry.get('element', this.element.type)
     },
+    elementPage() {
+      // We use the page from the element itself
+      return this.$store.getters['page/getById'](
+        this.builder,
+        this.element.page_id
+      )
+    },
     children() {
-      return this.$store.getters['element/getChildren'](this.page, this.element)
+      return this.$store.getters['element/getChildren'](
+        this.elementPage,
+        this.element
+      )
     },
     /**
      * Responsible for returning elements to display in `ElementsList`.
@@ -76,7 +86,7 @@ export default {
     applicationContext() {
       return {
         builder: this.builder,
-        page: this.page,
+        page: this.elementPage,
         mode: this.mode,
         element: this.element,
       }

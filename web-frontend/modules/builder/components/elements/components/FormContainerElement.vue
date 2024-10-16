@@ -4,14 +4,16 @@
       v-if="
         mode === 'editing' &&
         children.length === 0 &&
-        $hasPermission('builder.page.create_element', page, workspace.id)
+        $hasPermission('builder.page.create_element', currentPage, workspace.id)
       "
     >
       <AddElementZone @add-element="showAddElementModal"></AddElementZone>
       <AddElementModal
         ref="addElementModal"
-        :page="page"
-        :element-types-allowed="elementType.childElementTypes(page, element)"
+        :page="elementPage"
+        :element-types-allowed="
+          elementType.childElementTypes(elementPage, element)
+        "
       ></AddElementModal>
     </div>
     <div v-else>
@@ -64,7 +66,6 @@ export default {
   props: {
     /**
      * @type {Object}
-     * @property button_color - The submit button's color.
      * @property submit_button_label - The label of the submit button
      * @property reset_initial_values_post_submission - Whether to reset the form
      *  elements to their initial value or not, following a successful submission.
@@ -80,7 +81,7 @@ export default {
     },
     getFormElementDescendants() {
       const descendants = this.$store.getters['element/getDescendants'](
-        this.page,
+        this.elementPage,
         this.element
       )
       return descendants
@@ -104,7 +105,7 @@ export default {
             recordIndexPath
           )
           return this.$store.getters['formData/getElementInvalid'](
-            this.page,
+            this.elementPage,
             uniqueElementId
           )
         }
@@ -128,7 +129,7 @@ export default {
             recordIndexPath
           )
           this.$store.dispatch('formData/setElementTouched', {
-            page: this.page,
+            page: this.elementPage,
             wasTouched,
             uniqueElementId,
           })
@@ -166,7 +167,7 @@ export default {
               ),
             }
             this.$store.dispatch('formData/setFormData', {
-              page: this.page,
+              page: this.elementPage,
               payload,
               uniqueElementId,
             })
@@ -197,7 +198,7 @@ export default {
     async moveElement(element, placement) {
       try {
         await this.actionMoveElement({
-          page: this.page,
+          page: this.elementPage,
           element,
           placement,
         })

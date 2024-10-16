@@ -22,6 +22,7 @@ import {
   CHOICE_OPTION_TYPES,
   ELEMENT_EVENTS,
   PLACEMENTS,
+  SHARE_TYPES,
 } from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
@@ -43,9 +44,11 @@ import IFrameElementForm from '@baserow/modules/builder/components/elements/comp
 import RepeatElement from '@baserow/modules/builder/components/elements/components/RepeatElement'
 import RepeatElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RepeatElementForm'
 import RecordSelectorElement from '@baserow/modules/builder/components/elements/components/RecordSelectorElement.vue'
+import RecordSelectorElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RecordSelectorElementForm'
+import MultiPageContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/MultiPageContainerElementForm'
+import MultiPageContainerElement from '@baserow/modules/builder/components/elements/components/MultiPageContainerElement'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { isNumeric, isValidEmail } from '@baserow/modules/core/utils/string'
-import RecordSelectorElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RecordSelectorElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -98,6 +101,10 @@ export class ElementType extends Registerable {
     ]
   }
 
+  get onSharedPage() {
+    return false
+  }
+
   get styles() {
     return this.stylesAll
   }
@@ -119,6 +126,16 @@ export class ElementType extends Registerable {
 
   getEventByName(element, name) {
     return this.getEvents(element).find((event) => event.name === name)
+  }
+
+  /**
+   * Should return whether this element is visible.
+   * @param {Object} element the element to check
+   * @param {Object} currentPage the current displayed page
+   * @returns
+   */
+  isVisible({ element, currentPage }) {
+    return true
   }
 
   /**
@@ -501,7 +518,10 @@ const ContainerElementTypeMixin = (Base) =>
      * @returns {Array} An array of forbidden child element types.
      */
     childElementTypesForbidden(page, element) {
-      return []
+      if (page.shared) {
+        return []
+      }
+      return this.elementTypesAll.filter((type) => type.onSharedPage)
     }
 
     /**
@@ -626,9 +646,12 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
    * @returns {Array} An array containing the `FormContainerElementType`.
    */
   childElementTypesForbidden(page, element) {
-    return this.elementTypesAll.filter(
-      (elementType) => elementType.type === this.getType()
-    )
+    return [
+      ...super.childElementTypesForbidden(page, element),
+      ...this.elementTypesAll.filter(
+        (elementType) => elementType.type === this.getType()
+      ),
+    ]
   }
 
   get childStylesForbidden() {
@@ -690,9 +713,12 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
    * @returns {Array} An array containing the `ColumnElementType`.
    */
   childElementTypesForbidden(page, element) {
-    return this.elementTypesAll.filter(
-      (elementType) => elementType.type === this.getType()
-    )
+    return [
+      ...super.childElementTypesForbidden(page, element),
+      ...this.elementTypesAll.filter(
+        (elementType) => elementType.type === this.getType()
+      ),
+    ]
   }
 
   get childStylesForbidden() {
@@ -1781,5 +1807,96 @@ export class RecordSelectorElementType extends CollectionElementTypeMixin(
         },
       }
     }
+  }
+}
+
+export class MultiPageContainerElementType extends ContainerElementTypeMixin(
+  ElementType
+) {
+  static getType() {
+    return 'multi_page'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.multiPageContainer')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.multiPageContainerDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-layout-left'
+  }
+
+  get component() {
+    return MultiPageContainerElement
+  }
+
+  get generalFormComponent() {
+    return MultiPageContainerElementForm
+  }
+
+  get onSharedPage() {
+    return true
+  }
+
+  isVisible({ element, currentPage }) {
+    switch (element.share_type) {
+      case SHARE_TYPES.ALL:
+        return true
+      case SHARE_TYPES.ONLY:
+        return element.pages.includes(currentPage.id)
+      case SHARE_TYPES.EXCEPT:
+        return !element.pages.includes(currentPage.id)
+      default:
+        return false
+    }
+  }
+
+  get childStylesForbidden() {
+    return ['style_width']
+  }
+
+  childElementTypesForbidden(page, element) {
+    return [
+      ...super.childElementTypesForbidden(page, element),
+      ...this.elementTypesAll.filter(
+        (elementType) => elementType.type === this.getType()
+      ),
+    ]
+  }
+
+  getDefaultValues(page, values) {
+    const superValues = super.getDefaultValues(page, values)
+    const builder = this.app.store.getters['application/get'](page.builder_id)
+    const sharedPage = this.app.store.getters['page/getSharedPage'](builder)
+    return {
+      ...superValues,
+      style_padding_left: 0,
+      style_padding_right: 0,
+      page_id: sharedPage.id,
+    }
+  }
+
+  getDefaultChildValues(page, values) {
+    return {}
+  }
+
+  /**
+   * Return an array of placements that are disallowed for the elements to move
+   * in their container.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element for which the placements should
+   *    be calculated.
+   * @returns {Array} An array of placements that are disallowed for the element.
+   */
+  getPlacementsDisabledForChild(page, containerElement, element) {
+    return [
+      PLACEMENTS.LEFT,
+      PLACEMENTS.RIGHT,
+      ...this.getVerticalPlacementsDisabled(page, element),
+    ]
   }
 }

@@ -19,7 +19,6 @@ import ElementsListItem from '@baserow/modules/builder/components/elements/Eleme
 export default {
   name: 'ElementsList',
   components: { ElementsListItem },
-  inject: ['page'],
   props: {
     elements: {
       type: Array,

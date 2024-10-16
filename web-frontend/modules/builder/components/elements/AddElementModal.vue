@@ -16,7 +16,7 @@
         :parent-type="parentElementType"
         :disallowed-type-for-ancestry="isDisallowedByParent(elementType)"
         :loading="addingElementType === elementType.getType()"
-        :disabled="isCardDisabled(elementType)"
+        :disabled="isElementTypeDisabled(elementType)"
         @click="addElement(elementType)"
       />
     </div>
@@ -34,6 +34,7 @@ export default {
   name: 'AddElementModal',
   components: { AddElementCard },
   mixins: [modal],
+  inject: ['builder'],
   props: {
     page: {
       type: Object,
@@ -81,11 +82,18 @@ export default {
         !this.elementTypesAllowed.includes(elementType)
       )
     },
-    isCardDisabled(elementType) {
+    isElementTypeDisabled(elementType) {
       const isAddingElementType =
-        this.addingElementType !== null &&
         elementType.getType() === this.addingElementType
-      return isAddingElementType || this.isDisallowedByParent(elementType)
+
+      // Some elements are only allowed on shared pages
+      const notAllowedAsRootThisPage =
+        !this.parentElementType && this.page.shared !== elementType.onSharedPage
+      return (
+        notAllowedAsRootThisPage ||
+        isAddingElementType ||
+        this.isDisallowedByParent(elementType)
+      )
     },
     ...mapActions({
       actionCreateElement: 'element/create',
@@ -98,7 +106,7 @@ export default {
       modal.methods.show.bind(this)(...args)
     },
     async addElement(elementType) {
-      if (this.isCardDisabled(elementType)) {
+      if (this.isElementTypeDisabled(elementType)) {
         return false
       }
       this.addingElementType = elementType.getType()
@@ -108,7 +116,6 @@ export default {
             place_in_container: this.placeInContainer,
           }
         : null
-
       try {
         await this.actionCreateElement({
           page: this.page,

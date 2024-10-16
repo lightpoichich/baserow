@@ -43,7 +43,9 @@ export default {
   },
   computed: {
     dataSources() {
-      return this.$store.getters['dataSource/getPageDataSources'](this.page)
+      return this.$store.getters['dataSource/getPageDataSources'](
+        this.elementPage
+      )
     },
   },
 }

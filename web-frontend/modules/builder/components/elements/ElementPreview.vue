@@ -51,7 +51,7 @@
       v-if="canCreate"
       ref="addElementModal"
       :element-types-allowed="elementTypesAllowed"
-      :page="page"
+      :page="elementPage"
     />
 
     <i
@@ -85,7 +85,7 @@ export default {
     InsertElementButton,
     PageElement,
   },
-  inject: ['workspace', 'builder', 'page', 'mode'],
+  inject: ['workspace', 'builder', 'mode', 'currentPage'],
   props: {
     element: {
       type: Object,
@@ -97,11 +97,6 @@ export default {
       default: false,
     },
     isFirstElement: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    isRootElement: {
       type: Boolean,
       required: false,
       default: false,
@@ -124,7 +119,23 @@ export default {
       getClosestSiblingElement: 'element/getClosestSiblingElement',
       loggedUser: 'userSourceUser/getUser',
     }),
+    elementPage() {
+      // We use the page from the element itself
+      return this.$store.getters['page/getById'](
+        this.builder,
+        this.element.page_id
+      )
+    },
     isVisible() {
+      if (
+        !this.elementType.isVisible({
+          element: this.element,
+          currentPage: this.currentPage,
+        })
+      ) {
+        return false
+      }
+
       const isAuthenticated = this.$store.getters[
         'userSourceUser/isAuthenticated'
       ](this.builder)
@@ -165,24 +176,26 @@ export default {
         return null
       }
       return this.$store.getters['element/getElementById'](
-        this.page,
+        this.elementPage,
         this.elementSelected.parent_element_id
       )
     },
     placementsDisabled() {
       const elementType = this.$registry.get('element', this.element.type)
-      return elementType.getPlacementsDisabled(this.page, this.element)
+      return elementType.getPlacementsDisabled(this.elementPage, this.element)
     },
     elementTypesAllowed() {
       return (
-        this.parentElementType?.childElementTypes(this.page, this.element) ||
-        null
+        this.parentElementType?.childElementTypes(
+          this.elementPage,
+          this.element
+        ) || null
       )
     },
     canCreate() {
       return this.$hasPermission(
         'builder.page.create_element',
-        this.page,
+        this.currentPage,
         this.workspace.id
       )
     },
@@ -200,7 +213,7 @@ export default {
       if (!this.elementSelected) {
         return []
       }
-      return this.elementAncestors(this.page, this.elementSelected).map(
+      return this.elementAncestors(this.elementPage, this.elementSelected).map(
         ({ id }) => id
       )
     },
@@ -215,7 +228,7 @@ export default {
         return null
       }
       return this.$store.getters['element/getElementById'](
-        this.page,
+        this.elementPage,
         this.element.parent_element_id
       )
     },
@@ -226,13 +239,13 @@ export default {
     },
     nextElement() {
       return this.$store.getters['element/getNextElement'](
-        this.page,
+        this.elementPage,
         this.element
       )
     },
     inError() {
       return this.elementType.isInError({
-        page: this.page,
+        page: this.elementPage,
         element: this.element,
         builder: this.builder,
       })
@@ -316,7 +329,7 @@ export default {
       this.isDuplicating = true
       try {
         await this.actionDuplicateElement({
-          page: this.page,
+          page: this.elementPage,
           elementId: this.element.id,
         })
       } catch (error) {
@@ -327,11 +340,11 @@ export default {
     async deleteElement() {
       try {
         const siblingElementToSelect = this.getClosestSiblingElement(
-          this.page,
+          this.elementPage,
           this.elementSelected
         )
         await this.actionDeleteElement({
-          page: this.page,
+          page: this.elementPage,
           elementId: this.element.id,
         })
         if (siblingElementToSelect?.id) {

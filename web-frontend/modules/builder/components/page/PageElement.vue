@@ -17,10 +17,11 @@
     <div class="element__inner-wrapper">
       <component
         :is="component"
+        :key="element._.uid"
         :element="element"
-        :children="children"
         :application-context-additions="{
           element,
+          page: elementPage,
         }"
         class="element"
       />
@@ -49,9 +50,9 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'PageElement',
   mixins: [applicationContextMixin],
-  inject: ['builder', 'page', 'mode'],
+  inject: ['builder', 'mode', 'currentPage'],
   provide() {
-    return { mode: this.elementMode }
+    return { mode: this.elementMode, elementPage: this.elementPage }
   },
   props: {
     element: {
@@ -79,13 +80,29 @@ export default {
         this.elementMode === 'editing' ? 'editComponent' : 'component'
       return elementType[componentName]
     },
-    children() {
-      return this.$store.getters['element/getChildren'](this.page, this.element)
-    },
     ...mapGetters({
       loggedUser: 'userSourceUser/getUser',
     }),
+    elementPage() {
+      // We use the page from the element itself
+      return this.$store.getters['page/getById'](
+        this.builder,
+        this.element.page_id
+      )
+    },
+    elementType() {
+      return this.$registry.get('element', this.element.type)
+    },
     isVisible() {
+      if (
+        !this.elementType.isVisible({
+          element: this.element,
+          currentPage: this.currentPage,
+        })
+      ) {
+        return false
+      }
+
       const isAuthenticated = this.$store.getters[
         'userSourceUser/isAuthenticated'
       ](this.builder)

@@ -111,6 +111,7 @@ class PublicElementSerializer(serializers.ModelSerializer):
             "id",
             "type",
             "order",
+            "page_id",
             "parent_element_id",
             "place_in_container",
             "visibility",

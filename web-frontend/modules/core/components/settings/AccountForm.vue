@@ -31,7 +31,7 @@
     </FormGroup>
 
     <FormGroup :label="$t('accountForm.languageLabel')" small-label required>
-      <Dropdown v-model="values.language" :show-search="false">
+      <Dropdown v-model="values.language" :show-search="false" fixed-items>
         <DropdownItem
           v-for="locale in $i18n.locales"
           :key="locale.code"
@@ -47,7 +47,6 @@
 
 <script>
 import { required, maxLength, minLength } from 'vuelidate/lib/validators'
-
 import form from '@baserow/modules/core/mixins/form'
 
 export default {

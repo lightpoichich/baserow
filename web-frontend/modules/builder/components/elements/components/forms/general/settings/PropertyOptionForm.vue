@@ -111,14 +111,18 @@ export default {
         .map(([schemaProperty, propertyValues]) => ({
           schemaProperty,
           propertyValues,
-          Field: propertyValues.title,
-          Filter: this.getOptionValue(
+          [this.$t('propertyOptionForm.fieldHeading')]: propertyValues.title,
+          [this.$t('propertyOptionForm.filterHeading')]: this.getOptionValue(
             schemaProperty,
             propertyValues,
             'filterable'
           ),
-          Sort: this.getOptionValue(schemaProperty, propertyValues, 'sortable'),
-          Search: this.getOptionValue(
+          [this.$t('propertyOptionForm.sortHeading')]: this.getOptionValue(
+            schemaProperty,
+            propertyValues,
+            'sortable'
+          ),
+          [this.$t('propertyOptionForm.searchHeading')]: this.getOptionValue(
             schemaProperty,
             propertyValues,
             'searchable'

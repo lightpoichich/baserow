@@ -1481,7 +1481,9 @@ class LocalBaserowUpsertRowServiceType(
                 {
                     **item,
                     "field_id": (
-                        id_mapping["database_fields"][item["field_id"]]
+                        # The `database_fields` exist, but the field ID
+                        # won't be present if it's trashed.
+                        id_mapping["database_fields"].get(item["field_id"], None)
                         if "database_fields" in id_mapping
                         else item["field_id"]
                     ),
@@ -1527,7 +1529,11 @@ class LocalBaserowUpsertRowServiceType(
             **kwargs,
         )
 
-        # Create the field mappings
+        # Create the field mappings.
+        # We don't create any field mappings if the `field_id` is `None`,
+        # this will happen if we've exported a workspace's applications
+        # and the field was trashed. The imported application's field mapping
+        # will be skipped.
         LocalBaserowTableServiceFieldMapping.objects.bulk_create(
             [
                 LocalBaserowTableServiceFieldMapping(
@@ -1535,6 +1541,7 @@ class LocalBaserowUpsertRowServiceType(
                     service=service,
                 )
                 for field_mapping in field_mappings
+                if field_mapping["field_id"] is not None
             ]
         )
 

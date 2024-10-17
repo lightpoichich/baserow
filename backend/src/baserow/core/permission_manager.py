@@ -1,6 +1,7 @@
-from typing import List, Iterable
+from typing import Iterable, List
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 
 from baserow.core.handler import CoreHandler
 from baserow.core.integrations.operations import (
@@ -42,7 +43,6 @@ from .operations import (
 )
 from .registries import PermissionManagerType
 from .subjects import AnonymousUserSubjectType, UserSubjectType
-from django.contrib.auth.models import AbstractUser
 
 User = get_user_model()
 
@@ -202,7 +202,7 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
     ):
         """
         Return a `user_id -> is in the workspace` map. This version is cached for
-        `TTL_CACHE_DURATION` seconds to prevent queries.
+        a few seconds to prevent queries.
         """
 
         cached = get_or_set_ttl_cache(

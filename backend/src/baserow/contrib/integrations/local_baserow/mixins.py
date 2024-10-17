@@ -416,7 +416,7 @@ class LocalBaserowTableServiceSearchableMixin:
         )
 
         if isinstance(used_fields_from_parent, list) and service.search_query:
-            fields = [fo["field"] for fo in self.get_table_field_objects(service)]
+            fields = [fo["field"] for fo in self.get_table_field_objects(service) or []]
             return used_fields_from_parent + [f.tsv_db_column for f in fields]
 
         return used_fields_from_parent

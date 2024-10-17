@@ -14,7 +14,7 @@ from decimal import Decimal
 from fractions import Fraction
 from itertools import chain, islice
 from numbers import Number
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, Callable
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from django.conf import settings
 from django.db import transaction
@@ -1164,7 +1164,7 @@ def get_or_set_ttl_cache(
 
     # To deactivate the cache we can set the duration to 0
     # the cache is also deactivated by default in the tests
-    if settings.TTL_CACHE_DURATION == 0 or getattr(settings, "TESTS", False):
+    if settings.SHORT_LIVE_CACHE_TTL_DURATION == 0 or getattr(settings, "TESTS", False):
         return populate_callback()
 
     # Initialize the cache and last cleanup time on the instance if they don't exist
@@ -1195,7 +1195,7 @@ def get_or_set_ttl_cache(
 
     instance._ttl_cache[property_name] = (
         new_value,
-        current_time + settings.TTL_CACHE_DURATION,
+        current_time + settings.SHORT_LIVE_CACHE_TTL_DURATION,
     )
 
     return new_value

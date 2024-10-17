@@ -20,9 +20,6 @@ from baserow.contrib.builder.elements.models import Element
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.user_sources.user_source_user import UserSourceUser
-from tests.baserow.contrib.builder.api.user_sources.helpers import (
-    create_user_table_and_role,
-)
 
 
 @pytest.fixture
@@ -693,8 +690,7 @@ def user_source_user_fixture(data_fixture):
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
 
-    user_source, _ = create_user_table_and_role(
-        data_fixture,
+    user_source, _ = data_fixture.create_user_table_and_role(
         user,
         builder,
         "foo_user_role",
@@ -1009,8 +1005,7 @@ def test_public_dispatch_data_sources_list_rows_with_elements_and_role(
 
     page = data_source_element_roles_fixture["page"]
 
-    user_source, integration = create_user_table_and_role(
-        data_fixture,
+    user_source, integration = data_fixture.create_user_table_and_role(
         data_source_element_roles_fixture["user"],
         data_source_element_roles_fixture["builder_to"],
         user_role,

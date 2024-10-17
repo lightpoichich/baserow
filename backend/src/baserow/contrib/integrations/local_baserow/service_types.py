@@ -26,6 +26,7 @@ from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
+from baserow.contrib.database.api.utils import extract_field_ids_from_list
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -186,7 +187,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         only_field_names = self.get_used_field_names(service, dispatch_context)
 
         return model.objects.all().enhance_by_fields(
-            only_field_ids=self.extract_field_ids(only_field_names)
+            only_field_ids=extract_field_ids_from_list(only_field_names)
         )
 
     def enhance_queryset(self, queryset):
@@ -485,7 +486,12 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         Returns the fields of the table associated with the given service.
         """
 
-        return self.get_table_model(service).get_field_objects()
+        model = self.get_table_model(service)
+
+        if model is None:
+            return []
+
+        return model.get_field_objects()
 
     def get_context_data(self, service: ServiceSubClass) -> Dict[str, Any]:
         table = service.table
@@ -493,8 +499,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             return None
 
         ret = {}
-        field_objects = self.get_table_field_objects(service)
-        for field_object in field_objects:
+        for field_object in self.get_table_field_objects(service):
             field_type = field_object["type"]
             if field_type.can_have_select_options:
                 field_serializer = field_type.get_serializer(
@@ -553,25 +558,6 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         serializer_field = field_type.get_response_serializer_field(field)
         return guess_json_type_from_response_serializer_field(serializer_field)
-
-    def extract_field_ids(
-        self, field_names: Optional[List[str]]
-    ) -> Optional[List[int]]:
-        """
-        Given a list of field names, e.g. ["field_123"], return a list of
-        IDs, e.g. [123].
-
-        None will be returned if field_names is None.
-        """
-
-        if field_names is None:
-            return None
-
-        return [
-            int(field_name.split("field_")[-1])
-            for field_name in field_names
-            if isinstance(field_name, str) and field_name.startswith("field_")
-        ]
 
 
 class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
@@ -984,7 +970,11 @@ class LocalBaserowListRowsUserServiceType(
         :return: The list of rows.
         """
 
-        field_ids = self.extract_field_ids(dispatch_data.get("public_formula_fields"))
+        field_ids = (
+            extract_field_ids_from_list(dispatch_data["public_formula_fields"])
+            if isinstance(dispatch_data["public_formula_fields"], list)
+            else None
+        )
 
         serializer = get_row_serializer_class(
             dispatch_data["baserow_table_model"],
@@ -1223,13 +1213,19 @@ class LocalBaserowGetRowUserServiceType(
         :return:
         """
 
-        field_ids = self.extract_field_ids(dispatch_data.get("public_formula_fields"))
+        field_ids = (
+            extract_field_ids_from_list(dispatch_data["public_formula_fields"])
+            if isinstance(dispatch_data["public_formula_fields"], list)
+            else None
+        )
+
         serializer = get_row_serializer_class(
             dispatch_data["baserow_table_model"],
             RowSerializer,
             is_response=True,
             field_ids=field_ids,
         )
+
         serialized_row = serializer(dispatch_data["data"]).data
 
         return serialized_row

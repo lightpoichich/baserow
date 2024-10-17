@@ -1106,15 +1106,14 @@ def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
     mock_get_serializer.return_value = mock_serializer
 
     service_type = LocalBaserowListRowsUserServiceType()
-    service_type.extract_field_ids = MagicMock(return_value=[])
 
     dispatch_data = {
         "baserow_table_model": MagicMock(),
         "results": [],
         "has_next_page": False,
     }
-    if field_names:
-        dispatch_data["public_formula_fields"] = field_names
+
+    dispatch_data["public_formula_fields"] = field_names
 
     results = service_type.dispatch_transform(dispatch_data)
 
@@ -1126,9 +1125,8 @@ def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
         dispatch_data["baserow_table_model"],
         RowSerializer,
         is_response=True,
-        field_ids=[],
+        field_ids=None,
     )
-    service_type.extract_field_ids.assert_called_once_with(field_names)
 
 
 @pytest.mark.parametrize(

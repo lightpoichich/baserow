@@ -396,7 +396,6 @@ class RecordSelectorElementType(
     type = "record_selector"
     model_class = RecordSelectorElement
     simple_formula_fields = [
-        # "option_name_suffix",
         "label",
         "default_value",
         "placeholder",
@@ -524,8 +523,10 @@ class RecordSelectorElementType(
 
             try:
                 # Beside the id and the name field, the record selector also requires
-                # the "current_record" properties, so we parse the formula and create
-                # a new context to extract it.
+                # the properties used in the `option_name_suffix` formula.
+                # This formula has access to the `CurrentDataProvider` so we need
+                # to populate the formula context with the `data_source_id`
+                # of the element so that we can resolve them.
                 formula_context = ElementHandler().get_import_context_addition(
                     instance.id,
                     element_map,
@@ -549,6 +550,8 @@ class RecordSelectorElementType(
         import_formula: Callable[[str, Dict[str, Any]], str],
         **kwargs: Dict[str, Any],
     ) -> Set[Instance]:
+        # We need to import the option_name_suffix formula separately because
+        # it uses a different import_context
         updated_models = super().import_formulas(
             instance, id_mapping, import_formula, **kwargs
         )

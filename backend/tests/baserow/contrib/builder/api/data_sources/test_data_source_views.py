@@ -43,8 +43,7 @@ def data_source_fixture(data_fixture):
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
 
-    user_source, _ = create_user_table_and_role(
-        data_fixture,
+    user_source, _ = data_fixture.create_user_table_and_role(
         user,
         builder,
         "foo_user_role",

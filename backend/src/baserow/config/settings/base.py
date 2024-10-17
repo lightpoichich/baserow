@@ -1257,4 +1257,4 @@ BASEROW_OLLAMA_MODELS = (
 )
 
 # Duration of the short living cache used to save queries in many places
-TTL_CACHE_DURATION = 10
+SHORT_LIVE_CACHE_TTL_DURATION = 10

@@ -1,94 +1,50 @@
 import { GroupTaskQueue } from '@baserow/modules/core/utils/queue'
+import flushPromises from 'flush-promises'
 
-// Create a custom sense of time that can be controlled by the test
-// and don't rely on some precise timing that could fail in CI.
-function startTimer(timer) {
-  if (timer.timerInterval) {
-    clearInterval(timer.timerInterval)
-  }
-  timer.currentTime = 0
-  timer.timerInterval = setInterval(() => {
-    timer.currentTime += 5
-  }, 5)
-}
+jest.useFakeTimers()
 
-function stopTimer(timer) {
-  if (timer.timerInterval) {
-    clearInterval(timer.timerInterval)
-    timer.timerInterval = null
-  }
-}
-
-function sleep(timer, ms) {
-  const targetTime = timer.currentTime + ms
-  return new Promise((resolve) => {
-    const checkTime = () => {
-      if (timer.currentTime >= targetTime) {
-        resolve()
-      } else {
-        setTimeout(checkTime, 2)
-      }
-    }
-    checkTime()
-  })
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 describe('test GroupTaskQueue when immediately filling the queue', () => {
-  let timer
-
-  beforeAll(() => {
-    timer = { currentTime: 0, timerInterval: null }
-    startTimer(timer)
-  })
-
-  afterAll(() => {
-    stopTimer(timer)
-  })
-
   test('test GroupTaskQueue when immediately filling the queue', async () => {
     let executed1 = false
     let executed2 = false
 
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed1 = true
     })
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed2 = true
     })
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
 
-    await sleep(timer, 15)
+    jest.advanceTimersByTime(15)
+    await flushPromises()
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
 
-    await sleep(timer, 10)
+    jest.advanceTimersByTime(10)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(false)
 
-    await sleep(timer, 20)
+    jest.advanceTimersByTime(20)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
   })
 })
 describe('test GroupTaskQueue adding to queue on the fly', () => {
-  let timer
-
-  beforeAll(() => {
-    timer = { currentTime: 0, timerInterval: null }
-    startTimer(timer)
-  })
-
-  afterAll(() => {
-    stopTimer(timer)
-  })
   test('test GroupTaskQueue adding to queue on the fly', async () => {
     let executed1 = false
     let executed2 = false
@@ -96,7 +52,7 @@ describe('test GroupTaskQueue adding to queue on the fly', () => {
 
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed1 = true
     })
 
@@ -104,35 +60,39 @@ describe('test GroupTaskQueue adding to queue on the fly', () => {
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
-    await sleep(timer, 15)
+    jest.advanceTimersByTime(15)
+    await flushPromises()
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed2 = true
     })
 
-    await sleep(timer, 15)
+    jest.advanceTimersByTime(15)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed3 = true
     })
 
-    await sleep(timer, 15)
+    jest.advanceTimersByTime(20)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
     expect(executed3).toBe(false)
 
-    await sleep(timer, 25)
+    jest.advanceTimersByTime(25)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -140,16 +100,6 @@ describe('test GroupTaskQueue adding to queue on the fly', () => {
   })
 })
 describe('test GroupTaskQueue with different ids', () => {
-  let timer
-
-  beforeAll(() => {
-    timer = { currentTime: 0, timerInterval: null }
-    startTimer(timer)
-  })
-
-  afterAll(() => {
-    stopTimer(timer)
-  })
   test('test GroupTaskQueue with different ids', async () => {
     let executed1 = false
     let executed2 = false
@@ -157,32 +107,35 @@ describe('test GroupTaskQueue with different ids', () => {
 
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed1 = true
     }, 1)
 
-    await sleep(timer, 10)
+    jest.advanceTimersByTime(10)
+    await flushPromises()
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
     expect(executed3).toBe(false)
 
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed2 = true
     }, 2)
     queue.add(async () => {
-      await sleep(timer, 30)
+      await sleep(30)
       executed3 = true
     }, 1)
 
-    await sleep(timer, 30)
+    jest.advanceTimersByTime(30)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
     expect(executed3).toBe(false)
 
-    await sleep(timer, 10)
+    jest.advanceTimersByTime(30)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -190,16 +143,6 @@ describe('test GroupTaskQueue with different ids', () => {
   })
 })
 describe('test GroupTaskQueue with waiting for add to resolve', () => {
-  let timer
-
-  beforeAll(() => {
-    timer = { currentTime: 0, timerInterval: null }
-    startTimer(timer)
-  })
-
-  afterAll(() => {
-    stopTimer(timer)
-  })
   test('test GroupTaskQueue with waiting for add to resolve', async () => {
     let executed1 = false
     let executed2 = false
@@ -208,27 +151,30 @@ describe('test GroupTaskQueue with waiting for add to resolve', () => {
     const queue = new GroupTaskQueue()
     queue
       .add(async () => {
-        await sleep(timer, 20)
+        await sleep(20)
       })
       .then(() => {
         executed1 = true
       })
     queue
       .add(async () => {
-        await sleep(timer, 20)
+        await sleep(20)
       })
       .then(() => {
         executed2 = true
       })
     queue
       .add(async () => {
-        await sleep(timer, 20)
+        await sleep(20)
       })
       .then(() => {
         executed3 = true
       })
 
-    await sleep(timer, 50)
+    jest.advanceTimersByTime(30)
+    await flushPromises()
+    jest.advanceTimersByTime(20)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -236,16 +182,6 @@ describe('test GroupTaskQueue with waiting for add to resolve', () => {
   })
 })
 describe('test GroupTaskQueue with exception during execution', () => {
-  let timer
-
-  beforeAll(() => {
-    timer = { currentTime: 0, timerInterval: null }
-    startTimer(timer)
-  })
-
-  afterAll(() => {
-    stopTimer(timer)
-  })
   test('test GroupTaskQueue with exception during execution', async () => {
     let failed1 = false
     let failed1Error = null
@@ -254,7 +190,7 @@ describe('test GroupTaskQueue with exception during execution', () => {
     const queue = new GroupTaskQueue()
     queue
       .add(async () => {
-        await sleep(timer, 20)
+        await sleep(20)
         throw new Error('test')
       })
       .then(() => {
@@ -266,7 +202,7 @@ describe('test GroupTaskQueue with exception during execution', () => {
       })
     queue
       .add(async () => {
-        await sleep(timer, 20)
+        await sleep(20)
       })
       .then(() => {
         failed2 = false
@@ -275,7 +211,8 @@ describe('test GroupTaskQueue with exception during execution', () => {
         failed2 = true
       })
 
-    await sleep(timer, 50)
+    jest.advanceTimersByTime(50)
+    await flushPromises()
 
     expect(failed1).toBe(true)
     expect(failed1Error.toString()).toBe('Error: test')
@@ -283,16 +220,6 @@ describe('test GroupTaskQueue with exception during execution', () => {
   })
 })
 describe('test GroupTaskQueue with lock', () => {
-  let timer
-
-  beforeAll(() => {
-    timer = { currentTime: 0, timerInterval: null }
-    startTimer(timer)
-  })
-
-  afterAll(() => {
-    stopTimer(timer)
-  })
   test('test GroupTaskQueue with exception during execution', async () => {
     let executed1 = false
     let executed2 = false
@@ -303,19 +230,20 @@ describe('test GroupTaskQueue with lock', () => {
     queue.lock(2)
 
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed1 = true
     }, 1)
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed2 = true
     }, 2)
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
       executed3 = true
     }, 1)
 
-    await sleep(timer, 30)
+    jest.advanceTimersByTime(30)
+    await flushPromises()
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(false)
@@ -323,7 +251,8 @@ describe('test GroupTaskQueue with lock', () => {
 
     queue.release(2)
 
-    await sleep(timer, 30)
+    jest.advanceTimersByTime(30)
+    await flushPromises()
 
     expect(executed1).toBe(false)
     expect(executed2).toBe(true)
@@ -331,13 +260,15 @@ describe('test GroupTaskQueue with lock', () => {
 
     queue.release(1)
 
-    await sleep(timer, 30)
+    jest.advanceTimersByTime(30)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
     expect(executed3).toBe(false)
 
-    await sleep(timer, 20)
+    jest.advanceTimersByTime(20)
+    await flushPromises()
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)
@@ -345,25 +276,16 @@ describe('test GroupTaskQueue with lock', () => {
   })
 })
 describe('test queue deleted from GroupTaskQueue', () => {
-  let timer
-
-  beforeAll(() => {
-    timer = { currentTime: 0, timerInterval: null }
-    startTimer(timer)
-  })
-
-  afterAll(() => {
-    stopTimer(timer)
-  })
   test('test queue deleted from GroupTaskQueue', async () => {
     const queue = new GroupTaskQueue()
     queue.add(async () => {
-      await sleep(timer, 20)
+      await sleep(20)
     }, 1)
 
     expect(Object.prototype.hasOwnProperty.call(queue.queues, 1)).toBe(true)
 
-    await sleep(timer, 30)
+    jest.advanceTimersByTime(30)
+    await flushPromises()
 
     expect(Object.prototype.hasOwnProperty.call(queue.queues, 1)).toBe(false)
   })

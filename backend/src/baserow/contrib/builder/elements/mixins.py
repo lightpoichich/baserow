@@ -316,6 +316,16 @@ class CollectionElementTypeMixin:
         if prop_name == "data_source_id" and value:
             return id_mapping["builder_data_sources"][value]
 
+        if prop_name == "property_options" and "database_fields" in id_mapping:
+            property_options = []
+            for po in value:
+                field_id = int(po["schema_property"].split("field_")[-1])
+                new_field_id = id_mapping["database_fields"][field_id]
+                property_options.append(
+                    {**po, "schema_property": f"field_{new_field_id}"}
+                )
+            return property_options
+
         return super().deserialize_property(
             prop_name,
             value,

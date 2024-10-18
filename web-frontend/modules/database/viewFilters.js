@@ -197,7 +197,12 @@ export class EqualViewFilterType extends ViewFilterType {
       'uuid',
       'autonumber',
       'duration',
-      FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'number',
+        'duration'
+      ),
     ]
   }
 
@@ -2702,7 +2707,8 @@ export class EmptyViewFilterType extends ViewFilterType {
         'boolean',
         'date',
         'number',
-        FormulaFieldType.arrayOf('single_file')
+        FormulaFieldType.arrayOf('single_file'),
+        FormulaFieldType.arrayOf('boolean')
       ),
     ]
   }
@@ -2764,7 +2770,8 @@ export class NotEmptyViewFilterType extends ViewFilterType {
         'boolean',
         'date',
         'number',
-        FormulaFieldType.arrayOf('single_file')
+        FormulaFieldType.arrayOf('single_file'),
+        FormulaFieldType.arrayOf('boolean')
       ),
     ]
   }

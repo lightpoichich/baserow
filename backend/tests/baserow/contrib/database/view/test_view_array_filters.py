@@ -15,6 +15,7 @@ from baserow.contrib.database.views.models import GridView
 class ArrayFiltersSetup:
     user: AbstractUser
     table: Table
+    other_table: Table
     model: GeneratedTableModel
     other_table_model: GeneratedTableModel
     grid_view: GridView
@@ -23,6 +24,10 @@ class ArrayFiltersSetup:
     target_field: Field
     row_handler: RowHandler
     view_handler: ViewHandler
+
+
+def boolean_field_factory(data_fixture, table, user):
+    return data_fixture.create_boolean_field(name="target", user=user, table=table)
 
 
 def text_field_factory(data_fixture, table, user):
@@ -49,7 +54,7 @@ def uuid_field_factory(data_fixture, table, user):
     return data_fixture.create_uuid_field(name="target", user=user, table=table)
 
 
-def setup(data_fixture, target_field_factory):
+def setup(data_fixture, target_field_factory) -> ArrayFiltersSetup:
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(user=user, database=database)
@@ -74,6 +79,7 @@ def setup(data_fixture, target_field_factory):
     return ArrayFiltersSetup(
         user=user,
         table=table,
+        other_table=other_table,
         other_table_model=other_table_model,
         target_field=target_field,
         row_handler=row_handler,
@@ -1560,3 +1566,113 @@ def test_has_value_length_is_lower_than_uuid_field_types(data_fixture):
         ).all()
     ]
     assert len(ids) == 4
+
+
+@pytest.mark.parametrize(
+    "filter_type_name,test_value,expected_rows",
+    [
+        (
+            "none_of_array_is",
+            "0",
+            [2],
+        ),
+        (
+            "none_of_array_is",
+            "1",
+            [1],
+        ),
+        (
+            "any_of_array_is",
+            "0",
+            [0, 1],
+        ),
+        (
+            "any_of_array_is",
+            "1",
+            [0, 2],
+        ),
+        (
+            "any_of_array_is",
+            "0",
+            [0, 1],
+        ),
+        (
+            "all_of_array_are",
+            "0",
+            [1],
+        ),
+        (
+            "all_of_array_are",
+            "1",
+            [2],
+        ),
+        (
+            "not_empty",
+            "",
+            [0, 1, 2],
+        ),
+        (
+            "empty",
+            "",
+            [3],
+        ),
+    ],
+)
+@pytest.mark.django_db
+def test_boolean_lookup_is_empty(
+    data_fixture, filter_type_name, test_value, expected_rows
+):
+    test_setup = setup(data_fixture, boolean_field_factory)
+
+    dict_rows = [{test_setup.target_field.db_column: idx % 2} for idx in range(0, 10)]
+
+    linked_rows = test_setup.row_handler.create_rows(
+        user=test_setup.user, table=test_setup.other_table, rows_values=dict_rows
+    )
+    rows = [
+        {
+            # mixed
+            test_setup.link_row_field.db_column: [
+                linked_rows[0].id,
+                linked_rows[1].id,
+                linked_rows[2].id,
+                linked_rows[3].id,
+                linked_rows[4].id,
+            ]
+        },
+        # all false
+        {
+            test_setup.link_row_field.db_column: [
+                linked_rows[0].id,
+                linked_rows[2].id,
+                linked_rows[4].id,
+            ]
+        },
+        # all true
+        {
+            test_setup.link_row_field.db_column: [
+                linked_rows[1].id,
+                linked_rows[3].id,
+                linked_rows[5].id,
+                linked_rows[7].id,
+            ]
+        },
+        # all none
+        {test_setup.link_row_field.db_column: []},
+    ]
+    r_mixed, r_false, r_true, r_none = test_setup.row_handler.create_rows(
+        user=test_setup.user, table=test_setup.table, rows_values=rows
+    )
+    rows = [r_mixed, r_false, r_true, r_none]
+    selected = [rows[idx] for idx in expected_rows]
+
+    test_setup.view_handler.create_filter(
+        test_setup.user,
+        test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type_name=filter_type_name,
+        value=test_value,
+    )
+    q = test_setup.view_handler.get_queryset(test_setup.grid_view)
+    assert len(q) == len(selected)
+    assert set([r.id for r in q]) == set([r.id for r in selected])

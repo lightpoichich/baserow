@@ -190,8 +190,7 @@ class ElementHandler:
         """
 
         if specific:
-            queryset = base_queryset.select_related("content_type")
-            elements = specific_iterator(queryset)
+            elements = specific_iterator(base_queryset)
         else:
             elements = base_queryset
 
@@ -488,9 +487,7 @@ class ElementHandler:
         :return: All the workflow actions associated
         """
 
-        return specific_iterator(
-            element.builderworkflowaction_set.select_related("content_type").all()
-        )
+        return specific_iterator(element.builderworkflowaction_set.all())
 
     def duplicate_element(self, element: Element) -> ElementsAndWorkflowActions:
         """

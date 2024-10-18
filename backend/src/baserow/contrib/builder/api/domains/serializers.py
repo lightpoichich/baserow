@@ -186,7 +186,7 @@ class BasePublicUserSourceSerializer(serializers.ModelSerializer):
         :return: A list of serialized user sources that belong to this instance.
         """
 
-        auth_providers = instance.auth_providers.select_related("content_type").all()
+        auth_providers = instance.auth_providers.all()
 
         return ReadPolymorphicAppAuthProviderSerializer(auth_providers, many=True).data
 
@@ -280,7 +280,7 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
         :return: A list of serialized user sources that belong to this instance.
         """
 
-        user_sources = instance.user_sources.select_related("content_type").all()
+        user_sources = instance.user_sources.all()
 
         return PolymorphicPublicUserSourceSerializer(user_sources, many=True).data
 

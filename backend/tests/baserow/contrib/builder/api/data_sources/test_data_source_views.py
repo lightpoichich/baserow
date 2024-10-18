@@ -2,6 +2,7 @@ import json
 from unittest.mock import ANY, MagicMock, patch
 
 from django.db import transaction
+from django.test import override_settings
 from django.urls import reverse
 
 import pytest
@@ -769,6 +770,7 @@ def test_dispatch_data_source(api_client, data_fixture):
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 # pytest -k "test_dispatch_data_source_perf" -s --run-disabled-in-ci
+@override_settings(TESTS=False)
 def test_dispatch_data_source_perf(api_client, data_fixture, profiler):
     user, token = data_fixture.create_user_and_token()
     table, _, _, _, _ = setup_interesting_test_table(data_fixture, user)
@@ -792,6 +794,75 @@ def test_dispatch_data_source_perf(api_client, data_fixture, profiler):
     )
 
     with profiler(html_report_name="data_source_dispatch_perf"):
+        for _ in range(30):
+            api_client.post(
+                url,
+                {},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+
+
+@pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+# pytest -k "test_dispatch_data_sources_perf" -s --run-disabled-in-ci
+@override_settings(TESTS=False)
+def test_dispatch_data_sources_perf(api_client, data_fixture, profiler):
+    user, token = data_fixture.create_user_and_token()
+    table1, _, _, _, _ = setup_interesting_test_table(data_fixture, user)
+    table2, _, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            [["2CV", "Green"]] * 40,
+        ],
+    )
+    table3, _, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            [["Twingo", "White"]] * 40,
+        ],
+    )
+
+    view = data_fixture.create_grid_view(user, table=table1)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table1,
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table2,
+    )
+    data_source3 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table3,
+    )
+
+    url = reverse("api:builder:data_source:dispatch-all", kwargs={"page_id": page.id})
+
+    with profiler(html_report_name="data_sources_dispatch_perf"):
         for _ in range(30):
             api_client.post(
                 url,

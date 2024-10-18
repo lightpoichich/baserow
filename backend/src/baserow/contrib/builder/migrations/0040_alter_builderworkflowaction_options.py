@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("builder", "0038_collection_element_property_options"),
+        ("builder", "0039_alter_page_options_page_shared"),
     ]
 
     operations = [

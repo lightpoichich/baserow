@@ -366,7 +366,16 @@ class JiraIssuesDataSyncType(DataSyncType):
             JiraURLDataSyncProperty("url", "Issue URL"),
         ]
 
-    def get_all_rows(self, instance) -> List[Dict]:
+    def _parse_datetime(self, value):
+        if not value:
+            return value
+
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            raise SyncError(f"The date {value} could not be parsed.")
+
+    def _fetch_issues(self, instance):
         headers = {"Content-Type": "application/json"}
         issues = []
         start_at = 0
@@ -414,8 +423,11 @@ class JiraIssuesDataSyncType(DataSyncType):
         except (RequestException, ConnectionError):
             raise SyncError("Error fetching issues from Jira.")
 
+        return issues
+
+    def get_all_rows(self, instance) -> List[Dict]:
         issue_list = []
-        for issue in issues:
+        for issue in self._fetch_issues(instance):
             assignee = (
                 issue["fields"].get("assignee", {}).get("displayName")
                 if issue["fields"].get("assignee")
@@ -446,17 +458,10 @@ class JiraIssuesDataSyncType(DataSyncType):
                 "url": f"{instance.jira_url}/browse/{issue['key']}",
             }
 
-            if issue_dict["created"]:
-                issue_dict["created"] = datetime.fromisoformat(issue_dict["created"])
-
-            if issue_dict["updated"]:
-                issue_dict["updated"] = datetime.fromisoformat(issue_dict["updated"])
-
-            if issue_dict["resolved"]:
-                issue_dict["resolved"] = datetime.fromisoformat(issue_dict["resolved"])
-
-            if issue_dict["due"]:
-                issue_dict["due"] = datetime.fromisoformat(issue_dict["due"])
+            issue_dict["created"] = self._parse_datetime(issue_dict["created"])
+            issue_dict["updated"] = self._parse_datetime(issue_dict["updated"])
+            issue_dict["resolved"] = self._parse_datetime(issue_dict["resolved"])
+            issue_dict["due"] = self._parse_datetime(issue_dict["due"])
 
             issue_list.append(issue_dict)
 

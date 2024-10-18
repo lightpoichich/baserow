@@ -2,7 +2,8 @@ from datetime import date, datetime
 from typing import Any, Dict, List
 from uuid import UUID
 
-import requests
+import advocate
+from advocate import UnacceptableAddressException
 from baserow_premium.fields.field_types import AIFieldType
 from baserow_premium.license.handler import LicenseHandler
 from jira2markdown import convert
@@ -392,7 +393,7 @@ class JiraIssuesDataSyncType(DataSyncType):
                 if instance.jira_project_key:
                     url += f"&jql=project={instance.jira_project_key}"
 
-                response = requests.get(
+                response = advocate.get(
                     url,
                     auth=HTTPBasicAuth(instance.jira_username, instance.jira_api_token),
                     headers=headers,
@@ -421,7 +422,7 @@ class JiraIssuesDataSyncType(DataSyncType):
                 start_at += max_results
                 if data["total"] <= start_at:
                     break
-        except (RequestException, ConnectionError):
+        except (RequestException, UnacceptableAddressException, ConnectionError):
             raise SyncError("Error fetching issues from Jira.")
 
         return issues

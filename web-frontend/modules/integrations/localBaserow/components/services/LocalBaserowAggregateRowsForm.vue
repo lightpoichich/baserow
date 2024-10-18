@@ -143,7 +143,6 @@ export default {
         (field) => field.id === this.values.field_id
       )
       if (!selectedField) return []
-      console.log('selectedField', selectedField)
       return this.$registry
         .getOrderedList('viewAggregation')
         .filter((agg) => agg.fieldIsCompatible(selectedField))
@@ -198,9 +197,6 @@ export default {
       },
       immediate: true,
     },
-  },
-  mounted() {
-    console.log(JSON.stringify(this.databases))
   },
   methods: {
     /**

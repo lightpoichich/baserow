@@ -45,6 +45,7 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
+from baserow.core.utils import get_value_at_path
 from baserow_enterprise.features import DATA_SYNC
 
 from .models import JiraIssuesDataSync, LocalBaserowTableDataSync
@@ -368,7 +369,7 @@ class JiraIssuesDataSyncType(DataSyncType):
 
     def _parse_datetime(self, value):
         if not value:
-            return value
+            return None
 
         try:
             return datetime.fromisoformat(value)
@@ -428,41 +429,40 @@ class JiraIssuesDataSyncType(DataSyncType):
     def get_all_rows(self, instance) -> List[Dict]:
         issue_list = []
         for issue in self._fetch_issues(instance):
-            assignee = (
-                issue["fields"].get("assignee", {}).get("displayName")
-                if issue["fields"].get("assignee")
-                else ""
-            )
-            reporter = (
-                issue["fields"].get("reporter", {}).get("displayName")
-                if issue["fields"].get("reporter")
-                else ""
-            )
-            project = (
-                issue["fields"]["project"]["name"] if issue["fields"]["project"] else ""
-            )
-
+            try:
+                jira_id = issue["id"]
+                issue_url = f"{instance.jira_url}/browse/{issue['key']}"
+            except KeyError:
+                raise SyncError(
+                    "The `id` and `key` are not found in the issue. This is likely the "
+                    "result of an invalid response from Jira."
+                )
+            summary = get_value_at_path(issue, "fields.summary", "")
+            description = get_value_at_path(issue, "fields.description", "") or ""
+            assignee = get_value_at_path(issue, "fields.assignee.displayName", "")
+            reporter = get_value_at_path(issue, "fields.reporter.displayName", "")
+            project = get_value_at_path(issue, "fields.project.name", "")
+            status = get_value_at_path(issue, "fields.status.name", "")
+            labels = ", ".join(issue["fields"].get("labels", []))
+            created = self._parse_datetime(issue["fields"].get("created"))
+            updated = self._parse_datetime(issue["fields"].get("updated"))
+            resolved = self._parse_datetime(issue["fields"].get("resolutiondate"))
+            due = self._parse_datetime(issue["fields"].get("duedate"))
             issue_dict = {
-                "jira_id": issue["id"],
-                "summary": issue["fields"]["summary"],
-                "description": convert(issue["fields"].get("description", "")),
+                "jira_id": jira_id,
+                "summary": summary,
+                "description": convert(description),
                 "assignee": assignee,
                 "reporter": reporter,
-                "labels": ", ".join(issue["fields"].get("labels", [])),
-                "created": issue["fields"].get("created"),
-                "updated": issue["fields"].get("updated"),
-                "resolved": issue["fields"].get("resolutiondate"),
-                "due": issue["fields"].get("duedate"),
-                "status": issue["fields"]["status"]["name"],
+                "labels": labels,
+                "created": created,
+                "updated": updated,
+                "resolved": resolved,
+                "due": due,
+                "status": status,
                 "project": project,
-                "url": f"{instance.jira_url}/browse/{issue['key']}",
+                "url": issue_url,
             }
-
-            issue_dict["created"] = self._parse_datetime(issue_dict["created"])
-            issue_dict["updated"] = self._parse_datetime(issue_dict["updated"])
-            issue_dict["resolved"] = self._parse_datetime(issue_dict["resolved"])
-            issue_dict["due"] = self._parse_datetime(issue_dict["due"])
-
             issue_list.append(issue_dict)
 
         return issue_list

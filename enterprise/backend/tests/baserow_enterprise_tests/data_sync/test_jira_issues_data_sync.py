@@ -231,6 +231,110 @@ SECOND_ISSUE = deepcopy(SINGLE_ISSUE)
 SECOND_ISSUE["id"] = "10003"
 SECOND_ISSUE["key"] = "CRM-6"
 
+EMPTY_ISSUE = {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations,customfield_10010.requestTypePractice",
+    "id": "10007",
+    "self": "https://bram2w.atlassian.net/rest/api/2/issue/10007",
+    "key": "CRM-8",
+    "fields": {
+        "statuscategorychangedate": "2024-10-18T13:39:02.301+0200",
+        "issuetype": None,
+        "timespent": None,
+        "project": None,
+        "customfield_10032": None,
+        "fixVersions": [],
+        "customfield_10034": None,
+        "aggregatetimespent": None,
+        "resolution": None,
+        "customfield_10035": None,
+        "customfield_10027": None,
+        "customfield_10028": None,
+        "customfield_10029": None,
+        "resolutiondate": None,
+        "workratio": -1,
+        "watches": {
+            "self": "https://bram2w.atlassian.net/rest/api/2/issue/CRM-8/watchers",
+            "watchCount": 1,
+            "isWatching": True,
+        },
+        "issuerestriction": {"issuerestrictions": {}, "shouldDisplay": True},
+        "lastViewed": None,
+        "created": None,
+        "customfield_10020": None,
+        "customfield_10021": None,
+        "customfield_10022": None,
+        "priority": {
+            "self": "https://bram2w.atlassian.net/rest/api/2/priority/3",
+            "iconUrl": "https://bram2w.atlassian.net/images/icons/priorities/medium.svg",
+            "name": "Medium",
+            "id": "3",
+        },
+        "customfield_10023": None,
+        "customfield_10024": None,
+        "customfield_10025": None,
+        "customfield_10026": None,
+        "labels": [],
+        "customfield_10016": None,
+        "customfield_10017": None,
+        "customfield_10018": {
+            "hasEpicLinkFieldDependency": False,
+            "showField": False,
+            "nonEditableReason": {
+                "reason": "EPIC_LINK_SHOULD_BE_USED",
+                "message": "To set an epic as the parent, use the epic link instead",
+            },
+        },
+        "customfield_10019": "0|i00013:",
+        "timeestimate": None,
+        "aggregatetimeoriginalestimate": None,
+        "versions": [],
+        "issuelinks": [],
+        "assignee": None,
+        "updated": "",
+        "status": None,
+        "components": [],
+        "timeoriginalestimate": None,
+        "description": "",
+        "customfield_10010": None,
+        "customfield_10014": None,
+        "timetracking": {},
+        "customfield_10015": None,
+        "customfield_10005": None,
+        "customfield_10006": None,
+        "security": None,
+        "customfield_10007": None,
+        "customfield_10008": None,
+        "customfield_10009": None,
+        "aggregatetimeestimate": None,
+        "attachment": [],
+        "summary": "empty",
+        "creator": None,
+        "subtasks": [],
+        "reporter": None,
+        "aggregateprogress": {"progress": 0, "total": 0},
+        "customfield_10001": None,
+        "customfield_10002": [],
+        "customfield_10003": None,
+        "customfield_10004": None,
+        "environment": None,
+        "duedate": None,
+        "progress": {"progress": 0, "total": 0},
+        "votes": {
+            "self": "https://bram2w.atlassian.net/rest/api/2/issue/CRM-8/votes",
+            "votes": 0,
+            "hasVoted": False,
+        },
+        "comment": {
+            "comments": [],
+            "self": "https://bram2w.atlassian.net/rest/api/2/issue/10007/comment",
+            "maxResults": 0,
+            "total": 0,
+            "startAt": 0,
+        },
+        "worklog": {"startAt": 0, "maxResults": 20, "total": 0, "worklogs": []},
+    },
+}
+
 SINGLE_ISSUE_RESPONSE = {
     "expand": "schema,names",
     "startAt": 0,
@@ -253,12 +357,19 @@ SINGLE_ISSUE_RESPONSE_PAGE_2 = {
     "total": 51,
     "issues": [SECOND_ISSUE],
 }
-EMPTY_ISSUE_RESPONSE = {
+NO_ISSUES_RESPONSE = {
     "expand": "schema,names",
     "startAt": 0,
     "maxResults": 50,
     "total": 0,
     "issues": [],
+}
+EMPTY_ISSUE_RESPONSE = {
+    "expand": "schema,names",
+    "startAt": 0,
+    "maxResults": 50,
+    "total": 1,
+    "issues": [EMPTY_ISSUE],
 }
 
 
@@ -480,6 +591,89 @@ expand
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 @responses.activate
+def test_sync_data_sync_table_empty_issue(enterprise_data_fixture):
+    basic_auth_header = HTTPBasicAuth("test@test.nl", "test_token")
+    responses.add(
+        responses.GET,
+        "https://test.atlassian.net/rest/api/2/search?startAt=0&maxResults=50",
+        status=200,
+        json=EMPTY_ISSUE_RESPONSE,
+        headers={"Authorization": f"Basic {basic_auth_header}"},
+    )
+
+    enterprise_data_fixture.enable_enterprise()
+
+    user = enterprise_data_fixture.create_user()
+    database = enterprise_data_fixture.create_database_application(user=user)
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="jira_issues",
+        synced_properties=[
+            "jira_id",
+            "summary",
+            "description",
+            "assignee",
+            "reporter",
+            "labels",
+            "created",
+            "updated",
+            "resolved",
+            "due",
+            "status",
+            "project",
+            "url",
+        ],
+        jira_url="https://test.atlassian.net",
+        jira_project_key="",
+        jira_username="test@test.nl",
+        jira_api_token="test_token",
+    )
+    handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+    fields = specific_iterator(data_sync.table.field_set.all().order_by("id"))
+    jira_id_field = fields[0]
+    summary_field = fields[1]
+    description_field = fields[2]
+    assignee_field = fields[3]
+    reporter_field = fields[4]
+    labels_field = fields[5]
+    created_field = fields[6]
+    updated_field = fields[7]
+    resolved_field = fields[8]
+    due_field = fields[9]
+    state_field = fields[10]
+    project_field = fields[11]
+    url_field = fields[12]
+
+    model = data_sync.table.get_model()
+    assert model.objects.all().count() == 1
+    row = model.objects.all().first()
+
+    assert getattr(row, f"field_{jira_id_field.id}") == "10007"
+    assert getattr(row, f"field_{summary_field.id}") == "empty"
+    assert getattr(row, f"field_{description_field.id}") == ""
+    assert getattr(row, f"field_{assignee_field.id}") == ""
+    assert getattr(row, f"field_{reporter_field.id}") == ""
+    assert getattr(row, f"field_{labels_field.id}") == ""
+    assert getattr(row, f"field_{created_field.id}") is None
+    assert getattr(row, f"field_{updated_field.id}") is None
+    assert getattr(row, f"field_{resolved_field.id}") is None
+    assert getattr(row, f"field_{due_field.id}") is None
+    assert getattr(row, f"field_{state_field.id}") == ""
+    assert getattr(row, f"field_{project_field.id}") == ""
+    assert (
+        getattr(row, f"field_{url_field.id}")
+        == "https://test.atlassian.net/browse/CRM-8"
+    )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@responses.activate
 def test_create_data_sync_table_pagination(enterprise_data_fixture):
     basic_auth_header = HTTPBasicAuth("test@test.nl", "test_token")
     responses.add(
@@ -543,7 +737,7 @@ def test_create_data_sync_table_invalid_auth(enterprise_data_fixture):
         responses.GET,
         "https://test.atlassian.net/rest/api/2/search?startAt=0&maxResults=50",
         status=200,
-        json=EMPTY_ISSUE_RESPONSE,
+        json=NO_ISSUES_RESPONSE,
         headers={"Authorization": f"Basic {basic_auth_header}"},
     )
 

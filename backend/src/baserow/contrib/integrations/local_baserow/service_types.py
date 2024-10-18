@@ -1483,7 +1483,7 @@ class LocalBaserowUpsertRowServiceType(
                     "field_id": (
                         # The `database_fields` exist, but the field ID
                         # won't be present if it's trashed.
-                        id_mapping["database_fields"].get(item["field_id"], None)
+                        id_mapping["database_fields"].get(item["field_id"])
                         if "database_fields" in id_mapping
                         else item["field_id"]
                     ),

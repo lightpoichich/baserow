@@ -37,9 +37,7 @@ class ServiceHandler:
 
         try:
             if specific:
-                service = (
-                    queryset.select_related("content_type").get(id=service_id).specific
-                )
+                service = queryset.get(id=service_id).specific
                 # We use the enhanced version of the queryset to get the related
                 # fields.
                 service = service.get_type().get_queryset().get(id=service_id)
@@ -103,8 +101,6 @@ class ServiceHandler:
             queryset = queryset.filter(integration=integration)
 
         if specific:
-            queryset = queryset.select_related("content_type")
-
             # Apply the type specific queryset enhancement for performance.
             def per_content_type_queryset_hook(model, queryset):
                 service_type = service_type_registry.get_by_model(model)

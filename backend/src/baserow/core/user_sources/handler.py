@@ -49,11 +49,7 @@ class UserSourceHandler:
 
         try:
             if specific:
-                user_source = (
-                    queryset.select_related("content_type")
-                    .get(id=user_source_id)
-                    .specific
-                )
+                user_source = queryset.get(id=user_source_id).specific
                 if user_source.integration_id:
                     specific_integration = IntegrationHandler().get_integration(
                         user_source.integration_id, specific=True
@@ -95,11 +91,7 @@ class UserSourceHandler:
 
         try:
             if specific:
-                user_source = (
-                    queryset.select_related("content_type")
-                    .get(uid=user_source_uid)
-                    .specific
-                )
+                user_source = queryset.get(uid=user_source_uid).specific
                 if user_source.integration_id:
                     specific_integration = IntegrationHandler().get_integration(
                         user_source.integration_id, specific=True
@@ -169,9 +161,7 @@ class UserSourceHandler:
                 user_source_type = user_source_type_registry.get_by_model(model)
                 return user_source_type.enhance_queryset(queryset)
 
-            queryset = queryset.select_related(
-                "content_type", "application", "application__workspace", "integration"
-            )
+            queryset = queryset.select_related("application__workspace", "integration")
 
             return specific_iterator(
                 queryset, per_content_type_queryset_hook=per_content_type_queryset_hook

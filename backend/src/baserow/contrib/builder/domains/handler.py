@@ -57,9 +57,7 @@ class DomainHandler:
         """
 
         if base_queryset is None:
-            base_queryset = Domain.objects
-
-        base_queryset = base_queryset.select_related("content_type")
+            base_queryset = Domain.objects.all()
 
         return specific_iterator(base_queryset.filter(builder=builder))
 

@@ -103,6 +103,7 @@ export default {
   watch: {
     chosenType(newValue, oldValue) {
       if (newValue !== oldValue) {
+        this.hideError()
         this.loadedProperties = false
         this.loadingProperties = false
         this.formValues = null

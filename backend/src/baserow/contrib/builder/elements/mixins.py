@@ -41,6 +41,7 @@ from baserow.contrib.builder.elements.types import (
 )
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.types import ElementDict
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.utils import merge_dicts_no_duplicates
 
@@ -319,7 +320,7 @@ class CollectionElementTypeMixin:
         if prop_name == "property_options" and "database_fields" in id_mapping:
             property_options = []
             for po in value:
-                field_id = int(po["schema_property"].split("field_")[-1])
+                field_id = get_field_id_from_field_key(po["schema_property"])
                 new_field_id = id_mapping["database_fields"][field_id]
                 property_options.append(
                     {**po, "schema_property": f"field_{new_field_id}"}

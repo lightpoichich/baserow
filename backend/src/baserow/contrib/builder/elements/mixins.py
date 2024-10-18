@@ -321,6 +321,12 @@ class CollectionElementTypeMixin:
             property_options = []
             for po in value:
                 field_id = get_field_id_from_field_key(po["schema_property"])
+                if field_id is None:
+                    # If we can't translate the `schema_property` into a Field ID, then
+                    # it's not a `Field` db_column value. For example this can happen
+                    # if someone chooses to have a `id` property option.
+                    property_options.append(po)
+                    continue
                 new_field_id = id_mapping["database_fields"][field_id]
                 property_options.append(
                     {**po, "schema_property": f"field_{new_field_id}"}

@@ -62,6 +62,7 @@ def test_import_export_collection_element_type(data_fixture):
             },
         ],
     )
+    element.property_options.create(schema_property="id", sortable=True)
     element.property_options.create(schema_property=field.db_column, sortable=True)
 
     config = ImportExportConfig(include_permission_data=False)
@@ -87,6 +88,12 @@ def test_import_export_collection_element_type(data_fixture):
     # Pluck out the imported builder records.
     imported_page = imported_builder.page_set.exclude(path="__shared__")[0]
     imported_element = imported_page.element_set.get()
-    imported_property_option = imported_element.property_options.get()
 
-    assert imported_property_option.schema_property == imported_field.db_column
+    imported_property_options = [
+        {"schema_property": option.schema_property, "sortable": option.sortable}
+        for option in imported_element.property_options.all()
+    ]
+    assert imported_property_options == [
+        {"schema_property": "id", "sortable": True},
+        {"schema_property": imported_field.db_column, "sortable": True},
+    ]

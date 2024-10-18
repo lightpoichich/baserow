@@ -1,16 +1,20 @@
 from collections import defaultdict
+from copy import deepcopy
 from typing import Dict, List, Optional, Set, Tuple, cast
 
+from django.db import connection
 from django.db.models import Expression, Q, Value
 
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.signals import field_updated
+from baserow.contrib.database.formula.ast.function import construct_not_null_filters_for_inner_join
+from baserow.contrib.database.formula.expression_generator.generator import WrappedExpressionWithMetadata
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.constants import (
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
 )
-from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.signals import table_updated
 
 StartingRowIdsType = Optional[List[int]]
@@ -131,6 +135,7 @@ class PathBasedUpdateStatementCollector:
         starting_row_ids: StartingRowIdsType = None,
         path_to_starting_table: StartingRowIdsType = None,
         deleted_m2m_rels_per_link_field: Optional[Dict[int, Set[int]]] = None,
+        cte=None,
     ) -> int:
         updated_rows = 0
         path_to_starting_table = path_to_starting_table or []
@@ -141,6 +146,7 @@ class PathBasedUpdateStatementCollector:
             path_to_starting_table,
             starting_row_ids,
             deleted_m2m_rels_per_link_field,
+            cte=cte
         )
 
         for sub_path in self.sub_paths.values():
@@ -158,6 +164,7 @@ class PathBasedUpdateStatementCollector:
         path_to_starting_table: List[LinkRowField],
         starting_row_ids: StartingRowIdsType,
         deleted_m2m_rels_per_link_field: Optional[Dict[int, Set[int]]],
+        cte=None,
     ) -> int:
         model = field_cache.get_model(self.table)
         qs = model.objects_and_trash
@@ -212,6 +219,25 @@ class PathBasedUpdateStatementCollector:
                             f"{annotated_field}__isnull": True,
                         }
                     ) | ~Q(**{field: expr})
+
+            if cte is not None:
+                q = cte.q
+                sql, params = q.query.get_compiler(connection=connection).as_sql()
+
+                with connection.cursor() as cursor:
+                    raw_sql = f"""
+                        WITH cte AS ({sql})
+                        UPDATE {q.model._meta.db_table} AS t
+                        SET {', '.join([f'{k} = cte.{v}' for k, v in cte.fields.items()])}
+                        FROM cte
+                        WHERE t.id = cte.id;
+                        """  # nosec B608
+                    cursor.execute(
+                        raw_sql,
+                        params
+                    )
+                    print(raw_sql)
+                    updated_rows += cursor.rowcount
 
             updated_rows = (
                 qs.annotate(**annotations)
@@ -283,6 +309,23 @@ class FieldUpdatesTracker(defaultdict):
         return self[table].keys()
 
 
+class CTECollector:
+    def __init__(self):
+        self.q = None
+        self.fields = {}
+
+    def update_cte(self, model, field, expr_with_metadata):
+        q = self.q
+        if q is None:
+            q = model.objects_and_trash.values("id")
+        
+        pre_annotations = expr_with_metadata.pre_annotations
+        expr = expr_with_metadata.expression
+        agg_field_name = f"agg_field_{field.id}"
+        self.fields[f"field_{field.id}"] = agg_field_name
+        self.q = q.annotate(**pre_annotations, **{agg_field_name: expr})
+
+
 class FieldUpdateCollector:
     """
     From a starting table this class collects updated fields and an update
@@ -323,6 +366,7 @@ class FieldUpdateCollector:
         self._starting_table = starting_table
         self._deleted_m2m_rels_per_link_field = deleted_m2m_rels_per_link_field
         self.update_changes_only = update_changes_only
+        self.cte = CTECollector()
 
         self._update_statement_collector = self._init_update_statement_collector()
 
@@ -361,6 +405,24 @@ class FieldUpdateCollector:
         self._update_statement_collector.add_update_statement(
             field, update_statement, via_path_to_starting_table
         )
+    
+    def annotate_cte_or_add_update_statement(
+        self,
+        model: GeneratedTableModel,
+        field: Field,
+        expr_with_metadata: WrappedExpressionWithMetadata,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+    ):
+        inner_expr_with_metadata = expr_with_metadata.inner_expr_with_metadata
+        if via_path_to_starting_table or field.table != self._starting_table or inner_expr_with_metadata is None:
+            update_statement = expr_with_metadata.expression
+            self.add_field_with_pending_update_statement(
+                field, update_statement, via_path_to_starting_table
+            )
+        else:
+            # let's try to handle the CTEs here
+            self.cte.update_cte(model, field, inner_expr_with_metadata)
+            
 
     def add_field_which_has_changed(
         self,
@@ -400,6 +462,7 @@ class FieldUpdateCollector:
             field_cache,
             self._starting_row_ids,
             deleted_m2m_rels_per_link_field=self._deleted_m2m_rels_per_link_field,
+            cte=self.cte,
         )
         return updated_rows_count
 

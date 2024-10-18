@@ -1,4 +1,5 @@
 from abc import ABC
+from copy import deepcopy
 from datetime import timedelta
 from decimal import Decimal
 from typing import List
@@ -65,7 +66,6 @@ from baserow.contrib.database.formula.ast.function import (
     ThreeArgumentBaserowFunction,
     TwoArgumentBaserowFunction,
     ZeroArgumentBaserowFunction,
-    aggregate_expr_with_metadata_filters,
     aggregate_wrapper,
     construct_aggregate_wrapper_queryset,
     construct_not_null_filters_for_inner_join,
@@ -2006,20 +2006,24 @@ def array_agg_expression(
         else:
             json_builder_args["id"] = F(join_ids[0][0] + "__id")
         expr = JSONBAgg(JSONObject(**json_builder_args), ordering=orders)
+        inner_expr = JSONBAgg(JSONObject(**json_builder_args), ordering=orders)
     else:
         expr = JSONBAgg(args[0].expression, ordering=orders)
-    wrapped_expr = aggregate_wrapper(
-        WrappedExpressionWithMetadata(
-            expr, pre_annotations, aggregate_filters, join_ids
-        ),
-        context.model,
-    ).expression
+        inner_expr = JSONBAgg(args[0].expression, ordering=orders)
+    
+    inner_expr_with_metadata = WrappedExpressionWithMetadata(
+        inner_expr, deepcopy(pre_annotations), aggregate_filters, join_ids
+    )
+    wrapped_expr = aggregate_wrapper(WrappedExpressionWithMetadata(
+        expr, pre_annotations, aggregate_filters, join_ids
+    ), context.model).expression
     return WrappedExpressionWithMetadata(
         Coalesce(
             wrapped_expr,
             Value([], output_field=JSONField()),
             output_field=JSONField(),
-        )
+        ),
+        inner_expr_with_metadata=inner_expr_with_metadata,
     )
 
 
@@ -2054,7 +2058,6 @@ def string_agg_array_of_multiple_select_field(
     not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
         expr_with_metadata.pre_annotations
     )
-    aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
     # There is only one tuple of (field, database_table) in this case in the join_ids,
     # the one needed to join the linked table.
@@ -2075,7 +2078,7 @@ def string_agg_array_of_multiple_select_field(
                 output_field=fields.CharField(),
             )
         )
-        .filter(aggregated_filters)
+        .filter(expr_with_metadata.and_all_aggregate_filters)
     )
 
     join_field_id = f"{join_field}__id"
@@ -2140,7 +2143,7 @@ def aggregate_multiple_selects_options(
         expr_with_metadata.pre_annotations
     )
 
-    aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
+    aggregated_filters = expr_with_metadata.and_all_aggregate_filters
 
     # There is only one tuple of (field, database_table) in this case in the join_ids,
     # the one needed to join the linked table.

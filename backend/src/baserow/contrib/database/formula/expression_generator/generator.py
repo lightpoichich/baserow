@@ -34,6 +34,7 @@ from baserow.contrib.database.formula.ast.tree import (
 )
 from baserow.contrib.database.formula.ast.visitors import BaserowFormulaASTVisitor
 from baserow.contrib.database.formula.expression_generator.django_expressions import (
+    AndExpr,
     JSONArray,
 )
 from baserow.contrib.database.formula.types.formula_type import (
@@ -48,7 +49,7 @@ def baserow_expression_to_update_django_expression(
     baserow_expression: BaserowExpression[BaserowFormulaType],
     model: Type[Model],
 ):
-    return _baserow_expression_to_django_expression(baserow_expression, model, None)
+    return _baserow_expression_to_django_expression(baserow_expression, model)
 
 
 def baserow_expression_to_single_row_update_django_expression(
@@ -69,10 +70,27 @@ def baserow_expression_to_insert_django_expression(
     )
 
 
+def baserow_expression_to_expr_with_metadata(
+    baserow_expression: BaserowExpression[BaserowFormulaType],
+    model: Type[Model],
+) -> "WrappedExpressionWithMetadata":
+    try:
+        if isinstance(baserow_expression.expression_type, BaserowFormulaInvalidType):
+            return Value(None)
+        else:
+            generator = BaserowExpressionToDjangoExpressionGenerator(model)
+            return baserow_expression.accept(generator)
+    except RecursionError:
+        raise MaximumFormulaSizeError()
+    except Exception as e:
+        formula_exception_handler(e)
+        return Value(None)
+
+
 def _baserow_expression_to_django_expression(
     baserow_expression: BaserowExpression[BaserowFormulaType],
     model: Type[Model],
-    model_instance: Optional[Model],
+    model_instance: Optional[Model] = None,
     insert=False,
 ) -> Expression:
     """
@@ -116,7 +134,8 @@ def _baserow_expression_to_django_expression(
                 generator = BaserowExpressionToDjangoExpressionGenerator(
                     model, model_instance
                 )
-                return baserow_expression.accept(generator).expression
+                expr_wrapper = baserow_expression.accept(generator)
+                return expr_wrapper.expression
     except RecursionError:
         raise MaximumFormulaSizeError()
     except Exception as e:
@@ -127,6 +146,24 @@ def _baserow_expression_to_django_expression(
 JoinIdsType = List[Tuple[str, str]]
 
 
+def and_all_aggregate_filters(
+    aggregate_filters: Optional[List[Expression]] = None,
+) -> Expression:
+    """
+    Combines all the aggregate filters on the expression into a single filter.
+    This function must be called before aggregating the expression.
+
+    :param expr_with_metadata: The wrapped expression with metadata to
+        aggregate.
+    """
+
+    combined_filter: Expression = Value(True)
+    if len(aggregate_filters) > 0:
+        for f in aggregate_filters:
+            combined_filter = AndExpr(combined_filter, f)
+    return combined_filter
+
+
 class WrappedExpressionWithMetadata:
     def __init__(
         self,
@@ -134,11 +171,13 @@ class WrappedExpressionWithMetadata:
         pre_annotations: Optional[Dict[str, FilteredRelation]] = None,
         aggregate_filters: Optional[List[Expression]] = None,
         join_ids: Optional[JoinIdsType] = None,
+        inner_expr_with_metadata: Optional["WrappedExpressionWithMetadata"] = None,
     ):
         self.expression = expression
         self._pre_annotations: Dict[str, FilteredRelation] = pre_annotations or {}
         self.aggregate_filters: List[Expression] = aggregate_filters or []
         self.join_ids: JoinIdsType = join_ids or []
+        self.inner_expr_with_metadata = inner_expr_with_metadata
 
     @property
     def pre_annotations(self) -> Dict[str, FilteredRelation]:
@@ -152,14 +191,21 @@ class WrappedExpressionWithMetadata:
         pre_annotations = {}
         aggregate_filters = []
         join_ids = []
+        inner_expr_with_metadata = None
         for child in child_args:
             pre_annotations.update(child.pre_annotations)
             aggregate_filters.extend(child.aggregate_filters)
             join_ids.extend(child.join_ids)
+            if child.inner_expr_with_metadata:
+                inner_expr_with_metadata = child.inner_expr_with_metadata
 
         return WrappedExpressionWithMetadata(
-            expr, pre_annotations, aggregate_filters, join_ids
+            expr, pre_annotations, aggregate_filters, join_ids, inner_expr_with_metadata
         )
+
+    @property
+    def and_all_aggregate_filters(self) -> Expression:
+        return and_all_aggregate_filters(self.aggregate_filters)
 
 
 class BaserowExpressionToDjangoExpressionGenerator(
@@ -176,7 +222,7 @@ class BaserowExpressionToDjangoExpressionGenerator(
     def __init__(
         self,
         model: Type[Model],
-        model_instance: Optional[Model],
+        model_instance: Optional[Model] = None,
     ):
         self.model_instance = model_instance
         self.model = model

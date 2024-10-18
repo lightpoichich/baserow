@@ -1,5 +1,5 @@
 import typing
-from typing import Dict, Optional, Set, Tuple, Type
+from typing import Dict, List, Optional, Set, Tuple, Type
 
 from django.db.models import Expression, Model
 
@@ -15,9 +15,11 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowFunctionDefinition,
 )
 from baserow.contrib.database.formula.expression_generator.generator import (
+    WrappedExpressionWithMetadata,
     baserow_expression_to_insert_django_expression,
     baserow_expression_to_single_row_update_django_expression,
     baserow_expression_to_update_django_expression,
+    baserow_expression_to_expr_with_metadata,
 )
 from baserow.contrib.database.formula.migrations.migrations import (
     BASEROW_FORMULA_VERSION,
@@ -101,6 +103,12 @@ class FormulaHandler(metaclass=baserow_trace_methods(tracer)):
     Contains all the methods used to interact with formulas and formula fields in
     Baserow.
     """
+
+    @classmethod
+    def baserow_expression_to_expr_with_metadata(
+        cls, expression: BaserowExpression, model: Type[Model]
+    ) -> WrappedExpressionWithMetadata:
+        return baserow_expression_to_expr_with_metadata(expression, model)
 
     @classmethod
     def baserow_expression_to_update_django_expression(

@@ -22,9 +22,6 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowFunctionCall,
     BaserowFunctionDefinition,
 )
-from baserow.contrib.database.formula.expression_generator.django_expressions import (
-    AndExpr,
-)
 from baserow.contrib.database.formula.expression_generator.generator import (
     WrappedExpressionWithMetadata,
 )
@@ -278,25 +275,6 @@ def aggregate_wrapper(
     )
 
 
-def aggregate_expr_with_metadata_filters(
-    expr_with_metadata: WrappedExpressionWithMetadata,
-) -> Expression:
-    """
-    Combines all the aggregate filters on the expression into a single filter.
-    This function is called before aggregating the expression.
-
-    :param expr_with_metadata: The wrapped expression with metadata to
-        aggregate.
-    """
-
-    aggregate_filters = expr_with_metadata.aggregate_filters
-    combined_filter: Expression = Value(True)
-    if len(aggregate_filters) > 0:
-        for f in aggregate_filters:
-            combined_filter = AndExpr(combined_filter, f)
-    return combined_filter
-
-
 def construct_not_null_filters_for_inner_join(pre_annotations):
     """
     Constructs a dictionary of filters which enforce that each filtered relation
@@ -325,8 +303,7 @@ def construct_aggregate_wrapper_queryset(
         expr_with_metadata.pre_annotations
     )
 
-    aggregate_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
-
+    aggregate_filters = expr_with_metadata.and_all_aggregate_filters
     qs = model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
 
     return (

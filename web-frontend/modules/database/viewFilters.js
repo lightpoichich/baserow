@@ -2702,6 +2702,7 @@ export class EmptyViewFilterType extends ViewFilterType {
         'boolean',
         'date',
         'number',
+        'duration',
         FormulaFieldType.arrayOf('single_file')
       ),
     ]

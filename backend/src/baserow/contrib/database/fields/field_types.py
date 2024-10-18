@@ -4778,15 +4778,16 @@ class FormulaFieldType(
         field_cache: "FieldCache",
         via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
-        update_statement = (
-            FormulaHandler.baserow_expression_to_update_django_expression(
+        expr_with_metadata = (
+            FormulaHandler.baserow_expression_to_expr_with_metadata(
                 field.cached_typed_internal_expression,
                 field_cache.get_model(field.table),
             )
         )
-        update_collector.add_field_with_pending_update_statement(
+        update_collector.annotate_cte_or_add_update_statement(
+            field_cache.get_model(field.table),
             field,
-            update_statement,
+            expr_with_metadata,
             via_path_to_starting_table=via_path_to_starting_table,
         )
 

@@ -104,7 +104,6 @@ class EqualViewFilterType(ViewFilterType):
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,
             BaserowFormulaNumberType.type,
-            BaserowFormulaDurationType.type,
         ),
     ]
 

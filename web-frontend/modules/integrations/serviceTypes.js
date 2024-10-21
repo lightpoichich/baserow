@@ -2,6 +2,7 @@ import { ServiceType } from '@baserow/modules/core/serviceTypes'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integrationTypes'
 import LocalBaserowGetRowForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowGetRowForm'
 import LocalBaserowListRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowListRowsForm'
+import LocalBaserowAggregateRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowAggregateRowsForm'
 import { uuid } from '@baserow/modules/core/utils/string'
 
 export class LocalBaserowGetRowServiceType extends ServiceType {
@@ -213,5 +214,51 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
 
   getOrder() {
     return 20
+  }
+}
+
+export class LocalBaserowAggregateRowsServiceType extends ServiceType {
+  static getType() {
+    return 'local_baserow_aggregate_rows'
+  }
+
+  get name() {
+    return this.app.i18n.t('serviceType.localBaserowAggregateRows')
+  }
+
+  get integrationType() {
+    return this.app.$registry.get(
+      'integration',
+      LocalBaserowIntegrationType.getType()
+    )
+  }
+
+  get formComponent() {
+    return LocalBaserowAggregateRowsForm
+  }
+
+  isValid(service) {
+    return (
+      super.isValid(service) &&
+      Boolean(service.table_id) &&
+      Boolean(service.field_id)
+    )
+  }
+
+  getDataSchema(service) {
+    return service.schema
+  }
+
+  getContextDataSchema(service) {
+    return service.context_data_schema
+  }
+
+  /** Returns the name of the given record */
+  getRecordName(service, record) {
+    return ''
+  }
+
+  getOrder() {
+    return 30
   }
 }

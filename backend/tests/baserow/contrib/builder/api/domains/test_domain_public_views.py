@@ -128,13 +128,36 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
 
     del response_json["theme"]  # We are not testing the theme response here.
 
+    assert builder_to.page_set.filter(shared=True).count() == 1
+
+    shared_page = builder_to.page_set.get(shared=True)
+
     assert response_json == {
         "favicon_file": UserFileSerializer(builder_to.favicon_file).data,
         "id": builder_to.id,
         "name": builder_to.name,
         "pages": [
-            {"id": page.id, "name": page.name, "path": page.path, "path_params": []},
-            {"id": page2.id, "name": page2.name, "path": page2.path, "path_params": []},
+            {
+                "id": shared_page.id,
+                "name": "__shared__",
+                "path": "__shared__",
+                "path_params": [],
+                "shared": True,
+            },
+            {
+                "id": page.id,
+                "name": page.name,
+                "path": page.path,
+                "path_params": [],
+                "shared": False,
+            },
+            {
+                "id": page2.id,
+                "name": page2.name,
+                "path": page2.path,
+                "path_params": [],
+                "shared": False,
+            },
         ],
         "type": "builder",
         "user_sources": [],
@@ -221,13 +244,36 @@ def test_get_public_builder_by_id(api_client, data_fixture):
 
     del response_json["theme"]  # We are not testing the theme response here.
 
+    assert page.builder.page_set.filter(shared=True).count() == 1
+
+    shared_page = page.builder.page_set.get(shared=True)
+
     assert response_json == {
         "favicon_file": UserFileSerializer(page.builder.favicon_file).data,
         "id": page.builder.id,
         "name": page.builder.name,
         "pages": [
-            {"id": page.id, "name": page.name, "path": page.path, "path_params": []},
-            {"id": page2.id, "name": page2.name, "path": page2.path, "path_params": []},
+            {
+                "id": shared_page.id,
+                "name": "__shared__",
+                "path": "__shared__",
+                "path_params": [],
+                "shared": True,
+            },
+            {
+                "id": page.id,
+                "name": page.name,
+                "path": page.path,
+                "path_params": [],
+                "shared": False,
+            },
+            {
+                "id": page2.id,
+                "name": page2.name,
+                "path": page2.path,
+                "path_params": [],
+                "shared": False,
+            },
         ],
         "type": "builder",
         "user_sources": [],
@@ -924,7 +970,7 @@ def test_public_dispatch_data_sources_list_rows_no_elements(
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        str(data_source.id): {"has_next_page": False, "results": []}
+        str(data_source.id): {"has_next_page": False, "results": [{}] * 3}
     }
 
 
@@ -1034,6 +1080,6 @@ def test_public_dispatch_data_sources_list_rows_with_elements_and_role(
         assert response.json() == {
             str(data_source.id): {
                 "has_next_page": False,
-                "results": [],
+                "results": [{}] * 3,
             },
         }

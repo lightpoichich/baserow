@@ -1313,7 +1313,9 @@ def test_record_element_is_valid(data_fixture):
         table=table,
     )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
 
     # Record selector with no data sources is invalid
     with pytest.raises(FormDataProviderChunkInvalidException):
@@ -1443,7 +1445,7 @@ def test_repeat_element_import_export(data_fixture):
     imported_field = imported_table.field_set.get()
 
     # Pluck out the imported builder records.
-    imported_page = imported_builder.page_set.all()[0]
+    imported_page = imported_builder.page_set.filter(shared=False).all()[0]
     imported_data_source = imported_page.datasource_set.get()
     imported_root_repeat = imported_page.element_set.get(
         parent_element_id=None

@@ -596,7 +596,11 @@ const ContainerElementTypeMixin = (Base) =>
      * A Container element without any child elements is invalid. Return true
      * if there are no children, otherwise return false.
      */
-    isInError({ page, element }) {
+    isInError({ element, builder }) {
+      const page = this.app.store.getters['page/getById'](
+        builder,
+        element.page_id
+      )
       const children = this.app.store.getters['element/getChildren'](
         page,
         element
@@ -1395,12 +1399,10 @@ export class LinkElementType extends ElementType {
    * provided.
    */
   isInError({ element, builder }) {
-    // TODO: Figure out how to access mode in this module.
-    // If the mode is public and element.value is empty,
-    // we should not display this in public.
-    // if (!element.value && this.mode === 'public') {
-    //   return true
-    // }
+    // A Link without any text isn't usable
+    if (!element.value) {
+      return true
+    }
 
     if (element.navigation_type === 'page') {
       if (!element.navigate_to_page_id) {
@@ -1534,6 +1536,11 @@ export class ButtonElementType extends ElementType {
    * true if there are no Workflow Actions, otherwise return false.
    */
   isInError({ element, builder }) {
+    // If Button without any label should be considered invalid
+    if (!element.value) {
+      return true
+    }
+
     const page = this.app.store.getters['page/getById'](
       builder,
       element.page_id

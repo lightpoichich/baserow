@@ -1,7 +1,7 @@
 import json
 import uuid
 from os.path import join
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
@@ -14,19 +14,31 @@ from opentelemetry import trace
 
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.constants import JOB_FINISHED
-from baserow.core.models import Application, ExportApplicationsJob, Workspace
+from baserow.core.models import (
+    Application,
+    ExportApplicationsJob,
+    ImportApplicationsJob,
+    ImportResource,
+    Workspace,
+)
 from baserow.core.operations import ReadWorkspaceOperationType
 from baserow.core.registries import ImportExportConfig, application_type_registry
+from baserow.core.signals import application_created
 from baserow.core.storage import (
     _create_storage_dir_if_missing_and_open,
     get_default_storage,
 )
 from baserow.core.telemetry.utils import baserow_trace_methods
-from baserow.core.utils import ChildProgressBuilder, Progress
+from baserow.core.user_files.exceptions import (
+    FileSizeTooLargeError,
+    InvalidFileStreamError,
+)
+from baserow.core.utils import ChildProgressBuilder, Progress, stream_size
 
 tracer = trace.get_tracer(__name__)
 
 WORKSPACE_EXPORTS_LIMIT = 5
+JSON_FILE_NAME = "data/workspace_export.json"
 
 
 class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
@@ -154,7 +166,6 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
         export_app_progress = progress.create_child(80, len(applications))
 
         zip_file_name = f"workspace_{workspace.id}_{uuid.uuid4()}.zip"
-        json_file_name = f"data/workspace_export.json"
 
         export_path = self.export_file_path(zip_file_name)
 
@@ -170,7 +181,7 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
                     export_app_progress,
                 )
                 self.export_json_data(
-                    json_file_name, exported_applications, files_zip, storage
+                    JSON_FILE_NAME, exported_applications, files_zip, storage
                 )
                 progress.increment(by=20)
         return zip_file_name
@@ -205,3 +216,170 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
             .select_related("user")
             .order_by("-updated_on", "-id")[:WORKSPACE_EXPORTS_LIMIT]
         )
+
+    def get_import_job_by_file_name(self, file_name: str) -> ImportApplicationsJob:
+        return ImportApplicationsJob.objects.filter(file_name=file_name).first()
+
+    def upload_import_file(self, user, file_name, stream, workspace_id, storage=None):
+        if not hasattr(stream, "read"):
+            raise InvalidFileStreamError("The provided stream is not readable.")
+
+        size = stream_size(stream)
+
+        # TODO: Consider own file size limit
+        if size > settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+            raise FileSizeTooLargeError(
+                settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB,
+                "The provided file is too large.",
+            )
+
+        # TODO: Add validation for zip files
+        storage = storage or get_default_storage()
+
+        import_resource = ImportResource.objects.create(
+            uploaded_by=user,
+            original_name=file_name,
+            workspace_id=workspace_id,
+        )
+
+        full_path = self.export_file_path(import_resource.name)
+        storage.save(full_path, stream)
+        stream.close()
+
+        return import_resource
+
+    def import_application(
+        self,
+        application_data: Dict,
+        workspace: Workspace,
+        import_export_config: ImportExportConfig,
+        zip_file: ZipFile,
+        storage: Storage,
+        id_mapping: Dict[str, Any],
+        progress: Progress,
+    ) -> Application:
+        application_type = application_type_registry.get(application_data["type"])
+        imported_application = application_type.import_serialized(
+            workspace,
+            application_data,
+            import_export_config,
+            id_mapping,
+            zip_file,
+            storage,
+        )
+        progress.increment()
+        return imported_application
+
+    def import_multiple_applications(
+        self,
+        workspace: Workspace,
+        application_data: List[Dict],
+        import_export_config: ImportExportConfig,
+        zip_file: ZipFile,
+        storage: Storage,
+        progress: Progress,
+    ) -> List[Application]:
+        imported_applications = []
+
+        id_mapping: Dict[str, Any] = {}
+        next_application_order_value = Application.get_last_order(workspace)
+
+        for application in application_data:
+            imported_application = self.import_application(
+                application,
+                workspace,
+                import_export_config,
+                zip_file,
+                storage,
+                id_mapping,
+                progress,
+            )
+            imported_application.order = next_application_order_value
+            next_application_order_value += 1
+            imported_applications.append(imported_application)
+        return imported_applications
+
+    def extract_exported_applications(self, zip_file: ZipFile) -> List[Dict]:
+        file_list = zip_file.namelist()
+
+        if JSON_FILE_NAME not in file_list:
+            raise Exception("Import file is corrupted")
+
+        with zip_file.open(JSON_FILE_NAME) as export_handler:
+            exported_applications = json.load(export_handler)
+        return exported_applications
+
+    def import_workspace_applications(
+        self,
+        user: AbstractUser,
+        workspace: Workspace,
+        file_name: str,
+        import_export_config: ImportExportConfig,
+        storage: Optional[Storage] = None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ):
+        progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+
+        storage = storage or get_default_storage()
+
+        import_resource = ImportResource.objects.filter(
+            workspace_id=workspace.id, name=file_name
+        ).first()
+
+        if not import_resource:
+            # FIXME: Add proper exception type
+            raise Exception("Import file does not exist.")
+
+        file_path = self.export_file_path(file_name)
+
+        if not storage.exists(file_path):
+            # TODO: throw proper exception
+            raise Exception(f"The file {file_name} does not exist.")
+
+        progress.increment(by=5)
+
+        with storage.open(file_path, "rb") as zip_file_handle:
+            with ZipFile(zip_file_handle, "r") as zip_file:
+                exported_applications = self.extract_exported_applications(zip_file)
+
+                progress.increment(by=15)
+                import_app_progress = progress.create_child(
+                    70, len(exported_applications)
+                )
+
+                imported_applications = self.import_multiple_applications(
+                    workspace,
+                    exported_applications,
+                    import_export_config,
+                    zip_file,
+                    storage,
+                    import_app_progress,
+                )
+
+                for application in imported_applications:
+                    application_type = application_type_registry.get_by_model(
+                        application)
+                    application_created.send(
+                        self,
+                        application=application,
+                        user=user,
+                        type_name=application_type.type,
+                    )
+
+                Application.objects.bulk_update(imported_applications, ["order"])
+                progress.increment(by=10)
+        return imported_applications
+
+    def delete_resource(
+        self, workspace_id: int, resource_id: str, storage: Storage = None
+    ):
+        import_resource = ImportResource.objects.filter(
+            workspace_id=workspace_id, id=resource_id
+        ).first()
+        if not import_resource:
+            raise Exception("Resource does not exist.")
+
+        storage = storage or get_default_storage()
+        full_path = self.export_file_path(import_resource.name)
+        storage.delete(full_path)
+        import_resource.delete()

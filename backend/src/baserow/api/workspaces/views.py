@@ -5,8 +5,10 @@ from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_202_ACCEPTED
 from rest_framework.views import APIView
 
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
@@ -24,6 +26,7 @@ from baserow.api.schemas import (
     get_error_schema,
 )
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
+from baserow.api.user_files.errors import ERROR_FILE_SIZE_TOO_LARGE, ERROR_INVALID_FILE
 from baserow.api.utils import validate_data
 from baserow.api.workspaces.users.serializers import WorkspaceUserWorkspaceSerializer
 from baserow.core.action.registries import action_type_registry
@@ -45,16 +48,21 @@ from baserow.core.exceptions import (
 from baserow.core.feature_flags import FF_EXPORT_WORKSPACE, feature_flag_is_enabled
 from baserow.core.handler import CoreHandler
 from baserow.core.import_export_handler import ImportExportHandler
-from baserow.core.job_types import ExportApplicationsJobType
+from baserow.core.job_types import ExportApplicationsJobType, ImportApplicationsJobType
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.notifications.handler import NotificationHandler
 from baserow.core.operations import UpdateWorkspaceOperationType
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
+from baserow.core.user_files.exceptions import (
+    FileSizeTooLargeError,
+    InvalidFileStreamError,
+)
 
 from .errors import ERROR_GROUP_USER_IS_LAST_ADMIN
 from .serializers import (
+    ImportResourceSerializer,
     OrderWorkspacesSerializer,
     PermissionObjectSerializer,
     WorkspaceSerializer,
@@ -66,19 +74,35 @@ ExportApplicationsJobRequestSerializer = job_type_registry.get(
 ).get_serializer_class(
     base_class=serializers.Serializer,
     request_serializer=True,
-    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
+    meta_ref_name="ExportApplicationsJobRequestSerializer",
 )
 
 ExportApplicationsJobResponseSerializer = job_type_registry.get(
     ExportApplicationsJobType.type
 ).get_serializer_class(
     base_class=JobSerializer,
-    meta_ref_name="SingleExportApplicationsJobRequestSerializer",
+    meta_ref_name="ExportApplicationsJobRequestSerializer",
 )
 
 
 class ListExportWorkspaceApplicationsSerializer(serializers.Serializer):
     results = ExportApplicationsJobResponseSerializer(many=True)
+
+
+ImportApplicationsJobRequestSerializer = job_type_registry.get(
+    ImportApplicationsJobType.type
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    request_serializer=True,
+    meta_ref_name="ImportApplicationsJobRequestSerializer",
+)
+
+ImportApplicationsJobResponseSerializer = job_type_registry.get(
+    ImportApplicationsJobType.type
+).get_serializer_class(
+    base_class=JobSerializer,
+    meta_ref_name="ImportApplicationsJobResponseSerializer",
+)
 
 
 class WorkspacesView(APIView):
@@ -586,3 +610,134 @@ class AsyncExportWorkspaceApplicationsView(APIView):
 
         serializer = job_type_registry.get_serializer(job, JobSerializer)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class ImportApplicationsUploadFileView(APIView):
+    permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="workspace_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the workspace for which file is uploaded.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Workspaces"],
+        operation_id="import_workspace_applications_upload_file",
+        description=("TODO:"),
+        request=None,
+        responses={
+            202: ImportResourceSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                    "ERROR_INVALID_FILE",
+                    "ERROR_FILE_SIZE_TOO_LARGE",
+                ]
+            ),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            InvalidFileStreamError: ERROR_INVALID_FILE,
+            FileSizeTooLargeError: ERROR_FILE_SIZE_TOO_LARGE,
+        }
+    )
+    def post(self, request, workspace_id: int) -> Response:
+        if "file" not in request.FILES:
+            raise InvalidFileStreamError("No file was provided.")
+
+        file = request.FILES.get("file")
+        import_file = ImportExportHandler().upload_import_file(
+            request.user, file.name, file, workspace_id
+        )
+        serializer = ImportResourceSerializer(import_file)
+        return Response(serializer.data)
+
+
+class ImportApplicationsDeleteResourceView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["Workspaces"],
+        operation_id="import_workspace_applications_delete_resource",
+        description=("TODO:"),
+        request=None,
+        responses={
+            204: None,
+            404: get_error_schema(
+                ["RESOURCE_DOES_NOT_EXIST", "ERROR_GROUP_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            # TODO: Add resource does not exist error
+        }
+    )
+    def delete(self, request, workspace_id, resource_id: str) -> Response:
+        ImportExportHandler().delete_resource(workspace_id, resource_id)
+        return Response(status=204)
+
+
+class AsyncImportApplicationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="workspace_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the workspace where the application will be imported.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Workspaces"],
+        operation_id="import_workspace_applications_async",
+        description=("TODO:"),
+        request=None,
+        responses={
+            202: ImportApplicationsJobResponseSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                    "ERROR_FILE_DOES_NOT_EXISTS",
+                ]
+            ),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    @validate_body(ImportApplicationsJobRequestSerializer, return_validated=True)
+    def post(self, request, data: Dict, workspace_id: int) -> Response:
+        resource_id = data["resource_id"]
+
+        job = JobHandler().create_and_start_job(
+            request.user,
+            ImportApplicationsJobType.type,
+            workspace_id=workspace_id,
+            resource_id=resource_id,
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=HTTP_202_ACCEPTED)

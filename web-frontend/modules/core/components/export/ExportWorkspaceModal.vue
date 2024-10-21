@@ -36,10 +36,10 @@
           </Button>
         </template>
       </ExportWorkspaceForm>
-      <div class="snapshots-modal__list">
+      <div class="exports-modal__list">
         <div
           v-if="exportJobLoading"
-          class="loading snapshots-modal__list--loading"
+          class="loading exports-modal__list--loading"
         ></div>
         <div v-else-if="exportJobs.length > 0">
           <ExportWorkspaceListItem

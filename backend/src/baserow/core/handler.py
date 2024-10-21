@@ -2,8 +2,10 @@ import hashlib
 import json
 import os
 import re
+import uuid
 from dataclasses import dataclass
 from io import BytesIO
+from os.path import join
 from pathlib import Path
 from typing import IO, Any, Dict, List, NewType, Optional, Tuple, Union, cast
 from urllib.parse import urljoin, urlparse
@@ -12,6 +14,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, AnonymousUser
+from django.core.files.base import ContentFile
 from django.core.files.storage import Storage
 from django.db import OperationalError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
@@ -1616,6 +1619,81 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         application_deleted.send(
             self, application_id=application_id, application=application, user=user
         )
+
+    def export_workspace_applications_single_file(
+        self,
+        workspace,
+        import_export_config: ImportExportConfig,
+        application_ids=None,
+        storage=None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ):
+        """
+        Create zip file with exported applications. If application_ids is provided, only
+        those applications will be exported.
+
+        :param workspace: The workspace of which the applications must be exported.
+        :type workspace: Workspace
+        :param application_ids: A list of application ids that must be exported. If
+             not provided, all applications will be exported.
+        :param storage: The storage where the files can be loaded from.
+        :type storage: Storage or None
+        :param import_export_config: provides configuration options for the
+            import/export process to customize how it works.
+        :return: file name of the zip file with exported data
+        :rtype: str
+        """
+
+        # Note: this needs to be imported here to avoid circular imports
+        from baserow.contrib.database.export.handler import (
+            _create_storage_dir_if_missing_and_open,
+        )
+
+        storage = storage or get_default_storage()
+
+        progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+
+        zip_file_name = f"workspace_{workspace.id}_{uuid.uuid4()}.zip"
+        json_file_name = f"data/workspace_export.json"
+        temp_json_file_name = f"temp_{json_file_name}"
+
+        export_path = join(settings.EXPORT_FILES_DIRECTORY, zip_file_name)
+
+        applications = workspace.application_set.all()
+        if application_ids:
+            applications = applications.filter(id__in=application_ids)
+
+        app_progress_step = int(80 / (len(applications) or 1))
+        last_progress_step = 100 - app_progress_step * len(applications)
+
+        with _create_storage_dir_if_missing_and_open(export_path) as files_buffer:
+            with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+                exported_applications = []
+                for app in applications:
+                    application = app.specific
+                    application_type = application_type_registry.get_by_model(
+                        application
+                    )
+                    # We don't run it in export_safe_transaction_context
+                    # as it's readonly
+                    exported_application = application_type.export_serialized(
+                        application, import_export_config, files_zip, storage
+                    )
+                    exported_applications.append(exported_application)
+                    progress.increment(by=app_progress_step)
+
+                temp_json_file_path = storage.save(temp_json_file_name, ContentFile(""))
+
+                with storage.open(temp_json_file_path, "w") as temp_json_file:
+                    json.dump(exported_applications, temp_json_file, indent=None)
+
+                with storage.open(temp_json_file_path, "rb") as temp_json_file:
+                    files_zip.write(temp_json_file.name, json_file_name)
+                storage.delete(temp_json_file_path)
+
+                progress.increment(by=last_progress_step)
+
+        return zip_file_name
 
     def export_workspace_applications(
         self,

@@ -91,7 +91,8 @@ export default {
         element: this.element,
         builder: this.builder,
       })
-      if (this.mode === 'public' && isInError) {
+
+      if (this.mode !== 'editing' && isInError) {
         return false
       }
 

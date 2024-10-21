@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("core", "0089_alter_snapshot_unique_together"),
         ("database", "0169_alter_galleryview_card_cover_image_field"),
-        ("integrations", "0008_local_baserow_delete_row_table"),
+        ("integrations", "0009_alter_localbaserowgetrow_search_query_and_more"),
     ]
 
     operations = [

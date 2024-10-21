@@ -612,4 +612,16 @@ describe('elementTypes tests', () => {
       expect(elementType.isInError( {page: {}, element: {value: 'Foo Heading'}} )).toBe(false)
     })
   })
+
+  describe('TextElementType isInError tests', () => {
+    test('Returns true if Text Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'text')
+      
+      // Text with missing value is invalid
+      expect(elementType.isInError( {page: {}, element: {value: ''}} )).toBe(true)
+
+      // Text with value is valid
+      expect(elementType.isInError( {page: {}, element: {value: 'Foo Text'}} )).toBe(false)
+    })
+  })
 })

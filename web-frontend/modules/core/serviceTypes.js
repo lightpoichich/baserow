@@ -19,6 +19,23 @@ export class ServiceType extends Registerable {
     return null
   }
 
+  /**
+   * The collection element menu component.
+   */
+  get collectionElementMenuComponent() {
+    return null
+  }
+
+  /**
+   * A post-processor function for the collection element menu. The component
+   * returned by `collectionElementMenuComponent` will return the raw filter,
+   * sort and/or search value, and this function is responsible for processing
+   * the value and turning it into a value we can add to our dispatch query.
+   */
+  collectionElementMenuPostProcessor(preProcessedValue) {
+    return preProcessedValue
+  }
+
   isValid(service) {
     return true
   }

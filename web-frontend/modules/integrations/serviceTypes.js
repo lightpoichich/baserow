@@ -3,6 +3,8 @@ import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integ
 import LocalBaserowGetRowForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowGetRowForm'
 import LocalBaserowListRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowListRowsForm'
 import { uuid } from '@baserow/modules/core/utils/string'
+import { getFilters } from '@baserow/modules/database/utils/view'
+import LocalBaserowCollectionElementMenu from '@baserow/modules/integrations/localBaserow/elements/LocalBaserowCollectionElementMenu'
 
 export class LocalBaserowGetRowServiceType extends ServiceType {
   static getType() {
@@ -104,6 +106,23 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
 
   get formComponent() {
     return LocalBaserowListRowsForm
+  }
+
+  /**
+   * The collection element menu component.
+   */
+  get collectionElementMenuComponent() {
+    return LocalBaserowCollectionElementMenu
+  }
+
+  /**
+   * Responsible for taking a `view` object, in our case a "fake" one as we
+   * want adhoc filtering to work even if a view hasn't been chosen, and
+   * serializing the filters, sorts and search into a format that can be
+   * used in the dispatch query.
+   */
+  collectionElementMenuPostProcessor(preProcessedValue) {
+    return getFilters(preProcessedValue, true)
   }
 
   isValid(service) {

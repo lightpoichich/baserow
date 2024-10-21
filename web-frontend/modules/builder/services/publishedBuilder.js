@@ -24,15 +24,21 @@ export default (client) => {
         `builder/domains/published/page/${pageId}/workflow_actions/`
       )
     },
-    dispatch(dataSourceId, dispatchContext, { range }) {
+    dispatch(dataSourceId, dispatchContext, { range, refinements = {} }) {
       // Using POST Http method here is not Restful but it the cleanest way to send
       // data with the call without relying on GET parameter and serialization of
       // complex object.
-      const params = {}
+      const params = new URLSearchParams()
       if (range) {
-        params.offset = range[0]
-        params.count = range[1]
+        params.append('offset', range[0])
+        params.append('count', range[1])
       }
+
+      Object.keys(refinements).forEach((key) => {
+        refinements[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
 
       return client.post(
         `builder/domains/published/data-source/${dataSourceId}/dispatch/`,

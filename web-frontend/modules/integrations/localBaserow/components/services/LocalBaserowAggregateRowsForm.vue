@@ -178,8 +178,8 @@ export default {
     },
     table() {
       return this.databases
-        .find((db) => db.tables.some((tbl) => tbl.id === this.values.table_id))
-        ?.tables.find((tbl) => tbl.id === this.values.table_id)
+        .flatMap((db) => db.tables)
+        .find((tbl) => tbl.id === this.values.table_id)
     },
     fields() {
       return this.table?.fields || []

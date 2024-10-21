@@ -8,7 +8,7 @@
       {{
         element.value
           ? resolvedValue ||
-            (mode === 'editing' ? $t('headingElement.emptyValue') : '')
+            (mode === 'editing' ? $t('headingElement.emptyValue') : '&nbsp;')
           : $t('headingElement.emptyState')
       }}
     </ABHeading>

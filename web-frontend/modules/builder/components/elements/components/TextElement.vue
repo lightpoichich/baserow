@@ -11,7 +11,7 @@
         v-if="element.value"
         :content="
           resolvedValue ||
-          (mode === 'editing' ? $t('textElement.emptyValue') : '')
+          (mode === 'editing' ? $t('textElement.emptyValue') : '&nbsp;')
         "
         :rules="rules"
         @click.native="onClick"
@@ -23,7 +23,7 @@
         {{ paragraph.content }}
       </ABParagraph>
       <ABParagraph v-if="element.value && paragraphs.length === 0">
-        {{ mode === 'editing' ? $t('textElement.emptyValue') : '' }}
+        {{ mode === 'editing' ? $t('textElement.emptyValue') : '&nbsp;' }}
       </ABParagraph>
       <ABParagraph v-else-if="!element.value">
         {{ $t('textElement.noValue') }}

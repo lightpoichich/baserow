@@ -8,7 +8,7 @@
       {{
         element.value
           ? resolvedValue ||
-            (mode === 'editing' ? $t('linkElement.emptyValue') : '')
+            (mode === 'editing' ? $t('linkElement.emptyValue') : '&nbsp;')
           : $t('linkElement.emptyState')
       }}
     </ABLink>

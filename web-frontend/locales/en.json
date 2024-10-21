@@ -49,7 +49,7 @@
   },
   "applicationType": {
     "database": "Database",
-    "databases": "Databases",
+    "databaes": "Databases",
     "databaseDefaultName": "Untitled Database",
     "databaseDesc": "Create an organized collection of structured data.",
     "builder": "Application",

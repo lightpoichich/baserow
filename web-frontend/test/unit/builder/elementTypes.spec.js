@@ -568,4 +568,24 @@ describe('elementTypes tests', () => {
       expect(elementType.choiceOptions(element)).toEqual(['', 'bar_name'])
     })
   })
+
+  describe('ButtonElementType isInError tests', () => {
+    test('Returns true if value is missing', () => {
+      const page = { id: 1, name: 'Foo Page', workflowActions: [] }
+      const element = {id: 50, value: '', page_id: page.id}
+      const builder = { pages: [page]}
+      const elementType = testApp.getRegistry().get('element', 'button')
+      
+      // Button with missing value is invalid
+      expect(elementType.isInError( {element, builder} )).toBe(true)
+
+      // Button with value but missing workflowActions is invalid
+      element.value = "click me"
+      expect(elementType.isInError( {element, builder} )).toBe(true)
+
+      // Button with value and workflowAction is valid
+      page.workflowActions = [{element_id: 50}]
+      expect(elementType.isInError( {element, builder} )).toBe(false)
+    })
+  })
 })

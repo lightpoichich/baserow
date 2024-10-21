@@ -5,7 +5,12 @@
     }"
   >
     <ABHeading :level="element.level" :style="getStyleOverride('typography')">
-      {{ resolvedValue || $t('headingElement.noValue') }}
+      {{
+        element.value
+          ? resolvedValue ||
+            (mode === 'editing' ? $t('headingElement.emptyValue') : '')
+          : $t('headingElement.emptyState')
+      }}
     </ABHeading>
   </div>
 </template>
@@ -17,6 +22,7 @@ import { ensureString } from '@baserow/modules/core/utils/validator'
 export default {
   name: 'HeadingElement',
   mixins: [element],
+  inject: ['mode'],
   props: {
     /**
      * @type {Object}

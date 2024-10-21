@@ -8,8 +8,11 @@
   >
     <template v-if="element.format === TEXT_FORMAT_TYPES.MARKDOWN">
       <MarkdownIt
-        v-if="resolvedValue"
-        :content="resolvedValue"
+        v-if="element.value"
+        :content="
+          resolvedValue ||
+          (mode === 'editing' ? $t('textElement.emptyValue') : '')
+        "
         :rules="rules"
         @click.native="onClick"
       ></MarkdownIt>
@@ -19,7 +22,10 @@
       <ABParagraph v-for="paragraph in paragraphs" :key="paragraph.id">
         {{ paragraph.content }}
       </ABParagraph>
-      <ABParagraph v-if="!paragraphs.length">
+      <ABParagraph v-if="element.value && paragraphs.length === 0">
+        {{ mode === 'editing' ? $t('textElement.emptyValue') : '' }}
+      </ABParagraph>
+      <ABParagraph v-else-if="!element.value">
         {{ $t('textElement.noValue') }}
       </ABParagraph>
     </template>
@@ -42,6 +48,7 @@ import { prefixInternalResolvedUrl } from '@baserow/modules/builder/utils/urlRes
 export default {
   name: 'TextElement',
   mixins: [element],
+  inject: ['mode'],
   props: {
     /**
      * @type {Object}

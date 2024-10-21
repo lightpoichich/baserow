@@ -139,7 +139,8 @@
     "invalidFormula": "The formula is invalid"
   },
   "headingElement": {
-    "noValue": "No title..."
+    "emptyState": "Missing title",
+    "emptyValue": "Empty title"
   },
   "headingElementForm": {
     "levelTitle": "Level",
@@ -149,7 +150,8 @@
     "textError": "The value is invalid."
   },
   "textElement": {
-    "noValue": "Empty text..."
+    "noValue": "Missing text",
+    "emptyValue": "Empty text"
   },
   "textElementForm": {
     "textTitle": "Text",
@@ -160,7 +162,8 @@
     "textFormatTypeMarkdown": "Markdown"
   },
   "imageElement": {
-    "emptyState": "No alt text defined..."
+    "emptyState": "Alt text is missing",
+    "emptyValue": "Alt text is empty"
   },
   "generalForm": {
     "labelTitle": "Label",
@@ -198,7 +201,8 @@
     "uploadFileButton": "Upload file"
   },
   "iframeElementForm": {
-    "empty": "Empty IFrame...",
+    "emptyState": "No IFrame URL is defined",
+    "emptyValue": "IFrame URL is empty",
     "sourceTypeLabel": "Source type",
     "urlLabel": "URL",
     "urlPlaceholder": "Link to the external resource to be embedded",
@@ -267,7 +271,8 @@
     "subDomain": "Subdomain of {domain}"
   },
   "linkElement": {
-    "noValue": "Unnamed..."
+    "emptyState": "Link text is missing",
+    "emptyValue": "Link text is empty"
   },
   "linkNavigationSelection": {
     "navigateTo": "Navigate to",
@@ -510,7 +515,8 @@
     "valuePlaceholder": "Enter text..."
   },
   "buttonElement": {
-    "noValue": "Unnamed..."
+    "emptyState": "Button text is missing",
+    "emptyValue": "Button text is empty"
   },
   "eventTypes": {
     "clickLabel": "On click",
@@ -664,7 +670,8 @@
     "integrationFieldLabel": "Integration"
   },
   "formContainerElement": {
-    "submitDeactivatedText": "Complete all required fields to submit"
+    "submitDeactivatedText": "Complete all required fields to submit",
+    "defaultSubmitButtonLabel": "Submit"
   },
   "formContainerElementForm": {
     "submitButtonLabel": "Submit button",

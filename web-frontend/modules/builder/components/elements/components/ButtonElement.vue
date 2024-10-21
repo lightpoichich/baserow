@@ -10,7 +10,12 @@
       :loading="workflowActionsInProgress"
       @click="fireEvent(elementType.getEventByName(element, 'click'))"
     >
-      {{ resolvedValue || $t('buttonElement.noValue') }}
+      {{
+        element.value
+          ? resolvedValue ||
+            (mode === 'editing' ? $t('buttonElement.emptyValue') : '')
+          : $t('buttonElement.emptyState')
+      }}
     </ABButton>
   </div>
 </template>
@@ -28,6 +33,7 @@ import { ensureString } from '@baserow/modules/core/utils/validator'
 export default {
   name: 'ButtonElement',
   mixins: [element],
+  inject: ['mode'],
   props: {
     /**
      * @type {ButtonElement}

@@ -41,6 +41,7 @@ from baserow.contrib.builder.elements.types import (
 )
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.types import ElementDict
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.utils import merge_dicts_no_duplicates
 
@@ -316,6 +317,22 @@ class CollectionElementTypeMixin:
         if prop_name == "data_source_id" and value:
             return id_mapping["builder_data_sources"][value]
 
+        if prop_name == "property_options" and "database_fields" in id_mapping:
+            property_options = []
+            for po in value:
+                field_id = get_field_id_from_field_key(po["schema_property"])
+                if field_id is None:
+                    # If we can't translate the `schema_property` into a Field ID, then
+                    # it's not a `Field` db_column value. For example this can happen
+                    # if someone chooses to have a `id` property option.
+                    property_options.append(po)
+                    continue
+                new_field_id = id_mapping["database_fields"][field_id]
+                property_options.append(
+                    {**po, "schema_property": f"field_{new_field_id}"}
+                )
+            return property_options
+
         return super().deserialize_property(
             prop_name,
             value,
@@ -377,7 +394,10 @@ class CollectionElementTypeMixin:
         )
 
         # Create property options
-        options = [CollectionElementPropertyOptions(**po) for po in property_options]
+        options = [
+            CollectionElementPropertyOptions(**po, element=instance)
+            for po in property_options
+        ]
         CollectionElementPropertyOptions.objects.bulk_create(options)
 
         instance.property_options.add(*options)

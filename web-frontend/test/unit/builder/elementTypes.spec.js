@@ -624,4 +624,32 @@ describe('elementTypes tests', () => {
       expect(elementType.isInError( {page: {}, element: {value: 'Foo Text'}} )).toBe(false)
     })
   })
+
+  describe('LinkElementType isInError tests', () => {
+    test('Returns true if Link Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'link')
+      
+      // Link with missing text is invalid
+      expect(elementType.isInError( {element: {value: ''}} )).toBe(true)
+
+      // When navigation_type is 'page' the navigate_to_page_id must be set
+      let element = {navigation_type: 'page', navigate_to_page_id: '', value: 'Foo Link'}
+      expect(elementType.isInError( {page: {}, element} )).toBe(true)
+      
+      // Otherwise it is valid
+      const page = {id: 10, shared: false, order: 1}
+      const builder = {pages: [page]}
+      element.navigate_to_page_id = 10
+      expect(elementType.isInError( {builder, element} )).toBe(false)
+
+      // When navigation_type is 'custom' the navigate_to_url must be set
+      element = {navigation_type: 'custom', navigate_to_url: ''}
+      expect(elementType.isInError( {builder, element} )).toBe(true)
+
+      // Otherwise it is valid
+      element.navigate_to_url = 'http://localhost'
+      element.value = 'Foo Link'
+      expect(elementType.isInError( {builder, element} )).toBe(false)
+    })
+  })
 })

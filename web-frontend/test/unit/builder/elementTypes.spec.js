@@ -600,4 +600,16 @@ describe('elementTypes tests', () => {
       expect(elementType.isInError( {page: {}, element: {data_source_id: 100}} )).toBe(false)
     })
   })
+
+  describe('HeadingElementType isInError tests', () => {
+    test('Returns true if Heading Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'heading')
+      
+      // Heading with missing value is invalid
+      expect(elementType.isInError( {page: {}, element: {value: ''}} )).toBe(true)
+
+      // Heading with value is valid
+      expect(elementType.isInError( {page: {}, element: {value: 'Foo Heading'}} )).toBe(false)
+    })
+  })
 })

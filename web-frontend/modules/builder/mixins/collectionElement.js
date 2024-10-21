@@ -6,6 +6,7 @@ import _ from 'lodash'
 export default {
   data() {
     return {
+      adhocRefinements: undefined,
       currentOffset: 0,
       errorNotified: false,
       resetTimeout: null,
@@ -89,6 +90,13 @@ export default {
       },
       deep: true,
     },
+    adhocRefinements: {
+      handler(newValue, prevValue) {
+        if (!_.isEqual(newValue, prevValue)) {
+          this.debouncedReset()
+        }
+      },
+    },
   },
   async fetch() {
     if (!this.elementIsInError && this.elementType.fetchAtLoad) {
@@ -119,6 +127,7 @@ export default {
           dataSource: this.dataSource,
           data: this.dispatchContext,
           range,
+          refinements: this.adhocRefinements,
           mode: this.applicationContext.mode,
           replace,
         })

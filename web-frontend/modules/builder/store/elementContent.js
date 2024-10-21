@@ -58,6 +58,7 @@ const actions = {
    * @param {object} element - the element object
    * @param {object} dataSource - the data source we want to dispatch
    * @param {object} range - the range of the data we want to fetch
+   * @param {object} refinements - the adhoc refinements to apply to the data
    * @param {object} dispatchContext - the context to dispatch to the data
    * @param {bool} replace - if we want to replace the current content
    * @param {object} data - the query body
@@ -69,6 +70,7 @@ const actions = {
       element,
       dataSource,
       range,
+      refinements,
       mode,
       data: dispatchContext,
       replace = false,
@@ -203,7 +205,7 @@ const actions = {
         const { data } = await service(this.app.$client).dispatch(
           dataSource.id,
           dispatchContext,
-          { range: rangeToFetch }
+          { range: rangeToFetch, refinements }
         )
 
         // With a list-type data source, the data object will return

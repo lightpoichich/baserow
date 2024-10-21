@@ -570,7 +570,7 @@ describe('elementTypes tests', () => {
   })
 
   describe('ButtonElementType isInError tests', () => {
-    test('Returns true if value is missing', () => {
+    test('Returns true if Button Element has errors, false otherwise', () => {
       const page = { id: 1, name: 'Foo Page', workflowActions: [] }
       const element = {id: 50, value: '', page_id: page.id}
       const builder = { pages: [page]}
@@ -586,6 +586,18 @@ describe('elementTypes tests', () => {
       // Button with value and workflowAction is valid
       page.workflowActions = [{element_id: 50}]
       expect(elementType.isInError( {element, builder} )).toBe(false)
+    })
+  })
+
+  describe('RepeatElementType isInError tests', () => {
+    test('Returns true if Repeat Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'repeat')
+      
+      // Repeat with missing data source is invalid
+      expect(elementType.isInError( {page: {}, element: {}} )).toBe(true)
+
+      // Repeat with data source is valid
+      expect(elementType.isInError( {page: {}, element: {data_source_id: 100}} )).toBe(false)
     })
   })
 })

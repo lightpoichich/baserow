@@ -273,7 +273,6 @@ export class NoneOfArrayIsViewFilterType extends ViewFilterType {
   }
 
   matches(cellValue, filterValue, field, fieldType) {
-    console.log('none of array is', cellValue, filterValue, field, fieldType)
     return !_.includes(_.map(cellValue, 'value'), Boolean(filterValue))
   }
 }
@@ -300,7 +299,6 @@ export class AnyOfArrayIsViewFilterType extends ViewFilterType {
   }
 
   matches(cellValue, filterValue, field, fieldType) {
-    console.log('any of array is', cellValue, filterValue, field, fieldType)
     return _.includes(_.map(cellValue, 'value'), Boolean(filterValue))
   }
 }
@@ -327,7 +325,10 @@ export class AllOfArrayAreViewFilterType extends ViewFilterType {
   }
 
   matches(cellValue, filterValue, field, fieldType) {
-    console.log('any of array is', cellValue, filterValue, field, fieldType)
-    return _.every(_.map(cellValue, 'value'), Boolean(filterValue))
+    const expected = Boolean(filterValue)
+    if (cellValue.length === 0) {
+      return false
+    }
+    return _.every(_.map(cellValue, 'value'), (inVal) => inVal === expected)
   }
 }

@@ -1630,8 +1630,8 @@ def test_boolean_lookup_is_empty(
         user=test_setup.user, table=test_setup.other_table, rows_values=dict_rows
     )
     rows = [
+        # mixed
         {
-            # mixed
             test_setup.link_row_field.db_column: [
                 linked_rows[0].id,
                 linked_rows[1].id,

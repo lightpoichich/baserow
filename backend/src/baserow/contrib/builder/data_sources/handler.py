@@ -33,13 +33,18 @@ class DataSourceHandler:
         self.service_handler = ServiceHandler()
 
     def get_data_source(
-        self, data_source_id: int, base_queryset: Optional[QuerySet] = None, cache=None
+        self,
+        data_source_id: int,
+        base_queryset: Optional[QuerySet] = None,
+        specific=True,
     ) -> DataSource:
         """
         Returns a data_source instance from the database.
 
         :param data_source_id: The ID of the data_source.
         :param base_queryset: The base queryset to use to build the query.
+        :param specific: Return the specific version of related objects like the
+          service and the integration
         :raises DataSourceDoesNotExist: If the data_source can't be found.
         :return: The data_source instance.
         """
@@ -48,10 +53,22 @@ class DataSourceHandler:
             base_queryset if base_queryset is not None else DataSource.objects.all()
         )
 
+        queryset = queryset.select_related("page__builder__workspace")
+
         try:
-            data_source = queryset.select_related(
-                "page", "page__builder", "page__builder__workspace", "service"
-            ).get(id=data_source_id)
+            if specific:
+                data_source = queryset.get(id=data_source_id)
+                if data_source.service_id:
+                    specific_service = ServiceHandler().get_service(
+                        data_source.service_id, specific=True
+                    )
+                    data_source.__class__.service.field.set_cached_value(
+                        data_source, specific_service
+                    )
+            else:
+                data_source = queryset.select_related("service__integration").get(
+                    id=data_source_id
+                )
         except DataSource.DoesNotExist:
             raise DataSourceDoesNotExist()
 
@@ -90,16 +107,9 @@ class DataSourceHandler:
         :return: A list of queried data sources.
         """
 
-        data_source_queryset = base_queryset.select_related(
-            "service",
-            "page__builder__workspace",
-            "service__integration__application",
-        )
+        data_source_queryset = base_queryset.select_related("page__builder__workspace")
 
         if specific:
-            data_source_queryset = data_source_queryset.select_related(
-                "service__content_type"
-            )
             data_sources = list(data_source_queryset.all())
 
             # Get all service ids to get them from DB in one query
@@ -123,6 +133,9 @@ class DataSourceHandler:
 
             return data_sources
         else:
+            data_source_queryset.select_related(
+                "service__integration__application",
+            )
             return data_source_queryset.all()
 
     def get_data_sources(

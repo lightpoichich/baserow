@@ -171,11 +171,10 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         if not model:
             model = self.get_table_model(service)
 
-        queryset = self.get_queryset(service, table, dispatch_context, model)
-
+        queryset = self.get_table_queryset(service, table, dispatch_context, model)
         return queryset
 
-    def get_queryset(
+    def get_table_queryset(
         self,
         service: ServiceSubClass,
         table: "Table",
@@ -193,7 +192,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     def enhance_queryset(self, queryset):
         return queryset.select_related(
             "table__database__workspace",
-        ).prefetch_related("table__field_set")
+        )
 
     def resolve_service_formulas(
         self,
@@ -412,15 +411,17 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         :return: A schema dictionary, or None if no `Table` has been applied.
         """
 
-        table = service.table
-        if not table:
+        field_objects = self.get_table_field_objects(service)
+
+        if field_objects is None:
             return None
 
         properties = {"id": {"type": "number", "title": "Id"}}
-        for field_object in self.get_table_field_objects(service):
+        for field_object in field_objects:
             field_type = field_object["type"]
             field = field_object["field"]
             # Only `TextField` has a default value at the moment.
+            field = field_object["field"]
             default_value = getattr(field, "text_default", None)
             field_serializer = field_type.get_serializer(field, FieldSerializer)
             properties[field.db_column] = {
@@ -471,35 +472,34 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         Returns the model for the table associated with the given service.
         """
 
-        if getattr(service, "_table_model", None) is None:
-            table = service.table
+        if getattr(service, "_table_model", None) is None and service.table_id:
+            setattr(service, "_table_model", service.table.get_model())
 
-            if not table:
-                return None
-
-            setattr(service, "_table_model", table.get_model())
-
-        return getattr(service, "_table_model")
+        return getattr(service, "_table_model", None)
 
     def get_table_field_objects(self, service: LocalBaserowTableService) -> List[Dict]:
         """
-        Returns the fields of the table associated with the given service.
+        Returns the fields objects of the table of the given service.
+
+        :param service: The service we want the fields for.
+        :returns: The field objects from the table model.
         """
 
         model = self.get_table_model(service)
 
         if model is None:
-            return []
+            return None
 
         return model.get_field_objects()
 
     def get_context_data(self, service: ServiceSubClass) -> Dict[str, Any]:
-        table = service.table
-        if not table:
+        field_objects = self.get_table_field_objects(service)
+
+        if field_objects is None:
             return None
 
         ret = {}
-        for field_object in self.get_table_field_objects(service):
+        for field_object in field_objects:
             field_type = field_object["type"]
             if field_type.can_have_select_options:
                 field_serializer = field_type.get_serializer(
@@ -510,19 +510,17 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         return ret
 
     def get_context_data_schema(self, service: ServiceSubClass) -> Dict[str, Any]:
-        table = service.table
-        if not table:
+        field_objects = self.get_table_field_objects(service)
+
+        if field_objects is None:
             return None
 
         properties = {}
-        fields = FieldHandler().get_fields(table, specific=True)
-
-        for field in fields:
-            field_type = field_type_registry.get_by_model(field)
-            if field_type.can_have_select_options:
-                properties[field.db_column] = {
+        for field_object in field_objects:
+            if field_object["type"].can_have_select_options:
+                properties[field_object["name"]] = {
                     "type": "array",
-                    "title": field.name,
+                    "title": field_object["field"].name,
                     "default": None,
                     "items": {
                         "type": "object",
@@ -591,7 +589,7 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         return (
             super()
             .enhance_queryset(queryset)
-            .select_related("view")
+            .select_related("view__content_type")
             .prefetch_related(
                 "view__viewfilter_set",
                 "view__filter_groups",

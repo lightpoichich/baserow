@@ -1,5 +1,5 @@
 from collections import defaultdict
-from functools import cached_property
+from functools import cached_property, partial
 from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict
 
 from django.contrib.auth import get_user_model
@@ -18,6 +18,7 @@ from baserow.core.registries import (
 )
 from baserow.core.subjects import UserSubjectType
 from baserow.core.types import PermissionCheck
+from baserow.core.utils import get_or_set_ttl_cache
 from baserow_enterprise.features import RBAC
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 
@@ -43,7 +44,11 @@ class RolePermissionManagerType(PermissionManagerType):
         :param workspace: The workspace in which we want to use this permission manager.
         """
 
-        return LicenseHandler.workspace_has_feature(RBAC, workspace)
+        return get_or_set_ttl_cache(
+            self,
+            f"has_rbac_permission_{workspace.id}",
+            partial(LicenseHandler.workspace_has_feature, RBAC, workspace),
+        )
 
     def get_role_operations(self, role: Role) -> List[str]:
         """

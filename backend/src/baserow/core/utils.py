@@ -8,12 +8,13 @@ import os
 import random
 import re
 import string
+import time
 from collections import defaultdict, namedtuple
 from decimal import Decimal
 from fractions import Fraction
 from itertools import chain, islice
 from numbers import Number
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from django.conf import settings
 from django.db import transaction
@@ -1139,3 +1140,63 @@ def merge_dicts_no_duplicates(*dicts):
                 merged_dict[key] = dictionary[key]
 
     return merged_dict
+
+
+TTL_CACHE_CLEANUP_INTERVAL = 60 * 60  # 1 hour
+
+
+def get_or_set_ttl_cache(
+    instance: Any,
+    property_name: str,
+    populate_callback: Callable,
+):
+    """
+    Retrieves a cached value for a given property on the instance. If the cached value
+    does not exist or has expired, it calls the provided populate_callback to generate
+    a new value, stores it on the instance, and sets a TTL (Time-To-Live).
+
+    :param instance: The object instance to store the cache on.
+    :param property_name: The name of the property on the instance to cache and set.
+    :param populate_callback: A callable that generates the value to cache if it is not
+      present or has expired.
+    :param cleanup_interval: Time in seconds for how often the cleanup should occur.
+    :return: The cached or newly generated value.
+    """
+
+    # To deactivate the cache we can set the duration to 0
+    # the cache is also deactivated by default in the tests
+    if settings.SHORT_LIVE_CACHE_TTL_DURATION == 0 or getattr(settings, "TESTS", False):
+        return populate_callback()
+
+    # Initialize the cache and last cleanup time on the instance if they don't exist
+    if not hasattr(instance, "_ttl_cache"):
+        instance._ttl_cache = {}
+        instance._last_cleanup = time.time()
+
+    # Perform cleanup only if enough time has passed since the last cleanup
+    # We prevent memory leak that way
+    current_time = time.time()
+    if current_time - instance._last_cleanup > TTL_CACHE_CLEANUP_INTERVAL:
+        instance._ttl_cache = {
+            key: (value, expiration)
+            for key, (value, expiration) in instance._ttl_cache.items()
+            if current_time < expiration
+        }
+        instance._last_cleanup = current_time  # Update the last cleanup time
+
+    # Check if the property exists in the cache and if it's still valid
+    cache_entry = instance._ttl_cache.get(property_name, None)
+    if cache_entry:
+        value, expiration = cache_entry
+        if current_time < expiration:
+            return value
+
+    # If not valid or doesn't exist, call the callback to populate the value
+    new_value = populate_callback()
+
+    instance._ttl_cache[property_name] = (
+        new_value,
+        current_time + settings.SHORT_LIVE_CACHE_TTL_DURATION,
+    )
+
+    return new_value

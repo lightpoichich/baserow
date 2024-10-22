@@ -4,7 +4,6 @@ import pytest
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.builder.elements.models import Element
-from baserow.core.user_sources.registries import user_source_type_registry
 from baserow.core.user_sources.user_source_user import UserSourceUser
 
 
@@ -76,40 +75,6 @@ def data_source_element_roles_fixture(data_fixture):
         "rows": rows,
         "builder_to": builder_to,
     }
-
-
-def create_user_table_and_role(data_fixture, user, builder, user_role):
-    """Helper to create a User table with a particular user role."""
-
-    # Create the user table for the user_source
-    user_table, user_fields, user_rows = data_fixture.build_table(
-        user=user,
-        columns=[
-            ("Email", "text"),
-            ("Name", "text"),
-            ("Password", "text"),
-            ("Role", "text"),
-        ],
-        rows=[
-            ["foo@bar.com", "Foo User", "secret", user_role],
-        ],
-    )
-    email_field, name_field, password_field, role_field = user_fields
-
-    integration = data_fixture.create_local_baserow_integration(
-        user=user, application=builder
-    )
-    user_source = data_fixture.create_user_source(
-        user_source_type_registry.get("local_baserow").model_class,
-        application=builder,
-        integration=integration,
-        table=user_table,
-        email_field=email_field,
-        name_field=name_field,
-        role_field=role_field,
-    )
-
-    return user_source, integration
 
 
 @pytest.mark.django_db
@@ -466,8 +431,7 @@ def test_dispatch_data_sources_list_rows_with_elements_and_role(
 
     page = data_source_element_roles_fixture["page"]
 
-    user_source, integration = create_user_table_and_role(
-        data_fixture,
+    user_source, integration = data_fixture.create_user_table_and_role(
         data_source_element_roles_fixture["user"],
         data_source_element_roles_fixture["builder_to"],
         user_role,

@@ -173,11 +173,22 @@ class BasePublicUserSourceSerializer(serializers.ModelSerializer):
     def get_type(self, instance):
         return user_source_type_registry.get_by_model(instance.specific_class).type
 
-    auth_providers = ReadPolymorphicAppAuthProviderSerializer(
-        required=False,
-        many=True,
-        help_text="Auth providers related to this user source.",
+    auth_providers = serializers.SerializerMethodField(
+        help_text="The user sources related with this builder."
     )
+
+    @extend_schema_field(ReadPolymorphicAppAuthProviderSerializer(many=True))
+    def get_auth_providers(self, instance: Builder) -> List:
+        """
+        Returns the user sources related to this public builder.
+
+        :param instance: The builder application instance.
+        :return: A list of serialized user sources that belong to this instance.
+        """
+
+        auth_providers = instance.auth_providers.all()
+
+        return ReadPolymorphicAppAuthProviderSerializer(auth_providers, many=True).data
 
     class Meta:
         model = UserSource

@@ -1107,7 +1107,7 @@ def test_allow_if_template_permission_manager_filter_queryset(data_fixture):
         "member",
         "token",
         "basic",
-    ]
+    ],
 )
 def test_allow_if_template_permission_manager_query_count(data_fixture):
     buser = data_fixture.create_user(username="Auth user")

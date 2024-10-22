@@ -9,7 +9,9 @@
     "billable": "Billable",
     "all": "All",
     "beta": "Beta",
-    "summarize": "Summarize"
+    "summarize": "Summarize",
+    "or": "or",
+    "and": "and"
   },
   "action": {
     "upload": "Upload",
@@ -17,6 +19,7 @@
     "backToLogin": "Back to login",
     "backToHome": "Back to home",
     "signUp": "Sign up",
+    "getStarted": "Get started",
     "signIn": "Sign in",
     "login": "Login",
     "logout": "Logout",

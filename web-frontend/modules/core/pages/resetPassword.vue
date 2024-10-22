@@ -1,12 +1,12 @@
 <template>
-  <div>
+  <div class="auth__wrapper">
     <div v-if="!success">
       <div class="auth__logo">
         <nuxt-link :to="{ name: 'index' }">
           <Logo />
         </nuxt-link>
       </div>
-      <div class="auth__head auth__head--more-margin">
+      <div class="auth__head">
         <h1 class="auth__head-title">{{ $t('resetPassword.title') }}</h1>
         <LangPicker />
       </div>
@@ -30,7 +30,7 @@
             small-label
             :label="$t('resetPassword.newPassword')"
             required
-            class="margin-bottom-2"
+            class="mb-24"
           >
             <PasswordInput
               v-model="account.password"
@@ -45,7 +45,7 @@
             small-label
             :label="$t('resetPassword.repeatNewPassword')"
             required
-            class="margin-bottom-2"
+            class="mb-32"
             :error="$v.account.passwordConfirm.$error"
           >
             <FormInput
@@ -62,7 +62,7 @@
             </template>
           </FormGroup>
 
-          <div class="auth__action">
+          <div class="auth__action mb-32">
             <Button
               type="primary"
               full-width
@@ -75,9 +75,8 @@
           </div>
           <div>
             <ul class="auth__action-links">
-              <li>
+              <li class="auth__action-link">
                 <nuxt-link :to="{ name: 'login' }">
-                  <i class="iconoir-arrow-left"></i>
                   {{ $t('action.backToLogin') }}
                 </nuxt-link>
               </li>
@@ -86,18 +85,13 @@
         </form>
       </div>
     </div>
-    <div v-if="success" class="box__message">
-      <div class="box__message-icon">
-        <i class="iconoir-check"></i>
-      </div>
-      <h1 class="box__message-title">{{ $t('resetPassword.changed') }}</h1>
-      <Button
-        tag="nuxt-link"
-        :to="{ name: 'login' }"
-        size="large"
-        type="primary"
-        icon="iconoir-arrow-left"
-      >
+    <div v-if="success" class="auth__wrapper auth__wrapper--small-centered">
+      <ButtonIcon icon="iconoir-check" />
+      <h2>{{ $t('resetPassword.changed') }}</h2>
+      <p>
+        {{ $t('resetPassword.message') }}
+      </p>
+      <Button tag="nuxt-link" :to="{ name: 'login' }" size="large">
         {{ $t('action.backToLogin') }}
       </Button>
     </div>

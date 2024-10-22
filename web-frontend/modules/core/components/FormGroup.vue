@@ -18,16 +18,22 @@
       class="control__label"
       :class="{ 'control__label--small': smallLabel }"
     >
-      <span>{{ label }} </span>
+      <span>{{ label }}</span>
       <span v-if="!required" class="control__required">Optional</span>
+      <span v-if="hasAfterLabelSlot" class="control__after-label"
+        ><slot name="after-label"
+      /></span>
     </label>
 
     <span
       v-if="!label && hasLabelSlot"
       class="control__label"
       :class="{ 'control__label--small': smallLabel }"
-      ><slot name="label"></slot
-    ></span>
+      ><slot name="label"></slot>
+      <span v-if="hasAfterLabelSlot" class="control__after-label"
+        ><slot name="after-label"
+      /></span>
+    </span>
 
     <div class="control__wrapper">
       <div
@@ -151,6 +157,9 @@ export default {
     },
     hasLabelSlot() {
       return !!this.$slots.label
+    },
+    hasAfterLabelSlot() {
+      return !!this.$slots['after-label']
     },
     hasWarningSlot() {
       return !!this.$slots.warning

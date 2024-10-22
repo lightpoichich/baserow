@@ -423,6 +423,7 @@ class DatabaseConfig(AppConfig):
         from .views.view_aggregations import (
             AverageViewAggregationType,
             DecileViewAggregationType,
+            DistributionViewAggregationType,
             EmptyCountViewAggregationType,
             MaxViewAggregationType,
             MedianViewAggregationType,
@@ -445,6 +446,7 @@ class DatabaseConfig(AppConfig):
         view_aggregation_type_registry.register(DecileViewAggregationType())
         view_aggregation_type_registry.register(VarianceViewAggregationType())
         view_aggregation_type_registry.register(StdDevViewAggregationType())
+        view_aggregation_type_registry.register(DistributionViewAggregationType())
 
         from .views.form_view_mode_types import FormViewModeTypeForm
 

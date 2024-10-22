@@ -8,6 +8,10 @@ import {
 import { TestApp } from '@baserow/test/helpers/testApp'
 import _ from 'lodash'
 
+import {
+  IMAGE_SOURCE_TYPES,
+} from '@baserow/modules/builder/enums'
+
 describe('elementTypes tests', () => {
   const testApp = new TestApp()
 
@@ -650,6 +654,29 @@ describe('elementTypes tests', () => {
       element.navigate_to_url = 'http://localhost'
       element.value = 'Foo Link'
       expect(elementType.isInError( {builder, element} )).toBe(false)
+    })
+  })
+ 
+  describe('ImageElementType isInError tests', () => {
+    test('Returns true if Image Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'image')
+      
+      // Image with image_source_type of 'upload' must have an image_file url
+      const element = {image_source_type: IMAGE_SOURCE_TYPES.UPLOAD}
+      expect(elementType.isInError( {element} )).toBe(true)
+
+      // Otherwise it is valid
+      element.image_file = {url: 'http://localhost'}
+      expect(elementType.isInError( {element} )).toBe(false)
+
+      // Image with missing image_url is invalid
+      element.image_source_type = ''
+      element.image_url = ''
+      expect(elementType.isInError( {element} )).toBe(true)
+
+      // Otherwise it is valid
+      element.image_url = 'http://localhost'
+      expect(elementType.isInError( {element} )).toBe(false)      
     })
   })
 })

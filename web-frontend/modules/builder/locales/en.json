@@ -138,9 +138,9 @@
     "urlInputPlaceholder": "Enter url...",
     "invalidFormula": "The formula is invalid"
   },
-  "headingElement": {
-    "emptyState": "Missing title",
-    "emptyValue": "Empty title"
+  "elementPlaceholders": {
+    "undefinedValue": "Value is undefined",
+    "emptyValue": "Value is empty"
   },
   "headingElementForm": {
     "levelTitle": "Level",
@@ -149,10 +149,6 @@
     "headingName": "Heading {level} <h{level}>",
     "textError": "The value is invalid."
   },
-  "textElement": {
-    "noValue": "Missing text",
-    "emptyValue": "Empty text"
-  },
   "textElementForm": {
     "textTitle": "Text",
     "textPlaceholder": "Enter text...",
@@ -160,10 +156,6 @@
     "textFormatTypeLabel": "Format",
     "textFormatTypePlain": "Plain text",
     "textFormatTypeMarkdown": "Markdown"
-  },
-  "imageElement": {
-    "emptyState": "Alt text is missing",
-    "emptyValue": "Alt text is empty"
   },
   "generalForm": {
     "labelTitle": "Label",
@@ -201,8 +193,6 @@
     "uploadFileButton": "Upload file"
   },
   "iframeElementForm": {
-    "emptyState": "No IFrame URL is defined",
-    "emptyValue": "IFrame URL is empty",
     "sourceTypeLabel": "Source type",
     "urlLabel": "URL",
     "urlPlaceholder": "Link to the external resource to be embedded",
@@ -269,10 +259,6 @@
     "customName": "Custom domain",
     "subDomainName": "Subdomain",
     "subDomain": "Subdomain of {domain}"
-  },
-  "linkElement": {
-    "emptyState": "Link text is missing",
-    "emptyValue": "Link text is empty"
   },
   "linkNavigationSelection": {
     "navigateTo": "Navigate to",
@@ -513,10 +499,6 @@
   "buttonElementForm": {
     "valueLabel": "Button text",
     "valuePlaceholder": "Enter text..."
-  },
-  "buttonElement": {
-    "emptyState": "Button text is missing",
-    "emptyValue": "Button text is empty"
   },
   "eventTypes": {
     "clickLabel": "On click",

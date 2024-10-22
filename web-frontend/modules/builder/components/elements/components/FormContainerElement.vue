@@ -35,7 +35,9 @@
         :loading="workflowActionsInProgress"
         @click="validateAndSubmitEvent"
       >
-        {{ submitButtonLabelResolved || $t('buttonElement.emptyState') }}
+        {{
+          submitButtonLabelResolved || $t('elementPlaceholders.undefinedValue')
+        }}
       </ABButton>
     </div>
   </div>

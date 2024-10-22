@@ -8,8 +8,10 @@
       {{
         element.value
           ? resolvedValue ||
-            (mode === 'editing' ? $t('headingElement.emptyValue') : '&nbsp;')
-          : $t('headingElement.emptyState')
+            (mode === 'editing'
+              ? $t('elementPlaceholders.emptyValue')
+              : '&nbsp;')
+          : $t('elementPlaceholders.undefinedValue')
       }}
     </ABHeading>
   </div>

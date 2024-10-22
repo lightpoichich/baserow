@@ -13,8 +13,10 @@
       {{
         element.value
           ? resolvedValue ||
-            (mode === 'editing' ? $t('buttonElement.emptyValue') : '&nbsp;')
-          : $t('buttonElement.emptyState')
+            (mode === 'editing'
+              ? $t('elementPlaceholders.emptyValue')
+              : '&nbsp;')
+          : $t('elementPlaceholders.undefinedValue')
       }}
     </ABButton>
   </div>

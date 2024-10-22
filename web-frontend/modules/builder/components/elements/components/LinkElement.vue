@@ -8,8 +8,10 @@
       {{
         element.value
           ? resolvedValue ||
-            (mode === 'editing' ? $t('linkElement.emptyValue') : '&nbsp;')
-          : $t('linkElement.emptyState')
+            (mode === 'editing'
+              ? $t('elementPlaceholders.emptyValue')
+              : '&nbsp;')
+          : $t('elementPlaceholders.undefinedValue')
       }}
     </ABLink>
   </div>

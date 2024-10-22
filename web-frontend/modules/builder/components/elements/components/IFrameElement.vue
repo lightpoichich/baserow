@@ -11,9 +11,9 @@
       {{
         element.url || element.embed
           ? mode === 'editing'
-            ? $t('iframeElementForm.emptyValue')
+            ? $t('elementPlaceholders.emptyValue')
             : ''
-          : $t('iframeElementForm.emptyState')
+          : $t('elementPlaceholders.undefinedValue')
       }}
     </p>
     <template v-else>

@@ -8,8 +8,8 @@
       :alt="
         element.alt_text
           ? resolvedAltText ||
-            (mode === 'editing' ? $t('imageElement.emptyValue') : '')
-          : $t('imageElement.emptyState')
+            (mode === 'editing' ? $t('elementPlaceholders.emptyValue') : '')
+          : $t('elementPlaceholders.undefinedValue')
       "
       :src="imageSource"
     />

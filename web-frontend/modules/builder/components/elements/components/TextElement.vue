@@ -11,22 +11,26 @@
         v-if="element.value"
         :content="
           resolvedValue ||
-          (mode === 'editing' ? $t('textElement.emptyValue') : '&nbsp;')
+          (mode === 'editing' ? $t('elementPlaceholders.emptyValue') : '&nbsp;')
         "
         :rules="rules"
         @click.native="onClick"
       ></MarkdownIt>
-      <ABParagraph v-else>{{ $t('textElement.noValue') }}</ABParagraph>
+      <ABParagraph v-else>{{
+        $t('elementPlaceholders.undefinedValue')
+      }}</ABParagraph>
     </template>
     <template v-else>
       <ABParagraph v-for="paragraph in paragraphs" :key="paragraph.id">
         {{ paragraph.content }}
       </ABParagraph>
       <ABParagraph v-if="element.value && paragraphs.length === 0">
-        {{ mode === 'editing' ? $t('textElement.emptyValue') : '&nbsp;' }}
+        {{
+          mode === 'editing' ? $t('elementPlaceholders.emptyValue') : '&nbsp;'
+        }}
       </ABParagraph>
       <ABParagraph v-else-if="!element.value">
-        {{ $t('textElement.noValue') }}
+        {{ $t('elementPlaceholders.undefinedValue') }}
       </ABParagraph>
     </template>
   </div>

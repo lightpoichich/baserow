@@ -5,7 +5,12 @@
     :style="getStyleOverride('image')"
   >
     <ABImage
-      :alt="resolvedAltText || $t('imageElement.emptyState')"
+      :alt="
+        element.alt_text
+          ? resolvedAltText ||
+            (mode === 'editing' ? $t('elementPlaceholders.emptyValue') : '')
+          : $t('elementPlaceholders.undefinedValue')
+      "
       :src="imageSource"
     />
   </div>
@@ -19,6 +24,7 @@ import { ensureString } from '@baserow/modules/core/utils/validator'
 export default {
   name: 'ImageElement',
   mixins: [element],
+  inject: ['mode'],
   props: {
     /**
      * @type {Object}
@@ -46,7 +52,7 @@ export default {
     },
     classes() {
       return {
-        'element--no-value': !this.imageSource && !this.element.alt_text,
+        'element--no-value': !this.imageSource && !this.resolvedAltText,
       }
     },
   },

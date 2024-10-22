@@ -86,6 +86,16 @@ export default {
       loggedUser: 'userSourceUser/getUser',
     }),
     isVisible() {
+      const elementType = this.$registry.get('element', this.element.type)
+      const isInError = elementType.isInError({
+        element: this.element,
+        builder: this.builder,
+      })
+
+      if (this.mode !== 'editing' && isInError) {
+        return false
+      }
+
       const isAuthenticated = this.$store.getters[
         'userSourceUser/isAuthenticated'
       ](this.builder)

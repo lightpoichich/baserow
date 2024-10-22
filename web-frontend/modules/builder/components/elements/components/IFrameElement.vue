@@ -8,7 +8,13 @@
       class="iframe-element__empty"
       :style="{ height: `${element.height}px` }"
     >
-      {{ $t('iframeElementForm.empty') }}
+      {{
+        element.url || element.embed
+          ? mode === 'editing'
+            ? $t('elementPlaceholders.emptyValue')
+            : ''
+          : $t('elementPlaceholders.undefinedValue')
+      }}
     </p>
     <template v-else>
       <client-only

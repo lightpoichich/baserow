@@ -8,6 +8,11 @@ import {
 import { TestApp } from '@baserow/test/helpers/testApp'
 import _ from 'lodash'
 
+import {
+  IFRAME_SOURCE_TYPES,
+  IMAGE_SOURCE_TYPES,
+} from '@baserow/modules/builder/enums'
+
 describe('elementTypes tests', () => {
   const testApp = new TestApp()
 
@@ -566,6 +571,153 @@ describe('elementTypes tests', () => {
       // Since an empty string is a valid Value, if the user has explicitly
       // declared it, we should return an empty string.
       expect(elementType.choiceOptions(element)).toEqual(['', 'bar_name'])
+    })
+  })
+
+  describe('RepeatElementType isInError tests', () => {
+    test('Returns true if Repeat Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'repeat')
+
+      // Repeat with missing data source is invalid
+      expect(elementType.isInError({ page: {}, element: {} })).toBe(true)
+
+      // Repeat with data source is valid
+      expect(
+        elementType.isInError({ page: {}, element: { data_source_id: 100 } })
+      ).toBe(false)
+    })
+  })
+
+  describe('HeadingElementType isInError tests', () => {
+    test('Returns true if Heading Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'heading')
+
+      // Heading with missing value is invalid
+      expect(elementType.isInError({ page: {}, element: { value: '' } })).toBe(
+        true
+      )
+
+      // Heading with value is valid
+      expect(
+        elementType.isInError({ page: {}, element: { value: 'Foo Heading' } })
+      ).toBe(false)
+    })
+  })
+
+  describe('TextElementType isInError tests', () => {
+    test('Returns true if Text Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'text')
+
+      // Text with missing value is invalid
+      expect(elementType.isInError({ page: {}, element: { value: '' } })).toBe(
+        true
+      )
+
+      // Text with value is valid
+      expect(
+        elementType.isInError({ page: {}, element: { value: 'Foo Text' } })
+      ).toBe(false)
+    })
+  })
+
+  describe('LinkElementType isInError tests', () => {
+    test('Returns true if Link Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'link')
+
+      // Link with missing text is invalid
+      expect(elementType.isInError({ element: { value: '' } })).toBe(true)
+
+      // When navigation_type is 'page' the navigate_to_page_id must be set
+      let element = {
+        navigation_type: 'page',
+        navigate_to_page_id: '',
+        value: 'Foo Link',
+      }
+      expect(elementType.isInError({ page: {}, element })).toBe(true)
+
+      // Otherwise it is valid
+      const page = { id: 10, shared: false, order: 1 }
+      const builder = { pages: [page] }
+      element.navigate_to_page_id = 10
+      expect(elementType.isInError({ builder, element })).toBe(false)
+
+      // When navigation_type is 'custom' the navigate_to_url must be set
+      element = { navigation_type: 'custom', navigate_to_url: '' }
+      expect(elementType.isInError({ builder, element })).toBe(true)
+
+      // Otherwise it is valid
+      element.navigate_to_url = 'http://localhost'
+      element.value = 'Foo Link'
+      expect(elementType.isInError({ builder, element })).toBe(false)
+    })
+  })
+
+  describe('ImageElementType isInError tests', () => {
+    test('Returns true if Image Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'image')
+
+      // Image with image_source_type of 'upload' must have an image_file url
+      const element = { image_source_type: IMAGE_SOURCE_TYPES.UPLOAD }
+      expect(elementType.isInError({ element })).toBe(true)
+
+      // Otherwise it is valid
+      element.image_file = { url: 'http://localhost' }
+      expect(elementType.isInError({ element })).toBe(false)
+
+      // Image with missing image_url is invalid
+      element.image_source_type = ''
+      element.image_url = ''
+      expect(elementType.isInError({ element })).toBe(true)
+
+      // Otherwise it is valid
+      element.image_url = "'http://localhost'"
+      expect(elementType.isInError({ element })).toBe(false)
+    })
+  })
+
+  describe('ButtonElementType isInError tests', () => {
+    test('Returns true if Button Element has errors, false otherwise', () => {
+      const page = { id: 1, name: 'Foo Page', workflowActions: [] }
+      const element = { id: 50, value: '', page_id: page.id }
+      const builder = { pages: [page] }
+      const elementType = testApp.getRegistry().get('element', 'button')
+
+      // Button with missing value is invalid
+      expect(elementType.isInError({ element, builder })).toBe(true)
+
+      // Button with value but missing workflowActions is invalid
+      element.value = 'click me'
+      expect(elementType.isInError({ element, builder })).toBe(true)
+
+      // Button with value and workflowAction is valid
+      page.workflowActions = [{ element_id: 50 }]
+      expect(elementType.isInError({ element, builder })).toBe(false)
+    })
+  })
+
+  describe('IFrameElementType isInError tests', () => {
+    test('Returns true if IFrame Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'iframe')
+
+      // IFrame with source_type of 'url' and missing url is invalid
+      const element = { source_type: IFRAME_SOURCE_TYPES.URL }
+      expect(elementType.isInError({ element })).toBe(true)
+
+      // Otherwise it is valid
+      element.url = 'http://localhost'
+      expect(elementType.isInError({ element })).toBe(false)
+
+      // IFrame with source_type of 'embed' and missing embed is invalid
+      element.source_type = IFRAME_SOURCE_TYPES.EMBED
+      expect(elementType.isInError({ element })).toBe(true)
+
+      // Otherwise it is valid
+      element.embed = 'http://localhost'
+      expect(elementType.isInError({ element })).toBe(false)
+
+      // Default is to return no errors
+      element.source_type = 'foo'
+      expect(elementType.isInError({ element })).toBe(false)
     })
   })
 })

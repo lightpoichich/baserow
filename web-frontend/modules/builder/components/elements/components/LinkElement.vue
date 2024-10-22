@@ -5,7 +5,14 @@
     :style="getStyleOverride(element.variant)"
   >
     <ABLink :target="element.target" :url="url" :variant="element.variant">
-      {{ resolvedValue || $t('linkElement.noValue') }}
+      {{
+        element.value
+          ? resolvedValue ||
+            (mode === 'editing'
+              ? $t('elementPlaceholders.emptyValue')
+              : '&nbsp;')
+          : $t('elementPlaceholders.undefinedValue')
+      }}
     </ABLink>
   </div>
 </template>
@@ -29,6 +36,7 @@ import { ensureString } from '@baserow/modules/core/utils/validator'
 export default {
   name: 'LinkElement',
   mixins: [element],
+  inject: ['mode'],
   props: {
     /**
      * @type {LinkElement}

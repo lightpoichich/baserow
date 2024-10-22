@@ -360,7 +360,7 @@ def test_get_elements_of_public_builder(api_client, data_fixture):
     response_json = response.json()
 
     expected_item = {
-        "id": 1,
+        "id": element1.id,
         "page_id": page.id,
         "type": "heading",
         "order": "1.00000000000000000000",

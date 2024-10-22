@@ -9,8 +9,15 @@ import {
   HasEmptyValueViewFilterType,
   HasNotEmptyValueViewFilterType,
   HasValueLengthIsLowerThanViewFilterType,
+  AnyOfArrayIsViewFilterType,
+  NoneOfArrayIsViewFilterType,
+  AllOfArrayAreViewFilterType,
 } from '@baserow/modules/database/arrayViewFilters'
 import { FormulaFieldType } from '@baserow/modules/database/fieldTypes'
+import {
+  EmptyViewFilterType,
+  NotEmptyViewFilterType,
+} from '@baserow/modules/database/viewFilters'
 
 describe('Text-based array view filters', () => {
   let testApp = null
@@ -435,4 +442,313 @@ describe('Text-based array view filters', () => {
       )
     }
   )
+
+  const hasEmptyBoolValueCases = [
+    {
+      cellValue: [],
+      expected: true,
+    },
+    {
+      cellValue: [{ value: 'true' }, { value: 'true' }, { value: false }],
+      expected: false,
+    },
+    {
+      cellValue: [{ value: '' }],
+      expected: false,
+    },
+    {
+      cellValue: [{ value: 'C' }],
+      expected: false,
+    },
+  ]
+
+  test.each(hasEmptyBoolValueCases)(
+    'hasNotEmptyBoolValueCases %j',
+    (testValues) => {
+      const fieldType = new FormulaFieldType({
+        app: testApp._app,
+      })
+      const result = new NotEmptyViewFilterType({
+        app: testApp._app,
+      }).matches(
+        testValues.cellValue,
+        null,
+        { formula_type: 'array', array_formula_type: 'bool' },
+        fieldType
+      )
+      expect(result).toBe(!testValues.expected)
+    }
+  )
+
+  test.each(hasEmptyBoolValueCases)(
+    'hasEmptyBoolValueCases %j',
+    (testValues) => {
+      const fieldType = new FormulaFieldType({
+        app: testApp._app,
+      })
+      const result = new EmptyViewFilterType({
+        app: testApp._app,
+      }).matches(
+        testValues.cellValue,
+        testValues.filterValue,
+        { formula_type: 'array', array_formula_type: 'bool' },
+        fieldType
+      )
+      expect(result).toBe(testValues.expected)
+    }
+  )
+
+  const hasAnyValueBoolCases = [
+    {
+      cellValue: [],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: false }],
+      filterValue: true,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: false }],
+      filterValue: false,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: false }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: false }],
+      filterValue: false,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: false }, { value: false }],
+      filterValue: false,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: false }, { value: false }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: '' }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: '' }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: false,
+      expected: false,
+    },
+  ]
+
+  test.each(hasAnyValueBoolCases)('hasAnyValueBoolCases %j', (testValues) => {
+    const fieldType = new FormulaFieldType({
+      app: testApp._app,
+    })
+    const result = new AnyOfArrayIsViewFilterType({
+      app: testApp._app,
+    }).matches(
+      testValues.cellValue,
+      testValues.filterValue,
+      { formula_type: 'array', array_formula_type: 'bool' },
+      fieldType
+    )
+    expect(result).toBe(testValues.expected)
+  })
+
+  const hasNotValueBoolCases = [
+    {
+      cellValue: [],
+      filterValue: true,
+      expected: true,
+    },
+    {
+      cellValue: [],
+      filterValue: false,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: false }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: false }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: true }],
+      filterValue: false,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: true }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: true,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: false,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: false }],
+      filterValue: true,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: false }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: false }, { value: false }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: false }, { value: false }],
+      filterValue: true,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: '' }],
+      filterValue: true,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: '' }],
+      filterValue: false,
+      expected: true,
+    },
+  ]
+
+  test.each(hasNotValueBoolCases)('hasNotValueBoolCases %j', (testValues) => {
+    const fieldType = new FormulaFieldType({
+      app: testApp._app,
+    })
+    const result = new NoneOfArrayIsViewFilterType({
+      app: testApp._app,
+    }).matches(
+      testValues.cellValue,
+      testValues.filterValue,
+      { formula_type: 'array', array_formula_type: 'bool' },
+      fieldType
+    )
+    expect(result).toBe(testValues.expected)
+  })
+
+  const hasAllValueBoolCases = [
+    {
+      cellValue: [],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: false }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: false }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: true }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: true }, { value: true }, { value: true }],
+      filterValue: true,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: 'XYZ' }],
+      filterValue: false,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: false }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: false }],
+      filterValue: false,
+      expected: true,
+    },
+    {
+      cellValue: [{ value: '' }],
+      filterValue: true,
+      expected: false,
+    },
+    {
+      cellValue: [{ value: '' }],
+      filterValue: false,
+      expected: false,
+    },
+  ]
+
+  test.each(hasAllValueBoolCases)('hasAllValueBoolCases %j', (testValues) => {
+    const fieldType = new FormulaFieldType({
+      app: testApp._app,
+    })
+    const result = new AllOfArrayAreViewFilterType({
+      app: testApp._app,
+    }).matches(
+      testValues.cellValue,
+      testValues.filterValue,
+      { formula_type: 'array', array_formula_type: 'bool' },
+      fieldType
+    )
+    expect(result).toBe(testValues.expected)
+  })
 })

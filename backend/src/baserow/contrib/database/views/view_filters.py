@@ -1489,6 +1489,7 @@ class EmptyViewFilterType(ViewFilterType):
             BaserowFormulaDateIntervalType.type,
             BaserowFormulaDurationType.type,
             FormulaFieldType.array_of(BaserowFormulaSingleFileType.type),
+            FormulaFieldType.array_of(BaserowFormulaBooleanType.type),
         ),
     ]
 

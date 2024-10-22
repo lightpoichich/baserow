@@ -1,4 +1,13 @@
-from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
+import typing
+
+from django.db.models import BooleanField, F, Q, Value
+
+from loguru import logger
+
+from baserow.contrib.database.fields.field_filters import (
+    AnnotatedQ,
+    OptionallyAnnotatedQ,
+)
 from baserow.contrib.database.fields.field_types import FormulaFieldType
 from baserow.contrib.database.fields.filter_support import (
     FilterNotSupportedException,
@@ -10,7 +19,14 @@ from baserow.contrib.database.fields.filter_support import (
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import BaserowFormulaTextType
+from baserow.contrib.database.formula.expression_generator.django_expressions import (
+    BaserowFilterExpression,
+    JSONArrayAllAreExpr,
+    JSONArrayAnyIsExpr,
+    JSONArrayNoneIsExpr,
+)
 from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaBooleanType,
     BaserowFormulaCharType,
     BaserowFormulaURLType,
 )
@@ -184,3 +200,49 @@ class HasValueLengthIsLowerThanViewFilterType(ViewFilterType):
             )
         except Exception:
             return self.default_filter_on_exception()
+
+
+class _OfArrayIsMixin:
+    json_expression: typing.ClassVar[typing.Type[BaserowFilterExpression]]
+    compatible_field_types = [
+        FormulaFieldType.compatible_with_formula_types(
+            FormulaFieldType.array_of(BaserowFormulaBooleanType.type)
+        ),
+    ]
+
+    def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
+        try:
+            value = value.strip()
+            if not value:
+                return Q()
+            converted_value = True if value == "1" else False
+            annotation_query = self.json_expression(
+                F(field_name), Value(converted_value), output_field=BooleanField()
+            )
+            hashed_value = hash(value)
+            return AnnotatedQ(
+                annotation={
+                    f"{field_name}_none_of_array_is_{hashed_value}": annotation_query
+                },
+                q={f"{field_name}_none_of_array_is_{hashed_value}": True},
+            )
+        except Exception as err:
+            logger.error(
+                f"Error when creating {self.type} filter expression for {field_name} field with {value} value: {err}"
+            )
+            return self.default_filter_on_exception()
+
+
+class NoneOfArrayIsViewFilterType(_OfArrayIsMixin, ViewFilterType):
+    type = "none_of_array_is"
+    json_expression = JSONArrayNoneIsExpr
+
+
+class AnyOfArrayIsViewFilterType(_OfArrayIsMixin, ViewFilterType):
+    type = "any_of_array_is"
+    json_expression = JSONArrayAnyIsExpr
+
+
+class AllOfArrayAreViewFilterType(_OfArrayIsMixin, ViewFilterType):
+    type = "all_of_array_are"
+    json_expression = JSONArrayAllAreExpr

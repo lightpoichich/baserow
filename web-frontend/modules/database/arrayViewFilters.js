@@ -1,7 +1,9 @@
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
+import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import { FormulaFieldType } from '@baserow/modules/database/fieldTypes'
 import { ViewFilterType } from '@baserow/modules/database/viewFilters'
+import { _ } from 'lodash'
 
 export class HasEmptyValueViewFilterType extends ViewFilterType {
   static getType() {
@@ -242,5 +244,91 @@ export class HasValueLengthIsLowerThanViewFilterType extends ViewFilterType {
       cellValue,
       filterValue
     )
+  }
+}
+
+export class NoneOfArrayIsViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'none_of_array_is'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.noneOfArrayIs')
+  }
+
+  getInputComponent(field) {
+    return ViewFilterTypeBoolean
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'array(boolean)',
+      FormulaFieldType.compatibleWithFormulaTypes('array(boolean)'),
+    ]
+  }
+
+  prepareValue(value, field) {
+    return value === '' ? '0' : value
+  }
+
+  matches(cellValue, filterValue, field, fieldType) {
+    return !_.includes(_.map(cellValue, 'value'), Boolean(filterValue))
+  }
+}
+
+export class AnyOfArrayIsViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'any_of_array_is'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.anyOfArrayIs')
+  }
+
+  getInputComponent(field) {
+    return ViewFilterTypeBoolean
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'array(boolean)',
+      FormulaFieldType.compatibleWithFormulaTypes('array(boolean)'),
+    ]
+  }
+
+  matches(cellValue, filterValue, field, fieldType) {
+    return _.includes(_.map(cellValue, 'value'), Boolean(filterValue))
+  }
+}
+
+export class AllOfArrayAreViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'all_of_array_are'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.allOfArrayAre')
+  }
+
+  getInputComponent(field) {
+    return ViewFilterTypeBoolean
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'array(boolean)',
+      FormulaFieldType.compatibleWithFormulaTypes('array(boolean)'),
+    ]
+  }
+
+  matches(cellValue, filterValue, field, fieldType) {
+    const expected = Boolean(filterValue)
+    if (cellValue.length === 0) {
+      return false
+    }
+    return _.every(_.map(cellValue, 'value'), (inVal) => inVal === expected)
   }
 }

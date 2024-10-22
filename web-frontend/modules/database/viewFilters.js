@@ -2702,7 +2702,8 @@ export class EmptyViewFilterType extends ViewFilterType {
         'boolean',
         'date',
         'number',
-        FormulaFieldType.arrayOf('single_file')
+        FormulaFieldType.arrayOf('single_file'),
+        FormulaFieldType.arrayOf('boolean')
       ),
     ]
   }
@@ -2764,7 +2765,8 @@ export class NotEmptyViewFilterType extends ViewFilterType {
         'boolean',
         'date',
         'number',
-        FormulaFieldType.arrayOf('single_file')
+        FormulaFieldType.arrayOf('single_file'),
+        FormulaFieldType.arrayOf('boolean')
       ),
     ]
   }

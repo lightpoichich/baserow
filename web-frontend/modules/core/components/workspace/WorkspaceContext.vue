@@ -1,5 +1,6 @@
 <template>
   <Context
+    ph-autocapture='context__menu-title'
     ref="context"
     overflow-scroll
     max-height-if-outside-viewport

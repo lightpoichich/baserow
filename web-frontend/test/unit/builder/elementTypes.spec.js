@@ -9,7 +9,8 @@ import { TestApp } from '@baserow/test/helpers/testApp'
 import _ from 'lodash'
 
 import {
-  IMAGE_SOURCE_TYPES,
+  IFRAME_SOURCE_TYPES,
+  IMAGE_SOURCE_TYPES,  
 } from '@baserow/modules/builder/enums'
 
 describe('elementTypes tests', () => {
@@ -573,26 +574,6 @@ describe('elementTypes tests', () => {
     })
   })
 
-  describe('ButtonElementType isInError tests', () => {
-    test('Returns true if Button Element has errors, false otherwise', () => {
-      const page = { id: 1, name: 'Foo Page', workflowActions: [] }
-      const element = {id: 50, value: '', page_id: page.id}
-      const builder = { pages: [page]}
-      const elementType = testApp.getRegistry().get('element', 'button')
-      
-      // Button with missing value is invalid
-      expect(elementType.isInError( {element, builder} )).toBe(true)
-
-      // Button with value but missing workflowActions is invalid
-      element.value = "click me"
-      expect(elementType.isInError( {element, builder} )).toBe(true)
-
-      // Button with value and workflowAction is valid
-      page.workflowActions = [{element_id: 50}]
-      expect(elementType.isInError( {element, builder} )).toBe(false)
-    })
-  })
-
   describe('RepeatElementType isInError tests', () => {
     test('Returns true if Repeat Element has errors, false otherwise', () => {
       const elementType = testApp.getRegistry().get('element', 'repeat')
@@ -675,8 +656,54 @@ describe('elementTypes tests', () => {
       expect(elementType.isInError( {element} )).toBe(true)
 
       // Otherwise it is valid
-      element.image_url = 'http://localhost'
-      expect(elementType.isInError( {element} )).toBe(false)      
+      element.image_url = "'http://localhost'"
+      expect(elementType.isInError( {element} )).toBe(false)
+    })
+  })
+
+  describe('ButtonElementType isInError tests', () => {
+    test('Returns true if Button Element has errors, false otherwise', () => {
+      const page = { id: 1, name: 'Foo Page', workflowActions: [] }
+      const element = {id: 50, value: '', page_id: page.id}
+      const builder = { pages: [page]}
+      const elementType = testApp.getRegistry().get('element', 'button')
+      
+      // Button with missing value is invalid
+      expect(elementType.isInError( {element, builder} )).toBe(true)
+
+      // Button with value but missing workflowActions is invalid
+      element.value = "click me"
+      expect(elementType.isInError( {element, builder} )).toBe(true)
+
+      // Button with value and workflowAction is valid
+      page.workflowActions = [{element_id: 50}]
+      expect(elementType.isInError( {element, builder} )).toBe(false)
+    })
+  })
+
+  describe('IFrameElementType isInError tests', () => {
+    test('Returns true if IFrame Element has errors, false otherwise', () => {
+      const elementType = testApp.getRegistry().get('element', 'iframe')
+      
+      // IFrame with source_type of 'url' and missing url is invalid
+      const element = {source_type: IFRAME_SOURCE_TYPES.URL}
+      expect(elementType.isInError( {element} )).toBe(true)
+
+      // Otherwise it is valid
+      element.url = 'http://localhost'
+      expect(elementType.isInError( {element} )).toBe(false)
+
+      // IFrame with source_type of 'embed' and missing embed is invalid
+      element.source_type = IFRAME_SOURCE_TYPES.EMBED
+      expect(elementType.isInError( {element} )).toBe(true)
+
+      // Otherwise it is valid
+      element.embed = 'http://localhost'
+      expect(elementType.isInError( {element} )).toBe(false)
+
+      // Default is to return no errors
+      element.source_type = 'foo'
+      expect(elementType.isInError( {element} )).toBe(false)
     })
   })
 })

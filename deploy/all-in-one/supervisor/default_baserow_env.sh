@@ -75,6 +75,7 @@ export BASEROW_CELERY_EXPORT_WORKER_STARTUP_COMMAND="${BASEROW_CELERY_EXPORT_WOR
 export BASEROW_CELERY_BEAT_STARTUP_COMMAND="${BASEROW_CELERY_BEAT_STARTUP_COMMAND:-$DEFAULT_CELERY_BEAT_STARTUP_COMMAND}"
 export XDG_CONFIG_HOME=/home/$DOCKER_USER/
 export HOME=/home/$DOCKER_USER/
+export BASEROW_ASGI_HTTP_MAX_CONCURRENCY=${BASEROW_ASGI_HTTP_MAX_CONCURRENCY:-}
 
 # By default we run all other sub-supervisor processes as a non root user. However for
 # now we want to default just Caddy to a root user so it can bind to the privileged

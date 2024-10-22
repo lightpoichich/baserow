@@ -197,7 +197,7 @@ export default {
       }
     }
 
-    await DataProviderType.initAll($registry.getAll('builderDataProvider'), {
+    DataProviderType.initAll($registry.getAll('builderDataProvider'), {
       builder,
       page,
       pageParamsValue,
@@ -316,11 +316,24 @@ export default {
         }
       },
     },
-    isAuthenticated() {
+    async isAuthenticated() {
+      await Promise.all(
+        this.$store.getters['page/getAll'](this.builder).map(async (page) => {
+          if (page.id !== this.page.id) {
+            await this.$store.dispatch('element/clearAll', { page })
+          }
+        })
+      )
       // When the user login or logout, we need to refetch the elements and actions
       // as they might have changed
-      this.$store.dispatch('element/fetchPublished', { page: this.page })
-      this.$store.dispatch('workflowAction/fetchPublished', { page: this.page })
+      this.$store.dispatch('element/fetchPublished', {
+        page: this.page,
+        force: true,
+      })
+      this.$store.dispatch('workflowAction/fetchPublished', {
+        page: this.page,
+        force: true,
+      })
     },
   },
 }
